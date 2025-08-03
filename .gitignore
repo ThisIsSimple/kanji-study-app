@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Flutter
+kanji_study_app/.dart_tool/
+kanji_study_app/.flutter-plugins
+kanji_study_app/.flutter-plugins-dependencies
+kanji_study_app/.pub-cache/
+kanji_study_app/.pub/
+kanji_study_app/build/
+kanji_study_app/*.iml
+kanji_study_app/*.ipr
+kanji_study_app/*.iws
+kanji_study_app/.idea/
+
+# Android
+kanji_study_app/android/.gradle/
+kanji_study_app/android/captures/
+kanji_study_app/android/local.properties
+kanji_study_app/android/**/GeneratedPluginRegistrant.java
+
+# iOS
+kanji_study_app/ios/Flutter/Flutter.framework
+kanji_study_app/ios/Flutter/Flutter.podspec
+kanji_study_app/ios/Flutter/Generated.xcconfig
+kanji_study_app/ios/Flutter/flutter_export_environment.sh
+kanji_study_app/ios/Flutter/.last_build_id
+kanji_study_app/ios/Pods/
+kanji_study_app/ios/.symlinks/
+kanji_study_app/ios/Runner/GeneratedPluginRegistrant.*
+
+# Web
+kanji_study_app/web/flutter_service_worker.js
+kanji_study_app/web/main.dart.js*
+
+# Miscellaneous
+*.log
+.packages
+.metadata
+.flutter-plugins-dependencies
+kanji_study_app/pubspec.lock
