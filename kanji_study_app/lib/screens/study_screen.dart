@@ -187,6 +187,7 @@ class _StudyScreenState extends State<StudyScreen> {
                               '한국어 음독',
                               style: theme.typography.sm.copyWith(
                                 color: theme.colors.mutedForeground,
+                                fontFamily: 'SUITE',
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -208,6 +209,7 @@ class _StudyScreenState extends State<StudyScreen> {
                                     style: theme.typography.base.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color: theme.colors.primary,
+                                      fontFamily: 'SUITE',
                                     ),
                                   ),
                                 );
@@ -222,6 +224,7 @@ class _StudyScreenState extends State<StudyScreen> {
                               '한국어 훈독',
                               style: theme.typography.sm.copyWith(
                                 color: theme.colors.mutedForeground,
+                                fontFamily: 'SUITE',
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -243,6 +246,7 @@ class _StudyScreenState extends State<StudyScreen> {
                                     style: theme.typography.base.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color: theme.colors.secondary,
+                                      fontFamily: 'SUITE',
                                     ),
                                   ),
                                 );

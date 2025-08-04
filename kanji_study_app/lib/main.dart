@@ -5,6 +5,7 @@ import 'services/notification_service.dart';
 import 'services/gemini_service.dart';
 import 'services/supabase_service.dart';
 import 'screens/main_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +33,7 @@ class KanjiStudyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Kanji Study',
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.getLightTheme(),
       builder: (context, child) => FTheme(
         data: FThemes.zinc.light,
         child: child!,

@@ -223,6 +223,7 @@ class _WordsScreenState extends State<WordsScreen> {
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.primary,
                             fontWeight: FontWeight.w500,
+                            fontFamily: 'SUITE',
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
