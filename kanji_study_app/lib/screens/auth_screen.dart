@@ -121,7 +121,9 @@ class _AuthScreenState extends State<AuthScreen> {
             const SizedBox(height: 48),
             
             // Email Input
-            TextField(
+            Material(
+              color: Colors.transparent,
+              child: TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
@@ -141,12 +143,15 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 prefixIcon: const Icon(Icons.email),
               ),
+              ),
             ),
             const SizedBox(height: 16),
             
             // Username Input (Sign Up only)
             if (_isSignUp) ...[
-              TextField(
+              Material(
+                color: Colors.transparent,
+                child: TextField(
                 controller: _usernameController,
                 decoration: InputDecoration(
                   labelText: '사용자 이름',
@@ -165,12 +170,15 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   prefixIcon: const Icon(Icons.person),
                 ),
+                ),
               ),
               const SizedBox(height: 16),
             ],
             
             // Password Input
-            TextField(
+            Material(
+              color: Colors.transparent,
+              child: TextField(
               controller: _passwordController,
               obscureText: true,
               decoration: InputDecoration(
@@ -189,6 +197,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   borderSide: BorderSide(color: theme.colors.primary),
                 ),
                 prefixIcon: const Icon(Icons.lock),
+              ),
               ),
             ),
             

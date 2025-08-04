@@ -210,41 +210,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           const SizedBox(height: 16),
                           
                           // API Key Input
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _apiKeyController,
-                                  obscureText: !_apiKeyVisible,
-                                  decoration: InputDecoration(
-                                    labelText: 'Gemini API Key',
-                                    hintText: 'API 키를 입력하세요',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide(color: theme.colors.border),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide(color: theme.colors.border),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide(color: theme.colors.primary),
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _apiKeyVisible ? Icons.visibility_off : Icons.visibility,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _apiKeyVisible = !_apiKeyVisible;
-                                        });
-                                      },
-                                    ),
+                          Material(
+                            color: Colors.transparent,
+                            child: TextField(
+                              controller: _apiKeyController,
+                              obscureText: !_apiKeyVisible,
+                              decoration: InputDecoration(
+                                labelText: 'Gemini API Key',
+                                hintText: 'API 키를 입력하세요',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: theme.colors.border),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: theme.colors.border),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: theme.colors.primary),
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _apiKeyVisible ? Icons.visibility_off : Icons.visibility,
                                   ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _apiKeyVisible = !_apiKeyVisible;
+                                    });
+                                  },
                                 ),
                               ),
-                            ],
+                            ),
                           ),
                           const SizedBox(height: 12),
                           FButton(
