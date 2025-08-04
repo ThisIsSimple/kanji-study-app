@@ -281,7 +281,7 @@ class KanjiGridCard extends StatelessWidget {
                           color: theme.colors.primary,
                           fontWeight: FontWeight.w600,
                           fontFamily: 'SUITE',
-                          fontSize: 11,
+                          fontSize: 13,
                           height: 1.2,
                         ),
                         textAlign: TextAlign.center,
