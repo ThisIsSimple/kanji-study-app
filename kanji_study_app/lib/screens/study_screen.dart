@@ -95,7 +95,10 @@ class _StudyScreenState extends State<StudyScreen> {
     
     return FScaffold(
       header: FHeader.nested(
-        title: const Text('한자 학습'),
+        title: Text(
+          '한자 학습',
+          style: TextStyle(fontFamily: 'SUITE'),
+        ),
         prefixes: [
           FHeaderAction.back(
             onPress: () => Navigator.of(context).pop(),
@@ -136,6 +139,7 @@ class _StudyScreenState extends State<StudyScreen> {
                             '의미',
                             style: theme.typography.sm.copyWith(
                               color: theme.colors.mutedForeground,
+                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -143,6 +147,7 @@ class _StudyScreenState extends State<StudyScreen> {
                             widget.kanji.meanings.join(', '),
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'SUITE',
                             ),
                           ),
                         ],
@@ -154,7 +159,10 @@ class _StudyScreenState extends State<StudyScreen> {
                     FButton(
                       onPress: _toggleDetails,
                       style: FButtonStyle.outline(),
-                      child: Text(_showDetails ? '상세 정보 숨기기' : '상세 정보 보기'),
+                      child: Text(
+                        _showDetails ? '상세 정보 숨기기' : '상세 정보 보기',
+                        style: TextStyle(fontFamily: 'SUITE'),
+                      ),
                     ),
                   ],
                 ),
@@ -176,6 +184,7 @@ class _StudyScreenState extends State<StudyScreen> {
                         '읽기',
                         style: theme.typography.lg.copyWith(
                           fontWeight: FontWeight.bold,
+                          fontFamily: 'SUITE',
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -218,6 +227,7 @@ class _StudyScreenState extends State<StudyScreen> {
                               '일본어 음독 (音読み)',
                               style: theme.typography.sm.copyWith(
                                 color: theme.colors.mutedForeground,
+                                fontFamily: 'SUITE',
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -250,6 +260,7 @@ class _StudyScreenState extends State<StudyScreen> {
                               '일본어 훈독 (訓読み)',
                               style: theme.typography.sm.copyWith(
                                 color: theme.colors.mutedForeground,
+                                fontFamily: 'SUITE',
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -297,6 +308,7 @@ class _StudyScreenState extends State<StudyScreen> {
                             '예시',
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'SUITE',
                             ),
                           ),
                           if (_geminiService.isInitialized)
@@ -309,7 +321,10 @@ class _StudyScreenState extends State<StudyScreen> {
                                       height: 16,
                                       child: CircularProgressIndicator(strokeWidth: 2),
                                     )
-                                  : const Text('AI 예문 생성'),
+                                  : Text(
+                                      'AI 예문 생성',
+                                      style: TextStyle(fontFamily: 'SUITE'),
+                                    ),
                             ),
                         ],
                       ),
@@ -352,6 +367,7 @@ class _StudyScreenState extends State<StudyScreen> {
                                     example.korean,
                                     style: theme.typography.base.copyWith(
                                       fontWeight: FontWeight.w500,
+                                      fontFamily: 'SUITE',
                                     ),
                                   ),
                                 ],
@@ -385,6 +401,7 @@ class _StudyScreenState extends State<StudyScreen> {
                           '예문이 없습니다.',
                           style: theme.typography.base.copyWith(
                             color: theme.colors.mutedForeground,
+                            fontFamily: 'SUITE',
                           ),
                         ),
                       ],
@@ -399,7 +416,10 @@ class _StudyScreenState extends State<StudyScreen> {
             // Complete Study Button
             FButton(
               onPress: _isCompleted ? null : _markAsStudied,
-              child: Text(_isCompleted ? '학습 완료됨' : '학습 완료'),
+              child: Text(
+                _isCompleted ? '학습 완료됨' : '학습 완료',
+                style: TextStyle(fontFamily: 'SUITE'),
+              ),
             ),
           ],
         ),

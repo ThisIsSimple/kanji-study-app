@@ -95,7 +95,10 @@ class _WordsScreenState extends State<WordsScreen> {
     
     return FScaffold(
       header: FHeader(
-        title: const Text('단어 목록'),
+        title: Text(
+          '단어 목록',
+          style: TextStyle(fontFamily: 'SUITE'),
+        ),
       ),
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -132,6 +135,7 @@ class _WordsScreenState extends State<WordsScreen> {
                         '전체 ${_filteredKanji.length}개',
                         style: theme.typography.sm.copyWith(
                           color: theme.colors.mutedForeground,
+                          fontFamily: 'SUITE',
                         ),
                       ),
                     ],
@@ -152,6 +156,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                     '검색 결과가 없습니다',
                                     style: theme.typography.base.copyWith(
                                       color: theme.colors.mutedForeground,
+                                      fontFamily: 'SUITE',
                                     ),
                                   ),
                                 ),
@@ -219,6 +224,7 @@ class _WordsScreenState extends State<WordsScreen> {
                               kanji.meanings.join(', '),
                               style: theme.typography.base.copyWith(
                                 fontWeight: FontWeight.w600,
+                                fontFamily: 'SUITE',
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -251,6 +257,7 @@ class _WordsScreenState extends State<WordsScreen> {
                           '일본어: ${kanji.readings.kun.join(', ')}${kanji.readings.kun.isNotEmpty && kanji.readings.on.isNotEmpty ? ', ' : ''}${kanji.readings.on.join(', ')}',
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.mutedForeground,
+                            fontFamily: 'SUITE',
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
