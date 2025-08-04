@@ -142,7 +142,7 @@ class _WordsScreenState extends State<WordsScreen> {
                   ),
                 ),
                 
-                // Kanji List
+                // Kanji Grid
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: () => _loadKanji(forceReload: true),
@@ -163,12 +163,18 @@ class _WordsScreenState extends State<WordsScreen> {
                               ),
                             ],
                           )
-                        : ListView.builder(
+                        : GridView.builder(
                             padding: const EdgeInsets.all(16.0),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              childAspectRatio: 0.8,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                            ),
                             itemCount: _filteredKanji.length,
                             itemBuilder: (context, index) {
                               final kanji = _filteredKanji[index];
-                              return _buildKanjiTile(kanji);
+                              return _buildKanjiCard(kanji);
                             },
                           ),
                   ),
@@ -179,100 +185,105 @@ class _WordsScreenState extends State<WordsScreen> {
   }
 
 
-  Widget _buildKanjiTile(Kanji kanji) {
+  Widget _buildKanjiCard(Kanji kanji) {
     final theme = FTheme.of(context);
     final progress = _kanjiService.getProgress(kanji.character);
+    final isFavorite = _kanjiService.isFavorite(kanji.character);
     
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: GestureDetector(
-        onTap: () => _navigateToStudy(kanji),
-        child: FCard(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                // Kanji Character
-                Container(
-                  width: 60,
-                  height: 60,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: theme.colors.secondary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
+    return GestureDetector(
+      onTap: () => _navigateToStudy(kanji),
+      child: FCard(
+        child: Stack(
+          children: [
+            // Main content
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Kanji Character
+                  Text(
                     kanji.character,
                     style: GoogleFonts.notoSerifJp(
-                      fontSize: 32,
+                      fontSize: 48,
                       fontWeight: FontWeight.bold,
                       color: theme.colors.foreground,
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                
-                // Kanji Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              kanji.meanings.join(', '),
-                              style: theme.typography.base.copyWith(
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'SUITE',
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (progress != null && progress.mastered)
-                            Icon(
-                              Icons.check_circle,
-                              size: 16,
-                              color: theme.colors.primary,
-                            ),
-                        ],
+                  const SizedBox(height: 8),
+                  
+                  // Korean readings
+                  if (hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings)) ...[
+                    Text(
+                      formatKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings),
+                      style: theme.typography.sm.copyWith(
+                        color: theme.colors.primary,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'SUITE',
                       ),
-                      const SizedBox(height: 4),
-                      // Korean readings
-                      if (hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings)) ...[
-                        Text(
-                          '한국어: ${formatKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings)}',
-                          style: theme.typography.sm.copyWith(
-                            color: theme.colors.primary,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'SUITE',
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                      ],
-                      // Japanese readings
-                      if (kanji.readings.kun.isNotEmpty || kanji.readings.on.isNotEmpty)
-                        Text(
-                          '일본어: ${kanji.readings.kun.join(', ')}${kanji.readings.kun.isNotEmpty && kanji.readings.on.isNotEmpty ? ', ' : ''}${kanji.readings.on.join(', ')}',
-                          style: theme.typography.sm.copyWith(
-                            color: theme.colors.mutedForeground,
-                            fontFamily: 'SUITE',
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                    ],
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                  
+                  // Japanese readings
+                  if (kanji.readings.kun.isNotEmpty || kanji.readings.on.isNotEmpty)
+                    Text(
+                      '${kanji.readings.kun.join(', ')}${kanji.readings.kun.isNotEmpty && kanji.readings.on.isNotEmpty ? ', ' : ''}${kanji.readings.on.join(', ')}',
+                      style: theme.typography.xs.copyWith(
+                        color: theme.colors.mutedForeground,
+                        fontFamily: 'SUITE',
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
+            
+            // Top left - Check mark for mastered
+            if (progress != null && progress.mastered)
+              Positioned(
+                top: 8,
+                left: 8,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: theme.colors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check,
+                    size: 12,
+                    color: theme.colors.background,
                   ),
                 ),
-                
-                // Arrow
-                Icon(
-                  Icons.chevron_right,
-                  color: theme.colors.mutedForeground,
+              ),
+            
+            // Top right - Favorite button
+            Positioned(
+              top: 4,
+              right: 4,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _kanjiService.toggleFavorite(kanji.character);
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(
+                    isFavorite ? Icons.star : Icons.star_border,
+                    size: 20,
+                    color: isFavorite ? Colors.amber : theme.colors.mutedForeground,
+                  ),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

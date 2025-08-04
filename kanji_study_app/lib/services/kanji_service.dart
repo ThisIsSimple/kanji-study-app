@@ -13,15 +13,18 @@ class KanjiService {
   
   final KanjiRepository _repository = KanjiRepository.instance;
   final Map<String, UserProgress> _progressMap = {};
+  final Set<String> _favoriteKanji = {};
   
   Future<void> init() async {
     await _repository.loadKanjiData();
     await _loadProgress();
+    await _loadFavorites();
   }
   
   Future<void> reloadData() async {
     await _repository.reloadKanjiData();
     await _loadProgress();
+    await _loadFavorites();
   }
   
   Future<void> _loadProgress() async {
@@ -45,6 +48,38 @@ class KanjiService {
     });
     
     await prefs.setString('user_progress', json.encode(data));
+  }
+  
+  Future<void> _loadFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    final favoritesData = prefs.getStringList('favorite_kanji') ?? [];
+    _favoriteKanji.clear();
+    _favoriteKanji.addAll(favoritesData);
+  }
+  
+  Future<void> _saveFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('favorite_kanji', _favoriteKanji.toList());
+  }
+  
+  bool isFavorite(String character) {
+    return _favoriteKanji.contains(character);
+  }
+  
+  Future<void> toggleFavorite(String character) async {
+    if (_favoriteKanji.contains(character)) {
+      _favoriteKanji.remove(character);
+    } else {
+      _favoriteKanji.add(character);
+    }
+    await _saveFavorites();
+  }
+  
+  List<Kanji> getFavoriteKanji() {
+    return _favoriteKanji
+        .map((char) => _repository.getKanjiByCharacter(char))
+        .whereType<Kanji>()
+        .toList();
   }
   
   Kanji getTodayKanji() {
