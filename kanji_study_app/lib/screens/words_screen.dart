@@ -27,9 +27,14 @@ class _WordsScreenState extends State<WordsScreen> {
     _loadKanji();
   }
 
-  Future<void> _loadKanji() async {
+  Future<void> _loadKanji({bool forceReload = false}) async {
     try {
-      await _kanjiService.init();
+      if (forceReload) {
+        // Force reload from Supabase
+        await _kanjiService.repository.reloadKanjiData();
+      } else {
+        await _kanjiService.init();
+      }
       setState(() {
         _allKanji = _kanjiService.getAllKanji();
         _applyFilters();
@@ -135,23 +140,33 @@ class _WordsScreenState extends State<WordsScreen> {
                 
                 // Kanji List
                 Expanded(
-                  child: _filteredKanji.isEmpty
-                      ? Center(
-                          child: Text(
-                            '검색 결과가 없습니다',
-                            style: theme.typography.base.copyWith(
-                              color: theme.colors.mutedForeground,
-                            ),
+                  child: RefreshIndicator(
+                    onRefresh: () => _loadKanji(forceReload: true),
+                    child: _filteredKanji.isEmpty
+                        ? ListView(
+                            children: [
+                              SizedBox(
+                                height: MediaQuery.of(context).size.height * 0.5,
+                                child: Center(
+                                  child: Text(
+                                    '검색 결과가 없습니다',
+                                    style: theme.typography.base.copyWith(
+                                      color: theme.colors.mutedForeground,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16.0),
+                            itemCount: _filteredKanji.length,
+                            itemBuilder: (context, index) {
+                              final kanji = _filteredKanji[index];
+                              return _buildKanjiTile(kanji);
+                            },
                           ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16.0),
-                          itemCount: _filteredKanji.length,
-                          itemBuilder: (context, index) {
-                            final kanji = _filteredKanji[index];
-                            return _buildKanjiTile(kanji);
-                          },
-                        ),
+                  ),
                 ),
               ],
             ),

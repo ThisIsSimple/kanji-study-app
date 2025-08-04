@@ -40,6 +40,18 @@ class KanjiRepository {
     }
   }
   
+  // Clear cached data
+  void clearCache() {
+    _kanjiList = null;
+    _kanjiMap = null;
+  }
+  
+  // Force reload data from Supabase
+  Future<void> reloadKanjiData() async {
+    clearCache();
+    await loadKanjiData();
+  }
+  
   // Get all kanji
   List<Kanji> getAllKanji() {
     return _kanjiList ?? [];
