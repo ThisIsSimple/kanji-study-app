@@ -31,7 +31,7 @@ class _WordsScreenState extends State<WordsScreen> {
     try {
       if (forceReload) {
         // Force reload from Supabase
-        await _kanjiService.repository.reloadKanjiData();
+        await _kanjiService.reloadData();
       } else {
         await _kanjiService.init();
       }

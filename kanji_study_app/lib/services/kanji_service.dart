@@ -19,6 +19,11 @@ class KanjiService {
     await _loadProgress();
   }
   
+  Future<void> reloadData() async {
+    await _repository.reloadKanjiData();
+    await _loadProgress();
+  }
+  
   Future<void> _loadProgress() async {
     final prefs = await SharedPreferences.getInstance();
     final progressData = prefs.getString('user_progress');
