@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/kanji_model.dart';
+import '../models/kanji_example.dart';
 import '../services/kanji_service.dart';
+import '../services/gemini_service.dart';
 
 class StudyScreen extends StatefulWidget {
   final Kanji kanji;
@@ -18,13 +20,45 @@ class StudyScreen extends StatefulWidget {
 
 class _StudyScreenState extends State<StudyScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
+  final GeminiService _geminiService = GeminiService.instance;
   bool _showDetails = false;
   bool _isCompleted = false;
+  bool _isGeneratingExamples = false;
+  List<KanjiExample>? _generatedExamples;
 
   void _toggleDetails() {
     setState(() {
       _showDetails = !_showDetails;
     });
+  }
+
+  Future<void> _generateExamples() async {
+    if (_isGeneratingExamples) return;
+    
+    setState(() {
+      _isGeneratingExamples = true;
+    });
+    
+    try {
+      final examples = await _geminiService.generateExamples(widget.kanji);
+      setState(() {
+        _generatedExamples = examples;
+        _isGeneratingExamples = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isGeneratingExamples = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('예문 생성 실패: $e'),
+            backgroundColor: FTheme.of(context).colors.destructive,
+          ),
+        );
+      }
+    }
   }
 
   void _markAsStudied() async {
@@ -289,33 +323,104 @@ class _StudyScreenState extends State<StudyScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '예시',
-                        style: theme.typography.lg.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ...widget.kanji.examples.map((example) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12.0),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: theme.colors.secondary.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: theme.colors.border,
-                                width: 1,
-                              ),
-                            ),
-                            child: Text(
-                              example,
-                              style: theme.typography.base,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '예시',
+                            style: theme.typography.lg.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        );
-                      }),
+                          if (_geminiService.isInitialized)
+                            FButton(
+                              onPress: _isGeneratingExamples ? null : _generateExamples,
+                              style: FButtonStyle.outline(),
+                              child: _isGeneratingExamples
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Text('AI 예문 생성'),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Display generated examples if available, otherwise show default examples
+                      if (_generatedExamples != null) ...[
+                        ..._generatedExamples!.map((example) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16.0),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: theme.colors.primary.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: theme.colors.primary.withValues(alpha: 0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    example.japanese,
+                                    style: GoogleFonts.notoSerifJp(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500,
+                                      color: theme.colors.foreground,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    example.hiragana,
+                                    style: theme.typography.sm.copyWith(
+                                      color: theme.colors.mutedForeground,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    example.korean,
+                                    style: theme.typography.base.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ] else if (widget.kanji.examples.isNotEmpty) ...[
+                        ...widget.kanji.examples.map((example) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: theme.colors.secondary.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: theme.colors.border,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                example.toString(),
+                                style: theme.typography.base,
+                              ),
+                            ),
+                          );
+                        }),
+                      ] else ...[
+                        Text(
+                          '예문이 없습니다.',
+                          style: theme.typography.base.copyWith(
+                            color: theme.colors.mutedForeground,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

@@ -1,3 +1,5 @@
+import 'kanji_example.dart';
+
 class Kanji {
   final int id;
   final String character;
@@ -7,7 +9,7 @@ class Kanji {
   final int jlpt;
   final int strokeCount;
   final int frequency;
-  final List<String> examples;
+  final List<KanjiExample> examples;
 
   const Kanji({
     required this.id,
@@ -22,6 +24,27 @@ class Kanji {
   });
 
   factory Kanji.fromJson(Map<String, dynamic> json) {
+    // Handle legacy format (List<String>) and new format (List<KanjiExample>)
+    List<KanjiExample> parseExamples(dynamic examplesData) {
+      if (examplesData == null || examplesData is! List) {
+        return [];
+      }
+      
+      final List<KanjiExample> result = [];
+      for (final example in examplesData) {
+        if (example is String) {
+          // Legacy format: convert string to KanjiExample
+          result.add(KanjiExample.fromString(example));
+        } else if (example is Map<String, dynamic>) {
+          // New format: parse as KanjiExample
+          result.add(KanjiExample.fromJson(example));
+        } else {
+          result.add(KanjiExample.fromString(example.toString()));
+        }
+      }
+      return result;
+    }
+
     return Kanji(
       id: json['id'] as int,
       character: json['character'] as String,
@@ -31,7 +54,7 @@ class Kanji {
       jlpt: json['jlpt'] as int,
       strokeCount: json['strokeCount'] as int,
       frequency: json['frequency'] as int,
-      examples: List<String>.from(json['examples'] as List),
+      examples: parseExamples(json['examples']),
     );
   }
 
@@ -45,7 +68,7 @@ class Kanji {
       'jlpt': jlpt,
       'strokeCount': strokeCount,
       'frequency': frequency,
-      'examples': examples,
+      'examples': examples.map((e) => e.toJson()).toList(),
     };
   }
 }

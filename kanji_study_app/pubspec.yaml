@@ -39,6 +39,7 @@ dependencies:
   timezone: ^0.10.1
   shared_preferences: ^2.5.3
   google_fonts: ^6.3.0
+  flutter_gemini: ^3.0.0
 
 dev_dependencies:
   flutter_test:

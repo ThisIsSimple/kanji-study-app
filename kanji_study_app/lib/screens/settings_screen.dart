@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import '../services/notification_service.dart';
+import '../services/gemini_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -11,19 +12,29 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final NotificationService _notificationService = NotificationService.instance;
+  final GeminiService _geminiService = GeminiService.instance;
+  final TextEditingController _apiKeyController = TextEditingController();
   bool _notificationsEnabled = false;
   TimeOfDay _selectedTime = const TimeOfDay(hour: 9, minute: 0);
   bool _isLoading = true;
+  bool _apiKeyVisible = false;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
   }
+  
+  @override
+  void dispose() {
+    _apiKeyController.dispose();
+    super.dispose();
+  }
 
   Future<void> _loadSettings() async {
     final enabled = await _notificationService.areNotificationsEnabled();
     final scheduledTime = await _notificationService.getScheduledTime();
+    await _geminiService.init();
     
     setState(() {
       _notificationsEnabled = enabled;
@@ -32,6 +43,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           hour: scheduledTime['hour']!,
           minute: scheduledTime['minute']!,
         );
+      }
+      if (_geminiService.apiKey != null) {
+        _apiKeyController.text = _geminiService.apiKey!;
       }
       _isLoading = false;
     });
@@ -167,6 +181,106 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                             ),
                           ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Gemini API Settings Card
+                  FCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'AI 설정',
+                            style: theme.typography.lg.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Gemini API를 사용하여 예문 생성 및 학습 콘텐츠를 만들 수 있습니다.',
+                            style: theme.typography.sm.copyWith(
+                              color: theme.colors.mutedForeground,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          
+                          // API Key Input
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _apiKeyController,
+                                  obscureText: !_apiKeyVisible,
+                                  decoration: InputDecoration(
+                                    labelText: 'Gemini API Key',
+                                    hintText: 'API 키를 입력하세요',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(color: theme.colors.border),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(color: theme.colors.border),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(color: theme.colors.primary),
+                                    ),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _apiKeyVisible ? Icons.visibility_off : Icons.visibility,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _apiKeyVisible = !_apiKeyVisible;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          FButton(
+                            onPress: () async {
+                              final apiKey = _apiKeyController.text.trim();
+                              if (apiKey.isNotEmpty) {
+                                await _geminiService.setApiKey(apiKey);
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('API 키가 저장되었습니다.'),
+                                  ),
+                                );
+                              }
+                            },
+                            style: FButtonStyle.outline(),
+                            child: const Text('API 키 저장'),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () {
+                              // Open AI Studio link
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('브라우저에서 ai.google.dev를 방문하여 API 키를 생성하세요.'),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              'API 키 받기 →',
+                              style: theme.typography.sm.copyWith(
+                                color: theme.colors.primary,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
