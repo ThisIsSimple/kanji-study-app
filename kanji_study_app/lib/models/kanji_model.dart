@@ -5,6 +5,8 @@ class Kanji {
   final String character;
   final List<String> meanings;
   final KanjiReadings readings;
+  final List<String> koreanOnReadings;   // 한글 음독
+  final List<String> koreanKunReadings;  // 한글 훈독
   final int grade;
   final int jlpt;
   final int strokeCount;
@@ -16,6 +18,8 @@ class Kanji {
     required this.character,
     required this.meanings,
     required this.readings,
+    this.koreanOnReadings = const [],
+    this.koreanKunReadings = const [],
     required this.grade,
     required this.jlpt,
     required this.strokeCount,
@@ -50,6 +54,12 @@ class Kanji {
       character: json['character'] as String,
       meanings: List<String>.from(json['meanings'] as List),
       readings: KanjiReadings.fromJson(json['readings'] as Map<String, dynamic>),
+      koreanOnReadings: json['korean_on_readings'] != null 
+          ? List<String>.from(json['korean_on_readings'] as List)
+          : [],
+      koreanKunReadings: json['korean_kun_readings'] != null
+          ? List<String>.from(json['korean_kun_readings'] as List)
+          : [],
       grade: json['grade'] as int,
       jlpt: json['jlpt'] as int,
       strokeCount: json['strokeCount'] as int,
@@ -64,6 +74,8 @@ class Kanji {
       'character': character,
       'meanings': meanings,
       'readings': readings.toJson(),
+      'korean_on_readings': koreanOnReadings,
+      'korean_kun_readings': koreanKunReadings,
       'grade': grade,
       'jlpt': jlpt,
       'strokeCount': strokeCount,

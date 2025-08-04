@@ -543,7 +543,8 @@ class SupabaseService {
   /// Get all kanji from database
   Future<List<Map<String, dynamic>>> getAllKanji({int? grade, int? jlpt}) async {
     try {
-      var query = _client.from(SupabaseConfig.kanjiTable).select();
+      var query = _client.from(SupabaseConfig.kanjiTable)
+          .select('*, korean_on_readings, korean_kun_readings');
       
       if (grade != null) {
         query = query.eq('grade', grade);
@@ -555,7 +556,28 @@ class SupabaseService {
       
       final response = await query.order('frequency');
       
-      return (response as List).cast<Map<String, dynamic>>();
+      // Transform data to match expected format
+      final List<Map<String, dynamic>> result = [];
+      for (final item in response as List) {
+        result.add({
+          'id': item['id'],
+          'character': item['character'],
+          'meanings': item['meanings'],
+          'readings': {
+            'on': item['on_readings'] ?? [],
+            'kun': item['kun_readings'] ?? [],
+          },
+          'korean_on_readings': item['korean_on_readings'] ?? [],
+          'korean_kun_readings': item['korean_kun_readings'] ?? [],
+          'grade': item['grade'],
+          'jlpt': item['jlpt'],
+          'strokeCount': item['stroke_count'],
+          'frequency': item['frequency'],
+          'examples': [],
+        });
+      }
+      
+      return result;
     } catch (e) {
       debugPrint('Error getting all kanji: $e');
       rethrow;
