@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'services/notification_service.dart';
 import 'services/gemini_service.dart';
+import 'services/supabase_service.dart';
 import 'screens/main_screen.dart';
 
 void main() async {
@@ -10,6 +11,9 @@ void main() async {
   
   // Initialize timezone
   tz.initializeTimeZones();
+  
+  // Initialize Supabase
+  await SupabaseService.instance.init();
   
   // Initialize notification service
   await NotificationService.instance.init();

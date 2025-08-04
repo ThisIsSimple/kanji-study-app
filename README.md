@@ -25,6 +25,17 @@
 - Forui UI 라이브러리 사용
 - 깔끔하고 직관적인 인터페이스
 - 다크/라이트 테마 지원 (zinc 테마)
+- Noto Serif Japanese 폰트로 한자 표시
+
+### 🤖 AI 기능
+- Gemini API를 통한 예문 자동 생성
+- 일본어/히라가나/한국어 번역 제공
+- 향후 시험 문제 생성 기능 추가 예정
+
+### ☁️ 클라우드 동기화
+- Supabase를 통한 학습 진도 동기화
+- 여러 기기에서 학습 이어하기
+- 안전한 사용자 인증
 
 ## 기술 스택
 
@@ -33,6 +44,9 @@
 - **State Management**: SharedPreferences
 - **Notifications**: flutter_local_notifications
 - **Data Source**: Excel → JSON 변환
+- **Backend**: Supabase (Authentication, Database, Storage)
+- **AI Integration**: Google Gemini API (예문 생성)
+- **Fonts**: Google Fonts (Noto Serif Japanese)
 
 ## 설치 및 실행
 
@@ -67,11 +81,19 @@ kanji_study_app/
 │   ├── screens/               # 화면
 │   │   ├── home_screen.dart   # 홈 화면
 │   │   ├── study_screen.dart  # 학습 화면
-│   │   └── settings_screen.dart # 설정 화면
-│   └── services/              # 서비스
-│       ├── kanji_repository.dart # 한자 데이터 저장소
-│       ├── kanji_service.dart    # 한자 비즈니스 로직
-│       └── notification_service.dart # 알림 서비스
+│   │   ├── settings_screen.dart # 설정 화면
+│   │   ├── main_screen.dart     # 바텀 네비게이션
+│   │   ├── words_screen.dart    # 단어 목록 화면
+│   │   ├── profile_screen.dart  # 프로필 화면
+│   │   └── auth_screen.dart     # 로그인/회원가입 화면
+│   ├── services/              # 서비스
+│   │   ├── kanji_repository.dart    # 한자 데이터 저장소
+│   │   ├── kanji_service.dart       # 한자 비즈니스 로직
+│   │   ├── notification_service.dart # 알림 서비스
+│   │   ├── gemini_service.dart      # AI 예문 생성 서비스
+│   │   └── supabase_service.dart    # 클라우드 동기화 서비스
+│   └── config/                # 설정
+│       └── supabase_config.dart # Supabase 설정
 ├── assets/
 │   └── data/
 │       └── kanji_data.json    # 한자 데이터 (2136자)
