@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'services/notification_service.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +28,7 @@ class KanjiStudyApp extends StatelessWidget {
         data: FThemes.zinc.light,
         child: child!,
       ),
-      home: const HomeScreen(),
+      home: const MainScreen(),
     );
   }
 }

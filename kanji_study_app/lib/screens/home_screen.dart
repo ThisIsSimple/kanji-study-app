@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/kanji_model.dart';
 import '../services/kanji_service.dart';
 import '../services/notification_service.dart';
 import 'study_screen.dart';
-import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -86,28 +86,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _navigateToSettings() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const SettingsScreen(),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     
     return FScaffold(
-      header: FHeader(
-        title: const Text('한자 학습'),
-        suffixes: [
-          FHeaderAction(
-            icon: Icon(Icons.settings),
-            onPress: _navigateToSettings,
-          ),
-        ],
+      header: const FHeader(
+        title: Text('한자 학습'),
       ),
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -186,9 +172,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 24),
                     Text(
                       todayKanji!.character,
-                      style: theme.typography.xl.copyWith(
-                        fontWeight: FontWeight.bold,
+                      style: GoogleFonts.notoSerifJp(
                         fontSize: 72,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colors.foreground,
                       ),
                     ),
                     const SizedBox(height: 16),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/kanji_model.dart';
 import '../services/kanji_service.dart';
 
@@ -79,9 +80,10 @@ class _StudyScreenState extends State<StudyScreen> {
                   children: [
                     Text(
                       widget.kanji.character,
-                      style: theme.typography.xl.copyWith(
-                        fontWeight: FontWeight.bold,
+                      style: GoogleFonts.notoSerifJp(
                         fontSize: 72,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colors.foreground,
                       ),
                     ),
                     const SizedBox(height: 24),
