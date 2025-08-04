@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'home_screen.dart';
 import 'words_screen.dart';
 import 'quiz_list_screen.dart';
@@ -54,25 +55,25 @@ class _MainScreenState extends State<MainScreen> {
             fontWeight: FontWeight.w600,
           ),
           unselectedLabelStyle: theme.typography.sm,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
+              icon: Icon(PhosphorIconsRegular.house),
+              activeIcon: Icon(PhosphorIconsFill.house),
               label: '홈',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.book_outlined),
-              activeIcon: Icon(Icons.book),
+              icon: Icon(PhosphorIconsRegular.bookOpen),
+              activeIcon: Icon(PhosphorIconsFill.bookOpen),
               label: '단어',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.quiz_outlined),
-              activeIcon: Icon(Icons.quiz),
+              icon: Icon(PhosphorIconsRegular.question),
+              activeIcon: Icon(PhosphorIconsFill.question),
               label: '퀴즈',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
+              icon: Icon(PhosphorIconsRegular.user),
+              activeIcon: Icon(PhosphorIconsFill.user),
               label: '프로필',
             ),
           ],

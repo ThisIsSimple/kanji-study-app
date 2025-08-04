@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
 import '../services/kanji_service.dart';
 import '../utils/korean_formatter.dart';
@@ -110,7 +111,7 @@ class _WordsScreenState extends State<WordsScreen> {
                         onChanged: _onSearchChanged,
                         decoration: InputDecoration(
                           hintText: '한자, 의미, 읽기로 검색...',
-                          prefixIcon: const Icon(Icons.search),
+                          prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(color: theme.colors.border),
@@ -233,7 +234,7 @@ class KanjiGridCard extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        Icons.check,
+                        PhosphorIconsFill.check,
                         size: 14,
                         color: theme.colors.background,
                       ),
@@ -245,7 +246,7 @@ class KanjiGridCard extends StatelessWidget {
                   GestureDetector(
                     onTap: onFavoriteToggle,
                     child: Icon(
-                      isFavorite ? Icons.star : Icons.star_border,
+                      isFavorite ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
                       size: 20,
                       color: isFavorite ? Colors.amber : theme.colors.mutedForeground,
                     ),

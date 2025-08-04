@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
 import '../services/kanji_service.dart';
 import '../services/notification_service.dart';
@@ -102,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 64),
+                      Icon(PhosphorIconsRegular.warningCircle, size: 64),
                       const SizedBox(height: 16),
                       Text(
                         '한자 데이터를 불러올 수 없습니다',

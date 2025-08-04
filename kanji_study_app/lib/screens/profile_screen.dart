@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../services/kanji_service.dart';
 import 'settings_screen.dart';
 
@@ -65,7 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text('프로필'),
         suffixes: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: Icon(PhosphorIconsRegular.gear),
             onPressed: _navigateToSettings,
           ),
         ],
@@ -91,7 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              Icons.person,
+                              PhosphorIconsFill.user,
                               size: 40,
                               color: theme.colors.primary,
                             ),
