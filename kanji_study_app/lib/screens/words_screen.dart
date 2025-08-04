@@ -259,9 +259,8 @@ class KanjiGridCard extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Spacer(flex: 1),
+                    const SizedBox(height: 4),
                     // Kanji Character
                     Text(
                       kanji.character,
@@ -289,7 +288,7 @@ class KanjiGridCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    const Spacer(flex: 2),
+                    const Spacer(),
                   ],
                 ),
               ),
