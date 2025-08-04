@@ -7,9 +7,14 @@ class SupabaseConfig {
   // Table names
   static const String usersTable = 'users';
   static const String userProgressTable = 'user_progress';
+  static const String kanjiTable = 'kanji';
   static const String kanjiExamplesTable = 'kanji_examples';
   static const String studySessionsTable = 'study_sessions';
-  static const String quizResultsTable = 'quiz_results';
+  static const String quizSetsTable = 'quiz_sets';
+  static const String quizQuestionsTable = 'quiz_questions';
+  static const String quizAttemptsTable = 'quiz_attempts';
+  static const String quizAnswersTable = 'quiz_answers';
+  static const String audioFilesTable = 'audio_files';
   
   // Storage buckets
   static const String profilePicturesBucket = 'profile-pictures';

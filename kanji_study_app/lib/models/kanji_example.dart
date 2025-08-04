@@ -2,6 +2,7 @@ class KanjiExample {
   final String japanese;      // 일본어 예문
   final String hiragana;      // 히라가나 읽기
   final String korean;        // 한국어 번역
+  final String? explanation;  // 해설 (퀴즈용)
   final DateTime? createdAt;  // 생성 시간
   final String? source;       // 출처 (gemini/manual/user)
 
@@ -9,6 +10,7 @@ class KanjiExample {
     required this.japanese,
     required this.hiragana,
     required this.korean,
+    this.explanation,
     this.createdAt,
     this.source = 'manual',
   });
@@ -18,6 +20,7 @@ class KanjiExample {
       japanese: json['japanese'] as String,
       hiragana: json['hiragana'] as String,
       korean: json['korean'] as String,
+      explanation: json['explanation'] as String?,
       createdAt: json['createdAt'] != null 
           ? DateTime.parse(json['createdAt'] as String)
           : null,
@@ -30,6 +33,7 @@ class KanjiExample {
       'japanese': japanese,
       'hiragana': hiragana,
       'korean': korean,
+      'explanation': explanation,
       'createdAt': createdAt?.toIso8601String(),
       'source': source,
     };
