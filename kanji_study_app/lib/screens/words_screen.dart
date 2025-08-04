@@ -167,7 +167,7 @@ class _WordsScreenState extends State<WordsScreen> {
                             padding: const EdgeInsets.all(16.0),
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 3,
-                              childAspectRatio: 0.8,
+                              childAspectRatio: 0.75,
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
                             ),
@@ -195,52 +195,60 @@ class _WordsScreenState extends State<WordsScreen> {
       child: FCard(
         child: Stack(
           children: [
-            // Main content
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Kanji Character
-                  Text(
-                    kanji.character,
-                    style: GoogleFonts.notoSerifJp(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colors.foreground,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  
-                  // Korean readings
-                  if (hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings)) ...[
+            // Main content - wrapped in Center and using intrinsic sizing
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Kanji Character
                     Text(
-                      formatKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings),
-                      style: theme.typography.sm.copyWith(
-                        color: theme.colors.primary,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'SUITE',
+                      kanji.character,
+                      style: GoogleFonts.notoSerifJp(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colors.foreground,
+                        height: 1.0,
                       ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                  ],
-                  
-                  // Japanese readings
-                  if (kanji.readings.kun.isNotEmpty || kanji.readings.on.isNotEmpty)
-                    Text(
-                      '${kanji.readings.kun.join(', ')}${kanji.readings.kun.isNotEmpty && kanji.readings.on.isNotEmpty ? ', ' : ''}${kanji.readings.on.join(', ')}',
-                      style: theme.typography.xs.copyWith(
-                        color: theme.colors.mutedForeground,
-                        fontFamily: 'SUITE',
+                    
+                    // Korean readings
+                    if (hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings)) ...[
+                      Text(
+                        formatKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings),
+                        style: theme.typography.xs.copyWith(
+                          color: theme.colors.primary,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'SUITE',
+                          fontSize: 10,
+                          height: 1.2,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
+                      const SizedBox(height: 2),
+                    ],
+                    
+                    // Japanese readings
+                    if (kanji.readings.kun.isNotEmpty || kanji.readings.on.isNotEmpty)
+                      Text(
+                        '${kanji.readings.kun.join(', ')}${kanji.readings.kun.isNotEmpty && kanji.readings.on.isNotEmpty ? ', ' : ''}${kanji.readings.on.join(', ')}',
+                        style: theme.typography.xs.copyWith(
+                          color: theme.colors.mutedForeground,
+                          fontFamily: 'SUITE',
+                          fontSize: 9,
+                          height: 1.2,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
               ),
             ),
             
