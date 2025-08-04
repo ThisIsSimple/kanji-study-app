@@ -30,7 +30,6 @@ class _WordsScreenState extends State<WordsScreen> {
   Future<void> _loadKanji({bool forceReload = false}) async {
     try {
       if (forceReload) {
-        // Force reload from Supabase
         await _kanjiService.reloadData();
       } else {
         await _kanjiService.init();
@@ -49,7 +48,6 @@ class _WordsScreenState extends State<WordsScreen> {
 
   void _applyFilters() {
     _filteredKanji = _allKanji.where((kanji) {
-      // 검색어 필터
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
         final matchesCharacter = kanji.character.contains(query);
@@ -68,7 +66,6 @@ class _WordsScreenState extends State<WordsScreen> {
           return false;
         }
       }
-      
       return true;
     }).toList();
   }
@@ -147,34 +144,35 @@ class _WordsScreenState extends State<WordsScreen> {
                   child: RefreshIndicator(
                     onRefresh: () => _loadKanji(forceReload: true),
                     child: _filteredKanji.isEmpty
-                        ? ListView(
-                            children: [
-                              SizedBox(
-                                height: MediaQuery.of(context).size.height * 0.5,
-                                child: Center(
-                                  child: Text(
-                                    '검색 결과가 없습니다',
-                                    style: theme.typography.base.copyWith(
-                                      color: theme.colors.mutedForeground,
-                                      fontFamily: 'SUITE',
-                                    ),
-                                  ),
-                                ),
+                        ? Center(
+                            child: Text(
+                              '검색 결과가 없습니다',
+                              style: theme.typography.base.copyWith(
+                                color: theme.colors.mutedForeground,
+                                fontFamily: 'SUITE',
                               ),
-                            ],
+                            ),
                           )
                         : GridView.builder(
-                            padding: const EdgeInsets.all(12.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 3,
                               childAspectRatio: 0.75,
-                              crossAxisSpacing: 8,
-                              mainAxisSpacing: 8,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
                             ),
                             itemCount: _filteredKanji.length,
                             itemBuilder: (context, index) {
                               final kanji = _filteredKanji[index];
-                              return _buildKanjiCard(kanji);
+                              return KanjiGridCard(
+                                kanji: kanji,
+                                onTap: () => _navigateToStudy(kanji),
+                                onFavoriteToggle: () {
+                                  setState(() {
+                                    _kanjiService.toggleFavorite(kanji.character);
+                                  });
+                                },
+                              );
                             },
                           ),
                   ),
@@ -183,62 +181,73 @@ class _WordsScreenState extends State<WordsScreen> {
             ),
     );
   }
+}
 
+// Separate widget for the grid card
+class KanjiGridCard extends StatelessWidget {
+  final Kanji kanji;
+  final VoidCallback onTap;
+  final VoidCallback onFavoriteToggle;
 
-  Widget _buildKanjiCard(Kanji kanji) {
+  const KanjiGridCard({
+    super.key,
+    required this.kanji,
+    required this.onTap,
+    required this.onFavoriteToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    final progress = _kanjiService.getProgress(kanji.character);
-    final isFavorite = _kanjiService.isFavorite(kanji.character);
+    final kanjiService = KanjiService.instance;
+    final progress = kanjiService.getProgress(kanji.character);
+    final isFavorite = kanjiService.isFavorite(kanji.character);
     
     return GestureDetector(
-      onTap: () => _navigateToStudy(kanji),
-      child: FCard(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.colors.background,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.colors.border,
+            width: 1,
+          ),
+        ),
         child: Column(
           children: [
             // Top bar with check and favorite
-            SizedBox(
-              height: 28,
+            Container(
+              height: 32,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Check mark
                   if (progress != null && progress.mastered)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          color: theme.colors.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.check,
-                          size: 14,
-                          color: theme.colors.background,
-                        ),
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: theme.colors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.check,
+                        size: 14,
+                        color: theme.colors.background,
                       ),
                     )
                   else
-                    const SizedBox(width: 28),
+                    const SizedBox(width: 20),
                   
                   // Favorite button
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          _kanjiService.toggleFavorite(kanji.character);
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Padding(
-                        padding: const EdgeInsets.all(6),
-                        child: Icon(
-                          isFavorite ? Icons.star : Icons.star_border,
-                          size: 18,
-                          color: isFavorite ? Colors.amber : theme.colors.mutedForeground,
-                        ),
-                      ),
+                  GestureDetector(
+                    onTap: onFavoriteToggle,
+                    child: Icon(
+                      isFavorite ? Icons.star : Icons.star_border,
+                      size: 20,
+                      color: isFavorite ? Colors.amber : theme.colors.mutedForeground,
                     ),
                   ),
                 ],
@@ -248,37 +257,34 @@ class _WordsScreenState extends State<WordsScreen> {
             // Main content
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Kanji Character
                     Flexible(
-                      flex: 3,
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        child: Text(
-                          kanji.character,
-                          style: GoogleFonts.notoSerifJp(
-                            fontSize: 50,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colors.foreground,
-                          ),
+                      child: Text(
+                        kanji.character,
+                        style: GoogleFonts.notoSerifJp(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colors.foreground,
+                          height: 1,
                         ),
                       ),
                     ),
                     const SizedBox(height: 4),
                     
                     // Korean readings
-                    if (hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings)) ...[
+                    if (hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings))
                       Flexible(
                         child: Text(
                           formatKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings),
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.primary,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
                             fontFamily: 'SUITE',
-                            fontSize: 13,
+                            fontSize: 11,
                             height: 1.1,
                           ),
                           textAlign: TextAlign.center,
@@ -286,8 +292,7 @@ class _WordsScreenState extends State<WordsScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                    ],
+                    const SizedBox(height: 2),
                     
                     // Japanese readings
                     if (kanji.readings.kun.isNotEmpty || kanji.readings.on.isNotEmpty)
@@ -297,7 +302,7 @@ class _WordsScreenState extends State<WordsScreen> {
                           style: theme.typography.xs.copyWith(
                             color: theme.colors.mutedForeground,
                             fontFamily: 'SUITE',
-                            fontSize: 11,
+                            fontSize: 9,
                             height: 1.1,
                           ),
                           textAlign: TextAlign.center,
@@ -309,7 +314,7 @@ class _WordsScreenState extends State<WordsScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
           ],
         ),
       ),
