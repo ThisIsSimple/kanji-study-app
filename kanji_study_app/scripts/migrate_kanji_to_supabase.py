@@ -16,7 +16,11 @@ SUPABASE_KEY = "sb_publishable_0d_TYnZ1PBpAkuJW5sgmuA_Kfu6EtYr"  # This should b
 def load_json_data(file_path: str) -> List[Dict[str, Any]]:
     """Load kanji data from JSON file"""
     with open(file_path, 'r', encoding='utf-8') as f:
-        return json.load(f)
+        data = json.load(f)
+        # JSON 구조가 {"kanji": [...]} 형태인 경우 처리
+        if isinstance(data, dict) and 'kanji' in data:
+            return data['kanji']
+        return data
 
 def prepare_kanji_data(kanji: Dict[str, Any]) -> Dict[str, Any]:
     """Prepare kanji data for database insertion"""
