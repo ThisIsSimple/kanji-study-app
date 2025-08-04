@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/kanji_model.dart';
 import '../services/kanji_service.dart';
+import '../utils/korean_formatter.dart';
 import 'study_screen.dart';
 
 class WordsScreen extends StatefulWidget {
@@ -217,9 +218,9 @@ class _WordsScreenState extends State<WordsScreen> {
                       ),
                       const SizedBox(height: 4),
                       // Korean readings
-                      if (kanji.koreanOnReadings.isNotEmpty || kanji.koreanKunReadings.isNotEmpty) ...[
+                      if (hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings)) ...[
                         Text(
-                          '한국어: ${kanji.koreanKunReadings.join(', ')}${kanji.koreanOnReadings.isNotEmpty && kanji.koreanKunReadings.isNotEmpty ? ', ' : ''}${kanji.koreanOnReadings.join(', ')}',
+                          '한국어: ${formatKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings)}',
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.primary,
                             fontWeight: FontWeight.w500,

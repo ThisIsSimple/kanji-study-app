@@ -5,6 +5,7 @@ import '../models/kanji_model.dart';
 import '../models/kanji_example.dart';
 import '../services/kanji_service.dart';
 import '../services/gemini_service.dart';
+import '../utils/korean_formatter.dart';
 
 class StudyScreen extends StatefulWidget {
   final Kanji kanji;
@@ -181,82 +182,37 @@ class _StudyScreenState extends State<StudyScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Korean readings first
-                          if (widget.kanji.koreanOnReadings.isNotEmpty) ...[
+                          // Korean reading
+                          if (hasKoreanReadings(widget.kanji.koreanKunReadings, widget.kanji.koreanOnReadings)) ...[
                             Text(
-                              '한국어 음독',
+                              '한국어',
                               style: theme.typography.sm.copyWith(
                                 color: theme.colors.mutedForeground,
                                 fontFamily: 'SUITE',
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 12,
-                              runSpacing: 8,
-                              children: widget.kanji.koreanOnReadings.map((reading) {
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: theme.colors.primary.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    reading,
-                                    style: theme.typography.base.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: theme.colors.primary,
-                                      fontFamily: 'SUITE',
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                          if (widget.kanji.koreanOnReadings.isNotEmpty && 
-                              widget.kanji.koreanKunReadings.isNotEmpty)
-                            const SizedBox(height: 16),
-                          if (widget.kanji.koreanKunReadings.isNotEmpty) ...[
-                            Text(
-                              '한국어 훈독',
-                              style: theme.typography.sm.copyWith(
-                                color: theme.colors.mutedForeground,
-                                fontFamily: 'SUITE',
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colors.primary.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                formatKoreanReadings(widget.kanji.koreanKunReadings, widget.kanji.koreanOnReadings),
+                                style: theme.typography.base.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colors.primary,
+                                  fontFamily: 'SUITE',
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 12,
-                              runSpacing: 8,
-                              children: widget.kanji.koreanKunReadings.map((reading) {
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: theme.colors.secondary.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    reading,
-                                    style: theme.typography.base.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: theme.colors.secondary,
-                                      fontFamily: 'SUITE',
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
+                            const SizedBox(height: 24),
                           ],
                           // Japanese readings
-                          if ((widget.kanji.koreanOnReadings.isNotEmpty || widget.kanji.koreanKunReadings.isNotEmpty) &&
-                              (widget.kanji.readings.on.isNotEmpty || widget.kanji.readings.kun.isNotEmpty))
-                            const SizedBox(height: 24),
                           if (widget.kanji.readings.on.isNotEmpty) ...[
                             Text(
                               '일본어 음독 (音読み)',

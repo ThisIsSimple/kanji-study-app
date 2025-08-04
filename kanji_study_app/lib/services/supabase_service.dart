@@ -554,7 +554,7 @@ class SupabaseService {
         query = query.eq('jlpt', jlpt);
       }
       
-      final response = await query.order('frequency');
+      final response = await query.order('id');
       
       // Transform data to match expected format
       final List<Map<String, dynamic>> result = [];
