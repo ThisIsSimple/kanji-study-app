@@ -137,30 +137,12 @@ class KanjiService {
     return resultMap.values.toList();
   }
   
-  List<Kanji> getKanjiByGrade(int grade) {
-    return _repository.getKanjiByGrade(grade);
-  }
-  
-  List<Kanji> getKanjiByJlpt(int jlptLevel) {
-    return _repository.getKanjiByJlpt(jlptLevel);
-  }
+  // Grade and JLPT methods removed - data is empty in current dataset
   
   List<Kanji> getKanjiForDailyStudy({
     int count = 5,
-    int? grade,
-    int? jlpt,
   }) {
     List<Kanji> candidates = _repository.getAllKanji();
-    
-    // Filter by grade if specified
-    if (grade != null) {
-      candidates = candidates.where((k) => k.grade == grade).toList();
-    }
-    
-    // Filter by JLPT if specified
-    if (jlpt != null) {
-      candidates = candidates.where((k) => k.jlpt == jlpt).toList();
-    }
     
     // Prioritize unstudied kanji
     final unstudied = candidates.where((k) => 
@@ -195,18 +177,6 @@ class KanjiService {
       'total': allKanji.length,
       'studied': _progressMap.length,
       'mastered': getMasteredCount(),
-      'grade1': _repository.getKanjiByGrade(1).length,
-      'grade2': _repository.getKanjiByGrade(2).length,
-      'grade3': _repository.getKanjiByGrade(3).length,
-      'grade4': _repository.getKanjiByGrade(4).length,
-      'grade5': _repository.getKanjiByGrade(5).length,
-      'grade6': _repository.getKanjiByGrade(6).length,
-      'grade7': _repository.getKanjiByGrade(7).length,
-      'jlptN5': _repository.getKanjiByJlpt(5).length,
-      'jlptN4': _repository.getKanjiByJlpt(4).length,
-      'jlptN3': _repository.getKanjiByJlpt(3).length,
-      'jlptN2': _repository.getKanjiByJlpt(2).length,
-      'jlptN1': _repository.getKanjiByJlpt(1).length,
     };
   }
 }

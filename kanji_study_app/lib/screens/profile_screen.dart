@@ -17,8 +17,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _studiedCount = 0;
   int _masteredCount = 0;
   double _progress = 0.0;
-  final Map<int, int> _gradeProgress = {};
-  final Map<int, int> _jlptProgress = {};
   bool _isLoading = true;
 
   @override
@@ -36,33 +34,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _studiedCount = _kanjiService.getStudiedCount();
         _masteredCount = _kanjiService.getMasteredCount();
         _progress = _kanjiService.getOverallProgress();
-        
-        // Calculate progress by grade
-        for (int grade = 1; grade <= 7; grade++) {
-          final kanjiList = _kanjiService.getKanjiByGrade(grade);
-          int studied = 0;
-          for (final kanji in kanjiList) {
-            final progress = _kanjiService.getProgress(kanji.character);
-            if (progress != null) {
-              studied++;
-            }
-          }
-          _gradeProgress[grade] = studied;
-        }
-        
-        // Calculate progress by JLPT
-        for (int level = 1; level <= 5; level++) {
-          final kanjiList = _kanjiService.getKanjiByJlpt(level);
-          int studied = 0;
-          for (final kanji in kanjiList) {
-            final progress = _kanjiService.getProgress(kanji.character);
-            if (progress != null) {
-              studied++;
-            }
-          }
-          _jlptProgress[level] = studied;
-        }
-        
         _isLoading = false;
       });
     } catch (e) {
@@ -198,78 +169,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  
-                  // Progress by Grade
-                  FCard(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '학년별 진도',
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ...List.generate(7, (index) {
-                            final grade = index + 1;
-                            final total = _kanjiService.getKanjiByGrade(grade).length;
-                            final studied = _gradeProgress[grade] ?? 0;
-                            final progress = total > 0 ? studied / total : 0.0;
-                            
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12.0),
-                              child: _buildProgressRow(
-                                grade <= 6 ? '$grade학년' : '중학교+',
-                                studied,
-                                total,
-                                progress,
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Progress by JLPT
-                  FCard(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'JLPT별 진도',
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ...List.generate(5, (index) {
-                            final level = index + 1;
-                            final total = _kanjiService.getKanjiByJlpt(level).length;
-                            final studied = _jlptProgress[level] ?? 0;
-                            final progress = total > 0 ? studied / total : 0.0;
-                            
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12.0),
-                              child: _buildProgressRow(
-                                'N$level',
-                                studied,
-                                total,
-                                progress,
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -300,37 +199,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProgressRow(String label, int studied, int total, double progress) {
-    final theme = FTheme.of(context);
-    
-    return Row(
-      children: [
-        SizedBox(
-          width: 80,
-          child: Text(
-            label,
-            style: theme.typography.sm.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        Expanded(
-          child: LinearProgressIndicator(
-            value: progress,
-            backgroundColor: theme.colors.secondary.withValues(alpha: 0.2),
-            valueColor: AlwaysStoppedAnimation<Color>(
-              theme.colors.primary.withValues(alpha: 0.8),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          '$studied/$total',
-          style: theme.typography.sm.copyWith(
-            color: theme.colors.mutedForeground,
-          ),
-        ),
-      ],
-    );
-  }
 }

@@ -181,9 +181,81 @@ class _StudyScreenState extends State<StudyScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Korean readings first
+                          if (widget.kanji.koreanOnReadings.isNotEmpty) ...[
+                            Text(
+                              '한국어 음독',
+                              style: theme.typography.sm.copyWith(
+                                color: theme.colors.mutedForeground,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 8,
+                              children: widget.kanji.koreanOnReadings.map((reading) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: theme.colors.primary.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    reading,
+                                    style: theme.typography.base.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: theme.colors.primary,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                          if (widget.kanji.koreanOnReadings.isNotEmpty && 
+                              widget.kanji.koreanKunReadings.isNotEmpty)
+                            const SizedBox(height: 16),
+                          if (widget.kanji.koreanKunReadings.isNotEmpty) ...[
+                            Text(
+                              '한국어 훈독',
+                              style: theme.typography.sm.copyWith(
+                                color: theme.colors.mutedForeground,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 8,
+                              children: widget.kanji.koreanKunReadings.map((reading) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: theme.colors.secondary.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    reading,
+                                    style: theme.typography.base.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: theme.colors.secondary,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                          // Japanese readings
+                          if ((widget.kanji.koreanOnReadings.isNotEmpty || widget.kanji.koreanKunReadings.isNotEmpty) &&
+                              (widget.kanji.readings.on.isNotEmpty || widget.kanji.readings.kun.isNotEmpty))
+                            const SizedBox(height: 24),
                           if (widget.kanji.readings.on.isNotEmpty) ...[
                             Text(
-                              '음독 (音読み)',
+                              '일본어 음독 (音読み)',
                               style: theme.typography.sm.copyWith(
                                 color: theme.colors.mutedForeground,
                               ),
@@ -215,7 +287,7 @@ class _StudyScreenState extends State<StudyScreen> {
                             const SizedBox(height: 16),
                           if (widget.kanji.readings.kun.isNotEmpty) ...[
                             Text(
-                              '훈독 (訓読み)',
+                              '일본어 훈독 (訓読み)',
                               style: theme.typography.sm.copyWith(
                                 color: theme.colors.mutedForeground,
                               ),
@@ -250,71 +322,6 @@ class _StudyScreenState extends State<StudyScreen> {
               ),
               const SizedBox(height: 16),
               
-              // Info Card
-              FCard(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Column(
-                        children: [
-                          Text(
-                            '학년',
-                            style: theme.typography.sm.copyWith(
-                              color: theme.colors.mutedForeground,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.kanji.grade <= 6 
-                              ? '${widget.kanji.grade}학년'
-                              : '중학교+',
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          Text(
-                            'JLPT',
-                            style: theme.typography.sm.copyWith(
-                              color: theme.colors.mutedForeground,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'N${widget.kanji.jlpt}',
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        children: [
-                          Text(
-                            '빈도',
-                            style: theme.typography.sm.copyWith(
-                              color: theme.colors.mutedForeground,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '#${widget.kanji.frequency}',
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
               
               // Examples Card
               FCard(

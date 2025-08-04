@@ -12,28 +12,18 @@ class WordsScreen extends StatefulWidget {
   State<WordsScreen> createState() => _WordsScreenState();
 }
 
-class _WordsScreenState extends State<WordsScreen> with SingleTickerProviderStateMixin {
+class _WordsScreenState extends State<WordsScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
-  late TabController _tabController;
   
   List<Kanji> _allKanji = [];
   List<Kanji> _filteredKanji = [];
   String _searchQuery = '';
-  int _selectedGrade = 0; // 0 = 전체
-  int _selectedJlpt = 0; // 0 = 전체
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
     _loadKanji();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadKanji() async {
@@ -60,23 +50,17 @@ class _WordsScreenState extends State<WordsScreen> with SingleTickerProviderStat
         final matchesMeaning = kanji.meanings.any(
           (meaning) => meaning.toLowerCase().contains(query),
         );
-        final matchesReading = kanji.readings.all.any(
+        final matchesJapaneseReading = kanji.readings.all.any(
           (reading) => reading.toLowerCase().contains(query),
         );
+        final matchesKoreanReading = [
+          ...kanji.koreanOnReadings,
+          ...kanji.koreanKunReadings,
+        ].any((reading) => reading.toLowerCase().contains(query));
         
-        if (!matchesCharacter && !matchesMeaning && !matchesReading) {
+        if (!matchesCharacter && !matchesMeaning && !matchesJapaneseReading && !matchesKoreanReading) {
           return false;
         }
-      }
-      
-      // 학년 필터
-      if (_selectedGrade > 0 && kanji.grade != _selectedGrade) {
-        return false;
-      }
-      
-      // JLPT 필터
-      if (_selectedJlpt > 0 && kanji.jlpt != _selectedJlpt) {
-        return false;
       }
       
       return true;
@@ -114,117 +98,35 @@ class _WordsScreenState extends State<WordsScreen> with SingleTickerProviderStat
                 // Search Bar
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: TextField(
-                    onChanged: _onSearchChanged,
-                    decoration: InputDecoration(
-                      hintText: '한자, 의미, 읽기로 검색...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: theme.colors.border),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: theme.colors.border),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: theme.colors.primary),
-                      ),
-                      filled: true,
-                      fillColor: theme.colors.background,
-                    ),
-                  ),
-                ),
-                
-                // Filter Tabs
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: theme.colors.border,
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    labelColor: theme.colors.foreground,
-                    unselectedLabelColor: theme.colors.mutedForeground,
-                    indicatorColor: theme.colors.primary,
-                    tabs: const [
-                      Tab(text: '전체'),
-                      Tab(text: '학년별'),
-                      Tab(text: 'JLPT별'),
-                    ],
-                  ),
-                ),
-                
-                // Filter Chips
-                Container(
-                  height: 50,
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: TabBarView(
-                    controller: _tabController,
+                  child: Column(
                     children: [
-                      // 전체 탭
-                      Center(
-                        child: Text(
-                          '전체 ${_filteredKanji.length}개',
-                          style: theme.typography.sm,
+                      TextField(
+                        onChanged: _onSearchChanged,
+                        decoration: InputDecoration(
+                          hintText: '한자, 의미, 읽기로 검색...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: theme.colors.border),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: theme.colors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: theme.colors.primary),
+                          ),
+                          filled: true,
+                          fillColor: theme.colors.background,
                         ),
                       ),
-                      
-                      // 학년별 탭
-                      ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          _buildFilterChip('전체', _selectedGrade == 0, () {
-                            setState(() {
-                              _selectedGrade = 0;
-                              _applyFilters();
-                            });
-                          }),
-                          ...List.generate(7, (index) {
-                            final grade = index + 1;
-                            return _buildFilterChip(
-                              grade <= 6 ? '$grade학년' : '중학교+',
-                              _selectedGrade == grade,
-                              () {
-                                setState(() {
-                                  _selectedGrade = grade;
-                                  _applyFilters();
-                                });
-                              },
-                            );
-                          }),
-                        ],
-                      ),
-                      
-                      // JLPT별 탭
-                      ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          _buildFilterChip('전체', _selectedJlpt == 0, () {
-                            setState(() {
-                              _selectedJlpt = 0;
-                              _applyFilters();
-                            });
-                          }),
-                          ...List.generate(5, (index) {
-                            final level = 5 - index;
-                            return _buildFilterChip(
-                              'N$level',
-                              _selectedJlpt == level,
-                              () {
-                                setState(() {
-                                  _selectedJlpt = level;
-                                  _applyFilters();
-                                });
-                              },
-                            );
-                          }),
-                        ],
+                      const SizedBox(height: 8),
+                      Text(
+                        '전체 ${_filteredKanji.length}개',
+                        style: theme.typography.sm.copyWith(
+                          color: theme.colors.mutedForeground,
+                        ),
                       ),
                     ],
                   ),
@@ -255,39 +157,6 @@ class _WordsScreenState extends State<WordsScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildFilterChip(String label, bool isSelected, VoidCallback onTap) {
-    final theme = FTheme.of(context);
-    
-    return Padding(
-      padding: const EdgeInsets.only(right: 8.0),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected 
-              ? theme.colors.primary 
-              : theme.colors.background,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isSelected 
-                ? theme.colors.primary 
-                : theme.colors.border,
-            ),
-          ),
-          child: Text(
-            label,
-            style: theme.typography.sm.copyWith(
-              color: isSelected 
-                ? theme.colors.background 
-                : theme.colors.foreground,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildKanjiTile(Kanji kanji) {
     final theme = FTheme.of(context);
@@ -347,56 +216,27 @@ class _WordsScreenState extends State<WordsScreen> with SingleTickerProviderStat
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        '${kanji.readings.kun.join(', ')} | ${kanji.readings.on.join(', ')}',
-                        style: theme.typography.sm.copyWith(
-                          color: theme.colors.mutedForeground,
+                      // Korean readings
+                      if (kanji.koreanOnReadings.isNotEmpty || kanji.koreanKunReadings.isNotEmpty) ...[
+                        Text(
+                          '한국어: ${kanji.koreanKunReadings.join(', ')}${kanji.koreanOnReadings.isNotEmpty && kanji.koreanKunReadings.isNotEmpty ? ', ' : ''}${kanji.koreanOnReadings.join(', ')}',
+                          style: theme.typography.sm.copyWith(
+                            color: theme.colors.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colors.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'N${kanji.jlpt}',
-                              style: theme.typography.xs,
-                            ),
+                        const SizedBox(height: 4),
+                      ],
+                      // Japanese readings
+                      if (kanji.readings.kun.isNotEmpty || kanji.readings.on.isNotEmpty)
+                        Text(
+                          '일본어: ${kanji.readings.kun.join(', ')}${kanji.readings.kun.isNotEmpty && kanji.readings.on.isNotEmpty ? ', ' : ''}${kanji.readings.on.join(', ')}',
+                          style: theme.typography.sm.copyWith(
+                            color: theme.colors.mutedForeground,
                           ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colors.secondary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              kanji.grade <= 6 
-                                ? '${kanji.grade}학년' 
-                                : '중학교+',
-                              style: theme.typography.xs,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '#${kanji.frequency}',
-                            style: theme.typography.xs.copyWith(
-                              color: theme.colors.mutedForeground,
-                            ),
-                          ),
-                        ],
-                      ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                     ],
                   ),
                 ),

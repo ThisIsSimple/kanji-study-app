@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'home_screen.dart';
 import 'words_screen.dart';
+import 'quiz_list_screen.dart';
 import 'profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const WordsScreen(),
+    const QuizListScreen(),
     const ProfileScreen(),
   ];
 
@@ -62,6 +64,11 @@ class _MainScreenState extends State<MainScreen> {
               icon: Icon(Icons.book_outlined),
               activeIcon: Icon(Icons.book),
               label: '단어',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.quiz_outlined),
+              activeIcon: Icon(Icons.quiz),
+              label: '퀴즈',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),

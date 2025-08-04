@@ -1,6 +1,5 @@
-import 'dart:convert';
-import 'package:flutter/services.dart';
 import '../models/kanji_model.dart';
+import 'supabase_service.dart';
 
 class KanjiRepository {
   static final KanjiRepository _instance = KanjiRepository._internal();
@@ -8,22 +7,19 @@ class KanjiRepository {
   
   KanjiRepository._internal();
   
+  final SupabaseService _supabaseService = SupabaseService.instance;
   List<Kanji>? _kanjiList;
   Map<String, Kanji>? _kanjiMap;
-  Map<int, List<Kanji>>? _gradeMap;
-  Map<int, List<Kanji>>? _jlptMap;
   
   Future<void> loadKanjiData() async {
     if (_kanjiList != null) return; // Already loaded
     
     try {
-      // Load JSON from assets
-      final String jsonString = await rootBundle.loadString('assets/data/kanji_data.json');
-      final Map<String, dynamic> jsonData = json.decode(jsonString);
+      // Load data from Supabase
+      final supabaseData = await _supabaseService.getAllKanji();
       
-      // Parse kanji list
-      final List<dynamic> kanjiJsonList = jsonData['kanji'] as List;
-      _kanjiList = kanjiJsonList.map((json) => Kanji.fromJson(json)).toList();
+      // Convert to Kanji objects
+      _kanjiList = supabaseData.map((data) => Kanji.fromJson(data)).toList();
       
       // Create lookup maps for efficient access
       _createLookupMaps();
@@ -42,18 +38,6 @@ class KanjiRepository {
     for (final kanji in _kanjiList!) {
       _kanjiMap![kanji.character] = kanji;
     }
-    
-    // Grade -> List<Kanji> map
-    _gradeMap = {};
-    for (final kanji in _kanjiList!) {
-      _gradeMap!.putIfAbsent(kanji.grade, () => []).add(kanji);
-    }
-    
-    // JLPT -> List<Kanji> map
-    _jlptMap = {};
-    for (final kanji in _kanjiList!) {
-      _jlptMap!.putIfAbsent(kanji.jlpt, () => []).add(kanji);
-    }
   }
   
   // Get all kanji
@@ -66,15 +50,7 @@ class KanjiRepository {
     return _kanjiMap?[character];
   }
   
-  // Get kanji by grade
-  List<Kanji> getKanjiByGrade(int grade) {
-    return _gradeMap?[grade] ?? [];
-  }
-  
-  // Get kanji by JLPT level
-  List<Kanji> getKanjiByJlpt(int jlptLevel) {
-    return _jlptMap?[jlptLevel] ?? [];
-  }
+  // Grade and JLPT methods removed - data is empty in current dataset
   
   // Search kanji by meaning
   List<Kanji> searchByMeaning(String query) {
@@ -88,14 +64,23 @@ class KanjiRepository {
     }).toList();
   }
   
-  // Search kanji by reading
+  // Search kanji by reading (Japanese and Korean)
   List<Kanji> searchByReading(String query) {
     if (_kanjiList == null) return [];
     
     return _kanjiList!.where((kanji) {
-      return kanji.readings.all.any((reading) => 
+      // Search in Japanese readings
+      final japaneseMatch = kanji.readings.all.any((reading) => 
         reading.contains(query)
       );
+      
+      // Search in Korean readings
+      final koreanMatch = [
+        ...kanji.koreanOnReadings,
+        ...kanji.koreanKunReadings,
+      ].any((reading) => reading.contains(query));
+      
+      return japaneseMatch || koreanMatch;
     }).toList();
   }
   
@@ -108,21 +93,11 @@ class KanjiRepository {
     }).toList();
   }
   
-  // Get random kanji from specific criteria
+  // Get random kanji
   List<Kanji> getRandomKanji({
-    int? grade,
-    int? jlpt,
     int count = 1,
   }) {
     List<Kanji> candidates = _kanjiList ?? [];
-    
-    if (grade != null) {
-      candidates = candidates.where((k) => k.grade == grade).toList();
-    }
-    
-    if (jlpt != null) {
-      candidates = candidates.where((k) => k.jlpt == jlpt).toList();
-    }
     
     if (candidates.isEmpty) return [];
     
