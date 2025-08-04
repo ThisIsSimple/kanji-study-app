@@ -256,41 +256,41 @@ class KanjiGridCard extends StatelessWidget {
             
             // Main content
             Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Kanji Character
-                      Text(
-                        kanji.character,
-                        style: GoogleFonts.notoSerifJp(
-                          fontSize: 42,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colors.foreground,
-                          height: 1,
-                        ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Spacer(flex: 1),
+                    // Kanji Character
+                    Text(
+                      kanji.character,
+                      style: GoogleFonts.notoSerifJp(
+                        fontSize: 42,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colors.foreground,
+                        height: 1,
                       ),
-                      const SizedBox(height: 12),
-                      
-                      // Korean readings
-                      if (hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings))
-                        Text(
-                          formatKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings),
-                          style: theme.typography.sm.copyWith(
-                            color: theme.colors.primary,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'SUITE',
-                            fontSize: 11,
-                            height: 1.2,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // Korean readings
+                    if (hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings))
+                      Text(
+                        formatKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings),
+                        style: theme.typography.sm.copyWith(
+                          color: theme.colors.primary,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'SUITE',
+                          fontSize: 11,
+                          height: 1.2,
                         ),
-                    ],
-                  ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    const Spacer(flex: 2),
+                  ],
                 ),
               ),
             ),
