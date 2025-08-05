@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../services/notification_service.dart';
 import '../services/gemini_service.dart';
 
@@ -98,7 +99,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     
     return FScaffold(
       header: FHeader.nested(
-        title: const Text('설정'),
+        title: Text(
+          '설정',
+          style: TextStyle(fontFamily: 'SUITE'),
+        ),
         prefixes: [
           FHeaderAction.back(
             onPress: () => Navigator.of(context).pop(),
@@ -123,6 +127,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             '알림 설정',
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -133,7 +138,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             children: [
                               Text(
                                 '학습 알림',
-                                style: theme.typography.base,
+                                style: theme.typography.base.copyWith(
+                                  fontFamily: 'SUITE',
+                                ),
                               ),
                               FSwitch(
                                 value: _notificationsEnabled,
@@ -164,6 +171,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           '알림 시간',
                                           style: theme.typography.sm.copyWith(
                                             color: theme.colors.mutedForeground,
+                                            fontFamily: 'SUITE',
                                           ),
                                         ),
                                         const SizedBox(height: 4),
@@ -175,7 +183,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         ),
                                       ],
                                     ),
-                                    Icon(Icons.access_time),
+                                    Icon(PhosphorIconsRegular.clock),
                                   ],
                                 ),
                               ),
@@ -198,6 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             'AI 설정',
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -205,6 +214,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             'Gemini API를 사용하여 예문 생성 및 학습 콘텐츠를 만들 수 있습니다.',
                             style: theme.typography.sm.copyWith(
                               color: theme.colors.mutedForeground,
+                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -218,6 +228,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Gemini API Key',
                                 hintText: 'API 키를 입력하세요',
+                                hintStyle: TextStyle(fontFamily: 'SUITE'),
+                                labelStyle: TextStyle(fontFamily: 'SUITE'),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                   borderSide: BorderSide(color: theme.colors.border),
@@ -232,7 +244,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                                 suffixIcon: IconButton(
                                   icon: Icon(
-                                    _apiKeyVisible ? Icons.visibility_off : Icons.visibility,
+                                    _apiKeyVisible ? PhosphorIconsRegular.eyeSlash : PhosphorIconsRegular.eye,
                                   ),
                                   onPressed: () {
                                     setState(() {
@@ -251,22 +263,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 await _geminiService.setApiKey(apiKey);
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('API 키가 저장되었습니다.'),
+                                  SnackBar(
+                                    content: Text(
+                                      'API 키가 저장되었습니다.',
+                                      style: TextStyle(fontFamily: 'SUITE'),
+                                    ),
                                   ),
                                 );
                               }
                             },
                             style: FButtonStyle.outline(),
-                            child: const Text('API 키 저장'),
+                            child: Text(
+                              'API 키 저장',
+                              style: TextStyle(fontFamily: 'SUITE'),
+                            ),
                           ),
                           const SizedBox(height: 8),
                           GestureDetector(
                             onTap: () {
                               // Open AI Studio link
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('브라우저에서 ai.google.dev를 방문하여 API 키를 생성하세요.'),
+                                SnackBar(
+                                  content: Text(
+                                    '브라우저에서 ai.google.dev를 방문하여 API 키를 생성하세요.',
+                                    style: TextStyle(fontFamily: 'SUITE'),
+                                  ),
                                 ),
                               );
                             },
@@ -275,6 +296,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               style: theme.typography.sm.copyWith(
                                 color: theme.colors.primary,
                                 decoration: TextDecoration.underline,
+                                fontFamily: 'SUITE',
                               ),
                             ),
                           ),
@@ -295,6 +317,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             '앱 정보',
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -303,7 +326,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             children: [
                               Text(
                                 '버전',
-                                style: theme.typography.base,
+                                style: theme.typography.base.copyWith(
+                                  fontFamily: 'SUITE',
+                                ),
                               ),
                               Text(
                                 '1.0.0',
@@ -319,7 +344,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             children: [
                               Text(
                                 '개발자',
-                                style: theme.typography.base,
+                                style: theme.typography.base.copyWith(
+                                  fontFamily: 'SUITE',
+                                ),
                               ),
                               Text(
                                 'space.cordelia273',
