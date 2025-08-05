@@ -290,8 +290,13 @@ class _WordsScreenState extends State<WordsScreen> {
                             ),
                           )
                         : ListView.builder(
+                            key: ValueKey('${_filteredWords.length}_$_showOnlyFavorites\_$_selectedJlptLevel'),
                             itemCount: _filteredWords.length,
                             itemBuilder: (context, index) {
+                              // Safety check to prevent RangeError
+                              if (index >= _filteredWords.length) {
+                                return const SizedBox.shrink();
+                              }
                               final word = _filteredWords[index];
                               return WordListItem(
                                 word: word,
