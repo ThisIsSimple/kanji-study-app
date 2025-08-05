@@ -16,16 +16,26 @@ class KanjiScreen extends StatefulWidget {
 
 class _KanjiScreenState extends State<KanjiScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
+  final TextEditingController _searchController = TextEditingController();
   
   List<Kanji> _allKanji = [];
   List<Kanji> _filteredKanji = [];
   String _searchQuery = '';
   bool _isLoading = true;
+  bool _showSearchBar = false;
+  bool _showOnlyFavorites = false;
 
   @override
   void initState() {
     super.initState();
     _loadKanji();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadKanji({bool forceReload = false}) async {
@@ -49,6 +59,12 @@ class _KanjiScreenState extends State<KanjiScreen> {
 
   void _applyFilters() {
     _filteredKanji = _allKanji.where((kanji) {
+      // Apply favorite filter
+      if (_showOnlyFavorites && !_kanjiService.isFavorite(kanji.character)) {
+        return false;
+      }
+      
+      // Apply search filter
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
         final matchesCharacter = kanji.character.contains(query);
@@ -71,9 +87,27 @@ class _KanjiScreenState extends State<KanjiScreen> {
     }).toList();
   }
 
-  void _onSearchChanged(String value) {
+  void _onSearchChanged() {
     setState(() {
-      _searchQuery = value;
+      _searchQuery = _searchController.text;
+      _applyFilters();
+    });
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _showSearchBar = !_showSearchBar;
+      if (!_showSearchBar) {
+        _searchController.clear();
+        _searchQuery = '';
+        _applyFilters();
+      }
+    });
+  }
+
+  void _toggleFavoriteFilter() {
+    setState(() {
+      _showOnlyFavorites = !_showOnlyFavorites;
       _applyFilters();
     });
   }
@@ -92,70 +126,132 @@ class _KanjiScreenState extends State<KanjiScreen> {
     final theme = FTheme.of(context);
     
     return FScaffold(
-      header: FHeader(
-        title: Text(
-          '한자 목록',
-          style: TextStyle(fontFamily: 'SUITE'),
-        ),
+      header: Stack(
+        children: [
+          FHeader(
+            title: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Text(
+                _showOnlyFavorites
+                    ? '즐겨찾기 ${_filteredKanji.length}개'
+                    : '전체 ${_filteredKanji.length}개',
+                style: theme.typography.sm.copyWith(
+                  color: theme.colors.mutedForeground,
+                  fontFamily: 'SUITE',
+                ),
+              ),
+            ),
+            suffixes: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: Icon(
+                        _showOnlyFavorites ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+                        color: _showOnlyFavorites ? Colors.amber : null,
+                        size: 20,
+                      ),
+                      onPressed: _toggleFavoriteFilter,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: Icon(
+                        PhosphorIconsRegular.magnifyingGlass,
+                        size: 20,
+                      ),
+                      onPressed: _toggleSearch,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          if (_showSearchBar)
+            Positioned.fill(
+              child: Container(
+                color: theme.colors.background,
+                child: SafeArea(
+                  child: Container(
+                    height: 56,
+                    margin: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            autofocus: true,
+                            decoration: InputDecoration(
+                              hintText: '한자, 의미, 읽기로 검색...',
+                              hintStyle: TextStyle(fontFamily: 'SUITE'),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            style: theme.typography.lg.copyWith(
+                              fontFamily: 'SUITE',
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: Icon(
+                              PhosphorIconsRegular.x,
+                              size: 20,
+                            ),
+                            onPressed: _toggleSearch,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Search Bar
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      TextField(
-                        onChanged: _onSearchChanged,
-                        decoration: InputDecoration(
-                          hintText: '한자, 의미, 읽기로 검색...',
-                          prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: theme.colors.border),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: theme.colors.border),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: theme.colors.primary),
-                          ),
-                          filled: true,
-                          fillColor: theme.colors.background,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '전체 ${_filteredKanji.length}개',
-                        style: theme.typography.sm.copyWith(
-                          color: theme.colors.mutedForeground,
-                          fontFamily: 'SUITE',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Kanji Grid
-                Expanded(
-                  child: RefreshIndicator(
+          : RefreshIndicator(
                     onRefresh: () => _loadKanji(forceReload: true),
                     child: _filteredKanji.isEmpty
                         ? Center(
-                            child: Text(
-                              '검색 결과가 없습니다',
-                              style: theme.typography.base.copyWith(
-                                color: theme.colors.mutedForeground,
-                                fontFamily: 'SUITE',
-                              ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  PhosphorIconsRegular.magnifyingGlass,
+                                  size: 48,
+                                  color: theme.colors.mutedForeground,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _showOnlyFavorites
+                                      ? '즐겨찾기한 한자가 없습니다'
+                                      : '검색 결과가 없습니다',
+                                  style: theme.typography.base.copyWith(
+                                    color: theme.colors.mutedForeground,
+                                    fontFamily: 'SUITE',
+                                  ),
+                                ),
+                              ],
                             ),
                           )
                         : GridView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding: const EdgeInsets.all(16.0),
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 3,
                               childAspectRatio: 0.75,
@@ -171,15 +267,15 @@ class _KanjiScreenState extends State<KanjiScreen> {
                                 onFavoriteToggle: () {
                                   setState(() {
                                     _kanjiService.toggleFavorite(kanji.character);
+                                    if (_showOnlyFavorites) {
+                                      _applyFilters();
+                                    }
                                   });
                                 },
                               );
                             },
                           ),
-                  ),
-                ),
-              ],
-            ),
+              ),
     );
   }
 }

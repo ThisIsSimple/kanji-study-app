@@ -18,9 +18,10 @@ class _WordsScreenState extends State<WordsScreen> {
   
   List<Word> _filteredWords = [];
   String _searchQuery = '';
-  int? _selectedJlptLevel;
+  final Set<int> _selectedJlptLevels = {};
   bool _isLoading = true;
   bool _showOnlyFavorites = false;
+  bool _showSearchBar = false;
 
   @override
   void initState() {
@@ -56,27 +57,25 @@ class _WordsScreenState extends State<WordsScreen> {
 
   void _applyFilters() {
     setState(() {
+      List<Word> words;
+      
       if (_showOnlyFavorites) {
-        _filteredWords = _wordService.getFavoriteWords();
-        
-        // Apply search and level filters on favorites
-        if (_searchQuery.isNotEmpty) {
-          _filteredWords = _filteredWords
-              .where((word) => word.matchesQuery(_searchQuery))
-              .toList();
-        }
-        
-        if (_selectedJlptLevel != null) {
-          _filteredWords = _filteredWords
-              .where((word) => word.jlptLevel == _selectedJlptLevel)
-              .toList();
-        }
+        words = _wordService.getFavoriteWords();
       } else {
-        _filteredWords = _wordService.searchWords(
-          _searchQuery,
-          jlptLevel: _selectedJlptLevel,
-        );
+        words = _wordService.allWords;
       }
+      
+      // Apply search filter
+      if (_searchQuery.isNotEmpty) {
+        words = words.where((word) => word.matchesQuery(_searchQuery)).toList();
+      }
+      
+      // Apply JLPT level filters
+      if (_selectedJlptLevels.isNotEmpty) {
+        words = words.where((word) => _selectedJlptLevels.contains(word.jlptLevel)).toList();
+      }
+      
+      _filteredWords = words;
     });
   }
 
@@ -87,10 +86,10 @@ class _WordsScreenState extends State<WordsScreen> {
 
   void _toggleJlptFilter(int level) {
     setState(() {
-      if (_selectedJlptLevel == level) {
-        _selectedJlptLevel = null;
+      if (_selectedJlptLevels.contains(level)) {
+        _selectedJlptLevels.remove(level);
       } else {
-        _selectedJlptLevel = level;
+        _selectedJlptLevels.add(level);
       }
       _applyFilters();
     });
@@ -103,165 +102,238 @@ class _WordsScreenState extends State<WordsScreen> {
     });
   }
 
+  void _toggleSearch() {
+    setState(() {
+      _showSearchBar = !_showSearchBar;
+      if (!_showSearchBar) {
+        _searchController.clear();
+        _searchQuery = '';
+        _applyFilters();
+      }
+    });
+  }
+
+  void _showFilterBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final theme = FTheme.of(context);
+            return Container(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'JLPT 레벨 필터',
+                          style: theme.typography.lg.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'SUITE',
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: Text(
+                            '완료',
+                            style: TextStyle(
+                              fontFamily: 'SUITE',
+                              color: theme.colors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(),
+                  ...List.generate(5, (index) {
+                    final level = 5 - index; // N5 to N1
+                    final isSelected = _selectedJlptLevels.contains(level);
+                    
+                    return ListTile(
+                      leading: Checkbox(
+                        value: isSelected,
+                        onChanged: (_) {
+                          setModalState(() {
+                            _toggleJlptFilter(level);
+                          });
+                          setState(() {}); // Update main screen
+                        },
+                        activeColor: theme.colors.primary,
+                      ),
+                      title: Text(
+                        'JLPT N$level',
+                        style: theme.typography.base.copyWith(
+                          fontFamily: 'SUITE',
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                      ),
+                      onTap: () {
+                        setModalState(() {
+                          _toggleJlptFilter(level);
+                        });
+                        setState(() {}); // Update main screen
+                      },
+                    );
+                  }),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     
     return FScaffold(
-      header: FHeader(
-        title: Text(
-          '단어 목록',
-          style: TextStyle(fontFamily: 'SUITE'),
-        ),
+      header: Stack(
+        children: [
+          FHeader(
+            title: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Text(
+                _showOnlyFavorites
+                    ? '즐겨찾기 ${_filteredWords.length}개'
+                    : _selectedJlptLevels.isEmpty
+                        ? '전체 ${_filteredWords.length}개'
+                        : 'JLPT ${_selectedJlptLevels.map((l) => "N$l").join(", ")} - ${_filteredWords.length}개',
+                style: theme.typography.sm.copyWith(
+                  color: theme.colors.mutedForeground,
+                  fontFamily: 'SUITE',
+                ),
+              ),
+            ),
+            suffixes: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: Icon(
+                        _showOnlyFavorites ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+                        color: _showOnlyFavorites ? Colors.amber : null,
+                        size: 20,
+                      ),
+                      onPressed: _toggleFavoriteFilter,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: Stack(
+                        children: [
+                          Icon(
+                            PhosphorIconsRegular.funnel,
+                            size: 20,
+                          ),
+                          if (_selectedJlptLevels.isNotEmpty)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: theme.colors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      onPressed: _showFilterBottomSheet,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: Icon(
+                        PhosphorIconsRegular.magnifyingGlass,
+                        size: 20,
+                      ),
+                      onPressed: _toggleSearch,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          if (_showSearchBar)
+            Positioned.fill(
+              child: Container(
+                color: theme.colors.background,
+                child: SafeArea(
+                  child: Container(
+                    height: 56,
+                    margin: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            autofocus: true,
+                            onChanged: _onSearchChanged,
+                            decoration: InputDecoration(
+                              hintText: '일본어, 한글, 후리가나로 검색...',
+                              hintStyle: TextStyle(fontFamily: 'SUITE'),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            style: theme.typography.lg.copyWith(
+                              fontFamily: 'SUITE',
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: Icon(
+                              PhosphorIconsRegular.x,
+                              size: 20,
+                            ),
+                            onPressed: _toggleSearch,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Search and filters section
-                Container(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      // Search bar
-                      TextField(
-                        controller: _searchController,
-                        onChanged: _onSearchChanged,
-                        decoration: InputDecoration(
-                          hintText: '일본어, 한글, 후리가나로 검색...',
-                          prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass),
-                          suffixIcon: _searchQuery.isNotEmpty
-                              ? IconButton(
-                                  icon: Icon(PhosphorIconsRegular.x),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    _onSearchChanged('');
-                                  },
-                                )
-                              : null,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: theme.colors.border),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: theme.colors.border),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: theme.colors.primary),
-                          ),
-                          filled: true,
-                          fillColor: theme.colors.background,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      // Filters row (Favorite + JLPT levels)
-                      Row(
-                        children: [
-                          // Favorite filter button
-                          FilterChip(
-                            label: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  _showOnlyFavorites 
-                                      ? PhosphorIconsFill.star 
-                                      : PhosphorIconsRegular.star,
-                                  size: 16,
-                                  color: _showOnlyFavorites 
-                                      ? Colors.amber 
-                                      : theme.colors.mutedForeground,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '즐겨찾기',
-                                  style: TextStyle(
-                                    fontFamily: 'SUITE',
-                                    fontWeight: _showOnlyFavorites 
-                                        ? FontWeight.w600 
-                                        : FontWeight.normal,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            selected: _showOnlyFavorites,
-                            onSelected: (_) => _toggleFavoriteFilter(),
-                            backgroundColor: theme.colors.background,
-                            selectedColor: Colors.amber.withValues(alpha: 0.1),
-                            checkmarkColor: Colors.transparent,
-                            side: BorderSide(
-                              color: _showOnlyFavorites 
-                                  ? Colors.amber 
-                                  : theme.colors.border,
-                              width: _showOnlyFavorites ? 2 : 1,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          
-                          // JLPT level filter tags
-                          Expanded(
-                            child: SizedBox(
-                              height: 32,
-                              child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: 5,
-                          separatorBuilder: (context, index) => 
-                              const SizedBox(width: 8),
-                          itemBuilder: (context, index) {
-                            final level = 5 - index; // N5 to N1
-                            final isSelected = _selectedJlptLevel == level;
-                            
-                            return FilterChip(
-                              label: Text(
-                                'N$level',
-                                style: TextStyle(
-                                  fontFamily: 'SUITE',
-                                  fontWeight: isSelected 
-                                      ? FontWeight.w600 
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                              selected: isSelected,
-                              onSelected: (_) => _toggleJlptFilter(level),
-                              backgroundColor: theme.colors.background,
-                              selectedColor: theme.colors.primary.withValues(alpha: 0.1),
-                              checkmarkColor: theme.colors.primary,
-                              side: BorderSide(
-                                color: isSelected 
-                                    ? theme.colors.primary 
-                                    : theme.colors.border,
-                                width: isSelected ? 2 : 1,
-                              ),
-                            );
-                          },
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 8),
-                      
-                      // Results count
-                      Text(
-                        _showOnlyFavorites
-                            ? '즐겨찾기 ${_filteredWords.length}개'
-                            : '검색 결과 ${_filteredWords.length}개',
-                        style: theme.typography.sm.copyWith(
-                          color: theme.colors.mutedForeground,
-                          fontFamily: 'SUITE',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Words list
-                Expanded(
-                  child: RefreshIndicator(
+          : RefreshIndicator(
                     onRefresh: () async {
                       await _wordService.reloadData();
                       _applyFilters();
@@ -290,8 +362,9 @@ class _WordsScreenState extends State<WordsScreen> {
                             ),
                           )
                         : ListView.builder(
-                            key: ValueKey('${_filteredWords.length}_${_showOnlyFavorites}_$_selectedJlptLevel'),
+                            padding: EdgeInsets.zero,
                             itemCount: _filteredWords.length,
+                            key: ValueKey(_filteredWords.length),
                             itemBuilder: (context, index) {
                               // Safety check to prevent RangeError
                               if (index >= _filteredWords.length) {
@@ -299,6 +372,7 @@ class _WordsScreenState extends State<WordsScreen> {
                               }
                               final word = _filteredWords[index];
                               return WordListItem(
+                                key: ValueKey(word.id),
                                 word: word,
                                 isFavorite: _wordService.isFavorite(word.id),
                                 onTap: () {
@@ -322,10 +396,7 @@ class _WordsScreenState extends State<WordsScreen> {
                               );
                             },
                           ),
-                  ),
-                ),
-              ],
-            ),
+              ),
     );
   }
 }
