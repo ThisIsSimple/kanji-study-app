@@ -108,6 +108,7 @@ class _StudyScreenState extends State<StudyScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       widget.kanji.character,
@@ -127,6 +128,7 @@ class _StudyScreenState extends State<StudyScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
                             '의미',
