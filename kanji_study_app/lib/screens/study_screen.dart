@@ -22,16 +22,9 @@ class StudyScreen extends StatefulWidget {
 class _StudyScreenState extends State<StudyScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
   final GeminiService _geminiService = GeminiService.instance;
-  bool _showDetails = false;
   bool _isCompleted = false;
   bool _isGeneratingExamples = false;
   List<KanjiExample>? _generatedExamples;
-
-  void _toggleDetails() {
-    setState(() {
-      _showDetails = !_showDetails;
-    });
-  }
 
   Future<void> _generateExamples() async {
     if (_isGeneratingExamples) return;
@@ -153,28 +146,15 @@ class _StudyScreenState extends State<StudyScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    
-                    // Show/Hide Details Button
-                    FButton(
-                      onPress: _toggleDetails,
-                      style: FButtonStyle.outline(),
-                      child: Text(
-                        _showDetails ? '상세 정보 숨기기' : '상세 정보 보기',
-                        style: TextStyle(fontFamily: 'SUITE'),
-                      ),
-                    ),
                   ],
                 ),
               ),
             ),
+            const SizedBox(height: 16),
             
             // Details Section
-            if (_showDetails) ...[
-              const SizedBox(height: 16),
-              
-              // Readings Card
-              FCard(
+            // Readings Card
+            FCard(
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
@@ -409,8 +389,6 @@ class _StudyScreenState extends State<StudyScreen> {
                   ),
                 ),
               ),
-            ],
-            
             const SizedBox(height: 32),
             
             // Complete Study Button
