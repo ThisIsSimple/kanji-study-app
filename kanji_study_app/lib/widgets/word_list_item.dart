@@ -48,7 +48,7 @@ class WordListItem extends StatelessWidget {
                       word.reading,
                       style: theme.typography.sm.copyWith(
                         color: theme.colors.mutedForeground.withValues(alpha: 0.7),
-                        fontSize: 12,
+                        fontSize: 14,
                         height: 1.2,
                       ),
                     ),
@@ -57,7 +57,7 @@ class WordListItem extends StatelessWidget {
                   Text(
                     word.word,
                     style: GoogleFonts.notoSerifJp(
-                      fontSize: 20,
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: theme.colors.foreground,
                       height: 1.3,

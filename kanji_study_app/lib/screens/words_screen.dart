@@ -290,7 +290,7 @@ class _WordsScreenState extends State<WordsScreen> {
                             ),
                           )
                         : ListView.builder(
-                            key: ValueKey('${_filteredWords.length}_$_showOnlyFavorites\_$_selectedJlptLevel'),
+                            key: ValueKey('${_filteredWords.length}_${_showOnlyFavorites}_$_selectedJlptLevel'),
                             itemCount: _filteredWords.length,
                             itemBuilder: (context, index) {
                               // Safety check to prevent RangeError
