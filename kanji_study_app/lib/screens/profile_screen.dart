@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../services/kanji_service.dart';
+import '../services/supabase_service.dart';
+import '../utils/nickname_generator.dart';
 import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -13,17 +15,22 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
+  final SupabaseService _supabaseService = SupabaseService.instance;
   
   int _totalKanji = 0;
   int _studiedCount = 0;
   int _masteredCount = 0;
   double _progress = 0.0;
   bool _isLoading = true;
+  bool _isLoadingProfile = true;
+  String _username = '';
+  String _userEmail = '';
 
   @override
   void initState() {
     super.initState();
     _loadStatistics();
+    _loadUserProfile();
   }
 
   Future<void> _loadStatistics() async {
@@ -43,6 +50,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
   }
+  
+  Future<void> _loadUserProfile() async {
+    setState(() {
+      _isLoadingProfile = true;
+    });
+    
+    try {
+      // Get current user info
+      final currentUser = _supabaseService.currentUser;
+      debugPrint('Current user ID: ${currentUser?.id}');
+      debugPrint('Current user email: ${currentUser?.email}');
+      
+      // Get user profile from Supabase
+      final profile = await _supabaseService.getUserProfile();
+      debugPrint('Loaded profile: $profile');
+      
+      if (profile != null && profile['username'] != null && profile['username'].toString().isNotEmpty) {
+        setState(() {
+          _username = profile['username'];
+        });
+        debugPrint('Username loaded: $_username');
+      } else {
+        debugPrint('No username found in profile');
+        // If no username, try to generate one
+        if (currentUser != null) {
+          final nickname = NicknameGenerator.instance.generate(currentUser.id);
+          debugPrint('Generated nickname for display: $nickname');
+          setState(() {
+            _username = nickname;
+          });
+          // Try to save it
+          try {
+            await _supabaseService.updateUserProfile(username: nickname);
+            debugPrint('Saved generated nickname to profile');
+          } catch (e) {
+            debugPrint('Failed to save nickname: $e');
+          }
+        }
+      }
+      
+      // Get email from current user
+      if (currentUser != null && currentUser.email != null) {
+        setState(() {
+          _userEmail = currentUser.email!;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading user profile: $e');
+    } finally {
+      setState(() {
+        _isLoadingProfile = false;
+      });
+    }
+  }
 
   void _navigateToSettings() async {
     final result = await Navigator.push(
@@ -54,6 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     
     if (result == true) {
       _loadStatistics();
+      _loadUserProfile();
     }
   }
 
@@ -102,16 +164,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          Text(
-                            '한자 학습자',
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'SUITE',
-                            ),
-                          ),
+                          _isLoadingProfile
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Text(
+                                  _username.isEmpty ? '로딩 중...' : _username,
+                                  style: theme.typography.lg.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'SUITE',
+                                  ),
+                                ),
                           const SizedBox(height: 8),
                           Text(
-                            '매일 꾸준히 학습 중',
+                            _userEmail.isEmpty ? '익명 사용자' : _userEmail,
                             style: theme.typography.sm.copyWith(
                               color: theme.colors.mutedForeground,
                               fontFamily: 'SUITE',

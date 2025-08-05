@@ -38,6 +38,17 @@ class SupabaseService {
   
   // ============= Auth Methods =============
   
+  /// Sign in anonymously
+  Future<AuthResponse> signInAnonymously() async {
+    try {
+      final response = await _client.auth.signInAnonymously();
+      return response;
+    } catch (e) {
+      debugPrint('Anonymous sign in error: $e');
+      rethrow;
+    }
+  }
+  
   /// Sign up with email and password
   Future<AuthResponse> signUp({
     required String email,
