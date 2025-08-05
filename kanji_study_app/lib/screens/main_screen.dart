@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'home_screen.dart';
+import 'kanji_screen.dart';
 import 'words_screen.dart';
 import 'quiz_list_screen.dart';
 import 'profile_screen.dart';
@@ -18,6 +19,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
+    const KanjiScreen(),
     const WordsScreen(),
     const QuizListScreen(),
     const ProfileScreen(),
@@ -60,6 +62,11 @@ class _MainScreenState extends State<MainScreen> {
               icon: Icon(PhosphorIconsRegular.house),
               activeIcon: Icon(PhosphorIconsFill.house),
               label: '홈',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(PhosphorIconsRegular.translate),
+              activeIcon: Icon(PhosphorIconsFill.translate),
+              label: '한자',
             ),
             BottomNavigationBarItem(
               icon: Icon(PhosphorIconsRegular.bookOpen),

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import '../models/kanji_model.dart';
-import '../services/kanji_service.dart';
-import '../utils/korean_formatter.dart';
-import 'study_screen.dart';
+import '../models/word_model.dart';
+import '../services/word_service.dart';
+import '../widgets/word_list_item.dart';
 
 class WordsScreen extends StatefulWidget {
   const WordsScreen({super.key});
@@ -15,76 +13,89 @@ class WordsScreen extends StatefulWidget {
 }
 
 class _WordsScreenState extends State<WordsScreen> {
-  final KanjiService _kanjiService = KanjiService.instance;
+  final WordService _wordService = WordService.instance;
+  final TextEditingController _searchController = TextEditingController();
   
-  List<Kanji> _allKanji = [];
-  List<Kanji> _filteredKanji = [];
+  List<Word> _filteredWords = [];
   String _searchQuery = '';
+  int? _selectedJlptLevel;
   bool _isLoading = true;
+  bool _showOnlyFavorites = false;
 
   @override
   void initState() {
     super.initState();
-    _loadKanji();
+    _loadWords();
   }
 
-  Future<void> _loadKanji({bool forceReload = false}) async {
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadWords() async {
+    setState(() => _isLoading = true);
+    
     try {
-      if (forceReload) {
-        await _kanjiService.reloadData();
-      } else {
-        await _kanjiService.init();
+      if (!_wordService.isInitialized) {
+        await _wordService.init();
       }
-      setState(() {
-        _allKanji = _kanjiService.getAllKanji();
-        _applyFilters();
-        _isLoading = false;
-      });
+      _applyFilters();
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      debugPrint('Error loading words: $e');
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
   void _applyFilters() {
-    _filteredKanji = _allKanji.where((kanji) {
-      if (_searchQuery.isNotEmpty) {
-        final query = _searchQuery.toLowerCase();
-        final matchesCharacter = kanji.character.contains(query);
-        final matchesMeaning = kanji.meanings.any(
-          (meaning) => meaning.toLowerCase().contains(query),
-        );
-        final matchesJapaneseReading = kanji.readings.all.any(
-          (reading) => reading.toLowerCase().contains(query),
-        );
-        final matchesKoreanReading = [
-          ...kanji.koreanOnReadings,
-          ...kanji.koreanKunReadings,
-        ].any((reading) => reading.toLowerCase().contains(query));
+    setState(() {
+      if (_showOnlyFavorites) {
+        _filteredWords = _wordService.getFavoriteWords();
         
-        if (!matchesCharacter && !matchesMeaning && !matchesJapaneseReading && !matchesKoreanReading) {
-          return false;
+        // Apply search and level filters on favorites
+        if (_searchQuery.isNotEmpty) {
+          _filteredWords = _filteredWords
+              .where((word) => word.matchesQuery(_searchQuery))
+              .toList();
         }
+        
+        if (_selectedJlptLevel != null) {
+          _filteredWords = _filteredWords
+              .where((word) => word.jlptLevel == _selectedJlptLevel)
+              .toList();
+        }
+      } else {
+        _filteredWords = _wordService.searchWords(
+          _searchQuery,
+          jlptLevel: _selectedJlptLevel,
+        );
       }
-      return true;
-    }).toList();
+    });
   }
 
   void _onSearchChanged(String value) {
+    _searchQuery = value;
+    _applyFilters();
+  }
+
+  void _toggleJlptFilter(int level) {
     setState(() {
-      _searchQuery = value;
+      if (_selectedJlptLevel == level) {
+        _selectedJlptLevel = null;
+      } else {
+        _selectedJlptLevel = level;
+      }
       _applyFilters();
     });
   }
 
-  void _navigateToStudy(Kanji kanji) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => StudyScreen(kanji: kanji),
-      ),
-    );
+  void _toggleFavoriteFilter() {
+    setState(() {
+      _showOnlyFavorites = !_showOnlyFavorites;
+      _applyFilters();
+    });
   }
 
   @override
@@ -93,25 +104,57 @@ class _WordsScreenState extends State<WordsScreen> {
     
     return FScaffold(
       header: FHeader(
-        title: Text(
-          '단어 목록',
-          style: TextStyle(fontFamily: 'SUITE'),
+        title: Row(
+          children: [
+            Text(
+              '단어 목록',
+              style: TextStyle(fontFamily: 'SUITE'),
+            ),
+            const Spacer(),
+            IconButton(
+              icon: Icon(
+                _showOnlyFavorites 
+                    ? PhosphorIconsFill.star 
+                    : PhosphorIconsRegular.star,
+                color: _showOnlyFavorites 
+                    ? Colors.amber 
+                    : theme.colors.mutedForeground,
+              ),
+              onPressed: _toggleFavoriteFilter,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(
+                minWidth: 40,
+                minHeight: 40,
+              ),
+            ),
+          ],
         ),
       ),
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // Search Bar
-                Padding(
+                // Search and filters section
+                Container(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
+                      // Search bar
                       TextField(
+                        controller: _searchController,
                         onChanged: _onSearchChanged,
                         decoration: InputDecoration(
-                          hintText: '한자, 의미, 읽기로 검색...',
+                          hintText: '일본어, 한글, 후리가나로 검색...',
                           prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(PhosphorIconsRegular.x),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    _onSearchChanged('');
+                                  },
+                                )
+                              : null,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(color: theme.colors.border),
@@ -128,9 +171,54 @@ class _WordsScreenState extends State<WordsScreen> {
                           fillColor: theme.colors.background,
                         ),
                       ),
+                      
+                      const SizedBox(height: 12),
+                      
+                      // JLPT level filter tags
+                      SizedBox(
+                        height: 32,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: 5,
+                          separatorBuilder: (context, index) => 
+                              const SizedBox(width: 8),
+                          itemBuilder: (context, index) {
+                            final level = 5 - index; // N5 to N1
+                            final isSelected = _selectedJlptLevel == level;
+                            
+                            return FilterChip(
+                              label: Text(
+                                'N$level',
+                                style: TextStyle(
+                                  fontFamily: 'SUITE',
+                                  fontWeight: isSelected 
+                                      ? FontWeight.w600 
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                              selected: isSelected,
+                              onSelected: (_) => _toggleJlptFilter(level),
+                              backgroundColor: theme.colors.background,
+                              selectedColor: theme.colors.primary.withValues(alpha: 0.1),
+                              checkmarkColor: theme.colors.primary,
+                              side: BorderSide(
+                                color: isSelected 
+                                    ? theme.colors.primary 
+                                    : theme.colors.border,
+                                width: isSelected ? 2 : 1,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      
                       const SizedBox(height: 8),
+                      
+                      // Results count
                       Text(
-                        '전체 ${_filteredKanji.length}개',
+                        _showOnlyFavorites
+                            ? '즐겨찾기 ${_filteredWords.length}개'
+                            : '검색 결과 ${_filteredWords.length}개',
                         style: theme.typography.sm.copyWith(
                           color: theme.colors.mutedForeground,
                           fontFamily: 'SUITE',
@@ -140,37 +228,59 @@ class _WordsScreenState extends State<WordsScreen> {
                   ),
                 ),
                 
-                // Kanji Grid
+                // Words list
                 Expanded(
                   child: RefreshIndicator(
-                    onRefresh: () => _loadKanji(forceReload: true),
-                    child: _filteredKanji.isEmpty
+                    onRefresh: () async {
+                      await _wordService.reloadData();
+                      _applyFilters();
+                    },
+                    child: _filteredWords.isEmpty
                         ? Center(
-                            child: Text(
-                              '검색 결과가 없습니다',
-                              style: theme.typography.base.copyWith(
-                                color: theme.colors.mutedForeground,
-                                fontFamily: 'SUITE',
-                              ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  PhosphorIconsRegular.magnifyingGlass,
+                                  size: 48,
+                                  color: theme.colors.mutedForeground,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _showOnlyFavorites
+                                      ? '즐겨찾기한 단어가 없습니다'
+                                      : '검색 결과가 없습니다',
+                                  style: theme.typography.base.copyWith(
+                                    color: theme.colors.mutedForeground,
+                                    fontFamily: 'SUITE',
+                                  ),
+                                ),
+                              ],
                             ),
                           )
-                        : GridView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              childAspectRatio: 0.75,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                            ),
-                            itemCount: _filteredKanji.length,
+                        : ListView.builder(
+                            itemCount: _filteredWords.length,
                             itemBuilder: (context, index) {
-                              final kanji = _filteredKanji[index];
-                              return KanjiGridCard(
-                                kanji: kanji,
-                                onTap: () => _navigateToStudy(kanji),
+                              final word = _filteredWords[index];
+                              return WordListItem(
+                                word: word,
+                                isFavorite: _wordService.isFavorite(word.id),
+                                onTap: () {
+                                  // TODO: Navigate to word detail screen
+                                  // For now, just show a snackbar
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('${word.word} (${word.reading})'),
+                                      duration: const Duration(seconds: 1),
+                                    ),
+                                  );
+                                },
                                 onFavoriteToggle: () {
                                   setState(() {
-                                    _kanjiService.toggleFavorite(kanji.character);
+                                    _wordService.toggleFavorite(word.id);
+                                    if (_showOnlyFavorites) {
+                                      _applyFilters();
+                                    }
                                   });
                                 },
                               );
@@ -180,123 +290,6 @@ class _WordsScreenState extends State<WordsScreen> {
                 ),
               ],
             ),
-    );
-  }
-}
-
-// Separate widget for the grid card
-class KanjiGridCard extends StatelessWidget {
-  final Kanji kanji;
-  final VoidCallback onTap;
-  final VoidCallback onFavoriteToggle;
-
-  const KanjiGridCard({
-    super.key,
-    required this.kanji,
-    required this.onTap,
-    required this.onFavoriteToggle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
-    final kanjiService = KanjiService.instance;
-    final progress = kanjiService.getProgress(kanji.character);
-    final isFavorite = kanjiService.isFavorite(kanji.character);
-    
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.colors.background,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colors.border,
-            width: 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            // Top bar with check and favorite
-            Container(
-              height: 32,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Check mark
-                  if (progress != null && progress.mastered)
-                    Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: theme.colors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        PhosphorIconsFill.check,
-                        size: 14,
-                        color: theme.colors.background,
-                      ),
-                    )
-                  else
-                    const SizedBox(width: 20),
-                  
-                  // Favorite button
-                  GestureDetector(
-                    onTap: onFavoriteToggle,
-                    child: Icon(
-                      isFavorite ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
-                      size: 20,
-                      color: isFavorite ? Colors.amber : theme.colors.mutedForeground,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Main content
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 4),
-                    // Kanji Character
-                    Text(
-                      kanji.character,
-                      style: GoogleFonts.notoSerifJp(
-                        fontSize: 42,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colors.foreground,
-                        height: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    // Korean readings
-                    if (hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings))
-                      Text(
-                        formatKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings),
-                        style: theme.typography.sm.copyWith(
-                          color: theme.colors.primary,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'SUITE',
-                          fontSize: 13,
-                          height: 1.2,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    const Spacer(),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
