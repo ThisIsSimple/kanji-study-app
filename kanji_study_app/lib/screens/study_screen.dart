@@ -107,9 +107,11 @@ class _StudyScreenState extends State<StudyScreen> {
             FCard(
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
                     Text(
                       widget.kanji.character,
                       style: GoogleFonts.notoSerifJp(
@@ -149,6 +151,7 @@ class _StudyScreenState extends State<StudyScreen> {
                       ),
                     ),
                   ],
+                  ),
                 ),
               ),
             ),

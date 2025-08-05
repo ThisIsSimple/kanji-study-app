@@ -172,9 +172,11 @@ class _HomeScreenState extends State<HomeScreen> {
             FCard(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
                     Text(
                       '오늘의 한자',
                       style: theme.typography.lg.copyWith(
@@ -207,6 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ],
+                  ),
                 ),
               ),
             ),
