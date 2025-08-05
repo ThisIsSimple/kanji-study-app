@@ -93,8 +93,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = FTheme.of(context);
     
     return FScaffold(
-      header: const FHeader(
-        title: Text('한자 학습'),
+      header: FHeader(
+        title: Text(
+          '한자 학습',
+          style: TextStyle(fontFamily: 'SUITE'),
+        ),
       ),
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -107,7 +110,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 16),
                       Text(
                         '한자 데이터를 불러올 수 없습니다',
-                        style: theme.typography.lg,
+                        style: theme.typography.lg.copyWith(
+                          fontFamily: 'SUITE',
+                        ),
                       ),
                     ],
                   ),
@@ -128,6 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       '학습 진도',
                       style: theme.typography.lg.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontFamily: 'SUITE',
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -144,11 +150,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Text(
                           '학습한 한자: $studiedCount개',
-                          style: theme.typography.sm,
+                          style: theme.typography.sm.copyWith(
+                            fontFamily: 'SUITE',
+                          ),
                         ),
                         Text(
                           '마스터한 한자: $masteredCount개',
-                          style: theme.typography.sm,
+                          style: theme.typography.sm.copyWith(
+                            fontFamily: 'SUITE',
+                          ),
                         ),
                       ],
                     ),
@@ -168,6 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       '오늘의 한자',
                       style: theme.typography.lg.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontFamily: 'SUITE',
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -182,13 +193,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 16),
                     Text(
                       todayKanji!.meanings.join(', '),
-                      style: theme.typography.lg,
+                      style: theme.typography.lg.copyWith(
+                        fontFamily: 'SUITE',
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'JLPT N${todayKanji!.jlpt} | ${todayKanji!.grade <= 6 ? "${todayKanji!.grade}학년" : "중학교+"}',
                       style: theme.typography.sm.copyWith(
                         color: theme.colors.mutedForeground,
+                        fontFamily: 'SUITE',
                       ),
                     ),
                   ],
@@ -200,7 +214,10 @@ class _HomeScreenState extends State<HomeScreen> {
             // Study Button
             FButton(
               onPress: _navigateToStudy,
-              child: const Text('학습 시작'),
+              child: Text(
+                '학습 시작',
+                style: TextStyle(fontFamily: 'SUITE'),
+              ),
             ),
                     ],
                   ),

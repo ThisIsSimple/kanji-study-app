@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/quiz_set.dart';
 import '../services/supabase_service.dart';
 import 'quiz_detail_screen.dart';
@@ -13,6 +14,7 @@ class QuizListScreen extends StatefulWidget {
 
 class _QuizListScreenState extends State<QuizListScreen> {
   final SupabaseService _supabaseService = SupabaseService.instance;
+  final TextEditingController _searchController = TextEditingController();
   List<QuizSet> _quizSets = [];
   bool _isLoading = true;
   String? _selectedCategory;
@@ -22,6 +24,12 @@ class _QuizListScreenState extends State<QuizListScreen> {
   void initState() {
     super.initState();
     _loadQuizSets();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadQuizSets() async {
@@ -117,8 +125,11 @@ class _QuizListScreenState extends State<QuizListScreen> {
     final theme = FTheme.of(context);
     
     return FScaffold(
-      header: const FHeader(
-        title: Text('퀴즈'),
+      header: FHeader(
+        title: Text(
+          '퀴즈',
+          style: TextStyle(fontFamily: 'SUITE'),
+        ),
       ),
       child: Column(
         children: [
@@ -138,9 +149,21 @@ class _QuizListScreenState extends State<QuizListScreen> {
               children: [
                 // Search Bar
                 TextField(
+                  controller: _searchController,
                   decoration: InputDecoration(
                     hintText: '퀴즈 검색...',
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(PhosphorIconsRegular.x),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                              });
+                            },
+                          )
+                        : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(color: theme.colors.border),
@@ -171,6 +194,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
                       '카테고리:',
                       style: theme.typography.sm.copyWith(
                         fontWeight: FontWeight.w600,
+                        fontFamily: 'SUITE',
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -228,7 +252,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.quiz_outlined,
+                              PhosphorIconsRegular.question,
                               size: 64,
                               color: theme.colors.mutedForeground,
                             ),
@@ -239,6 +263,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
                                   : '사용 가능한 퀴즈가 없습니다',
                               style: theme.typography.lg.copyWith(
                                 color: theme.colors.mutedForeground,
+                                fontFamily: 'SUITE',
                               ),
                             ),
                           ],
@@ -306,6 +331,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
                                                 quizSet.difficultyLevel,
                                               ),
                                               fontWeight: FontWeight.w600,
+                                              fontFamily: 'SUITE',
                                             ),
                                           ),
                                         ),
@@ -314,6 +340,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
                                           '${quizSet.kanjiIds.length}문제',
                                           style: theme.typography.xs.copyWith(
                                             color: theme.colors.mutedForeground,
+                                            fontFamily: 'SUITE',
                                           ),
                                         ),
                                         if (quizSet.category != null) ...[
@@ -330,7 +357,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
                                   ],
                                 ),
                                 trailing: Icon(
-                                  Icons.arrow_forward_ios,
+                                  PhosphorIconsRegular.caretRight,
                                   size: 16,
                                   color: theme.colors.mutedForeground,
                                 ),
@@ -387,6 +414,7 @@ class _CategoryChip extends StatelessWidget {
                 ? theme.colors.primaryForeground
                 : theme.colors.foreground,
             fontWeight: FontWeight.w500,
+            fontFamily: 'SUITE',
           ),
         ),
       ),

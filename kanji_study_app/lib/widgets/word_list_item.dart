@@ -58,7 +58,7 @@ class WordListItem extends StatelessWidget {
                     word.word,
                     style: GoogleFonts.notoSerifJp(
                       fontSize: 20,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.bold,
                       color: theme.colors.foreground,
                       height: 1.3,
                     ),

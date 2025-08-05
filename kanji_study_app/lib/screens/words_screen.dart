@@ -35,17 +35,22 @@ class _WordsScreenState extends State<WordsScreen> {
   }
 
   Future<void> _loadWords() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     
     try {
       if (!_wordService.isInitialized) {
         await _wordService.init();
       }
-      _applyFilters();
+      if (mounted) {
+        _applyFilters();
+      }
     } catch (e) {
       debugPrint('Error loading words: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -104,30 +109,9 @@ class _WordsScreenState extends State<WordsScreen> {
     
     return FScaffold(
       header: FHeader(
-        title: Row(
-          children: [
-            Text(
-              '단어 목록',
-              style: TextStyle(fontFamily: 'SUITE'),
-            ),
-            const Spacer(),
-            IconButton(
-              icon: Icon(
-                _showOnlyFavorites 
-                    ? PhosphorIconsFill.star 
-                    : PhosphorIconsRegular.star,
-                color: _showOnlyFavorites 
-                    ? Colors.amber 
-                    : theme.colors.mutedForeground,
-              ),
-              onPressed: _toggleFavoriteFilter,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(
-                minWidth: 40,
-                minHeight: 40,
-              ),
-            ),
-          ],
+        title: Text(
+          '단어 목록',
+          style: TextStyle(fontFamily: 'SUITE'),
         ),
       ),
       child: _isLoading
@@ -174,10 +158,54 @@ class _WordsScreenState extends State<WordsScreen> {
                       
                       const SizedBox(height: 12),
                       
-                      // JLPT level filter tags
-                      SizedBox(
-                        height: 32,
-                        child: ListView.separated(
+                      // Filters row (Favorite + JLPT levels)
+                      Row(
+                        children: [
+                          // Favorite filter button
+                          FilterChip(
+                            label: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _showOnlyFavorites 
+                                      ? PhosphorIconsFill.star 
+                                      : PhosphorIconsRegular.star,
+                                  size: 16,
+                                  color: _showOnlyFavorites 
+                                      ? Colors.amber 
+                                      : theme.colors.mutedForeground,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '즐겨찾기',
+                                  style: TextStyle(
+                                    fontFamily: 'SUITE',
+                                    fontWeight: _showOnlyFavorites 
+                                        ? FontWeight.w600 
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            selected: _showOnlyFavorites,
+                            onSelected: (_) => _toggleFavoriteFilter(),
+                            backgroundColor: theme.colors.background,
+                            selectedColor: Colors.amber.withValues(alpha: 0.1),
+                            checkmarkColor: Colors.transparent,
+                            side: BorderSide(
+                              color: _showOnlyFavorites 
+                                  ? Colors.amber 
+                                  : theme.colors.border,
+                              width: _showOnlyFavorites ? 2 : 1,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          
+                          // JLPT level filter tags
+                          Expanded(
+                            child: SizedBox(
+                              height: 32,
+                              child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: 5,
                           separatorBuilder: (context, index) => 
@@ -209,7 +237,10 @@ class _WordsScreenState extends State<WordsScreen> {
                               ),
                             );
                           },
-                        ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       
                       const SizedBox(height: 8),

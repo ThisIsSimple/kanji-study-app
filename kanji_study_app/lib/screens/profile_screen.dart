@@ -63,7 +63,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     
     return FScaffold(
       header: FHeader(
-        title: const Text('프로필'),
+        title: Text(
+          '프로필',
+          style: TextStyle(fontFamily: 'SUITE'),
+        ),
         suffixes: [
           IconButton(
             icon: Icon(PhosphorIconsRegular.gear),
@@ -102,6 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             '한자 학습자',
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -109,6 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             '매일 꾸준히 학습 중',
                             style: theme.typography.sm.copyWith(
                               color: theme.colors.mutedForeground,
+                              fontFamily: 'SUITE',
                             ),
                           ),
                         ],
@@ -128,6 +133,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             '전체 진도',
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -164,6 +170,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             '${(_progress * 100).toStringAsFixed(1)}% 완료',
                             style: theme.typography.sm.copyWith(
                               color: theme.colors.mutedForeground,
+                              fontFamily: 'SUITE',
                             ),
                           ),
                         ],
@@ -194,6 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           label,
           style: theme.typography.sm.copyWith(
             color: theme.colors.mutedForeground,
+            fontFamily: 'SUITE',
           ),
         ),
       ],
