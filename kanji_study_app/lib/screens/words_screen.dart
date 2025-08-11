@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/word_model.dart';
 import '../services/word_service.dart';
 import '../widgets/word_list_item.dart';
+import 'word_detail_screen.dart';
 
 class WordsScreen extends StatefulWidget {
   const WordsScreen({super.key});
@@ -362,7 +363,7 @@ class _WordsScreenState extends State<WordsScreen> {
                             ),
                           )
                         : ListView.builder(
-                            padding: EdgeInsets.zero,
+                            padding: const EdgeInsets.only(top: 8, bottom: 16),
                             itemCount: _filteredWords.length,
                             key: ValueKey(_filteredWords.length),
                             itemBuilder: (context, index) {
@@ -376,12 +377,10 @@ class _WordsScreenState extends State<WordsScreen> {
                                 word: word,
                                 isFavorite: _wordService.isFavorite(word.id),
                                 onTap: () {
-                                  // TODO: Navigate to word detail screen
-                                  // For now, just show a snackbar
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('${word.word} (${word.reading})'),
-                                      duration: const Duration(seconds: 1),
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => WordDetailScreen(word: word),
                                     ),
                                   );
                                 },
