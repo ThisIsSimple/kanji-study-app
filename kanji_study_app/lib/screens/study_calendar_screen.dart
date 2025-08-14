@@ -121,6 +121,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                         },
                         eventLoader: _getEventsForDay,
                         startingDayOfWeek: StartingDayOfWeek.monday,
+                        availableGestures: AvailableGestures.none,
                         calendarStyle: CalendarStyle(
                           outsideDaysVisible: false,
                           cellMargin: const EdgeInsets.all(4),
