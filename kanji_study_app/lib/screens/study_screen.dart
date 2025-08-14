@@ -135,7 +135,7 @@ class _StudyScreenState extends State<StudyScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isPrimary 
               ? theme.colors.primary.withValues(alpha: 0.05)
@@ -412,103 +412,101 @@ class _StudyScreenState extends State<StudyScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 24),
+              
+              // Examples Section Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '예시',
+                    style: theme.typography.lg.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'SUITE',
+                    ),
+                  ),
+                  if (_geminiService.isInitialized)
+                    FButton(
+                      onPress: _isGeneratingExamples ? null : _generateExamples,
+                      style: FButtonStyle.outline(),
+                      child: _isGeneratingExamples
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(
+                              'AI 예문 생성',
+                              style: TextStyle(fontFamily: 'SUITE'),
+                            ),
+                    ),
+                ],
+              ),
               const SizedBox(height: 16),
               
-              
-              // Examples Card
-              FCard(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '예시',
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'SUITE',
-                            ),
-                          ),
-                          if (_geminiService.isInitialized)
-                            FButton(
-                              onPress: _isGeneratingExamples ? null : _generateExamples,
-                              style: FButtonStyle.outline(),
-                              child: _isGeneratingExamples
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  : Text(
-                                      'AI 예문 생성',
-                                      style: TextStyle(fontFamily: 'SUITE'),
-                                    ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Display examples based on priority: DB examples > AI generated > default
-                      if (_isLoadingExamples) ...[
-                        const Center(
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ] else if (_databaseExamples.isNotEmpty || _generatedExamples != null) ...[
-                        // Display database examples first
-                        if (_databaseExamples.isNotEmpty) ...[
-                          ..._databaseExamples.map((example) => _buildExampleCard(
-                            example,
-                            theme,
-                            sourceLabel: _getSourceLabel(example.source),
-                            isPrimary: true,
-                          )),
-                        ],
-                        // Then display AI generated examples
-                        if (_generatedExamples != null) ...[
-                          ..._generatedExamples!.map((example) => _buildExampleCard(
-                            example,
-                            theme,
-                            sourceLabel: 'AI 생성',
-                            isPrimary: false,
-                          )),
-                        ],
-                      ] else if (widget.kanji.examples.isNotEmpty) ...[
-                        // Fallback to legacy examples
-                        ...widget.kanji.examples.map((example) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: theme.colors.secondary.withValues(alpha: 0.05),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: theme.colors.border,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                example.toString(),
-                                style: theme.typography.base,
-                              ),
-                            ),
-                          );
-                        }),
-                      ] else ...[
-                        Text(
-                          '예문이 없습니다.',
-                          style: theme.typography.base.copyWith(
-                            color: theme.colors.mutedForeground,
-                            fontFamily: 'SUITE',
-                          ),
-                        ),
-                      ],
-                    ],
+              // Display examples based on priority: DB examples > AI generated > default
+              if (_isLoadingExamples) ...[
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32),
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ),
-              ),
+              ] else if (_databaseExamples.isNotEmpty || _generatedExamples != null) ...[
+                // Display database examples first
+                if (_databaseExamples.isNotEmpty) ...[
+                  ..._databaseExamples.map((example) => _buildExampleCard(
+                    example,
+                    theme,
+                    sourceLabel: _getSourceLabel(example.source),
+                    isPrimary: true,
+                  )),
+                ],
+                // Then display AI generated examples
+                if (_generatedExamples != null) ...[
+                  ..._generatedExamples!.map((example) => _buildExampleCard(
+                    example,
+                    theme,
+                    sourceLabel: 'AI 생성',
+                    isPrimary: false,
+                  )),
+                ],
+              ] else if (widget.kanji.examples.isNotEmpty) ...[
+                // Fallback to legacy examples
+                ...widget.kanji.examples.map((example) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.colors.secondary.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: theme.colors.border,
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        example.toString(),
+                        style: theme.typography.base,
+                      ),
+                    ),
+                  );
+                }),
+              ] else ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: Center(
+                    child: Text(
+                      '예문이 없습니다.',
+                      style: theme.typography.base.copyWith(
+                        color: theme.colors.mutedForeground,
+                        fontFamily: 'SUITE',
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             const SizedBox(height: 32),
             
             // Complete Study Button

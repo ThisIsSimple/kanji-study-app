@@ -280,125 +280,104 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
               ),
             ),
             
+            const SizedBox(height: 24),
+            
+            // Examples Section Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '예문',
+                  style: theme.typography.lg.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'SUITE',
+                  ),
+                ),
+                if (_geminiService.isInitialized)
+                  FButton(
+                    onPress: _isGeneratingExamples ? null : _generateExamples,
+                    style: FButtonStyle.outline(),
+                    child: _isGeneratingExamples
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            'AI 예문 생성',
+                            style: TextStyle(fontFamily: 'SUITE'),
+                          ),
+                  ),
+              ],
+            ),
             const SizedBox(height: 16),
             
-            // Examples Card
-            FCard(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Display examples
+            if (_generatedExamples != null && _generatedExamples!.isNotEmpty) ...[
+              ..._generatedExamples!.map((example) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: FCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FuriganaText(
+                            text: example.furigana.contains('[') ? example.furigana : example.japanese,
+                            style: GoogleFonts.notoSerifJp(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              color: theme.colors.foreground,
+                              height: 1.5,  // 행간 조절
+                            ),
+                            rubyStyle: theme.typography.sm.copyWith(
+                              color: theme.colors.mutedForeground,
+                              fontSize: 11,
+                            ),
+                            spacing: -1.0,  // 한자와 후리가나 사이 간격을 더 좁게
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            example.korean,
+                            style: theme.typography.base.copyWith(
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'SUITE',
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ] else ...[
+              FCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Center(
+                    child: Column(
                       children: [
+                        Icon(
+                          PhosphorIconsRegular.sparkle,
+                          size: 48,
+                          color: theme.colors.mutedForeground,
+                        ),
+                        const SizedBox(height: 16),
                         Text(
-                          '예문',
-                          style: theme.typography.lg.copyWith(
-                            fontWeight: FontWeight.bold,
+                          'AI로 예문을 생성해보세요',
+                          style: theme.typography.base.copyWith(
+                            color: theme.colors.mutedForeground,
                             fontFamily: 'SUITE',
                           ),
                         ),
-                        if (_geminiService.isInitialized)
-                          FButton(
-                            onPress: _isGeneratingExamples ? null : _generateExamples,
-                            style: FButtonStyle.outline(),
-                            child: _isGeneratingExamples
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : Text(
-                                    'AI 예문 생성',
-                                    style: TextStyle(fontFamily: 'SUITE'),
-                                  ),
-                          ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    
-                    // Display examples
-                    if (_generatedExamples != null && _generatedExamples!.isNotEmpty) ...[
-                      ..._generatedExamples!.map((example) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: theme.colors.primary.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: theme.colors.primary.withValues(alpha: 0.2),
-                                width: 1,
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                FuriganaText(
-                                  text: example.furigana.contains('[') ? example.furigana : example.japanese,
-                                  style: GoogleFonts.notoSerifJp(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w500,
-                                    color: theme.colors.foreground,
-                                    height: 1.5,  // 행간 조절
-                                  ),
-                                  rubyStyle: theme.typography.sm.copyWith(
-                                    color: theme.colors.mutedForeground,
-                                    fontSize: 10,
-                                  ),
-                                  spacing: -1.0,  // 한자와 후리가나 사이 간격을 더 좁게
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  example.korean,
-                                  style: theme.typography.base.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    fontFamily: 'SUITE',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }),
-                    ] else ...[
-                      Container(
-                        padding: const EdgeInsets.all(32),
-                        decoration: BoxDecoration(
-                          color: theme.colors.secondary.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: theme.colors.border,
-                            width: 1,
-                          ),
-                        ),
-                        child: Center(
-                          child: Column(
-                            children: [
-                              Icon(
-                                PhosphorIconsRegular.sparkle,
-                                size: 48,
-                                color: theme.colors.mutedForeground,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'AI로 예문을 생성해보세요',
-                                style: theme.typography.base.copyWith(
-                                  color: theme.colors.mutedForeground,
-                                  fontFamily: 'SUITE',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),
