@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:intl/date_symbol_data_local.dart';
 import 'services/notification_service.dart';
 import 'services/gemini_service.dart';
 import 'services/supabase_service.dart';
@@ -13,6 +14,9 @@ void main() async {
   
   // Initialize timezone
   tz.initializeTimeZones();
+  
+  // Initialize date formatting for Korean locale
+  await initializeDateFormatting('ko_KR', null);
   
   // Initialize Supabase
   await SupabaseService.instance.init();
