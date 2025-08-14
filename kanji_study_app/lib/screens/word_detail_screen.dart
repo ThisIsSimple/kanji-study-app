@@ -11,10 +11,14 @@ import '../widgets/furigana_text.dart';
 
 class WordDetailScreen extends StatefulWidget {
   final Word word;
+  final List<Word>? wordList;
+  final int? currentIndex;
   
   const WordDetailScreen({
     super.key,
     required this.word,
+    this.wordList,
+    this.currentIndex,
   });
 
   @override
@@ -25,6 +29,11 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
   final WordService _wordService = WordService.instance;
   final GeminiService _geminiService = GeminiService.instance;
   
+  late PageController _pageController;
+  late int _currentIndex;
+  late List<Word> _wordList;
+  late Word _currentWord;
+  
   late bool _isFavorite;
   bool _isGeneratingExamples = false;
   List<WordExample>? _generatedExamples;
@@ -32,7 +41,26 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _isFavorite = _wordService.isFavorite(widget.word.id);
+    _wordList = widget.wordList ?? [widget.word];
+    _currentIndex = widget.currentIndex ?? 0;
+    _currentWord = _wordList[_currentIndex];
+    _pageController = PageController(initialPage: _currentIndex);
+    _isFavorite = _wordService.isFavorite(_currentWord.id);
+  }
+  
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+  
+  void _onPageChanged(int index) {
+    setState(() {
+      _currentIndex = index;
+      _currentWord = _wordList[index];
+      _isFavorite = _wordService.isFavorite(_currentWord.id);
+      _generatedExamples = null;
+    });
   }
 
   void _toggleFavorite() {
@@ -142,36 +170,12 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
     return examples;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
-    
-    return FScaffold(
-      header: FHeader.nested(
-        title: Text(
-          '단어 상세',
-          style: TextStyle(fontFamily: 'SUITE'),
-        ),
-        prefixes: [
-          FHeaderAction.back(
-            onPress: () => Navigator.of(context).pop(),
-          ),
-        ],
-        suffixes: [
-          IconButton(
-            icon: Icon(
-              _isFavorite ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
-              color: _isFavorite ? Colors.amber : null,
-            ),
-            onPressed: _toggleFavorite,
-          ),
-        ],
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+  Widget _buildWordPage(Word word, FThemeData theme) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
             // Word Information Card
             FCard(
               child: Padding(
@@ -208,17 +212,17 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _getJlptColor(widget.word.jlptLevel).withValues(alpha: 0.1),
+                            color: _getJlptColor(word.jlptLevel).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: _getJlptColor(widget.word.jlptLevel).withValues(alpha: 0.5),
+                              color: _getJlptColor(word.jlptLevel).withValues(alpha: 0.5),
                               width: 1,
                             ),
                           ),
                           child: Text(
-                            'JLPT N${widget.word.jlptLevel}',
+                            'JLPT N${word.jlptLevel}',
                             style: theme.typography.sm.copyWith(
-                              color: _getJlptColor(widget.word.jlptLevel),
+                              color: _getJlptColor(word.jlptLevel),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -378,8 +382,71 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                 ),
               ),
             ],
+        ],
+      ),
+    );
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    
+    // If no wordList provided, show single word without swipe
+    if (_wordList.length == 1) {
+      return FScaffold(
+        header: FHeader.nested(
+          title: Text(
+            '단어 상세',
+            style: TextStyle(fontFamily: 'SUITE'),
+          ),
+          prefixes: [
+            FHeaderAction.back(
+              onPress: () => Navigator.of(context).pop(),
+            ),
+          ],
+          suffixes: [
+            IconButton(
+              icon: Icon(
+                _isFavorite ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+                color: _isFavorite ? Colors.amber : null,
+              ),
+              onPressed: _toggleFavorite,
+            ),
           ],
         ),
+        child: _buildWordPage(_currentWord, theme),
+      );
+    }
+    
+    // Show with PageView for swipe navigation
+    return FScaffold(
+      header: FHeader.nested(
+        title: Text(
+          '단어 상세 (${_currentIndex + 1}/${_wordList.length})',
+          style: TextStyle(fontFamily: 'SUITE'),
+        ),
+        prefixes: [
+          FHeaderAction.back(
+            onPress: () => Navigator.of(context).pop(),
+          ),
+        ],
+        suffixes: [
+          IconButton(
+            icon: Icon(
+              _isFavorite ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+              color: _isFavorite ? Colors.amber : null,
+            ),
+            onPressed: _toggleFavorite,
+          ),
+        ],
+      ),
+      child: PageView.builder(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
+        itemCount: _wordList.length,
+        itemBuilder: (context, index) {
+          return _buildWordPage(_wordList[index], theme);
+        },
       ),
     );
   }

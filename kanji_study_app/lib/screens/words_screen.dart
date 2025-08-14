@@ -380,7 +380,11 @@ class _WordsScreenState extends State<WordsScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => WordDetailScreen(word: word),
+                                      builder: (context) => WordDetailScreen(
+                                        word: word,
+                                        wordList: _filteredWords,
+                                        currentIndex: index,
+                                      ),
                                     ),
                                   );
                                 },

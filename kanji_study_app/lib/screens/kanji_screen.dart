@@ -113,10 +113,15 @@ class _KanjiScreenState extends State<KanjiScreen> {
   }
 
   void _navigateToStudy(Kanji kanji) {
+    final index = _filteredKanji.indexOf(kanji);
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => StudyScreen(kanji: kanji),
+        builder: (context) => StudyScreen(
+          kanji: kanji,
+          kanjiList: _filteredKanji,
+          currentIndex: index >= 0 ? index : 0,
+        ),
       ),
     );
   }

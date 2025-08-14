@@ -11,10 +11,14 @@ import '../utils/korean_formatter.dart';
 
 class StudyScreen extends StatefulWidget {
   final Kanji kanji;
+  final List<Kanji>? kanjiList;
+  final int? currentIndex;
   
   const StudyScreen({
     super.key,
     required this.kanji,
+    this.kanjiList,
+    this.currentIndex,
   });
 
   @override
@@ -25,6 +29,12 @@ class _StudyScreenState extends State<StudyScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
   final GeminiService _geminiService = GeminiService.instance;
   final SupabaseService _supabaseService = SupabaseService.instance;
+  
+  PageController? _pageController;
+  int _currentIndex = 0;
+  List<Kanji>? _kanjiList;
+  Kanji? _currentKanji;
+  
   bool _isCompleted = false;
   bool _isGeneratingExamples = false;
   List<KanjiExample>? _generatedExamples;
@@ -34,7 +44,30 @@ class _StudyScreenState extends State<StudyScreen> {
   @override
   void initState() {
     super.initState();
+    _kanjiList = widget.kanjiList ?? [widget.kanji];
+    _currentIndex = widget.currentIndex ?? 0;
+    _currentKanji = _kanjiList![_currentIndex];
+    _pageController = PageController(initialPage: _currentIndex);
     _loadDatabaseExamples();
+  }
+  
+  @override
+  void dispose() {
+    _pageController?.dispose();
+    super.dispose();
+  }
+  
+  void _onPageChanged(int index) {
+    if (_kanjiList != null) {
+      setState(() {
+        _currentIndex = index;
+        _currentKanji = _kanjiList![index];
+        _isCompleted = false;
+        _generatedExamples = null;
+        _databaseExamples = [];
+      });
+      _loadDatabaseExamples();
+    }
   }
 
   Future<void> _loadDatabaseExamples() async {
@@ -44,7 +77,8 @@ class _StudyScreenState extends State<StudyScreen> {
     
     try {
       // Load examples from database using kanji id
-      final examples = await _supabaseService.getKanjiExamples(widget.kanji.id);
+      if (_currentKanji == null) return;
+      final examples = await _supabaseService.getKanjiExamples(_currentKanji!.id);
       setState(() {
         _databaseExamples = examples;
         _isLoadingExamples = false;
@@ -65,7 +99,8 @@ class _StudyScreenState extends State<StudyScreen> {
     });
     
     try {
-      final examples = await _geminiService.generateExamples(widget.kanji);
+      if (_currentKanji == null) return;
+      final examples = await _geminiService.generateExamples(_currentKanji!);
       setState(() {
         _generatedExamples = examples;
         _isGeneratingExamples = false;
@@ -87,7 +122,8 @@ class _StudyScreenState extends State<StudyScreen> {
   }
 
   void _markAsStudied() async {
-    await _kanjiService.markAsStudied(widget.kanji.character);
+    if (_currentKanji == null) return;
+    await _kanjiService.markAsStudied(_currentKanji!.character);
     setState(() {
       _isCompleted = true;
     });
@@ -98,7 +134,7 @@ class _StudyScreenState extends State<StudyScreen> {
         context: context,
         builder: (context) => FDialog(
           title: const Text('학습 완료!'),
-          body: Text('${widget.kanji.character} 한자를 학습했습니다.'),
+          body: Text('${_currentKanji?.character ?? ""} 한자를 학습했습니다.'),
           actions: [
             FButton(
               onPress: () {
@@ -218,27 +254,12 @@ class _StudyScreenState extends State<StudyScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
-    
-    return FScaffold(
-      header: FHeader.nested(
-        title: Text(
-          '한자 학습',
-          style: TextStyle(fontFamily: 'SUITE'),
-        ),
-        prefixes: [
-          FHeaderAction.back(
-            onPress: () => Navigator.of(context).pop(),
-          ),
-        ],
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+  Widget _buildKanjiPage(Kanji kanji, FThemeData theme) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
             // Main Kanji Card
             FCard(
               child: Padding(
@@ -249,7 +270,7 @@ class _StudyScreenState extends State<StudyScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                     Text(
-                      widget.kanji.character,
+                      kanji.character,
                       style: GoogleFonts.notoSerifJp(
                         fontSize: 72,
                         fontWeight: FontWeight.bold,
@@ -277,7 +298,7 @@ class _StudyScreenState extends State<StudyScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            widget.kanji.meanings.join(', '),
+                            kanji.meanings.join(', '),
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
                               fontFamily: 'SUITE',
@@ -313,7 +334,7 @@ class _StudyScreenState extends State<StudyScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Korean reading
-                          if (hasKoreanReadings(widget.kanji.koreanKunReadings, widget.kanji.koreanOnReadings)) ...[
+                          if (hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings)) ...[
                             Text(
                               '한국어',
                               style: theme.typography.sm.copyWith(
@@ -332,7 +353,7 @@ class _StudyScreenState extends State<StudyScreen> {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                formatKoreanReadings(widget.kanji.koreanKunReadings, widget.kanji.koreanOnReadings),
+                                formatKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings),
                                 style: theme.typography.base.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: theme.colors.primary,
@@ -343,7 +364,7 @@ class _StudyScreenState extends State<StudyScreen> {
                             const SizedBox(height: 24),
                           ],
                           // Japanese readings
-                          if (widget.kanji.readings.on.isNotEmpty) ...[
+                          if (kanji.readings.on.isNotEmpty) ...[
                             Text(
                               '일본어 음독 (音読み)',
                               style: theme.typography.sm.copyWith(
@@ -355,7 +376,7 @@ class _StudyScreenState extends State<StudyScreen> {
                             Wrap(
                               spacing: 12,
                               runSpacing: 8,
-                              children: widget.kanji.readings.on.map((reading) {
+                              children: kanji.readings.on.map((reading) {
                                 return Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
@@ -373,10 +394,10 @@ class _StudyScreenState extends State<StudyScreen> {
                               }).toList(),
                             ),
                           ],
-                          if (widget.kanji.readings.on.isNotEmpty && 
-                              widget.kanji.readings.kun.isNotEmpty)
+                          if (kanji.readings.on.isNotEmpty && 
+                              kanji.readings.kun.isNotEmpty)
                             const SizedBox(height: 16),
-                          if (widget.kanji.readings.kun.isNotEmpty) ...[
+                          if (kanji.readings.kun.isNotEmpty) ...[
                             Text(
                               '일본어 훈독 (訓読み)',
                               style: theme.typography.sm.copyWith(
@@ -388,7 +409,7 @@ class _StudyScreenState extends State<StudyScreen> {
                             Wrap(
                               spacing: 12,
                               runSpacing: 8,
-                              children: widget.kanji.readings.kun.map((reading) {
+                              children: kanji.readings.kun.map((reading) {
                                 return Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
@@ -471,9 +492,9 @@ class _StudyScreenState extends State<StudyScreen> {
                     isPrimary: false,
                   )),
                 ],
-              ] else if (widget.kanji.examples.isNotEmpty) ...[
+              ] else if (kanji.examples.isNotEmpty) ...[
                 // Fallback to legacy examples
-                ...widget.kanji.examples.map((example) {
+                ...kanji.examples.map((example) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12.0),
                     child: Container(
@@ -517,8 +538,73 @@ class _StudyScreenState extends State<StudyScreen> {
                 style: TextStyle(fontFamily: 'SUITE'),
               ),
             ),
+        ],
+      ),
+    );
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    
+    // Wait for initialization
+    if (_kanjiList == null || _currentKanji == null) {
+      return FScaffold(
+        header: FHeader.nested(
+          title: Text(
+            '한자 학습',
+            style: TextStyle(fontFamily: 'SUITE'),
+          ),
+          prefixes: [
+            FHeaderAction.back(
+              onPress: () => Navigator.of(context).pop(),
+            ),
           ],
         ),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    
+    // If no kanjiList provided, show single kanji without swipe
+    if (_kanjiList!.length == 1) {
+      return FScaffold(
+        header: FHeader.nested(
+          title: Text(
+            '한자 학습',
+            style: TextStyle(fontFamily: 'SUITE'),
+          ),
+          prefixes: [
+            FHeaderAction.back(
+              onPress: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
+        child: _buildKanjiPage(_currentKanji!, theme),
+      );
+    }
+    
+    // Show with PageView for swipe navigation
+    return FScaffold(
+      header: FHeader.nested(
+        title: Text(
+          '한자 학습 (${_currentIndex + 1}/${_kanjiList!.length})',
+          style: TextStyle(fontFamily: 'SUITE'),
+        ),
+        prefixes: [
+          FHeaderAction.back(
+            onPress: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+      child: PageView.builder(
+        controller: _pageController!,
+        onPageChanged: _onPageChanged,
+        itemCount: _kanjiList!.length,
+        itemBuilder: (context, index) {
+          return _buildKanjiPage(_kanjiList![index], theme);
+        },
       ),
     );
   }
