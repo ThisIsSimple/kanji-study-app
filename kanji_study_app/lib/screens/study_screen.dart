@@ -6,6 +6,7 @@ import '../models/kanji_example.dart';
 import '../services/kanji_service.dart';
 import '../services/gemini_service.dart';
 import '../services/supabase_service.dart';
+import '../widgets/furigana_text.dart';
 import '../utils/korean_formatter.dart';
 
 class StudyScreen extends StatefulWidget {
@@ -169,22 +170,20 @@ class _StudyScreenState extends State<StudyScreen> {
               ),
               const SizedBox(height: 8),
             ],
-            // Japanese text
-            Text(
-              example.japanese,
+            // Japanese text with furigana
+            FuriganaText(
+              text: example.furigana.contains('[') ? example.furigana : example.japanese,
               style: GoogleFonts.notoSerifJp(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
                 color: theme.colors.foreground,
+                height: 1.5,  // 행간 조절
               ),
-            ),
-            const SizedBox(height: 4),
-            // Furigana reading
-            Text(
-              example.furigana,
-              style: theme.typography.sm.copyWith(
+              rubyStyle: theme.typography.sm.copyWith(
                 color: theme.colors.mutedForeground,
+                fontSize: 10,
               ),
+              spacing: -1.0,  // 한자와 후리가나 사이 간격을 더 좁게
             ),
             const SizedBox(height: 8),
             // Korean translation

@@ -7,6 +7,7 @@ import '../models/word_model.dart';
 import '../models/word_example_model.dart';
 import '../services/word_service.dart';
 import '../services/gemini_service.dart';
+import '../widgets/furigana_text.dart';
 
 class WordDetailScreen extends StatefulWidget {
   final Word word;
@@ -335,20 +336,19 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  example.japanese,
+                                FuriganaText(
+                                  text: example.furigana.contains('[') ? example.furigana : example.japanese,
                                   style: GoogleFonts.notoSerifJp(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w500,
                                     color: theme.colors.foreground,
+                                    height: 1.5,  // 행간 조절
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  example.furigana,
-                                  style: theme.typography.sm.copyWith(
+                                  rubyStyle: theme.typography.sm.copyWith(
                                     color: theme.colors.mutedForeground,
+                                    fontSize: 10,
                                   ),
+                                  spacing: -1.0,  // 한자와 후리가나 사이 간격을 더 좁게
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
