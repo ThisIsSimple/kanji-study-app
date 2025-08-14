@@ -223,24 +223,31 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Reading (furigana)
-                    if (widget.word.reading.isNotEmpty && widget.word.reading != widget.word.word)
-                      Text(
-                        widget.word.reading,
-                        style: theme.typography.base.copyWith(
-                          color: theme.colors.mutedForeground,
-                          fontSize: 18,
-                        ),
-                      ),
-                    
-                    // Main word
-                    Text(
-                      widget.word.word,
-                      style: GoogleFonts.notoSerifJp(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colors.foreground,
-                        height: 1.2,
+                    // Centered word section
+                    Center(
+                      child: Column(
+                        children: [
+                          // Reading (furigana)
+                          if (word.reading.isNotEmpty && word.reading != word.word)
+                            Text(
+                              word.reading,
+                              style: theme.typography.base.copyWith(
+                                color: theme.colors.mutedForeground,
+                                fontSize: 18,
+                              ),
+                            ),
+                          
+                          // Main word
+                          Text(
+                            word.word,
+                            style: GoogleFonts.notoSerifJp(
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colors.foreground,
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     
