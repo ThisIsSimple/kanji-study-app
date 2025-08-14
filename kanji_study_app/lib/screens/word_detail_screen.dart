@@ -288,7 +288,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ...widget.word.meanings.map((meaning) {
+                    ...word.meanings.map((meaning) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Row(
