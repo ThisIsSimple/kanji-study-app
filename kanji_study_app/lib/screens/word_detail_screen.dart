@@ -7,6 +7,7 @@ import '../models/word_model.dart';
 import '../models/word_example_model.dart';
 import '../services/word_service.dart';
 import '../services/gemini_service.dart';
+import '../services/supabase_service.dart';
 import '../widgets/furigana_text.dart';
 
 class WordDetailScreen extends StatefulWidget {
@@ -28,6 +29,7 @@ class WordDetailScreen extends StatefulWidget {
 class _WordDetailScreenState extends State<WordDetailScreen> {
   final WordService _wordService = WordService.instance;
   final GeminiService _geminiService = GeminiService.instance;
+  final SupabaseService _supabaseService = SupabaseService.instance;
   
   late PageController _pageController;
   late int _currentIndex;
@@ -37,6 +39,8 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
   late bool _isFavorite;
   bool _isGeneratingExamples = false;
   List<WordExample>? _generatedExamples;
+  List<WordExample> _databaseExamples = [];
+  bool _isLoadingExamples = true;
 
   @override
   void initState() {
@@ -46,6 +50,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
     _currentWord = _wordList[_currentIndex];
     _pageController = PageController(initialPage: _currentIndex);
     _isFavorite = _wordService.isFavorite(_currentWord.id);
+    _loadDatabaseExamples();
   }
   
   @override
@@ -60,12 +65,34 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       _currentWord = _wordList[index];
       _isFavorite = _wordService.isFavorite(_currentWord.id);
       _generatedExamples = null;
+      _databaseExamples = [];
     });
+    _loadDatabaseExamples();
+  }
+  
+  Future<void> _loadDatabaseExamples() async {
+    setState(() {
+      _isLoadingExamples = true;
+    });
+    
+    try {
+      // Load examples from database using word id
+      final examples = await _supabaseService.getWordExamples(_currentWord.id);
+      setState(() {
+        _databaseExamples = examples;
+        _isLoadingExamples = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingExamples = false;
+      });
+      debugPrint('Error loading database examples: $e');
+    }
   }
 
   void _toggleFavorite() {
     setState(() {
-      _wordService.toggleFavorite(widget.word.id);
+      _wordService.toggleFavorite(_currentWord.id);
       _isFavorite = !_isFavorite;
     });
   }
@@ -168,6 +195,19 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
     }
     
     return examples;
+  }
+  
+  String _getSourceLabel(String? source) {
+    switch (source) {
+      case 'gemini':
+        return 'AI 생성';
+      case 'user':
+        return '사용자 제공';
+      case 'manual':
+        return '수동 입력';
+      default:
+        return '';
+    }
   }
 
   Widget _buildWordPage(Word word, FThemeData theme) {
@@ -317,45 +357,151 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
             const SizedBox(height: 16),
             
             // Display examples
-            if (_generatedExamples != null && _generatedExamples!.isNotEmpty) ...[
-              ..._generatedExamples!.map((example) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: FCard(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FuriganaText(
-                            text: example.furigana.contains('[') ? example.furigana : example.japanese,
-                            style: GoogleFonts.notoSerifJp(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                              color: theme.colors.foreground,
-                              height: 1.5,  // 행간 조절
+            if (_isLoadingExamples) ...[
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ] else if (_databaseExamples.isNotEmpty || _generatedExamples != null) ...[
+              // Display database examples first
+              if (_databaseExamples.isNotEmpty) ...[
+                ..._databaseExamples.map((example) {
+                  final sourceLabel = _getSourceLabel(example.source);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: FCard(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Source label
+                            if (sourceLabel.isNotEmpty) ...[ 
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: theme.colors.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  sourceLabel,
+                                  style: theme.typography.xs.copyWith(
+                                    color: theme.colors.primary,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'SUITE',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            FuriganaText(
+                              text: example.furigana.contains('[') ? example.furigana : example.japanese,
+                              style: GoogleFonts.notoSerifJp(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                                color: theme.colors.foreground,
+                                height: 1.5,  // 행간 조절
+                              ),
+                              rubyStyle: theme.typography.sm.copyWith(
+                                color: theme.colors.mutedForeground,
+                                fontSize: 11,
+                              ),
+                              spacing: -1.0,  // 한자와 후리가나 사이 간격을 더 좁게
                             ),
-                            rubyStyle: theme.typography.sm.copyWith(
-                              color: theme.colors.mutedForeground,
-                              fontSize: 11,
+                            const SizedBox(height: 12),
+                            Text(
+                              example.korean,
+                              style: theme.typography.base.copyWith(
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'SUITE',
+                                fontSize: 16,
+                              ),
                             ),
-                            spacing: -1.0,  // 한자와 후리가나 사이 간격을 더 좁게
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            example.korean,
-                            style: theme.typography.base.copyWith(
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'SUITE',
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
+                            // Explanation if exists
+                            if (example.explanation != null && example.explanation!.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: theme.colors.mutedForeground.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  example.explanation!,
+                                  style: theme.typography.sm.copyWith(
+                                    color: theme.colors.mutedForeground,
+                                    fontFamily: 'SUITE',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                }),
+              ],
+              // Then display AI generated examples
+              if (_generatedExamples != null) ...[
+                ..._generatedExamples!.map((example) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: FCard(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // AI Generated label
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: theme.colors.secondary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                'AI 생성',
+                                style: theme.typography.xs.copyWith(
+                                  color: theme.colors.secondary,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'SUITE',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            FuriganaText(
+                              text: example.furigana.contains('[') ? example.furigana : example.japanese,
+                              style: GoogleFonts.notoSerifJp(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                                color: theme.colors.foreground,
+                                height: 1.5,  // 행간 조절
+                              ),
+                              rubyStyle: theme.typography.sm.copyWith(
+                                color: theme.colors.mutedForeground,
+                                fontSize: 11,
+                              ),
+                              spacing: -1.0,  // 한자와 후리가나 사이 간격을 더 좁게
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              example.korean,
+                              style: theme.typography.base.copyWith(
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'SUITE',
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
             ] else ...[
               FCard(
                 child: Padding(

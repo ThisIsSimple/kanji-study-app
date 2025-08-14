@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../models/models.dart';
+import '../models/word_example_model.dart';
 
 /// Singleton service for managing Supabase operations
 class SupabaseService {
@@ -229,6 +230,34 @@ class SupabaseService {
     } catch (e) {
       debugPrint('Error getting kanji examples: $e');
       return []; // Return empty list instead of rethrowing
+    }
+  }
+  
+  /// Get word examples from database by word_id
+  Future<List<WordExample>> getWordExamples(int wordId) async {
+    try {
+      // Get both public examples and user's own examples
+      var query = _client
+          .from('word_examples')
+          .select()
+          .eq('word_id', wordId);
+      
+      // If logged in, get user's examples and public examples
+      // If not logged in, only get public examples (user_id is null)
+      if (isLoggedIn) {
+        query = query.or('user_id.eq.${currentUser!.id},user_id.is.null');
+      } else {
+        query = query.isFilter('user_id', null);
+      }
+      
+      final response = await query.order('created_at', ascending: false);
+      
+      return (response as List)
+          .map((data) => WordExample.fromJson(data))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting word examples: $e');
+      return [];
     }
   }
   
