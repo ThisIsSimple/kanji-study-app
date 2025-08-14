@@ -17,10 +17,11 @@ class StudyCalendarScreen extends StatefulWidget {
 class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
   final SupabaseService _supabaseService = SupabaseService.instance;
   
-  CalendarFormat _calendarFormat = CalendarFormat.month;
+  final CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   Map<DateTime, DailyStudyStats> _monthlyStats = {};
+  final Map<String, Map<DateTime, DailyStudyStats>> _monthlyStatsCache = {};
   bool _isLoading = true;
   
   @override
@@ -32,10 +33,24 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
     _loadMonthlyStats();
   }
   
-  Future<void> _loadMonthlyStats() async {
-    setState(() {
-      _isLoading = true;
-    });
+  Future<void> _loadMonthlyStats({bool showLoading = true}) async {
+    // Check cache first
+    final cacheKey = '${_focusedDay.year}-${_focusedDay.month}';
+    if (_monthlyStatsCache.containsKey(cacheKey)) {
+      setState(() {
+        _monthlyStats = _monthlyStatsCache[cacheKey]!;
+        if (showLoading) {
+          _isLoading = false;
+        }
+      });
+      return;
+    }
+    
+    if (showLoading) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
     
     try {
       final stats = await _supabaseService.getMonthlyStudyStats(
@@ -43,14 +58,21 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
         month: _focusedDay.month,
       );
       
+      // Cache the results
+      _monthlyStatsCache[cacheKey] = stats;
+      
       setState(() {
         _monthlyStats = stats;
-        _isLoading = false;
+        if (showLoading) {
+          _isLoading = false;
+        }
       });
     } catch (e) {
       debugPrint('Error loading monthly stats: $e');
       setState(() {
-        _isLoading = false;
+        if (showLoading) {
+          _isLoading = false;
+        }
       });
     }
   }
@@ -177,8 +199,10 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                           // Format change disabled
                         },
                         onPageChanged: (focusedDay) {
-                          _focusedDay = focusedDay;
-                          _loadMonthlyStats();
+                          setState(() {
+                            _focusedDay = focusedDay;
+                          });
+                          _loadMonthlyStats(showLoading: false);
                         },
                         calendarBuilders: CalendarBuilders(
                           markerBuilder: (context, day, events) {
