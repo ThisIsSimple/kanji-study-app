@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import '../services/kanji_service.dart';
+import 'package:intl/intl.dart';
 import '../services/supabase_service.dart';
 import '../utils/nickname_generator.dart';
+import '../models/daily_study_stats.dart';
 import 'settings_screen.dart';
+import 'study_calendar_screen.dart';
+import 'study_calendar_detail_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -14,37 +17,34 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final KanjiService _kanjiService = KanjiService.instance;
   final SupabaseService _supabaseService = SupabaseService.instance;
   
-  int _totalKanji = 0;
-  int _studiedCount = 0;
-  int _masteredCount = 0;
-  double _progress = 0.0;
   bool _isLoading = true;
   bool _isLoadingProfile = true;
   String _username = '';
   String _userEmail = '';
+  List<DailyStudyStats> _weeklyStats = [];
 
   @override
   void initState() {
     super.initState();
-    _loadStatistics();
+    _loadWeeklyStats();
     _loadUserProfile();
   }
 
-  Future<void> _loadStatistics() async {
+  Future<void> _loadWeeklyStats() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
     try {
-      await _kanjiService.init();
-      
+      final stats = await _supabaseService.getWeeklyStudyStats();
       setState(() {
-        _totalKanji = _kanjiService.getAllKanji().length;
-        _studiedCount = _kanjiService.getStudiedCount();
-        _masteredCount = _kanjiService.getMasteredCount();
-        _progress = _kanjiService.getOverallProgress();
+        _weeklyStats = stats;
         _isLoading = false;
       });
     } catch (e) {
+      debugPrint('Error loading weekly stats: $e');
       setState(() {
         _isLoading = false;
       });
@@ -114,7 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     
     if (result == true) {
-      _loadStatistics();
+      _loadWeeklyStats();
       _loadUserProfile();
     }
   }
@@ -191,57 +191,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 16),
                   
-                  // Overall Progress Card
+                  // Weekly Calendar Card
                   FCard(
                     child: Padding(
                       padding: const EdgeInsets.all(20.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '전체 진도',
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'SUITE',
-                            ),
-                          ),
-                          const SizedBox(height: 16),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              _buildStatItem(
-                                '전체',
-                                '$_totalKanji',
-                                theme.colors.primary,
+                              Text(
+                                '이번 주 학습',
+                                style: theme.typography.lg.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'SUITE',
+                                ),
                               ),
-                              _buildStatItem(
-                                '학습',
-                                '$_studiedCount',
-                                theme.colors.primary.withValues(alpha: 0.7),
-                              ),
-                              _buildStatItem(
-                                '마스터',
-                                '$_masteredCount',
-                                theme.colors.primary,
+                              FButton(
+                                onPress: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const StudyCalendarScreen(),
+                                    ),
+                                  );
+                                },
+                                style: FButtonStyle.outline(),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(PhosphorIconsRegular.calendar, size: 16),
+                                    const SizedBox(width: 6),
+                                    const Text(
+                                      '전체 보기',
+                                      style: TextStyle(fontFamily: 'SUITE'),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 20),
-                          LinearProgressIndicator(
-                            value: _progress,
-                            backgroundColor: theme.colors.secondary.withValues(alpha: 0.2),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              theme.colors.primary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${(_progress * 100).toStringAsFixed(1)}% 완료',
-                            style: theme.typography.sm.copyWith(
-                              color: theme.colors.mutedForeground,
-                              fontFamily: 'SUITE',
-                            ),
-                          ),
+                          _buildWeeklyCalendar(theme),
                         ],
                       ),
                     ),
@@ -252,23 +244,149 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStatItem(String label, String value, Color color) {
-    final theme = FTheme.of(context);
+  Widget _buildWeeklyCalendar(FThemeData theme) {
+    final now = DateTime.now();
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
     
     return Column(
       children: [
-        Text(
-          value,
-          style: theme.typography.xl.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-            fontSize: 32,
+        // Days of week header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            for (int i = 0; i < 7; i++)
+              _buildDayHeader(
+                DateFormat('E', 'ko_KR').format(startOfWeek.add(Duration(days: i)))[0],
+                theme,
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Calendar days
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            for (int i = 0; i < 7; i++)
+              _buildDayCell(
+                startOfWeek.add(Duration(days: i)),
+                theme,
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Legend
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildLegendItem('미학습', Colors.grey.shade200, theme),
+            const SizedBox(width: 16),
+            _buildLegendItem('1-4개', Colors.blue.shade100, theme),
+            const SizedBox(width: 16),
+            _buildLegendItem('5-9개', Colors.blue.shade300, theme),
+            const SizedBox(width: 16),
+            _buildLegendItem('10+개', Colors.blue.shade500, theme),
+          ],
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildDayHeader(String day, FThemeData theme) {
+    return Text(
+      day,
+      style: theme.typography.sm.copyWith(
+        color: theme.colors.mutedForeground,
+        fontFamily: 'SUITE',
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+  
+  Widget _buildDayCell(DateTime date, FThemeData theme) {
+    final isToday = DateUtils.isSameDay(date, DateTime.now());
+    final stats = _weeklyStats.firstWhere(
+      (s) => DateUtils.isSameDay(s.date, date),
+      orElse: () => DailyStudyStats(
+        date: date,
+        kanjiStudied: 0,
+        wordsStudied: 0,
+        totalCompleted: 0,
+        totalForgot: 0,
+        studyItems: [],
+      ),
+    );
+    
+    Color getBackgroundColor() {
+      final total = stats.totalStudied;
+      if (total == 0) return Colors.grey.shade200;
+      if (total < 5) return Colors.blue.shade100;
+      if (total < 10) return Colors.blue.shade300;
+      return Colors.blue.shade500;
+    }
+    
+    return GestureDetector(
+      onTap: () {
+        if (stats.totalStudied > 0) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => StudyCalendarDetailScreen(date: date),
+            ),
+          );
+        }
+      },
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          color: getBackgroundColor(),
+          borderRadius: BorderRadius.circular(8),
+          border: isToday
+              ? Border.all(color: theme.colors.primary, width: 2)
+              : null,
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${date.day}',
+                style: theme.typography.sm.copyWith(
+                  fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
+                  color: stats.totalStudied > 9 ? Colors.white : theme.colors.foreground,
+                ),
+              ),
+              if (stats.totalStudied > 0)
+                Text(
+                  '${stats.totalStudied}',
+                  style: theme.typography.xs.copyWith(
+                    fontSize: 10,
+                    color: stats.totalStudied > 9 ? Colors.white : theme.colors.foreground,
+                  ),
+                ),
+            ],
           ),
         ),
-        const SizedBox(height: 4),
+      ),
+    );
+  }
+  
+  Widget _buildLegendItem(String label, Color color, FThemeData theme) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 4),
         Text(
           label,
-          style: theme.typography.sm.copyWith(
+          style: theme.typography.xs.copyWith(
             color: theme.colors.mutedForeground,
             fontFamily: 'SUITE',
           ),

@@ -4,6 +4,7 @@ import '../config/supabase_config.dart';
 import '../models/models.dart';
 import '../models/word_example_model.dart';
 import '../models/study_record_model.dart';
+import '../models/daily_study_stats.dart';
 
 /// Singleton service for managing Supabase operations
 class SupabaseService {
@@ -817,6 +818,223 @@ class SupabaseService {
     } catch (e) {
       debugPrint('Error deleting study record: $e');
       rethrow;
+    }
+  }
+  
+  // ============= Calendar Methods =============
+  
+  /// Get daily study statistics for a date range
+  Future<List<DailyStudyStats>> getDailyStudyStats({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    if (!isLoggedIn) return [];
+    
+    try {
+      // Get study records for the date range
+      final response = await _client
+          .from('study_records')
+          .select()
+          .eq('user_id', currentUser!.id)
+          .gte('created_at', startDate.toIso8601String())
+          .lte('created_at', endDate.toIso8601String())
+          .order('created_at', ascending: true);
+      
+      final records = (response as List)
+          .map((data) => StudyRecord.fromJson(data))
+          .toList();
+      
+      // Group records by date
+      final Map<String, List<StudyRecord>> groupedRecords = {};
+      for (final record in records) {
+        final dateKey = '${record.createdAt!.year}-${record.createdAt!.month.toString().padLeft(2, '0')}-${record.createdAt!.day.toString().padLeft(2, '0')}';
+        if (!groupedRecords.containsKey(dateKey)) {
+          groupedRecords[dateKey] = [];
+        }
+        groupedRecords[dateKey]!.add(record);
+      }
+      
+      // Create DailyStudyStats for each date
+      final List<DailyStudyStats> dailyStats = [];
+      for (final entry in groupedRecords.entries) {
+        final date = DateTime.parse(entry.key);
+        final dayRecords = entry.value;
+        
+        int kanjiStudied = 0;
+        int wordsStudied = 0;
+        int totalCompleted = 0;
+        int totalForgot = 0;
+        final List<StudyItem> studyItems = [];
+        
+        // Track unique items studied
+        final Set<String> uniqueKanji = {};
+        final Set<String> uniqueWords = {};
+        
+        for (final record in dayRecords) {
+          final itemKey = '${record.type.value}-${record.targetId}';
+          
+          if (record.type == StudyType.kanji && !uniqueKanji.contains(itemKey)) {
+            uniqueKanji.add(itemKey);
+            kanjiStudied++;
+          } else if (record.type == StudyType.word && !uniqueWords.contains(itemKey)) {
+            uniqueWords.add(itemKey);
+            wordsStudied++;
+          }
+          
+          if (record.status == StudyStatus.completed) {
+            totalCompleted++;
+          } else if (record.status == StudyStatus.forgot) {
+            totalForgot++;
+          }
+          
+          // Create StudyItem
+          studyItems.add(StudyItem(
+            id: record.targetId,
+            type: record.type.value,
+            name: '', // We'll need to fetch the actual names if needed
+            status: record.status.value,
+            studiedAt: record.createdAt!,
+          ));
+        }
+        
+        dailyStats.add(DailyStudyStats(
+          date: date,
+          kanjiStudied: kanjiStudied,
+          wordsStudied: wordsStudied,
+          totalCompleted: totalCompleted,
+          totalForgot: totalForgot,
+          studyItems: studyItems,
+        ));
+      }
+      
+      return dailyStats;
+    } catch (e) {
+      debugPrint('Error getting daily study stats: $e');
+      return [];
+    }
+  }
+  
+  /// Get monthly study statistics
+  Future<Map<DateTime, DailyStudyStats>> getMonthlyStudyStats({
+    required int year,
+    required int month,
+  }) async {
+    if (!isLoggedIn) return {};
+    
+    try {
+      final startDate = DateTime(year, month, 1);
+      final endDate = DateTime(year, month + 1, 0, 23, 59, 59);
+      
+      final dailyStats = await getDailyStudyStats(
+        startDate: startDate,
+        endDate: endDate,
+      );
+      
+      final Map<DateTime, DailyStudyStats> statsMap = {};
+      for (final stats in dailyStats) {
+        // Normalize date to remove time component
+        final normalizedDate = DateTime(stats.date.year, stats.date.month, stats.date.day);
+        statsMap[normalizedDate] = stats;
+      }
+      
+      return statsMap;
+    } catch (e) {
+      debugPrint('Error getting monthly study stats: $e');
+      return {};
+    }
+  }
+  
+  /// Get weekly study statistics (for ProfileScreen)
+  Future<List<DailyStudyStats>> getWeeklyStudyStats() async {
+    if (!isLoggedIn) return [];
+    
+    try {
+      final now = DateTime.now();
+      final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+      final endOfWeek = startOfWeek.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+      
+      return await getDailyStudyStats(
+        startDate: startOfWeek,
+        endDate: endOfWeek,
+      );
+    } catch (e) {
+      debugPrint('Error getting weekly study stats: $e');
+      return [];
+    }
+  }
+  
+  /// Get study items for a specific date with details
+  Future<List<Map<String, dynamic>>> getDateStudyDetails(DateTime date) async {
+    if (!isLoggedIn) return [];
+    
+    try {
+      final startOfDay = DateTime(date.year, date.month, date.day);
+      final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+      
+      // Get study records for the specific date
+      final response = await _client
+          .from('study_records')
+          .select()
+          .eq('user_id', currentUser!.id)
+          .gte('created_at', startOfDay.toIso8601String())
+          .lte('created_at', endOfDay.toIso8601String())
+          .order('created_at', ascending: false);
+      
+      final records = (response as List)
+          .map((data) => StudyRecord.fromJson(data))
+          .toList();
+      
+      // Fetch details for each item
+      final List<Map<String, dynamic>> detailedItems = [];
+      
+      for (final record in records) {
+        Map<String, dynamic>? itemDetails;
+        
+        if (record.type == StudyType.kanji) {
+          // Fetch kanji details
+          final kanjiResponse = await _client
+              .from('kanji')
+              .select('character, meanings')
+              .eq('id', record.targetId)
+              .maybeSingle();
+          
+          if (kanjiResponse != null) {
+            itemDetails = {
+              'type': 'kanji',
+              'character': kanjiResponse['character'],
+              'meanings': (kanjiResponse['meanings'] as List).join(', '),
+              'status': record.status.value,
+              'studiedAt': record.createdAt!.toIso8601String(),
+            };
+          }
+        } else if (record.type == StudyType.word) {
+          // Fetch word details
+          final wordResponse = await _client
+              .from('words')
+              .select('word, reading')
+              .eq('id', record.targetId)
+              .maybeSingle();
+          
+          if (wordResponse != null) {
+            itemDetails = {
+              'type': 'word',
+              'word': wordResponse['word'],
+              'reading': wordResponse['reading'],
+              'status': record.status.value,
+              'studiedAt': record.createdAt!.toIso8601String(),
+            };
+          }
+        }
+        
+        if (itemDetails != null) {
+          detailedItems.add(itemDetails);
+        }
+      }
+      
+      return detailedItems;
+    } catch (e) {
+      debugPrint('Error getting date study details: $e');
+      return [];
     }
   }
 }
