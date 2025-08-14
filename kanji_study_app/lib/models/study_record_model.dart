@@ -84,7 +84,7 @@ class StudyRecord {
       status: StudyStatus.fromString(json['status'] as String),
       notes: json['notes'] as String?,
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
+          ? DateTime.parse(json['created_at'] as String).toLocal()
           : null,
     );
   }

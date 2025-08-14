@@ -651,6 +651,7 @@ class SupabaseService {
         targetId: targetId,
         status: status,
         notes: notes,
+        createdAt: DateTime.now().toUtc(), // Save in UTC
       );
       
       await _client.from('study_records').insert(record.toJsonForCreate());
@@ -831,23 +832,29 @@ class SupabaseService {
     if (!isLoggedIn) return [];
     
     try {
+      // Convert local dates to UTC for querying
+      final utcStartDate = DateTime(startDate.year, startDate.month, startDate.day).toUtc();
+      final utcEndDate = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59).toUtc();
+      
       // Get study records for the date range
       final response = await _client
           .from('study_records')
           .select()
           .eq('user_id', currentUser!.id)
-          .gte('created_at', startDate.toIso8601String())
-          .lte('created_at', endDate.toIso8601String())
+          .gte('created_at', utcStartDate.toIso8601String())
+          .lte('created_at', utcEndDate.toIso8601String())
           .order('created_at', ascending: true);
       
       final records = (response as List)
           .map((data) => StudyRecord.fromJson(data))
           .toList();
       
-      // Group records by date
+      // Group records by local date
       final Map<String, List<StudyRecord>> groupedRecords = {};
       for (final record in records) {
-        final dateKey = '${record.createdAt!.year}-${record.createdAt!.month.toString().padLeft(2, '0')}-${record.createdAt!.day.toString().padLeft(2, '0')}';
+        // Use local time for grouping
+        final localDate = record.createdAt!;
+        final dateKey = '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
         if (!groupedRecords.containsKey(dateKey)) {
           groupedRecords[dateKey] = [];
         }
@@ -950,8 +957,8 @@ class SupabaseService {
     
     try {
       final now = DateTime.now();
-      final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-      final endOfWeek = startOfWeek.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+      final startOfWeek = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
+      final endOfWeek = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day).add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
       
       return await getDailyStudyStats(
         startDate: startOfWeek,
@@ -968,8 +975,9 @@ class SupabaseService {
     if (!isLoggedIn) return [];
     
     try {
-      final startOfDay = DateTime(date.year, date.month, date.day);
-      final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+      // Convert local date to UTC for querying
+      final startOfDay = DateTime(date.year, date.month, date.day).toUtc();
+      final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59).toUtc();
       
       // Get study records for the specific date
       final response = await _client
