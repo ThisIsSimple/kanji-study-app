@@ -1,6 +1,6 @@
 class WordExample {
   final String japanese;
-  final String hiragana;
+  final String furigana;
   final String korean;
   final String? explanation;
   final String? source;
@@ -8,7 +8,7 @@ class WordExample {
 
   const WordExample({
     required this.japanese,
-    required this.hiragana,
+    required this.furigana,
     required this.korean,
     this.explanation,
     this.source,
@@ -18,7 +18,7 @@ class WordExample {
   factory WordExample.fromJson(Map<String, dynamic> json) {
     return WordExample(
       japanese: json['japanese'] as String,
-      hiragana: json['hiragana'] as String,
+      furigana: json['furigana'] as String? ?? json['hiragana'] as String? ?? json['hurigana'] as String? ?? '', // 호환성을 위해 다양한 이름 체크
       korean: json['korean'] as String,
       explanation: json['explanation'] as String?,
       source: json['source'] as String?,
@@ -31,7 +31,7 @@ class WordExample {
   Map<String, dynamic> toJson() {
     return {
       'japanese': japanese,
-      'hiragana': hiragana,
+      'furigana': furigana,
       'korean': korean,
       'explanation': explanation,
       'source': source,

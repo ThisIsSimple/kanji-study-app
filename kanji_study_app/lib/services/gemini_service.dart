@@ -196,23 +196,23 @@ JLPT N${kanji.jlpt} 수준에 맞는 난이도로 작성해주세요.
         
         final lines = part.split('\n');
         String japanese = '';
-        String hiragana = '';
+        String furigana = '';
         String korean = '';
         
         for (final line in lines) {
           if (line.startsWith('일본어:')) {
             japanese = line.substring('일본어:'.length).trim();
-          } else if (line.startsWith('히라가나:')) {
-            hiragana = line.substring('히라가나:'.length).trim();
+          } else if (line.startsWith('히라가나:') || line.startsWith('후리가나:')) {
+            furigana = line.substring(line.indexOf(':') + 1).trim();
           } else if (line.startsWith('한국어:')) {
             korean = line.substring('한국어:'.length).trim();
           }
         }
         
-        if (japanese.isNotEmpty && hiragana.isNotEmpty && korean.isNotEmpty) {
+        if (japanese.isNotEmpty && furigana.isNotEmpty && korean.isNotEmpty) {
           examples.add(KanjiExample(
             japanese: japanese,
-            hiragana: hiragana,
+            furigana: furigana,
             korean: korean,
             createdAt: DateTime.now(),
             source: 'gemini',

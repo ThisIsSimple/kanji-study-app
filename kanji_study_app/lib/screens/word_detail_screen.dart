@@ -109,22 +109,22 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
     final lines = response.split('\n');
     
     String? japanese;
-    String? hiragana;
+    String? furigana;
     String? korean;
     
     for (final line in lines) {
       if (line.startsWith('일본어:')) {
         japanese = line.substring(5).trim();
-      } else if (line.startsWith('히라가나:')) {
-        hiragana = line.substring(6).trim();
+      } else if (line.startsWith('히라가나:') || line.startsWith('후리가나:')) {
+        furigana = line.substring(line.indexOf(':') + 1).trim();
       } else if (line.startsWith('한국어:')) {
         korean = line.substring(5).trim();
         
         // If we have all three components, create an example
-        if (japanese != null && hiragana != null && korean != null) {
+        if (japanese != null && furigana != null && korean != null) {
           examples.add(WordExample(
             japanese: japanese,
-            hiragana: hiragana,
+            furigana: furigana,
             korean: korean,
             source: 'AI Generated',
             createdAt: DateTime.now(),
@@ -132,7 +132,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
           
           // Reset for next example
           japanese = null;
-          hiragana = null;
+          furigana = null;
           korean = null;
         }
       }
@@ -345,7 +345,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  example.hiragana,
+                                  example.furigana,
                                   style: theme.typography.sm.copyWith(
                                     color: theme.colors.mutedForeground,
                                   ),

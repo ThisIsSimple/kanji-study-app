@@ -181,7 +181,7 @@ class SupabaseService {
         'user_id': currentUser!.id,
         'kanji_character': character,
         'japanese': example.japanese,
-        'hiragana': example.hiragana,
+        'furigana': example.furigana,
         'korean': example.korean,
         'explanation': example.explanation,
         'source': example.source ?? 'gemini',
@@ -195,22 +195,29 @@ class SupabaseService {
     }
   }
   
-  /// Get kanji examples from database
-  Future<List<KanjiExample>> getKanjiExamples(String character) async {
-    if (!isLoggedIn) return [];
-    
+  /// Get kanji examples from database by kanji_id
+  Future<List<KanjiExample>> getKanjiExamples(int kanjiId) async {
     try {
-      final response = await _client
+      // Get both public examples and user's own examples
+      var query = _client
           .from(SupabaseConfig.kanjiExamplesTable)
           .select()
-          .eq('user_id', currentUser!.id)
-          .eq('kanji_character', character)
-          .order('created_at', ascending: false);
+          .eq('kanji_id', kanjiId);
+      
+      // If logged in, get user's examples and public examples
+      // If not logged in, only get public examples (user_id is null)
+      if (isLoggedIn) {
+        query = query.or('user_id.eq.${currentUser!.id},user_id.is.null');
+      } else {
+        query = query.isFilter('user_id', null);
+      }
+      
+      final response = await query.order('created_at', ascending: false);
       
       return (response as List)
           .map((data) => KanjiExample(
                 japanese: data['japanese'],
-                hiragana: data['hiragana'],
+                furigana: data['furigana'] ?? data['hiragana'] ?? '', // DB에서 furigana 컬럼 사용
                 korean: data['korean'],
                 explanation: data['explanation'],
                 source: data['source'],
@@ -221,7 +228,7 @@ class SupabaseService {
           .toList();
     } catch (e) {
       debugPrint('Error getting kanji examples: $e');
-      rethrow;
+      return []; // Return empty list instead of rethrowing
     }
   }
   

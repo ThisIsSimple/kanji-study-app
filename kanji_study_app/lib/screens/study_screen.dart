@@ -5,6 +5,7 @@ import '../models/kanji_model.dart';
 import '../models/kanji_example.dart';
 import '../services/kanji_service.dart';
 import '../services/gemini_service.dart';
+import '../services/supabase_service.dart';
 import '../utils/korean_formatter.dart';
 
 class StudyScreen extends StatefulWidget {
@@ -22,9 +23,38 @@ class StudyScreen extends StatefulWidget {
 class _StudyScreenState extends State<StudyScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
   final GeminiService _geminiService = GeminiService.instance;
+  final SupabaseService _supabaseService = SupabaseService.instance;
   bool _isCompleted = false;
   bool _isGeneratingExamples = false;
   List<KanjiExample>? _generatedExamples;
+  List<KanjiExample> _databaseExamples = [];
+  bool _isLoadingExamples = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDatabaseExamples();
+  }
+
+  Future<void> _loadDatabaseExamples() async {
+    setState(() {
+      _isLoadingExamples = true;
+    });
+    
+    try {
+      // Load examples from database using kanji id
+      final examples = await _supabaseService.getKanjiExamples(widget.kanji.id);
+      setState(() {
+        _databaseExamples = examples;
+        _isLoadingExamples = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingExamples = false;
+      });
+      debugPrint('Error loading database examples: $e');
+    }
+  }
 
   Future<void> _generateExamples() async {
     if (_isGeneratingExamples) return;
@@ -80,6 +110,113 @@ class _StudyScreenState extends State<StudyScreen> {
         ),
       );
     }
+  }
+
+  String _getSourceLabel(String? source) {
+    switch (source) {
+      case 'gemini':
+        return 'AI 생성';
+      case 'user':
+        return '사용자 제공';
+      case 'manual':
+        return '수동 입력';
+      default:
+        return '';
+    }
+  }
+
+  Widget _buildExampleCard(
+    KanjiExample example,
+    FThemeData theme, {
+    required String sourceLabel,
+    required bool isPrimary,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isPrimary 
+              ? theme.colors.primary.withValues(alpha: 0.05)
+              : theme.colors.secondary.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isPrimary
+                ? theme.colors.primary.withValues(alpha: 0.2)
+                : theme.colors.border,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Source label
+            if (sourceLabel.isNotEmpty) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.colors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  sourceLabel,
+                  style: theme.typography.xs.copyWith(
+                    color: theme.colors.primary,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'SUITE',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            // Japanese text
+            Text(
+              example.japanese,
+              style: GoogleFonts.notoSerifJp(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: theme.colors.foreground,
+              ),
+            ),
+            const SizedBox(height: 4),
+            // Furigana reading
+            Text(
+              example.furigana,
+              style: theme.typography.sm.copyWith(
+                color: theme.colors.mutedForeground,
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Korean translation
+            Text(
+              example.korean,
+              style: theme.typography.base.copyWith(
+                fontWeight: FontWeight.w500,
+                fontFamily: 'SUITE',
+              ),
+            ),
+            // Explanation if exists
+            if (example.explanation != null && example.explanation!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colors.mutedForeground.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  example.explanation!,
+                  style: theme.typography.sm.copyWith(
+                    color: theme.colors.mutedForeground,
+                    fontFamily: 'SUITE',
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -314,53 +451,32 @@ class _StudyScreenState extends State<StudyScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      // Display generated examples if available, otherwise show default examples
-                      if (_generatedExamples != null) ...[
-                        ..._generatedExamples!.map((example) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: theme.colors.primary.withValues(alpha: 0.05),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: theme.colors.primary.withValues(alpha: 0.2),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    example.japanese,
-                                    style: GoogleFonts.notoSerifJp(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w500,
-                                      color: theme.colors.foreground,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    example.hiragana,
-                                    style: theme.typography.sm.copyWith(
-                                      color: theme.colors.mutedForeground,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    example.korean,
-                                    style: theme.typography.base.copyWith(
-                                      fontWeight: FontWeight.w500,
-                                      fontFamily: 'SUITE',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }),
+                      // Display examples based on priority: DB examples > AI generated > default
+                      if (_isLoadingExamples) ...[
+                        const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ] else if (_databaseExamples.isNotEmpty || _generatedExamples != null) ...[
+                        // Display database examples first
+                        if (_databaseExamples.isNotEmpty) ...[
+                          ..._databaseExamples.map((example) => _buildExampleCard(
+                            example,
+                            theme,
+                            sourceLabel: _getSourceLabel(example.source),
+                            isPrimary: true,
+                          )),
+                        ],
+                        // Then display AI generated examples
+                        if (_generatedExamples != null) ...[
+                          ..._generatedExamples!.map((example) => _buildExampleCard(
+                            example,
+                            theme,
+                            sourceLabel: 'AI 생성',
+                            isPrimary: false,
+                          )),
+                        ],
                       ] else if (widget.kanji.examples.isNotEmpty) ...[
+                        // Fallback to legacy examples
                         ...widget.kanji.examples.map((example) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12.0),
