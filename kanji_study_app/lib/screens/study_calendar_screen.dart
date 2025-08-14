@@ -132,20 +132,15 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                           ),
                         ),
                         headerStyle: HeaderStyle(
-                          formatButtonVisible: true,
+                          formatButtonVisible: false,  // formatButton 숨기기
                           titleCentered: true,
                           formatButtonShowsNext: false,
-                          formatButtonDecoration: BoxDecoration(
-                            color: theme.colors.secondary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          formatButtonTextStyle: TextStyle(
-                            color: theme.colors.secondary,
-                            fontSize: 12,
-                            fontFamily: 'SUITE',
-                          ),
+                          leftChevronVisible: true,
+                          rightChevronVisible: true,
+                          headerMargin: const EdgeInsets.only(bottom: 8),
+                          headerPadding: const EdgeInsets.symmetric(vertical: 8),
                           titleTextStyle: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 17,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -175,12 +170,11 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                             );
                           }
                         },
+                        availableCalendarFormats: const {
+                          CalendarFormat.month: 'Month',
+                        },
                         onFormatChanged: (format) {
-                          if (_calendarFormat != format) {
-                            setState(() {
-                              _calendarFormat = format;
-                            });
-                          }
+                          // Format change disabled
                         },
                         onPageChanged: (focusedDay) {
                           _focusedDay = focusedDay;
