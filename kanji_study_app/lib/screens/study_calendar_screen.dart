@@ -23,18 +23,12 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
   Map<DateTime, DailyStudyStats> _monthlyStats = {};
   bool _isLoading = true;
   
-  PageController? _pageController;
-  final int _totalDays = 365 * 3; // 3 years of days
-  late int _initialPage;
-  
   @override
   void initState() {
     super.initState();
     final today = DateTime.now();
     _focusedDay = DateTime(today.year, today.month, today.day);
     _selectedDay = _focusedDay;
-    _initialPage = _totalDays ~/ 2; // Start from middle
-    _pageController = PageController(initialPage: _initialPage);
     _loadMonthlyStats();
   }
   
@@ -61,61 +55,10 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
     }
   }
   
-  Future<void> _loadMonthlyStatsForDate(DateTime date) async {
-    try {
-      final stats = await _supabaseService.getMonthlyStudyStats(
-        year: date.year,
-        month: date.month,
-      );
-      
-      setState(() {
-        _monthlyStats.addAll(stats);
-      });
-    } catch (e) {
-      debugPrint('Error loading monthly stats for date: $e');
-    }
-  }
-  
   List<DailyStudyStats> _getEventsForDay(DateTime day) {
     final normalizedDay = DateTime(day.year, day.month, day.day);
     final stats = _monthlyStats[normalizedDay];
     return stats != null ? [stats] : [];
-  }
-  
-  @override
-  void dispose() {
-    _pageController?.dispose();
-    super.dispose();
-  }
-  
-  DateTime _getDateFromPageIndex(int pageIndex) {
-    final daysDifference = pageIndex - _initialPage;
-    final today = DateTime.now();
-    final normalizedToday = DateTime(today.year, today.month, today.day);
-    return normalizedToday.add(Duration(days: daysDifference));
-  }
-  
-  int _getPageIndexFromDate(DateTime date) {
-    final today = DateTime.now();
-    final normalizedToday = DateTime(today.year, today.month, today.day);
-    final normalizedDate = DateTime(date.year, date.month, date.day);
-    final daysDifference = normalizedDate.difference(normalizedToday).inDays;
-    return _initialPage + daysDifference;
-  }
-  
-  void _onPageChanged(int pageIndex) {
-    final newDate = _getDateFromPageIndex(pageIndex);
-    final previousFocusedDay = _focusedDay;
-    
-    setState(() {
-      _selectedDay = newDate;
-      _focusedDay = newDate;
-    });
-    
-    // Load new month data if needed
-    if (newDate.year != previousFocusedDay.year || newDate.month != previousFocusedDay.month) {
-      _loadMonthlyStats();
-    }
   }
   
   @override
@@ -202,25 +145,19 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                         ),
                         onDaySelected: (selectedDay, focusedDay) {
                           if (!isSameDay(_selectedDay, selectedDay)) {
-                            final normalizedSelectedDay = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
-                            final normalizedFocusedDay = DateTime(focusedDay.year, focusedDay.month, focusedDay.day);
-                            
                             setState(() {
-                              _selectedDay = normalizedSelectedDay;
-                              _focusedDay = normalizedFocusedDay;
+                              _selectedDay = selectedDay;
+                              _focusedDay = focusedDay;
                             });
                             
-                            // Jump to the selected date in PageView
-                            final pageIndex = _getPageIndexFromDate(normalizedSelectedDay);
-                            _pageController?.jumpToPage(pageIndex);
-                            
                             // Navigate to detail screen if there's study data
-                            final stats = _monthlyStats[normalizedSelectedDay];
+                            final normalizedDay = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
+                            final stats = _monthlyStats[normalizedDay];
                             if (stats != null && stats.totalStudied > 0) {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => StudyCalendarDetailScreen(date: normalizedSelectedDay),
+                                  builder: (context) => StudyCalendarDetailScreen(date: selectedDay),
                                 ),
                               );
                             }
@@ -264,26 +201,12 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                   ),
                   const SizedBox(height: 16),
                   
-                  // Summary Card with PageView
+                  // Summary Card
                   if (_selectedDay != null) ...[
-                    SizedBox(
-                      height: 400, // Fixed height for PageView
-                      child: PageView.builder(
-                        controller: _pageController,
-                        onPageChanged: _onPageChanged,
-                        itemCount: _totalDays,
-                        itemBuilder: (context, index) {
-                          final date = _getDateFromPageIndex(index);
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                            child: FCard(
-                              child: Padding(
-                                padding: const EdgeInsets.all(20.0),
-                                child: _buildDaySummaryForDate(date, theme),
-                              ),
-                            ),
-                          );
-                        },
+                    FCard(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: _buildDaySummary(theme),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -302,23 +225,8 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
     );
   }
   
-  Widget _buildDaySummaryForDate(DateTime date, FThemeData theme) {
-    final normalizedDay = DateTime(date.year, date.month, date.day);
-    
-    // Check if we need to load data for a different month
-    bool needsMonthData = false;
-    for (final key in _monthlyStats.keys) {
-      if (key.year == date.year && key.month == date.month) {
-        needsMonthData = false;
-        break;
-      }
-      needsMonthData = true;
-    }
-    
-    if (needsMonthData && _monthlyStats.isNotEmpty) {
-      _loadMonthlyStatsForDate(date);
-    }
-    
+  Widget _buildDaySummary(FThemeData theme) {
+    final normalizedDay = DateTime(_selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
     final stats = _monthlyStats[normalizedDay];
     
     if (stats == null || stats.totalStudied == 0) {
@@ -329,13 +237,13 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                DateFormat('yyyy년 MM월 dd일').format(date),
+                DateFormat('yyyy년 MM월 dd일').format(_selectedDay!),
                 style: theme.typography.lg.copyWith(
                   fontWeight: FontWeight.bold,
                   fontFamily: 'SUITE',
                 ),
               ),
-              if (DateUtils.isSameDay(date, DateTime.now()))
+              if (DateUtils.isSameDay(_selectedDay!, DateTime.now()))
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
@@ -372,13 +280,13 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              DateFormat('yyyy년 MM월 dd일').format(date),
+              DateFormat('yyyy년 MM월 dd일').format(_selectedDay!),
               style: theme.typography.lg.copyWith(
                 fontWeight: FontWeight.bold,
                 fontFamily: 'SUITE',
               ),
             ),
-            if (DateUtils.isSameDay(date, DateTime.now()))
+            if (DateUtils.isSameDay(_selectedDay!, DateTime.now()))
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(

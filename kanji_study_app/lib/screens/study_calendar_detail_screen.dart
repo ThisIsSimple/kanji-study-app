@@ -21,42 +21,83 @@ class StudyCalendarDetailScreen extends StatefulWidget {
 class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
   final SupabaseService _supabaseService = SupabaseService.instance;
   
-  List<Map<String, dynamic>> _studyDetails = [];
-  DailyStudyStats? _dailyStats;
+  late PageController _pageController;
+  late DateTime _currentDate;
+  final int _totalDays = 365 * 3; // 3 years of days
+  late int _initialPage;
+  
+  final Map<DateTime, List<Map<String, dynamic>>> _studyDetailsCache = {};
+  final Map<DateTime, DailyStudyStats?> _dailyStatsCache = {};
   bool _isLoading = true;
   
   @override
   void initState() {
     super.initState();
-    _loadStudyDetails();
+    _currentDate = DateTime(widget.date.year, widget.date.month, widget.date.day);
+    _initialPage = _totalDays ~/ 2;
+    _pageController = PageController(initialPage: _initialPage);
+    _loadStudyDetailsForDate(_currentDate);
   }
   
-  Future<void> _loadStudyDetails() async {
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+  
+  DateTime _getDateFromPageIndex(int pageIndex) {
+    final daysDifference = pageIndex - _initialPage;
+    final normalizedInitialDate = DateTime(widget.date.year, widget.date.month, widget.date.day);
+    return normalizedInitialDate.add(Duration(days: daysDifference));
+  }
+  
+  Future<void> _loadStudyDetailsForDate(DateTime date) async {
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+    
+    // Check cache first
+    if (_studyDetailsCache.containsKey(normalizedDate) && 
+        _dailyStatsCache.containsKey(normalizedDate)) {
+      setState(() {
+        _currentDate = normalizedDate;
+        _isLoading = false;
+      });
+      return;
+    }
+    
     setState(() {
       _isLoading = true;
     });
     
     try {
       // Load detailed study items
-      final details = await _supabaseService.getDateStudyDetails(widget.date);
+      final details = await _supabaseService.getDateStudyDetails(normalizedDate);
       
       // Load daily statistics
       final stats = await _supabaseService.getDailyStudyStats(
-        startDate: widget.date,
-        endDate: widget.date.add(const Duration(hours: 23, minutes: 59, seconds: 59)),
+        startDate: normalizedDate,
+        endDate: normalizedDate.add(const Duration(hours: 23, minutes: 59, seconds: 59)),
       );
       
       setState(() {
-        _studyDetails = details;
-        _dailyStats = stats.isNotEmpty ? stats.first : null;
+        _studyDetailsCache[normalizedDate] = details;
+        _dailyStatsCache[normalizedDate] = stats.isNotEmpty ? stats.first : null;
+        _currentDate = normalizedDate;
         _isLoading = false;
       });
     } catch (e) {
       debugPrint('Error loading study details: $e');
       setState(() {
+        _studyDetailsCache[normalizedDate] = [];
+        _dailyStatsCache[normalizedDate] = null;
+        _currentDate = normalizedDate;
         _isLoading = false;
       });
     }
+  }
+  
+  void _onPageChanged(int pageIndex) {
+    final newDate = _getDateFromPageIndex(pageIndex);
+    _loadStudyDetailsForDate(newDate);
   }
   
   @override
@@ -66,7 +107,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
     return FScaffold(
       header: FHeader.nested(
         title: Text(
-          DateFormat('yyyy년 MM월 dd일').format(widget.date),
+          DateFormat('yyyy년 MM월 dd일').format(_currentDate),
           style: const TextStyle(fontFamily: 'SUITE'),
         ),
         prefixes: [
@@ -75,67 +116,83 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
           ),
         ],
       ),
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _studyDetails.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        PhosphorIconsRegular.calendarBlank,
-                        size: 64,
-                        color: theme.colors.mutedForeground,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        '이 날짜에 학습 기록이 없습니다',
-                        style: theme.typography.base.copyWith(
-                          color: theme.colors.mutedForeground,
-                          fontFamily: 'SUITE',
-                        ),
-                      ),
-                    ],
+      child: PageView.builder(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
+        itemCount: _totalDays,
+        itemBuilder: (context, index) {
+          final pageDate = _getDateFromPageIndex(index);
+          final normalizedPageDate = DateTime(pageDate.year, pageDate.month, pageDate.day);
+          final studyDetails = _studyDetailsCache[normalizedPageDate] ?? [];
+          final dailyStats = _dailyStatsCache[normalizedPageDate];
+          
+          if (_isLoading && normalizedPageDate == _currentDate) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          
+          if (studyDetails.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    PhosphorIconsRegular.calendarBlank,
+                    size: 64,
+                    color: theme.colors.mutedForeground,
                   ),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Summary Card
-                      if (_dailyStats != null) ...[
-                        FCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: _buildSummaryCard(theme),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      
-                      // Study Items Header
-                      Text(
-                        '학습 항목',
-                        style: theme.typography.lg.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'SUITE',
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      
-                      // Study Items List
-                      ..._studyDetails.map((item) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: _buildStudyItemCard(item, theme),
-                      )),
-                    ],
+                  const SizedBox(height: 16),
+                  Text(
+                    '이 날짜에 학습 기록이 없습니다',
+                    style: theme.typography.base.copyWith(
+                      color: theme.colors.mutedForeground,
+                      fontFamily: 'SUITE',
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Summary Card
+                if (dailyStats != null) ...[
+                  FCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: _buildSummaryCard(theme, dailyStats),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                
+                // Study Items Header
+                Text(
+                  '학습 항목',
+                  style: theme.typography.lg.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'SUITE',
                   ),
                 ),
+                const SizedBox(height: 12),
+                
+                // Study Items List
+                ...studyDetails.map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: _buildStudyItemCard(item, theme),
+                )),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
   
-  Widget _buildSummaryCard(FThemeData theme) {
+  Widget _buildSummaryCard(FThemeData theme, DailyStudyStats dailyStats) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -153,7 +210,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
               child: _buildStatItem(
                 icon: PhosphorIconsRegular.translate,
                 label: '한자',
-                value: '${_dailyStats!.kanjiStudied}개',
+                value: '${dailyStats.kanjiStudied}개',
                 color: theme.colors.primary,
                 theme: theme,
               ),
@@ -163,7 +220,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
               child: _buildStatItem(
                 icon: PhosphorIconsRegular.bookOpen,
                 label: '단어',
-                value: '${_dailyStats!.wordsStudied}개',
+                value: '${dailyStats.wordsStudied}개',
                 color: theme.colors.secondary,
                 theme: theme,
               ),
@@ -177,7 +234,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
               child: _buildStatItem(
                 icon: PhosphorIconsRegular.checkCircle,
                 label: '학습 완료',
-                value: '${_dailyStats!.totalCompleted}회',
+                value: '${dailyStats.totalCompleted}회',
                 color: Colors.green,
                 theme: theme,
               ),
@@ -187,14 +244,14 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
               child: _buildStatItem(
                 icon: PhosphorIconsRegular.warningCircle,
                 label: '까먹음',
-                value: '${_dailyStats!.totalForgot}회',
+                value: '${dailyStats.totalForgot}회',
                 color: Colors.orange,
                 theme: theme,
               ),
             ),
           ],
         ),
-        if (_dailyStats!.successRate > 0) ...[
+        if (dailyStats.successRate > 0) ...[
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
@@ -212,7 +269,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '성공률: ${(_dailyStats!.successRate * 100).toStringAsFixed(1)}%',
+                  '성공률: ${(dailyStats.successRate * 100).toStringAsFixed(1)}%',
                   style: theme.typography.base.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colors.secondary,
