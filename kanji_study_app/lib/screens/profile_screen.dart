@@ -275,15 +275,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 16),
         // Legend
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 12,
+          runSpacing: 8,
           children: [
             _buildLegendItem('미학습', Colors.grey.shade200, theme),
-            const SizedBox(width: 16),
             _buildLegendItem('1-4개', Colors.blue.shade100, theme),
-            const SizedBox(width: 16),
             _buildLegendItem('5-9개', Colors.blue.shade300, theme),
-            const SizedBox(width: 16),
             _buildLegendItem('10+개', Colors.blue.shade500, theme),
           ],
         ),
@@ -292,12 +291,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
   
   Widget _buildDayHeader(String day, FThemeData theme) {
-    return Text(
-      day,
-      style: theme.typography.sm.copyWith(
-        color: theme.colors.mutedForeground,
-        fontFamily: 'SUITE',
-        fontWeight: FontWeight.w600,
+    return SizedBox(
+      width: 36,
+      child: Center(
+        child: Text(
+          day,
+          style: theme.typography.xs.copyWith(
+            color: theme.colors.mutedForeground,
+            fontFamily: 'SUITE',
+            fontWeight: FontWeight.w600,
+            fontSize: 11,
+          ),
+        ),
       ),
     );
   }
@@ -336,8 +341,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       },
       child: Container(
-        width: 42,
-        height: 42,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
           color: getBackgroundColor(),
           borderRadius: BorderRadius.circular(8),
@@ -351,16 +356,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Text(
                 '${date.day}',
-                style: theme.typography.sm.copyWith(
+                style: theme.typography.xs.copyWith(
                   fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
                   color: stats.totalStudied > 9 ? Colors.white : theme.colors.foreground,
+                  fontSize: 12,
                 ),
               ),
               if (stats.totalStudied > 0)
                 Text(
                   '${stats.totalStudied}',
                   style: theme.typography.xs.copyWith(
-                    fontSize: 10,
+                    fontSize: 9,
                     color: stats.totalStudied > 9 ? Colors.white : theme.colors.foreground,
                   ),
                 ),
