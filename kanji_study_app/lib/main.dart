@@ -15,8 +15,9 @@ void main() async {
   // Initialize timezone
   tz.initializeTimeZones();
   
-  // Initialize date formatting for Korean locale
+  // Initialize date formatting for Korean and Japanese locales
   await initializeDateFormatting('ko_KR', null);
+  await initializeDateFormatting('ja_JP', null);
   
   // Initialize Supabase
   await SupabaseService.instance.init();

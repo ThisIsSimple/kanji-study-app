@@ -89,6 +89,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: TableCalendar<DailyStudyStats>(
+                        locale: 'ja_JP',
                         firstDay: DateTime(2024, 1, 1),
                         lastDay: DateTime.now().add(const Duration(days: 365)),
                         focusedDay: _focusedDay,
@@ -100,12 +101,14 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                         startingDayOfWeek: StartingDayOfWeek.monday,
                         calendarStyle: CalendarStyle(
                           outsideDaysVisible: false,
+                          cellMargin: const EdgeInsets.all(4),
                           weekendTextStyle: TextStyle(
                             color: theme.colors.foreground,
                           ),
                           todayTextStyle: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
                           todayDecoration: BoxDecoration(
                             color: theme.colors.primary.withValues(alpha: 0.7),
@@ -114,6 +117,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                           selectedTextStyle: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
                           selectedDecoration: BoxDecoration(
                             color: theme.colors.primary,
@@ -122,6 +126,9 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                           markerDecoration: BoxDecoration(
                             color: theme.colors.secondary,
                             shape: BoxShape.circle,
+                          ),
+                          defaultTextStyle: const TextStyle(
+                            fontSize: 14,
                           ),
                         ),
                         headerStyle: HeaderStyle(
@@ -134,13 +141,22 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                           ),
                           formatButtonTextStyle: TextStyle(
                             color: theme.colors.secondary,
-                            fontSize: 14,
+                            fontSize: 12,
                             fontFamily: 'SUITE',
                           ),
-                          titleTextStyle: TextStyle(
+                          titleTextStyle: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'SUITE',
+                          ),
+                        ),
+                        daysOfWeekStyle: const DaysOfWeekStyle(
+                          weekdayStyle: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          weekendStyle: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         onDaySelected: (selectedDay, focusedDay) {
@@ -150,17 +166,13 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                               _focusedDay = focusedDay;
                             });
                             
-                            // Navigate to detail screen if there's study data
-                            final normalizedDay = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
-                            final stats = _monthlyStats[normalizedDay];
-                            if (stats != null && stats.totalStudied > 0) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => StudyCalendarDetailScreen(date: selectedDay),
-                                ),
-                              );
-                            }
+                            // Navigate to detail screen for any selected date
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => StudyCalendarDetailScreen(date: selectedDay),
+                              ),
+                            );
                           }
                         },
                         onFormatChanged: (format) {
