@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../models/models.dart';
 import '../models/word_example_model.dart';
+import '../models/study_record_model.dart';
 
 /// Singleton service for managing Supabase operations
 class SupabaseService {
@@ -627,6 +628,194 @@ class SupabaseService {
       return result;
     } catch (e) {
       debugPrint('Error getting all kanji: $e');
+      rethrow;
+    }
+  }
+  
+  // ============= Study Records Methods =============
+  
+  /// Record a study session for a kanji or word
+  Future<void> recordStudy({
+    required StudyType type,
+    required int targetId,
+    required StudyStatus status,
+    String? notes,
+  }) async {
+    if (!isLoggedIn) return;
+    
+    try {
+      final record = StudyRecord(
+        userId: currentUser!.id,
+        type: type,
+        targetId: targetId,
+        status: status,
+        notes: notes,
+      );
+      
+      await _client.from('study_records').insert(record.toJsonForCreate());
+    } catch (e) {
+      debugPrint('Error recording study: $e');
+      rethrow;
+    }
+  }
+  
+  /// Get all study records for current user
+  Future<List<StudyRecord>> getStudyRecords({
+    StudyType? type,
+    int? targetId,
+    StudyStatus? status,
+    int? limit,
+  }) async {
+    if (!isLoggedIn) return [];
+    
+    try {
+      var query = _client
+          .from('study_records')
+          .select()
+          .eq('user_id', currentUser!.id);
+      
+      if (type != null) {
+        query = query.eq('type', type.value);
+      }
+      
+      if (targetId != null) {
+        query = query.eq('target_id', targetId);
+      }
+      
+      if (status != null) {
+        query = query.eq('status', status.value);
+      }
+      
+      // Apply ordering and limit in one chain
+      final finalQuery = limit != null 
+          ? query.order('created_at', ascending: false).limit(limit)
+          : query.order('created_at', ascending: false);
+      
+      final response = await finalQuery;
+      
+      return (response as List)
+          .map((data) => StudyRecord.fromJson(data))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting study records: $e');
+      return [];
+    }
+  }
+  
+  /// Get study statistics for a specific kanji or word
+  Future<StudyStats?> getStudyStats({
+    required StudyType type,
+    required int targetId,
+  }) async {
+    if (!isLoggedIn) return null;
+    
+    try {
+      final records = await getStudyRecords(
+        type: type,
+        targetId: targetId,
+      );
+      
+      if (records.isEmpty) {
+        return StudyStats(
+          targetId: targetId,
+          type: type,
+          totalRecords: 0,
+          completedCount: 0,
+          forgotCount: 0,
+          reviewingCount: 0,
+          masteredCount: 0,
+          recentRecords: [],
+        );
+      }
+      
+      int completedCount = 0;
+      int forgotCount = 0;
+      int reviewingCount = 0;
+      int masteredCount = 0;
+      
+      for (final record in records) {
+        switch (record.status) {
+          case StudyStatus.completed:
+            completedCount++;
+            break;
+          case StudyStatus.forgot:
+            forgotCount++;
+            break;
+          case StudyStatus.reviewing:
+            reviewingCount++;
+            break;
+          case StudyStatus.mastered:
+            masteredCount++;
+            break;
+        }
+      }
+      
+      return StudyStats(
+        targetId: targetId,
+        type: type,
+        totalRecords: records.length,
+        completedCount: completedCount,
+        forgotCount: forgotCount,
+        reviewingCount: reviewingCount,
+        masteredCount: masteredCount,
+        firstStudied: records.last.createdAt,
+        lastStudied: records.first.createdAt,
+        recentRecords: records.take(10).toList(),
+      );
+    } catch (e) {
+      debugPrint('Error getting study stats: $e');
+      return null;
+    }
+  }
+  
+  /// Get recent study records for all items
+  Future<Map<String, StudyStatus>> getRecentStudyStatuses({
+    required StudyType type,
+    required List<int> targetIds,
+  }) async {
+    if (!isLoggedIn || targetIds.isEmpty) return {};
+    
+    try {
+      final response = await _client
+          .from('study_records')
+          .select()
+          .eq('user_id', currentUser!.id)
+          .eq('type', type.value)
+          .inFilter('target_id', targetIds)
+          .order('created_at', ascending: false);
+      
+      final records = (response as List)
+          .map((data) => StudyRecord.fromJson(data))
+          .toList();
+      
+      // Group by target_id and get the most recent status
+      final Map<String, StudyStatus> statuses = {};
+      for (final record in records) {
+        final key = '${record.targetId}';
+        if (!statuses.containsKey(key)) {
+          statuses[key] = record.status;
+        }
+      }
+      
+      return statuses;
+    } catch (e) {
+      debugPrint('Error getting recent study statuses: $e');
+      return {};
+    }
+  }
+  
+  /// Delete a study record
+  Future<void> deleteStudyRecord(int recordId) async {
+    if (!isLoggedIn) return;
+    
+    try {
+      await _client
+          .from('study_records')
+          .delete()
+          .eq('id', recordId)
+          .eq('user_id', currentUser!.id);
+    } catch (e) {
+      debugPrint('Error deleting study record: $e');
       rethrow;
     }
   }
