@@ -532,76 +532,76 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                     
                     const SizedBox(height: 24),
                     
-                    // JLPT Level
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _getJlptColor(word.jlptLevel).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: _getJlptColor(word.jlptLevel).withValues(alpha: 0.5),
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            'JLPT N${word.jlptLevel}',
-                            style: theme.typography.sm.copyWith(
-                              color: _getJlptColor(word.jlptLevel),
-                              fontWeight: FontWeight.w600,
-                            ),
+                    // JLPT Level - Center aligned
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getJlptColor(word.jlptLevel).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: _getJlptColor(word.jlptLevel).withValues(alpha: 0.5),
+                            width: 1,
                           ),
                         ),
-                      ],
+                        child: Text(
+                          'JLPT N${word.jlptLevel}',
+                          style: theme.typography.sm.copyWith(
+                            color: _getJlptColor(word.jlptLevel),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ),
                     
                     const SizedBox(height: 24),
                     
-                    // Meanings by part of speech
-                    Text(
-                      '의미',
-                      style: theme.typography.lg.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'SUITE',
+                    // Meanings by part of speech - Center aligned
+                    Center(
+                      child: Text(
+                        '의미',
+                        style: theme.typography.lg.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'SUITE',
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 4),  // 8 → 4로 더 줄임
                     ...word.meanings.map((meaning) {
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Part of speech badge
-                            if (meaning.partOfSpeech.isNotEmpty)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                margin: const EdgeInsets.only(right: 8),
-                                decoration: BoxDecoration(
-                                  color: theme.colors.secondary.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  meaning.partOfSpeech,
-                                  style: theme.typography.sm.copyWith(
-                                    color: theme.colors.secondary,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 11,
+                        padding: const EdgeInsets.only(bottom: 2),  // 6 → 2로 더 줄임
+                        child: Center(
+                          child: Column(
+                            children: [
+                              // Part of speech badge
+                              if (meaning.partOfSpeech.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  margin: const EdgeInsets.only(bottom: 2),  // 4 → 2로 더 줄임
+                                  decoration: BoxDecoration(
+                                    color: theme.colors.secondary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    meaning.partOfSpeech,
+                                    style: theme.typography.sm.copyWith(
+                                      color: theme.colors.secondary,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 11,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            // Meaning text
-                            Expanded(
-                              child: Text(
+                              // Meaning text
+                              Text(
                                 meaning.meaning,
                                 style: theme.typography.base.copyWith(
                                   fontFamily: 'SUITE',
-                                  height: 1.5,
+                                  height: 1.2,  // 1.3 → 1.2로 더 줄임
                                 ),
+                                textAlign: TextAlign.center,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       );
                     }),
