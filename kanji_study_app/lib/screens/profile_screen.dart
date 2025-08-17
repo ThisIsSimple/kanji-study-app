@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
 import '../utils/nickname_generator.dart';
 import '../models/daily_study_stats.dart';
@@ -31,6 +32,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _loadWeeklyStats();
     _loadUserProfile();
+    
+    // Listen to auth state changes
+    _supabaseService.authStateChanges().listen((authState) {
+      if (authState.event == AuthChangeEvent.signedOut) {
+        // Clear user data when signed out
+        if (mounted) {
+          setState(() {
+            _username = '';
+            _userEmail = '';
+            _weeklyStats = [];
+          });
+        }
+      } else if (authState.event == AuthChangeEvent.signedIn) {
+        // Reload data when signed in
+        _loadWeeklyStats();
+        _loadUserProfile();
+      }
+    });
   }
 
   Future<void> _loadWeeklyStats() async {

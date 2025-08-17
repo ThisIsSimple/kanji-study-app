@@ -94,7 +94,16 @@ class SupabaseService {
   /// Sign out
   Future<void> signOut() async {
     try {
-      await _client.auth.signOut();
+      // Sign out from Google if signed in with Google
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      if (await googleSignIn.isSignedIn()) {
+        await googleSignIn.signOut();
+        debugPrint('Signed out from Google');
+      }
+      
+      // Sign out from Supabase with global scope to clear all sessions
+      await _client.auth.signOut(scope: SignOutScope.global);
+      debugPrint('Signed out from Supabase');
     } catch (e) {
       debugPrint('Sign out error: $e');
       rethrow;

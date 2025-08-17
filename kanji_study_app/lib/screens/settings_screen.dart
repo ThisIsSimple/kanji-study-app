@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../services/notification_service.dart';
 import '../services/gemini_service.dart';
+import '../services/supabase_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,11 +15,14 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final NotificationService _notificationService = NotificationService.instance;
   final GeminiService _geminiService = GeminiService.instance;
+  final SupabaseService _supabaseService = SupabaseService.instance;
   final TextEditingController _apiKeyController = TextEditingController();
   bool _notificationsEnabled = false;
   TimeOfDay _selectedTime = const TimeOfDay(hour: 9, minute: 0);
   bool _isLoading = true;
   bool _apiKeyVisible = false;
+  String? _userEmail;
+  bool _isAnonymous = false;
 
   @override
   void initState() {
@@ -37,6 +41,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final scheduledTime = await _notificationService.getScheduledTime();
     await _geminiService.init();
     
+    // Load user info
+    final user = _supabaseService.currentUser;
+    
     setState(() {
       _notificationsEnabled = enabled;
       if (scheduledTime != null) {
@@ -48,6 +55,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (_geminiService.apiKey != null) {
         _apiKeyController.text = _geminiService.apiKey!;
       }
+      _userEmail = user?.email;
+      _isAnonymous = user?.isAnonymous ?? false;
       _isLoading = false;
     });
   }
@@ -67,6 +76,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _handleLogout() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          '로그아웃',
+          style: TextStyle(fontFamily: 'SUITE'),
+        ),
+        content: Text(
+          _isAnonymous 
+            ? '게스트 계정에서 로그아웃하면 학습 기록이 삭제될 수 있습니다. 계속하시겠습니까?'
+            : '정말 로그아웃 하시겠습니까?',
+          style: TextStyle(fontFamily: 'SUITE'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              '취소',
+              style: TextStyle(fontFamily: 'SUITE'),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              '로그아웃',
+              style: TextStyle(
+                fontFamily: 'SUITE',
+                color: Colors.red,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    
+    if (shouldLogout == true && mounted) {
+      try {
+        await _supabaseService.signOut();
+        // The StreamBuilder in main.dart will automatically navigate to LoginScreen
+        // when the auth state changes
+        debugPrint('User signed out successfully');
+      } catch (e) {
+        debugPrint('Logout error: $e');
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '로그아웃 중 오류가 발생했습니다.',
+              style: TextStyle(fontFamily: 'SUITE'),
+            ),
+          ),
+        );
+      }
+    }
+  }
+  
   Future<void> _selectTime() async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -116,6 +182,92 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Account Management Card
+                  FCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '계정 관리',
+                            style: theme.typography.lg.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'SUITE',
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          // User Info
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: theme.colors.secondary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _isAnonymous 
+                                    ? PhosphorIconsRegular.userCircle
+                                    : PhosphorIconsRegular.userCheck,
+                                  size: 32,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _isAnonymous ? '게스트 사용자' : (_userEmail ?? '사용자'),
+                                        style: theme.typography.base.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'SUITE',
+                                        ),
+                                      ),
+                                      if (_isAnonymous) ...[  
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'SNS 계정을 연동하여 데이터를 안전하게 보관하세요',
+                                          style: theme.typography.sm.copyWith(
+                                            color: theme.colors.mutedForeground,
+                                            fontFamily: 'SUITE',
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          
+                          // Logout Button
+                          FButton(
+                            onPress: _handleLogout,
+                            style: FButtonStyle.destructive(),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  PhosphorIconsRegular.signOut,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '로그아웃',
+                                  style: TextStyle(fontFamily: 'SUITE'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
                   // Notification Settings Card
                   FCard(
                     child: Padding(
