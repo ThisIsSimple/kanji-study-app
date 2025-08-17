@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import '../config/supabase_config.dart';
 import '../models/models.dart';
 import '../models/word_example_model.dart';
@@ -101,6 +104,255 @@ class SupabaseService {
   /// Listen to auth state changes
   Stream<AuthState> authStateChanges() {
     return _client.auth.onAuthStateChange;
+  }
+  
+  /// Sign in with Google
+  Future<bool> signInWithGoogle() async {
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+      );
+      
+      // Trigger the Google Sign In process
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        throw Exception('Google sign in was cancelled');
+      }
+      
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      
+      final accessToken = googleAuth.accessToken;
+      final idToken = googleAuth.idToken;
+      
+      if (accessToken == null || idToken == null) {
+        throw Exception('Failed to get Google tokens');
+      }
+      
+      // Store anonymous user ID if exists
+      final anonymousUserId = currentUser?.id;
+      final isAnonymous = currentUser?.isAnonymous ?? false;
+      
+      // Always sign in with Google OAuth
+      await _client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+      
+      // If was anonymous, update the new user's metadata to indicate previous anonymous ID
+      if (isAnonymous && anonymousUserId != null) {
+        try {
+          await _client.auth.updateUser(
+            UserAttributes(
+              data: {
+                'previous_anonymous_id': anonymousUserId,
+                'linked_from_anonymous': true,
+              },
+            ),
+          );
+          debugPrint('Linked Google account from anonymous user: $anonymousUserId');
+          
+          // TODO: Implement server-side data migration from anonymous to Google user
+        } catch (e) {
+          debugPrint('Failed to update user metadata after Google sign in: $e');
+        }
+      }
+      
+      return true;
+    } catch (e) {
+      debugPrint('Google sign in error: $e');
+      rethrow;
+    }
+  }
+  
+  /// Sign in with Apple
+  Future<bool> signInWithApple() async {
+    try {
+      // Check if Apple Sign In is available
+      final isAvailable = await SignInWithApple.isAvailable();
+      if (!isAvailable) {
+        throw Exception('Apple Sign In is not available on this device');
+      }
+      
+      // Request credential for Apple ID
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+      
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        throw Exception('Failed to get Apple ID token');
+      }
+      
+      // Store anonymous user ID if exists
+      final anonymousUserId = currentUser?.id;
+      final isAnonymous = currentUser?.isAnonymous ?? false;
+      
+      // Always sign in with Apple OAuth
+      await _client.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+      );
+      
+      // If was anonymous, update the new user's metadata to indicate previous anonymous ID
+      if (isAnonymous && anonymousUserId != null) {
+        try {
+          String? displayName;
+          if (credential.givenName != null || credential.familyName != null) {
+            displayName = '${credential.givenName ?? ''} ${credential.familyName ?? ''}'.trim();
+          }
+          
+          await _client.auth.updateUser(
+            UserAttributes(
+              data: {
+                'previous_anonymous_id': anonymousUserId,
+                'linked_from_anonymous': true,
+                'username': displayName ?? credential.email?.split('@')[0] ?? 'Apple User',
+              },
+            ),
+          );
+          debugPrint('Linked Apple account from anonymous user: $anonymousUserId');
+          
+          // TODO: Implement server-side data migration from anonymous to Apple user
+        } catch (e) {
+          debugPrint('Failed to update user metadata after Apple sign in: $e');
+        }
+      }
+      
+      return true;
+    } catch (e) {
+      debugPrint('Apple sign in error: $e');
+      rethrow;
+    }
+  }
+  
+  /// Sign in with Kakao
+  Future<bool> signInWithKakao() async {
+    try {
+      // Check if KakaoTalk is installed
+      bool isInstalled = await kakao.isKakaoTalkInstalled();
+      
+      if (isInstalled) {
+        try {
+          await kakao.UserApi.instance.loginWithKakaoTalk();
+        } catch (e) {
+          debugPrint('Failed to login with KakaoTalk: $e');
+          // If login with KakaoTalk fails, try login with Kakao account
+          await kakao.UserApi.instance.loginWithKakaoAccount();
+        }
+      } else {
+        // Login with Kakao account (web browser)
+        await kakao.UserApi.instance.loginWithKakaoAccount();
+      }
+      
+      // Get user information from Kakao
+      kakao.User kakaoUser = await kakao.UserApi.instance.me();
+      debugPrint('Kakao user info: ${kakaoUser.id}, ${kakaoUser.kakaoAccount?.email}');
+      
+      // Check if user is currently anonymous
+      final isAnonymous = currentUser?.isAnonymous ?? false;
+      final anonymousUserId = currentUser?.id;
+      
+      if (isAnonymous && anonymousUserId != null) {
+        debugPrint('Current user is anonymous, attempting to link with Kakao account');
+        
+        // Since Kakao is not a native Supabase provider, we need to use a different approach
+        // Option 1: Use email/password with Kakao email (if available)
+        final kakaoEmail = kakaoUser.kakaoAccount?.email;
+        
+        if (kakaoEmail != null && kakaoEmail.isNotEmpty) {
+          try {
+            // First, try to sign up with the Kakao email
+            // Use Kakao ID as a pseudo-password (this should be handled more securely in production)
+            final pseudoPassword = 'kakao_${kakaoUser.id}_user';
+            
+            // Try to sign in first in case user already exists
+            try {
+              await _client.auth.signInWithPassword(
+                email: kakaoEmail,
+                password: pseudoPassword,
+              );
+              debugPrint('Signed in with existing Kakao-linked account');
+            } catch (signInError) {
+              // If sign in fails, create new account
+              await _client.auth.signUp(
+                email: kakaoEmail,
+                password: pseudoPassword,
+                data: {
+                  'provider': 'kakao',
+                  'username': kakaoUser.kakaoAccount?.profile?.nickname ?? 'Kakao User',
+                  'kakao_id': kakaoUser.id.toString(),
+                  'previous_anonymous_id': anonymousUserId,
+                },
+              );
+              debugPrint('Created new Kakao-linked account');
+            }
+            
+            // TODO: Migrate anonymous user data to new account
+            // This would require backend functions to transfer data from anonymous user to new user
+            
+            return true;
+          } catch (e) {
+            debugPrint('Failed to link Kakao account: $e');
+            
+            // Fallback: Just update the anonymous user's metadata
+            await _client.auth.updateUser(
+              UserAttributes(
+                data: {
+                  'provider': 'kakao',
+                  'username': kakaoUser.kakaoAccount?.profile?.nickname ?? 'Kakao User',
+                  'kakao_id': kakaoUser.id.toString(),
+                  'kakao_email': kakaoEmail,
+                },
+              ),
+            );
+            debugPrint('Updated anonymous user metadata with Kakao info');
+            return true;
+          }
+        } else {
+          // No email available, just update metadata
+          await _client.auth.updateUser(
+            UserAttributes(
+              data: {
+                'provider': 'kakao',
+                'username': kakaoUser.kakaoAccount?.profile?.nickname ?? 'Kakao User',
+                'kakao_id': kakaoUser.id.toString(),
+              },
+            ),
+          );
+          debugPrint('Updated anonymous user metadata with Kakao info (no email)');
+          return true;
+        }
+      } else {
+        // Not anonymous, use regular OAuth flow if configured in Supabase
+        // Note: This requires Kakao to be configured as a provider in Supabase
+        debugPrint('User is not anonymous, using regular OAuth flow');
+        await _client.auth.signInWithOAuth(
+          OAuthProvider.kakao,
+          authScreenLaunchMode: LaunchMode.inAppWebView,
+        );
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Kakao sign in error: $e');
+      rethrow;
+    }
+  }
+  
+  /// Check if current user is anonymous
+  bool get isAnonymousUser {
+    return currentUser?.isAnonymous ?? false;
+  }
+  
+  /// Get linked providers for current user
+  List<String> get linkedProviders {
+    final identities = currentUser?.appMetadata['providers'] as List<dynamic>?;
+    return identities?.map((e) => e.toString()).toList() ?? [];
   }
   
   // ============= User Progress Methods =============

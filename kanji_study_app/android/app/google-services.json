@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "276747789159",
+    "project_id": "kanji-study-app-469316",
+    "storage_bucket": "kanji-study-app-469316.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:276747789159:android:5913d1c5201cdd5dff45c2",
+        "android_client_info": {
+          "package_name": "space.cordelia273.kanji_study_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "276747789159-ghmuf8ndkr8sse0i2n53jalj30ig99rk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "space.cordelia273.kanji_study_app",
+            "certificate_hash": "938e25aeef4fb41810b8501c0716bec66bf1f9d9"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBM7OBz5hxhO-51Zh6zDgjasZg7Bvv6n80"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "276747789159-1anmlunhqqjhr57fsp0s31m633rvuc5s.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "space.cordelia273.kanjiStudyApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

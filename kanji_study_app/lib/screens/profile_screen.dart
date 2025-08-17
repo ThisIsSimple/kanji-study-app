@@ -8,6 +8,7 @@ import '../models/daily_study_stats.dart';
 import 'settings_screen.dart';
 import 'study_calendar_screen.dart';
 import 'study_calendar_detail_screen.dart';
+import 'social_login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -61,18 +62,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final currentUser = _supabaseService.currentUser;
       debugPrint('Current user ID: ${currentUser?.id}');
       debugPrint('Current user email: ${currentUser?.email}');
+      debugPrint('Is anonymous: ${_supabaseService.isAnonymousUser}');
+      debugPrint('User metadata: ${currentUser?.userMetadata}');
       
       // Get user profile from Supabase
       final profile = await _supabaseService.getUserProfile();
       debugPrint('Loaded profile: $profile');
       
+      // Check for username in profile or metadata
+      String? username;
       if (profile != null && profile['username'] != null && profile['username'].toString().isNotEmpty) {
+        username = profile['username'];
+      } else if (currentUser?.userMetadata?['username'] != null) {
+        username = currentUser!.userMetadata!['username'];
+      } else if (currentUser?.userMetadata?['provider'] == 'kakao' && 
+                 currentUser?.userMetadata?['username'] != null) {
+        username = currentUser!.userMetadata!['username'];
+      }
+      
+      if (username != null) {
         setState(() {
-          _username = profile['username'];
+          _username = username!;
         });
         debugPrint('Username loaded: $_username');
       } else {
-        debugPrint('No username found in profile');
+        debugPrint('No username found in profile or metadata');
         // If no username, try to generate one
         if (currentUser != null) {
           final nickname = NicknameGenerator.instance.generate(currentUser.id);
@@ -90,11 +104,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       }
       
-      // Get email from current user
-      if (currentUser != null && currentUser.email != null) {
-        setState(() {
-          _userEmail = currentUser.email!;
-        });
+      // Get email from current user or metadata
+      if (currentUser != null) {
+        if (currentUser.email != null && currentUser.email!.isNotEmpty) {
+          setState(() {
+            _userEmail = currentUser.email!;
+          });
+        } else if (currentUser.userMetadata?['kakao_email'] != null) {
+          setState(() {
+            _userEmail = '카카오 계정';
+          });
+        } else if (currentUser.userMetadata?['provider'] == 'kakao') {
+          setState(() {
+            _userEmail = '카카오 계정으로 연동됨';
+          });
+        } else if (_supabaseService.isAnonymousUser) {
+          setState(() {
+            _userEmail = '익명 사용자';
+          });
+        }
       }
     } catch (e) {
       debugPrint('Error loading user profile: $e');
@@ -115,6 +143,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     
     if (result == true) {
       _loadWeeklyStats();
+      _loadUserProfile();
+    }
+  }
+
+  void _navigateToSocialLogin() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SocialLoginScreen(),
+      ),
+    );
+    
+    if (result == true) {
+      // Reload profile after successful SNS linking
       _loadUserProfile();
     }
   }
@@ -143,6 +185,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // SNS Account Linking Banner for Anonymous Users
+                  if (_supabaseService.isAnonymousUser) ...[
+                    GestureDetector(
+                      onTap: _navigateToSocialLogin,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              theme.colors.primary.withValues(alpha: 0.1),
+                              theme.colors.primary.withValues(alpha: 0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colors.primary.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: theme.colors.primary.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                PhosphorIconsFill.shieldCheck,
+                                color: theme.colors.primary,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'SNS 계정 연동해서 데이터 안전하게 보관하기',
+                                    style: theme.typography.sm.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'SUITE',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '다른 기기에서도 학습 기록을 이어가세요',
+                                    style: theme.typography.xs.copyWith(
+                                      color: theme.colors.mutedForeground,
+                                      fontFamily: 'SUITE',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              PhosphorIconsRegular.caretRight,
+                              color: theme.colors.mutedForeground,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  
                   // User Info Card
                   FCard(
                     child: Padding(

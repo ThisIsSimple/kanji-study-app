@@ -7,6 +7,9 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
     
+    <!-- Internet permission for social login -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    
     <application
         android:label="kanji_study_app"
         android:name="${applicationName}"
@@ -45,6 +48,18 @@
             </intent-filter>
         </activity>
         
+        <!-- Kakao Login Activity -->
+        <activity 
+            android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kakao88ec2313b07c9ce230ae930ac839549c" android:host="oauth"/>
+            </intent-filter>
+        </activity>
+        
         <!-- Notification receivers -->
         <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" android:exported="false" />
         <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver" android:exported="false">
@@ -70,5 +85,7 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Kakao Login -->
+        <package android:name="com.kakao.talk"/>
     </queries>
 </manifest>
