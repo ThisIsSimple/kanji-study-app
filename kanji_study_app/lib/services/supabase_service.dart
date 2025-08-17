@@ -111,6 +111,37 @@ class SupabaseService {
     try {
       debugPrint('Starting Google Sign In process...');
       
+      // Check if current user is anonymous
+      final isAnonymous = currentUser?.isAnonymous ?? false;
+      final anonymousUserId = currentUser?.id;
+      debugPrint('Current user anonymous status: $isAnonymous, ID: $anonymousUserId');
+      
+      if (isAnonymous) {
+        // If anonymous user, link with Google identity
+        debugPrint('Linking anonymous user with Google identity...');
+        try {
+          await _client.auth.linkIdentity(OAuthProvider.google);
+          debugPrint('Successfully linked Google account to anonymous user');
+          
+          // Update user metadata to indicate successful linking
+          await _client.auth.updateUser(
+            UserAttributes(
+              data: {
+                'linked_provider': 'google',
+                'linked_at': DateTime.now().toIso8601String(),
+              },
+            ),
+          );
+          
+          return true;
+        } catch (e) {
+          debugPrint('Failed to link Google identity: $e');
+          // If linking fails, fall back to regular sign in
+          debugPrint('Falling back to regular Google sign in...');
+        }
+      }
+      
+      // Regular Google sign in flow (for non-anonymous users or if linking fails)
       final GoogleSignIn googleSignIn = GoogleSignIn(
         scopes: ['email', 'profile'],
       );
@@ -144,12 +175,7 @@ class SupabaseService {
         throw Exception('Failed to get Google tokens');
       }
       
-      // Store anonymous user ID if exists
-      final anonymousUserId = currentUser?.id;
-      final isAnonymous = currentUser?.isAnonymous ?? false;
-      debugPrint('Current user anonymous status: $isAnonymous, ID: $anonymousUserId');
-      
-      // Always sign in with Google OAuth
+      // Sign in with Google OAuth
       debugPrint('Signing in with Supabase using Google tokens...');
       await _client.auth.signInWithIdToken(
         provider: OAuthProvider.google,
@@ -158,25 +184,6 @@ class SupabaseService {
       );
       
       debugPrint('Successfully signed in with Supabase');
-      
-      // If was anonymous, update the new user's metadata to indicate previous anonymous ID
-      if (isAnonymous && anonymousUserId != null) {
-        try {
-          await _client.auth.updateUser(
-            UserAttributes(
-              data: {
-                'previous_anonymous_id': anonymousUserId,
-                'linked_from_anonymous': true,
-              },
-            ),
-          );
-          debugPrint('Linked Google account from anonymous user: $anonymousUserId');
-          
-          // TODO: Implement server-side data migration from anonymous to Google user
-        } catch (e) {
-          debugPrint('Failed to update user metadata after Google sign in: $e');
-        }
-      }
       
       return true;
     } catch (e) {
@@ -195,6 +202,37 @@ class SupabaseService {
         throw Exception('Apple Sign In is not available on this device');
       }
       
+      // Check if current user is anonymous
+      final isAnonymous = currentUser?.isAnonymous ?? false;
+      final anonymousUserId = currentUser?.id;
+      debugPrint('Current user anonymous status: $isAnonymous, ID: $anonymousUserId');
+      
+      if (isAnonymous) {
+        // If anonymous user, link with Apple identity
+        debugPrint('Linking anonymous user with Apple identity...');
+        try {
+          await _client.auth.linkIdentity(OAuthProvider.apple);
+          debugPrint('Successfully linked Apple account to anonymous user');
+          
+          // Update user metadata to indicate successful linking
+          await _client.auth.updateUser(
+            UserAttributes(
+              data: {
+                'linked_provider': 'apple',
+                'linked_at': DateTime.now().toIso8601String(),
+              },
+            ),
+          );
+          
+          return true;
+        } catch (e) {
+          debugPrint('Failed to link Apple identity: $e');
+          // If linking fails, fall back to regular sign in
+          debugPrint('Falling back to regular Apple sign in...');
+        }
+      }
+      
+      // Regular Apple sign in flow (for non-anonymous users or if linking fails)
       // Request credential for Apple ID
       final credential = await SignInWithApple.getAppleIDCredential(
         scopes: [
@@ -208,39 +246,32 @@ class SupabaseService {
         throw Exception('Failed to get Apple ID token');
       }
       
-      // Store anonymous user ID if exists
-      final anonymousUserId = currentUser?.id;
-      final isAnonymous = currentUser?.isAnonymous ?? false;
-      
-      // Always sign in with Apple OAuth
+      // Sign in with Apple OAuth
       await _client.auth.signInWithIdToken(
         provider: OAuthProvider.apple,
         idToken: idToken,
       );
       
-      // If was anonymous, update the new user's metadata to indicate previous anonymous ID
-      if (isAnonymous && anonymousUserId != null) {
-        try {
-          String? displayName;
-          if (credential.givenName != null || credential.familyName != null) {
-            displayName = '${credential.givenName ?? ''} ${credential.familyName ?? ''}'.trim();
-          }
-          
+      debugPrint('Successfully signed in with Apple');
+      
+      // Update user metadata with Apple display name if available
+      try {
+        String? displayName;
+        if (credential.givenName != null || credential.familyName != null) {
+          displayName = '${credential.givenName ?? ''} ${credential.familyName ?? ''}'.trim();
+        }
+        
+        if (displayName != null && displayName.isNotEmpty) {
           await _client.auth.updateUser(
             UserAttributes(
               data: {
-                'previous_anonymous_id': anonymousUserId,
-                'linked_from_anonymous': true,
-                'username': displayName ?? credential.email?.split('@')[0] ?? 'Apple User',
+                'username': displayName,
               },
             ),
           );
-          debugPrint('Linked Apple account from anonymous user: $anonymousUserId');
-          
-          // TODO: Implement server-side data migration from anonymous to Apple user
-        } catch (e) {
-          debugPrint('Failed to update user metadata after Apple sign in: $e');
         }
+      } catch (e) {
+        debugPrint('Failed to update user metadata: $e');
       }
       
       return true;
