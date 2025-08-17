@@ -25,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoadingProfile = true;
   String _username = '';
   String _userEmail = '';
+  String? _avatarUrl;
   List<DailyStudyStats> _weeklyStats = [];
 
   @override
@@ -41,6 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           setState(() {
             _username = '';
             _userEmail = '';
+            _avatarUrl = null;
             _weeklyStats = [];
           });
         }
@@ -125,21 +127,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
       
       // Get email from current user or metadata
       if (currentUser != null) {
+        // Get avatar URL from metadata or profile
+        String? avatarUrl;
+        if (currentUser.userMetadata?['avatar_url'] != null) {
+          avatarUrl = currentUser.userMetadata!['avatar_url'];
+        } else if (currentUser.userMetadata?['picture'] != null) {
+          avatarUrl = currentUser.userMetadata!['picture'];
+        } else if (profile != null && profile['avatar_url'] != null) {
+          avatarUrl = profile['avatar_url'];
+        }
+        
         if (currentUser.email != null && currentUser.email!.isNotEmpty) {
           setState(() {
             _userEmail = currentUser.email!;
+            _avatarUrl = avatarUrl;
           });
         } else if (currentUser.userMetadata?['kakao_email'] != null) {
           setState(() {
             _userEmail = '카카오 계정';
+            _avatarUrl = avatarUrl;
           });
         } else if (currentUser.userMetadata?['provider'] == 'kakao') {
           setState(() {
             _userEmail = '카카오 계정으로 연동됨';
+            _avatarUrl = avatarUrl;
           });
         } else if (_supabaseService.isAnonymousUser) {
           setState(() {
             _userEmail = '익명 사용자';
+            _avatarUrl = avatarUrl;
           });
         }
       }
@@ -277,21 +293,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   FCard(
                     child: Padding(
                       padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
                           Container(
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
                               color: theme.colors.secondary.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
+                              image: _avatarUrl != null
+                                  ? DecorationImage(
+                                      image: NetworkImage(_avatarUrl!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
                             ),
-                            child: Icon(
-                              PhosphorIconsFill.user,
-                              size: 40,
-                              color: theme.colors.primary,
-                            ),
+                            child: _avatarUrl == null
+                                ? Icon(
+                                    PhosphorIconsFill.user,
+                                    size: 40,
+                                    color: theme.colors.primary,
+                                  )
+                                : null,
                           ),
                           const SizedBox(height: 16),
                           _isLoadingProfile
@@ -306,6 +332,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'SUITE',
                                   ),
+                                  textAlign: TextAlign.center,
                                 ),
                           const SizedBox(height: 8),
                           Text(
@@ -314,8 +341,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: theme.colors.mutedForeground,
                               fontFamily: 'SUITE',
                             ),
+                            textAlign: TextAlign.center,
                           ),
                         ],
+                      ),
                       ),
                     ),
                   ),
