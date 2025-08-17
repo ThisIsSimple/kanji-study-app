@@ -109,22 +109,36 @@ class SupabaseService {
   /// Sign in with Google
   Future<bool> signInWithGoogle() async {
     try {
+      debugPrint('Starting Google Sign In process...');
+      
       final GoogleSignIn googleSignIn = GoogleSignIn(
         scopes: ['email', 'profile'],
       );
       
+      // Sign out first to ensure fresh sign in
+      await googleSignIn.signOut();
+      debugPrint('Cleared previous Google session');
+      
       // Trigger the Google Sign In process
+      debugPrint('Triggering Google Sign In dialog...');
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       
       if (googleUser == null) {
+        debugPrint('Google sign in was cancelled by user');
         throw Exception('Google sign in was cancelled');
       }
       
+      debugPrint('Google user signed in: ${googleUser.email}');
+      
       // Obtain the auth details from the request
+      debugPrint('Getting Google authentication tokens...');
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       
       final accessToken = googleAuth.accessToken;
       final idToken = googleAuth.idToken;
+      
+      debugPrint('Access token received: ${accessToken != null}');
+      debugPrint('ID token received: ${idToken != null}');
       
       if (accessToken == null || idToken == null) {
         throw Exception('Failed to get Google tokens');
@@ -133,13 +147,17 @@ class SupabaseService {
       // Store anonymous user ID if exists
       final anonymousUserId = currentUser?.id;
       final isAnonymous = currentUser?.isAnonymous ?? false;
+      debugPrint('Current user anonymous status: $isAnonymous, ID: $anonymousUserId');
       
       // Always sign in with Google OAuth
+      debugPrint('Signing in with Supabase using Google tokens...');
       await _client.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
         accessToken: accessToken,
       );
+      
+      debugPrint('Successfully signed in with Supabase');
       
       // If was anonymous, update the new user's metadata to indicate previous anonymous ID
       if (isAnonymous && anonymousUserId != null) {
@@ -163,6 +181,7 @@ class SupabaseService {
       return true;
     } catch (e) {
       debugPrint('Google sign in error: $e');
+      debugPrint('Error stack trace: ${StackTrace.current}');
       rethrow;
     }
   }
