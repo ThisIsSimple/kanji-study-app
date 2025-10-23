@@ -526,7 +526,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                                 style: _showStrokeOrder
                                     ? TextStyle(
                                         fontFamily: 'KanjiStrokeOrders',
-                                        fontSize: 100,  // 100pt 이상 권장
+                                        fontSize: 90,  // 100pt 이상 권장
                                         fontWeight: FontWeight.normal,
                                         color: theme.colors.foreground,
                                         height: 1.2,
