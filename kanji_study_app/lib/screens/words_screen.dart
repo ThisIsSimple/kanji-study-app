@@ -433,7 +433,6 @@ class _WordsScreenState extends State<WordsScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: FButton(
-                      label: const Text('플래시카드 학습 시작'),
                       onPress: _startFlashcardSession,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),

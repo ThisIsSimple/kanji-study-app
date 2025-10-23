@@ -260,7 +260,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
             ),
           ],
         ),
-        prefixes: [
+        suffixes: [
           IconButton(
             icon: Icon(PhosphorIconsRegular.x),
             onPressed: () {
@@ -366,12 +366,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
                           Row(
                             children: [
                               Expanded(
-                                child: FButton(
-                                  label: const Text('모르겠어요'),
-                                  onPress: () => _recordAnswer(false),
-                                  style: FButtonStyle.outline,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: GestureDetector(
+                                  onTap: () => _recordAnswer(false),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: theme.colors.border, width: 1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
@@ -397,7 +399,6 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
                               const SizedBox(width: 12),
                               Expanded(
                                 child: FButton(
-                                  label: const Text('알았어요'),
                                   onPress: () => _recordAnswer(true),
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -436,8 +437,16 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
   }
 
   Widget _buildCardFront(Word word, FThemeData theme) {
+    // 일반적인 구분자들을 줄바꿈으로 변경
+    // · (middle dot), • (bullet), ・ (katakana middle dot),
+    // ∙ (bullet operator), / (slash), , (comma), ; (semicolon) 등
+    final displayWord = word.word
+        .replaceAll(RegExp(r'[·•・∙/,;、]'), '\n')
+        .trim();
+
     return Container(
       width: double.infinity,
+      padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
         color: theme.colors.background,
         borderRadius: BorderRadius.circular(20),
@@ -454,22 +463,16 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            word.word,
-            style: theme.typography.display.copyWith(
+            displayWord,
+            textAlign: TextAlign.center,
+            style: theme.typography.xl4.copyWith(
               fontSize: 64,
               fontWeight: FontWeight.bold,
               fontFamily: 'Noto Serif Japanese',
+              height: 1.3,
             ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            word.reading,
-            style: theme.typography.xl2.copyWith(
-              color: theme.colors.mutedForeground,
-              fontFamily: 'Noto Serif Japanese',
-            ),
-          ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
@@ -491,6 +494,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
   }
 
   Widget _buildCardBack(Word word, FThemeData theme) {
+    // 일반적인 구분자들을 줄바꿈으로 변경
+    final displayWord = word.word
+        .replaceAll(RegExp(r'[·•・∙/,;、]'), '\n')
+        .trim();
+    final displayReading = word.reading
+        .replaceAll(RegExp(r'[·•・∙/,;、]'), '\n')
+        .trim();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -511,12 +522,28 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(
-            child: Text(
-              word.word,
-              style: theme.typography.xl2.copyWith(
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Noto Serif Japanese',
-              ),
+            child: Column(
+              children: [
+                Text(
+                  displayWord,
+                  textAlign: TextAlign.center,
+                  style: theme.typography.xl2.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Noto Serif Japanese',
+                    height: 1.3,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  displayReading,
+                  textAlign: TextAlign.center,
+                  style: theme.typography.lg.copyWith(
+                    color: theme.colors.mutedForeground,
+                    fontFamily: 'Noto Serif Japanese',
+                    height: 1.3,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 24),
