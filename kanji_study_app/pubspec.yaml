@@ -103,6 +103,9 @@ flutter:
           weight: 800
         - asset: assets/fonts/SUITE-Heavy.ttf
           weight: 900
+    - family: KanjiStrokeOrders
+      fonts:
+        - asset: assets/fonts/KanjiStrokeOrders_v4.005.ttf
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

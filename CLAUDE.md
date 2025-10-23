@@ -8,6 +8,48 @@ This is a Flutter-based Japanese Kanji study application with a Python data proc
 
 ## Development Commands
 
+### Code Validation (IMPORTANT for Claude Code)
+
+**⚠️ CRITICAL**: The user keeps `flutter run` running continuously. **NEVER use `flutter run` for code validation.**
+
+Use these commands instead for validating changes:
+
+1. **Primary Validation** - Static Analysis (fastest):
+   ```bash
+   cd kanji_study_app
+   flutter analyze
+   ```
+   - Checks for errors, warnings, and lint issues
+   - No impact on running app
+   - Completes in seconds
+
+2. **Code Formatting Check**:
+   ```bash
+   dart format --set-exit-if-changed lib/
+   ```
+   - Verifies code formatting compliance
+   - Use `dart format lib/` to auto-format
+
+3. **Build Verification** (if structural changes):
+   ```bash
+   flutter build ios --debug
+   # or
+   flutter build apk --debug
+   ```
+   - Validates compilation without running
+   - Use sparingly (slower than analyze)
+
+4. **Run Tests** (when tests exist):
+   ```bash
+   flutter test
+   ```
+
+**Workflow for Code Changes**:
+1. Make code changes
+2. Run `flutter analyze` to validate
+3. Fix any issues reported
+4. Let user test in their running app (hot reload handles updates)
+
 ### Flutter App Commands
 ```bash
 # Navigate to app directory
@@ -17,6 +59,7 @@ cd kanji_study_app
 flutter pub get
 
 # Run the app (iOS Simulator or Android Emulator)
+# ⚠️ NOTE: User typically keeps this running - don't use for validation
 flutter run
 
 # Run on specific device
@@ -116,6 +159,16 @@ The app follows a layered architecture with clear separation of concerns:
 - `flutter_local_notifications: ^19.4.0` - Study reminders
 - `table_calendar: ^3.1.2` - Study calendar view
 - `ruby_text: ^3.0.3` - Furigana rendering
+
+### Custom Fonts
+- **SUITE**: Korean font family (Light to Heavy weights)
+- **KanjiStrokeOrders**: Stroke order display font for kanji characters
+  - Located: `assets/fonts/KanjiStrokeOrders_v4.005.ttf`
+  - **CRITICAL**: When using this font, follow these requirements:
+    - **Minimum font size**: 100pt or larger (stroke order numbers won't show below this)
+    - **Font weight**: DO NOT use `FontWeight.bold` - use `FontWeight.normal` only
+    - **Reason**: Bold weight obscures the stroke order numbers embedded in the font
+    - Each stroke displays a small number indicating the proper writing sequence
 
 ### Python Dependencies
 - `supabase>=2.0.0` - Database operations

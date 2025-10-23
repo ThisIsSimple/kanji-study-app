@@ -43,10 +43,11 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
   List<WordExample>? _generatedExamples;
   List<WordExample> _databaseExamples = [];
   bool _isLoadingExamples = true;
-  
+
   StudyStats? _studyStats;
   bool _isLoadingStats = true;
   bool _isRecordingStudy = false;
+  bool _showStrokeOrder = false;
 
   @override
   void initState() {
@@ -75,6 +76,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       _databaseExamples = [];
       _studyStats = null;
       _isLoadingStats = true;
+      _showStrokeOrder = false;
     });
     _loadDatabaseExamples();
     _loadStudyStats();
@@ -497,38 +499,48 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
         children: [
             // Word Information Card
             FCard(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Centered word section
-                    Center(
-                      child: Column(
-                        children: [
-                          // Reading (furigana)
-                          if (word.reading.isNotEmpty && word.reading != word.word)
-                            Text(
-                              word.reading,
-                              style: theme.typography.base.copyWith(
-                                color: theme.colors.mutedForeground,
-                                fontSize: 18,
+              child: Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Centered word section
+                        Center(
+                          child: Column(
+                            children: [
+                              // Reading (furigana)
+                              if (word.reading.isNotEmpty && word.reading != word.word)
+                                Text(
+                                  word.reading,
+                                  style: theme.typography.base.copyWith(
+                                    color: theme.colors.mutedForeground,
+                                    fontSize: 18,
+                                  ),
+                                ),
+
+                              // Main word
+                              Text(
+                                word.word,
+                                style: _showStrokeOrder
+                                    ? TextStyle(
+                                        fontFamily: 'KanjiStrokeOrders',
+                                        fontSize: 100,  // 100pt 이상 권장
+                                        fontWeight: FontWeight.normal,
+                                        color: theme.colors.foreground,
+                                        height: 1.2,
+                                      )
+                                    : GoogleFonts.notoSerifJp(
+                                        fontSize: 48,
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colors.foreground,
+                                        height: 1.2,
+                                      ),
                               ),
-                            ),
-                          
-                          // Main word
-                          Text(
-                            word.word,
-                            style: GoogleFonts.notoSerifJp(
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colors.foreground,
-                              height: 1.2,
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
                     
                     const SizedBox(height: 24),
                     
@@ -605,8 +617,48 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                         ),
                       );
                     }),
-                  ],
-                ),
+                      ],
+                    ),
+                  ),
+                  // Stroke Order Toggle Button
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _showStrokeOrder = !_showStrokeOrder;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _showStrokeOrder
+                                ? theme.colors.primary
+                                : theme.colors.secondary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _showStrokeOrder
+                                  ? theme.colors.primary
+                                  : theme.colors.border,
+                              width: 1,
+                            ),
+                          ),
+                          child: Icon(
+                            PhosphorIconsRegular.path,
+                            size: 20,
+                            color: _showStrokeOrder
+                                ? Colors.white
+                                : theme.colors.mutedForeground,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             

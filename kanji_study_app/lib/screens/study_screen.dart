@@ -43,10 +43,11 @@ class _StudyScreenState extends State<StudyScreen> {
   List<KanjiExample>? _generatedExamples;
   List<KanjiExample> _databaseExamples = [];
   bool _isLoadingExamples = true;
-  
+
   StudyStats? _studyStats;
   bool _isLoadingStats = true;
   bool _isRecordingStudy = false;
+  bool _showStrokeOrder = false;
 
   @override
   void initState() {
@@ -75,6 +76,7 @@ class _StudyScreenState extends State<StudyScreen> {
         _databaseExamples = [];
         _studyStats = null;
         _isLoadingStats = true;
+        _showStrokeOrder = false;
       });
       _loadDatabaseExamples();
       _loadStudyStats();
@@ -544,54 +546,103 @@ class _StudyScreenState extends State<StudyScreen> {
         children: [
             // Main Kanji Card
             FCard(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                    Text(
-                      kanji.character,
-                      style: GoogleFonts.notoSerifJp(
-                        fontSize: 72,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colors.foreground,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    // Meanings
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: theme.colors.secondary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+              child: Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Center(
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            '의미',
-                            style: theme.typography.sm.copyWith(
-                              color: theme.colors.mutedForeground,
-                              fontFamily: 'SUITE',
-                            ),
+                        Text(
+                          kanji.character,
+                          style: _showStrokeOrder
+                              ? TextStyle(
+                                  fontFamily: 'KanjiStrokeOrders',
+                                  fontSize: 100,  // 100pt 이상 권장 (획순 숫자 표시를 위해)
+                                  fontWeight: FontWeight.normal,
+                                  color: theme.colors.foreground,
+                                )
+                              : GoogleFonts.notoSerifJp(
+                                  fontSize: 72,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colors.foreground,
+                                ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Meanings
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.colors.secondary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            kanji.meanings.join(', '),
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'SUITE',
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                '의미',
+                                style: theme.typography.sm.copyWith(
+                                  color: theme.colors.mutedForeground,
+                                  fontFamily: 'SUITE',
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                kanji.meanings.join(', '),
+                                style: theme.typography.lg.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'SUITE',
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
+                      ],
                       ),
                     ),
-                  ],
                   ),
-                ),
+                  // Stroke Order Toggle Button
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _showStrokeOrder = !_showStrokeOrder;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _showStrokeOrder
+                                ? theme.colors.primary
+                                : theme.colors.secondary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _showStrokeOrder
+                                  ? theme.colors.primary
+                                  : theme.colors.border,
+                              width: 1,
+                            ),
+                          ),
+                          child: Icon(
+                            PhosphorIconsRegular.path,
+                            size: 20,
+                            color: _showStrokeOrder
+                                ? Colors.white
+                                : theme.colors.mutedForeground,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
