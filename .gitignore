@@ -61,3 +61,6 @@ kanji_study_app/pubspec.lock.mcp.json
 
 # Data processing scripts and files
 data_processing/
+
+# env files
+.env
