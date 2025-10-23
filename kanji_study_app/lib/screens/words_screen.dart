@@ -3,8 +3,10 @@ import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/word_model.dart';
 import '../services/word_service.dart';
+import '../services/flashcard_service.dart';
 import '../widgets/word_list_item.dart';
 import 'word_detail_screen.dart';
+import 'flashcard_screen.dart';
 
 class WordsScreen extends StatefulWidget {
   const WordsScreen({super.key});
@@ -15,6 +17,7 @@ class WordsScreen extends StatefulWidget {
 
 class _WordsScreenState extends State<WordsScreen> {
   final WordService _wordService = WordService.instance;
+  final FlashcardService _flashcardService = FlashcardService.instance;
   final TextEditingController _searchController = TextEditingController();
   
   List<Word> _filteredWords = [];
@@ -111,6 +114,94 @@ class _WordsScreenState extends State<WordsScreen> {
         _searchQuery = '';
         _applyFilters();
       }
+    });
+  }
+
+  Future<void> _startFlashcardSession() async {
+    if (_filteredWords.isEmpty) {
+      final theme = FTheme.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '학습할 단어가 없습니다',
+            style: TextStyle(fontFamily: 'SUITE'),
+          ),
+          backgroundColor: theme.colors.destructive,
+        ),
+      );
+      return;
+    }
+
+    // Check if there's an active session
+    final existingSession = await _flashcardService.loadSession();
+
+    if (existingSession != null && !existingSession.isCompleted && mounted) {
+      // Ask user if they want to resume or start new
+      showDialog(
+        context: context,
+        builder: (context) {
+          final theme = FTheme.of(context);
+          return AlertDialog(
+            title: Text(
+              '진행 중인 학습',
+              style: theme.typography.lg.copyWith(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'SUITE',
+              ),
+            ),
+            content: Text(
+              '이전에 진행 중이던 플래시카드 학습이 있습니다.\n계속하시겠습니까?',
+              style: theme.typography.base.copyWith(fontFamily: 'SUITE'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  await _flashcardService.clearSession();
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                    _navigateToFlashcard(null);
+                  }
+                },
+                child: Text(
+                  '새로 시작',
+                  style: TextStyle(fontFamily: 'SUITE'),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _navigateToFlashcard(existingSession);
+                },
+                child: Text(
+                  '이어하기',
+                  style: TextStyle(
+                    fontFamily: 'SUITE',
+                    color: theme.colors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      _navigateToFlashcard(null);
+    }
+  }
+
+  void _navigateToFlashcard(dynamic session) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FlashcardScreen(
+          words: _filteredWords,
+          initialSession: session,
+        ),
+      ),
+    ).then((_) {
+      // Refresh when coming back
+      setState(() {});
     });
   }
 
@@ -334,7 +425,42 @@ class _WordsScreenState extends State<WordsScreen> {
       ),
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
+          : Column(
+              children: [
+                // Flashcard start button
+                if (_filteredWords.isNotEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: FButton(
+                      label: const Text('플래시카드 학습 시작'),
+                      onPress: _startFlashcardSession,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              PhosphorIconsRegular.cards,
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '플래시카드 학습 시작 (${_filteredWords.length}개)',
+                              style: theme.typography.base.copyWith(
+                                fontFamily: 'SUITE',
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                Expanded(
+                  child: RefreshIndicator(
                     onRefresh: () async {
                       await _wordService.reloadData();
                       _applyFilters();
@@ -399,7 +525,10 @@ class _WordsScreenState extends State<WordsScreen> {
                               );
                             },
                           ),
-              ),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
