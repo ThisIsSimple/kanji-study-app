@@ -3,9 +3,12 @@ import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
+import '../models/kanji_flashcard_adapter.dart';
 import '../services/kanji_service.dart';
+import '../services/flashcard_service.dart';
 import '../utils/korean_formatter.dart';
 import 'study_screen.dart';
+import 'flashcard_screen.dart';
 
 class KanjiScreen extends StatefulWidget {
   const KanjiScreen({super.key});
@@ -16,6 +19,7 @@ class KanjiScreen extends StatefulWidget {
 
 class _KanjiScreenState extends State<KanjiScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
+  final FlashcardService _flashcardService = FlashcardService.instance;
   final TextEditingController _searchController = TextEditingController();
   
   List<Kanji> _allKanji = [];
@@ -126,6 +130,97 @@ class _KanjiScreenState extends State<KanjiScreen> {
     );
   }
 
+  Future<void> _startFlashcardSession() async {
+    if (_filteredKanji.isEmpty) {
+      final theme = FTheme.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '학습할 한자가 없습니다',
+            style: TextStyle(fontFamily: 'SUITE'),
+          ),
+          backgroundColor: theme.colors.destructive,
+        ),
+      );
+      return;
+    }
+
+    // Check if there's an active session
+    final existingSession = await _flashcardService.loadSession();
+
+    if (existingSession != null && !existingSession.isCompleted && mounted) {
+      // Ask user if they want to resume or start new
+      showDialog(
+        context: context,
+        builder: (context) {
+          final theme = FTheme.of(context);
+          return AlertDialog(
+            title: Text(
+              '진행 중인 학습',
+              style: theme.typography.lg.copyWith(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'SUITE',
+              ),
+            ),
+            content: Text(
+              '이전에 진행 중이던 플래시카드 학습이 있습니다.\n계속하시겠습니까?',
+              style: theme.typography.base.copyWith(fontFamily: 'SUITE'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  await _flashcardService.clearSession();
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                    _navigateToFlashcard(null);
+                  }
+                },
+                child: Text(
+                  '새로 시작',
+                  style: TextStyle(fontFamily: 'SUITE'),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _navigateToFlashcard(existingSession);
+                },
+                child: Text(
+                  '이어하기',
+                  style: TextStyle(
+                    fontFamily: 'SUITE',
+                    color: theme.colors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      _navigateToFlashcard(null);
+    }
+  }
+
+  void _navigateToFlashcard(dynamic session) {
+    // Convert kanji to FlashcardItem using adapter
+    final flashcardItems = _filteredKanji.map((kanji) => KanjiFlashcardAdapter(kanji)).toList();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FlashcardScreen(
+          items: flashcardItems,
+          initialSession: session,
+        ),
+      ),
+    ).then((_) {
+      // Refresh when coming back
+      setState(() {});
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
@@ -230,7 +325,42 @@ class _KanjiScreenState extends State<KanjiScreen> {
       ),
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
+          : Column(
+              children: [
+                // Flashcard start button
+                if (_filteredKanji.isNotEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: FButton(
+                      onPress: _startFlashcardSession,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              PhosphorIconsRegular.cards,
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '플래시카드 학습 시작 (${_filteredKanji.length}개)',
+                              style: theme.typography.base.copyWith(
+                                fontFamily: 'SUITE',
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                // Kanji grid
+                Expanded(
+                  child: RefreshIndicator(
                     onRefresh: () => _loadKanji(forceReload: true),
                     child: _filteredKanji.isEmpty
                         ? Center(
@@ -280,7 +410,10 @@ class _KanjiScreenState extends State<KanjiScreen> {
                               );
                             },
                           ),
-              ),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

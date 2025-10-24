@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/word_model.dart';
+import '../models/word_flashcard_adapter.dart';
 import '../services/word_service.dart';
 import '../services/flashcard_service.dart';
 import '../widgets/word_list_item.dart';
@@ -191,11 +192,14 @@ class _WordsScreenState extends State<WordsScreen> {
   }
 
   void _navigateToFlashcard(dynamic session) {
+    // Convert words to FlashcardItem using adapter
+    final flashcardItems = _filteredWords.map((word) => WordFlashcardAdapter(word)).toList();
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => FlashcardScreen(
-          words: _filteredWords,
+          items: flashcardItems,
           initialSession: session,
         ),
       ),

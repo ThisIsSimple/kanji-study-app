@@ -2,19 +2,22 @@ import 'dart:convert';
 
 /// Represents a single flashcard result
 class FlashcardResult {
-  final int wordId;
-  final bool isCorrect; // true = knew it, false = didn't know
+  final String itemType;  // 'word' or 'kanji'
+  final int itemId;       // word_id or kanji_id
+  final bool isCorrect;   // true = knew it, false = didn't know
   final DateTime timestamp;
 
   const FlashcardResult({
-    required this.wordId,
+    required this.itemType,
+    required this.itemId,
     required this.isCorrect,
     required this.timestamp,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'wordId': wordId,
+      'itemType': itemType,
+      'itemId': itemId,
       'isCorrect': isCorrect,
       'timestamp': timestamp.toIso8601String(),
     };
@@ -22,7 +25,8 @@ class FlashcardResult {
 
   factory FlashcardResult.fromJson(Map<String, dynamic> json) {
     return FlashcardResult(
-      wordId: json['wordId'] as int,
+      itemType: json['itemType'] as String? ?? 'word',  // 하위 호환성
+      itemId: json['itemId'] as int? ?? json['wordId'] as int,  // 하위 호환성
       isCorrect: json['isCorrect'] as bool,
       timestamp: DateTime.parse(json['timestamp'] as String),
     );
@@ -31,14 +35,16 @@ class FlashcardResult {
 
 /// Represents a flashcard study session
 class FlashcardSession {
-  final List<int> wordIds;
+  final String itemType;  // 'word' or 'kanji'
+  final List<int> itemIds;  // word_ids or kanji_ids
   final int currentIndex;
   final List<FlashcardResult> results;
   final DateTime startTime;
   final DateTime? endTime;
 
   const FlashcardSession({
-    required this.wordIds,
+    required this.itemType,
+    required this.itemIds,
     this.currentIndex = 0,
     this.results = const [],
     required this.startTime,
@@ -46,20 +52,24 @@ class FlashcardSession {
   });
 
   /// Check if the session is completed
-  bool get isCompleted => currentIndex >= wordIds.length;
+  bool get isCompleted => currentIndex >= itemIds.length;
 
-  /// Get the current word ID
-  int? get currentWordId {
-    if (currentIndex < wordIds.length) {
-      return wordIds[currentIndex];
+  /// Get the current item ID
+  int? get currentItemId {
+    if (currentIndex < itemIds.length) {
+      return itemIds[currentIndex];
     }
     return null;
   }
 
+  /// 하위 호환성을 위한 getter (deprecated)
+  @deprecated
+  int? get currentWordId => currentItemId;
+
   /// Get progress percentage (0-100)
   double get progressPercentage {
-    if (wordIds.isEmpty) return 0;
-    return (currentIndex / wordIds.length * 100).clamp(0, 100);
+    if (itemIds.isEmpty) return 0;
+    return (currentIndex / itemIds.length * 100).clamp(0, 100);
   }
 
   /// Get number of correct answers
@@ -77,18 +87,20 @@ class FlashcardSession {
   /// Create a new session with updated current index
   FlashcardSession copyWithNextCard() {
     return FlashcardSession(
-      wordIds: wordIds,
+      itemType: itemType,
+      itemIds: itemIds,
       currentIndex: currentIndex + 1,
       results: results,
       startTime: startTime,
-      endTime: currentIndex + 1 >= wordIds.length ? DateTime.now() : null,
+      endTime: currentIndex + 1 >= itemIds.length ? DateTime.now() : null,
     );
   }
 
   /// Create a new session with an added result
   FlashcardSession copyWithResult(FlashcardResult result) {
     return FlashcardSession(
-      wordIds: wordIds,
+      itemType: itemType,
+      itemIds: itemIds,
       currentIndex: currentIndex,
       results: [...results, result],
       startTime: startTime,
@@ -99,7 +111,8 @@ class FlashcardSession {
   /// Convert to JSON for storage
   Map<String, dynamic> toJson() {
     return {
-      'wordIds': wordIds,
+      'itemType': itemType,
+      'itemIds': itemIds,
       'currentIndex': currentIndex,
       'results': results.map((r) => r.toJson()).toList(),
       'startTime': startTime.toIso8601String(),
@@ -110,7 +123,9 @@ class FlashcardSession {
   /// Create from JSON
   factory FlashcardSession.fromJson(Map<String, dynamic> json) {
     return FlashcardSession(
-      wordIds: (json['wordIds'] as List).cast<int>(),
+      itemType: json['itemType'] as String? ?? 'word',  // 하위 호환성
+      itemIds: (json['itemIds'] as List?)?.cast<int>() ??
+               (json['wordIds'] as List).cast<int>(),  // 하위 호환성
       currentIndex: json['currentIndex'] as int,
       results: (json['results'] as List)
           .map((r) => FlashcardResult.fromJson(r as Map<String, dynamic>))

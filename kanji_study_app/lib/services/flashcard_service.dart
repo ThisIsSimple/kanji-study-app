@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/flashcard_session_model.dart';
-import '../models/word_model.dart';
 import 'supabase_service.dart';
 
 class FlashcardService {
@@ -21,21 +20,22 @@ class FlashcardService {
   /// Check if there's an active session
   bool get hasActiveSession => _currentSession != null && !_currentSession!.isCompleted;
 
-  /// Create a new flashcard session from a list of words
-  Future<FlashcardSession> createSession(List<Word> words) async {
-    if (words.isEmpty) {
-      throw Exception('Cannot create flashcard session with empty word list');
+  /// Create a new flashcard session from a list of items
+  Future<FlashcardSession> createSession(String itemType, List<int> itemIds) async {
+    if (itemIds.isEmpty) {
+      throw Exception('Cannot create flashcard session with empty item list');
     }
 
     final session = FlashcardSession(
-      wordIds: words.map((w) => w.id).toList(),
+      itemType: itemType,
+      itemIds: itemIds,
       startTime: DateTime.now(),
     );
 
     _currentSession = session;
     await _saveSession(session);
 
-    debugPrint('Created flashcard session with ${words.length} words');
+    debugPrint('Created flashcard session with ${itemIds.length} $itemType items');
     return session;
   }
 
@@ -48,7 +48,7 @@ class FlashcardService {
       if (sessionJson != null) {
         final session = FlashcardSession.fromJsonString(sessionJson);
         _currentSession = session;
-        debugPrint('Loaded flashcard session with ${session.wordIds.length} words');
+        debugPrint('Loaded flashcard session with ${session.itemIds.length} ${session.itemType} items');
         return session;
       }
     } catch (e) {
@@ -78,7 +78,7 @@ class FlashcardService {
 
   /// Record a flashcard result and move to next card
   Future<FlashcardSession> recordResult({
-    required int wordId,
+    required int itemId,
     required bool isCorrect,
   }) async {
     if (_currentSession == null) {
@@ -86,7 +86,8 @@ class FlashcardService {
     }
 
     final result = FlashcardResult(
-      wordId: wordId,
+      itemType: _currentSession!.itemType,
+      itemId: itemId,
       isCorrect: isCorrect,
       timestamp: DateTime.now(),
     );
@@ -132,17 +133,25 @@ class FlashcardService {
 
       // Record each flashcard result as a study record
       for (final result in session.results) {
-        await _supabaseService.client.from('study_records').insert({
+        final Map<String, dynamic> record = {
           'user_id': userId,
-          'study_type': 'word',
+          'study_type': result.itemType,
           'study_date': result.timestamp.toIso8601String().split('T')[0],
-          'word_id': result.wordId,
           'study_status': result.isCorrect ? 'completed' : 'forgot',
           'created_at': result.timestamp.toIso8601String(),
-        });
+        };
+
+        // Add item-specific ID field
+        if (result.itemType == 'word') {
+          record['word_id'] = result.itemId;
+        } else if (result.itemType == 'kanji') {
+          record['kanji_id'] = result.itemId;
+        }
+
+        await _supabaseService.client.from('study_records').insert(record);
       }
 
-      debugPrint('Recorded ${session.results.length} flashcard results to study_records');
+      debugPrint('Recorded ${session.results.length} ${session.itemType} flashcard results to study_records');
     } catch (e) {
       debugPrint('Error recording study session: $e');
     }
@@ -151,18 +160,18 @@ class FlashcardService {
   /// Get session statistics
   Map<String, dynamic> getSessionStats(FlashcardSession session) {
     return {
-      'total': session.wordIds.length,
+      'total': session.itemIds.length,
       'completed': session.results.length,
       'correct': session.correctCount,
       'incorrect': session.incorrectCount,
-      'remaining': session.wordIds.length - session.currentIndex,
+      'remaining': session.itemIds.length - session.currentIndex,
       'accuracy': session.accuracyPercentage,
       'progress': session.progressPercentage,
     };
   }
 
   /// Resume or create new session
-  Future<FlashcardSession?> resumeOrCreateSession(List<Word> words) async {
+  Future<FlashcardSession?> resumeOrCreateSession(String itemType, List<int> itemIds) async {
     // Try to load existing session
     final existingSession = await loadSession();
 
@@ -171,8 +180,8 @@ class FlashcardService {
     }
 
     // Create new session if no active session exists
-    if (words.isNotEmpty) {
-      return await createSession(words);
+    if (itemIds.isNotEmpty) {
+      return await createSession(itemType, itemIds);
     }
 
     return null;

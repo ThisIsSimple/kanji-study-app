@@ -2,18 +2,17 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import '../models/word_model.dart';
+import '../models/flashcard_item.dart';
 import '../models/flashcard_session_model.dart';
 import '../services/flashcard_service.dart';
-import '../services/word_service.dart';
 
 class FlashcardScreen extends StatefulWidget {
-  final List<Word> words;
+  final List<FlashcardItem> items;
   final FlashcardSession? initialSession;
 
   const FlashcardScreen({
     super.key,
-    required this.words,
+    required this.items,
     this.initialSession,
   });
 
@@ -23,7 +22,6 @@ class FlashcardScreen extends StatefulWidget {
 
 class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProviderStateMixin {
   final FlashcardService _flashcardService = FlashcardService.instance;
-  final WordService _wordService = WordService.instance;
 
   late FlashcardSession _session;
   bool _isFlipped = false;
@@ -35,7 +33,8 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
   void initState() {
     super.initState();
     _session = widget.initialSession ?? FlashcardSession(
-      wordIds: widget.words.map((w) => w.id).toList(),
+      itemType: widget.items.first.itemType,
+      itemIds: widget.items.map((i) => i.id).toList(),
       startTime: DateTime.now(),
     );
 
@@ -57,7 +56,10 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
   Future<void> _initializeSession() async {
     setState(() => _isLoading = true);
     try {
-      _session = await _flashcardService.createSession(widget.words);
+      _session = await _flashcardService.createSession(
+        widget.items.first.itemType,
+        widget.items.map((i) => i.id).toList(),
+      );
     } catch (e) {
       debugPrint('Error initializing session: $e');
     } finally {
@@ -86,13 +88,13 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
   }
 
   Future<void> _recordAnswer(bool isCorrect) async {
-    if (_session.currentWordId == null) return;
+    if (_session.currentItemId == null) return;
 
     setState(() => _isLoading = true);
 
     try {
       final updatedSession = await _flashcardService.recordResult(
-        wordId: _session.currentWordId!,
+        itemId: _session.currentItemId!,
         isCorrect: isCorrect,
       );
 
@@ -207,15 +209,19 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
     );
   }
 
-  Word? _getCurrentWord() {
-    if (_session.currentWordId == null) return null;
-    return _wordService.getWordById(_session.currentWordId!);
+  FlashcardItem? _getCurrentItem() {
+    if (_session.currentItemId == null) return null;
+    try {
+      return widget.items.firstWhere((item) => item.id == _session.currentItemId);
+    } catch (e) {
+      return null;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    final currentWord = _getCurrentWord();
+    final currentItem = _getCurrentItem();
 
     if (_session.isCompleted) {
       return FScaffold(
@@ -231,7 +237,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
       );
     }
 
-    if (currentWord == null) {
+    if (currentItem == null) {
       return FScaffold(
         header: FHeader(
           title: const Text('플래시카드 학습'),
@@ -252,7 +258,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
               ),
             ),
             Text(
-              ' / ${_session.wordIds.length}',
+              ' / ${_session.itemIds.length}',
               style: theme.typography.lg.copyWith(
                 color: theme.colors.mutedForeground,
                 fontFamily: 'SUITE',
@@ -342,9 +348,9 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
                                       ? Transform(
                                           transform: Matrix4.identity()..rotateY(math.pi),
                                           alignment: Alignment.center,
-                                          child: _buildCardBack(currentWord, theme),
+                                          child: _buildCardBack(currentItem, theme),
                                         )
-                                      : _buildCardFront(currentWord, theme),
+                                      : _buildCardFront(currentItem, theme),
                                 );
                               },
                             ),
@@ -436,11 +442,11 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildCardFront(Word word, FThemeData theme) {
+  Widget _buildCardFront(FlashcardItem item, FThemeData theme) {
     // 일반적인 구분자들을 줄바꿈으로 변경
     // · (middle dot), • (bullet), ・ (katakana middle dot),
     // ∙ (bullet operator), / (slash), , (comma), ; (semicolon) 등
-    final displayWord = word.word
+    final displayText = item.frontText
         .replaceAll(RegExp(r'[·•・∙/,;、]'), '\n')
         .trim();
 
@@ -463,7 +469,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            displayWord,
+            displayText,
             textAlign: TextAlign.center,
             style: theme.typography.xl4.copyWith(
               fontSize: 64,
@@ -472,35 +478,41 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
               height: 1.3,
             ),
           ),
-          const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: _getJlptColor(word.jlptLevel).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              'JLPT N${word.jlptLevel}',
-              style: theme.typography.sm.copyWith(
-                fontWeight: FontWeight.bold,
-                color: _getJlptColor(word.jlptLevel),
-                fontFamily: 'SUITE',
+          if (item.frontBadge != null) ...[
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: item.frontBadgeColor != null
+                    ? Color(item.frontBadgeColor!).withOpacity(0.1)
+                    : theme.colors.muted,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                item.frontBadge!,
+                style: theme.typography.sm.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: item.frontBadgeColor != null
+                      ? Color(item.frontBadgeColor!)
+                      : theme.colors.mutedForeground,
+                  fontFamily: 'SUITE',
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildCardBack(Word word, FThemeData theme) {
+  Widget _buildCardBack(FlashcardItem item, FThemeData theme) {
     // 일반적인 구분자들을 줄바꿈으로 변경
-    final displayWord = word.word
+    final displayText = item.backText
         .replaceAll(RegExp(r'[·•・∙/,;、]'), '\n')
         .trim();
-    final displayReading = word.reading
-        .replaceAll(RegExp(r'[·•・∙/,;、]'), '\n')
-        .trim();
+    final displayReading = item.backReading != null
+        ? item.backReading!.replaceAll(RegExp(r'[·•・∙/,;、]'), '\n').trim()
+        : null;
 
     return Container(
       width: double.infinity,
@@ -525,7 +537,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
             child: Column(
               children: [
                 Text(
-                  displayWord,
+                  displayText,
                   textAlign: TextAlign.center,
                   style: theme.typography.xl2.copyWith(
                     fontWeight: FontWeight.bold,
@@ -533,23 +545,25 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
                     height: 1.3,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  displayReading,
-                  textAlign: TextAlign.center,
-                  style: theme.typography.lg.copyWith(
-                    color: theme.colors.mutedForeground,
-                    fontFamily: 'Noto Serif Japanese',
-                    height: 1.3,
+                if (displayReading != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    displayReading,
+                    textAlign: TextAlign.center,
+                    style: theme.typography.lg.copyWith(
+                      color: theme.colors.mutedForeground,
+                      fontFamily: 'Noto Serif Japanese',
+                      height: 1.3,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
           const SizedBox(height: 24),
           Divider(color: theme.colors.border),
           const SizedBox(height: 24),
-          ...word.meanings.map((meaning) {
+          ...item.backMeanings.map((meaning) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: Column(
@@ -562,7 +576,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      meaning.partOfSpeech,
+                      meaning.category,
                       style: theme.typography.xs.copyWith(
                         color: theme.colors.mutedForeground,
                         fontFamily: 'SUITE',
@@ -586,20 +600,4 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
     );
   }
 
-  Color _getJlptColor(int level) {
-    switch (level) {
-      case 1:
-        return Colors.red;
-      case 2:
-        return Colors.orange;
-      case 3:
-        return Colors.amber;
-      case 4:
-        return Colors.lightGreen;
-      case 5:
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
 }
