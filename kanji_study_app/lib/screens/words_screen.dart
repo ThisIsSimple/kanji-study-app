@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -6,6 +7,7 @@ import '../models/word_flashcard_adapter.dart';
 import '../services/word_service.dart';
 import '../services/flashcard_service.dart';
 import '../widgets/word_list_item.dart';
+import '../widgets/flashcard_count_selector.dart';
 import 'word_detail_screen.dart';
 import 'flashcard_screen.dart';
 
@@ -133,8 +135,8 @@ class _WordsScreenState extends State<WordsScreen> {
       return;
     }
 
-    // Check if there's an active session
-    final existingSession = await _flashcardService.loadSession();
+    // Check if there's an active word session
+    final existingSession = await _flashcardService.loadSessionByType('word');
 
     if (existingSession != null && !existingSession.isCompleted && mounted) {
       // Ask user if they want to resume or start new
@@ -157,10 +159,10 @@ class _WordsScreenState extends State<WordsScreen> {
             actions: [
               TextButton(
                 onPressed: () async {
-                  await _flashcardService.clearSession();
+                  await _flashcardService.clearSession('word');
                   if (mounted) {
                     Navigator.of(context).pop();
-                    _navigateToFlashcard(null);
+                    await _showCountSelectorAndStart();
                   }
                 },
                 child: Text(
@@ -171,7 +173,7 @@ class _WordsScreenState extends State<WordsScreen> {
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  _navigateToFlashcard(existingSession);
+                  _navigateToFlashcard(_filteredWords, existingSession);
                 },
                 child: Text(
                   '이어하기',
@@ -187,13 +189,38 @@ class _WordsScreenState extends State<WordsScreen> {
         },
       );
     } else {
-      _navigateToFlashcard(null);
+      await _showCountSelectorAndStart();
     }
   }
 
-  void _navigateToFlashcard(dynamic session) {
-    // Convert words to FlashcardItem using adapter
-    final flashcardItems = _filteredWords.map((word) => WordFlashcardAdapter(word)).toList();
+  Future<void> _showCountSelectorAndStart() async {
+    // 개수 선택 다이얼로그 표시
+    final selectedCount = await FlashcardCountSelector.show(context, _filteredWords.length);
+
+    if (selectedCount != null && mounted) {
+      // 랜덤으로 단어 선택
+      final selectedWords = _selectRandomWords(_filteredWords, selectedCount);
+      _navigateToFlashcard(selectedWords, null);
+    }
+  }
+
+  List<Word> _selectRandomWords(List<Word> words, int count) {
+    if (count >= words.length) return words;
+
+    final random = Random();
+    final selectedIndices = <int>{};
+
+    // 중복 없이 랜덤 인덱스 생성
+    while (selectedIndices.length < count) {
+      selectedIndices.add(random.nextInt(words.length));
+    }
+
+    return selectedIndices.map((i) => words[i]).toList();
+  }
+
+  void _navigateToFlashcard(List<Word> selectedWords, dynamic session) {
+    // Convert selected words to FlashcardItem using adapter
+    final flashcardItems = selectedWords.map((word) => WordFlashcardAdapter(word)).toList();
 
     Navigator.push(
       context,

@@ -117,7 +117,9 @@ class KanjiService {
   }
   
   List<Kanji> getAllKanji() => _repository.getAllKanji();
-  
+
+  Kanji? getKanjiById(int id) => _repository.getKanjiById(id);
+
   UserProgress? getProgress(String character) => _progressMap[character];
   
   Future<void> markAsStudied(String character) async {

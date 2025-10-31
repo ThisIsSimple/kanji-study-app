@@ -121,11 +121,13 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
           fontFamily: 'SUITE',
         ),
       ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      content: SizedBox(
+        width: 300,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // 미리 정의된 버튼들 (2x2 그리드)
             GridView.count(
               crossAxisCount: 2,
@@ -237,6 +239,7 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
               ),
             ),
           ],
+          ),
         ),
       ),
       actions: [

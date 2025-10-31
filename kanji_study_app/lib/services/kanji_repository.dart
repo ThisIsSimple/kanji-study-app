@@ -61,6 +61,16 @@ class KanjiRepository {
   Kanji? getKanjiByCharacter(String character) {
     return _kanjiMap?[character];
   }
+
+  // Get kanji by ID
+  Kanji? getKanjiById(int id) {
+    if (_kanjiList == null) return null;
+    try {
+      return _kanjiList!.firstWhere((kanji) => kanji.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
   
   // Grade and JLPT methods removed - data is empty in current dataset
   

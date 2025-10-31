@@ -5,6 +5,10 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/flashcard_item.dart';
 import '../models/flashcard_session_model.dart';
 import '../services/flashcard_service.dart';
+import '../services/word_service.dart';
+import '../services/kanji_service.dart';
+import '../widgets/word_flashcard_content.dart';
+import '../widgets/kanji_flashcard_content.dart';
 
 class FlashcardScreen extends StatefulWidget {
   final List<FlashcardItem> items;
@@ -22,6 +26,8 @@ class FlashcardScreen extends StatefulWidget {
 
 class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProviderStateMixin {
   final FlashcardService _flashcardService = FlashcardService.instance;
+  final WordService _wordService = WordService.instance;
+  final KanjiService _kanjiService = KanjiService.instance;
 
   late FlashcardSession _session;
   bool _isFlipped = false;
@@ -96,6 +102,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
       final updatedSession = await _flashcardService.recordResult(
         itemId: _session.currentItemId!,
         isCorrect: isCorrect,
+        itemType: _session.itemType,  // itemType 파라미터 추가
       );
 
       if (mounted) {
@@ -166,7 +173,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
         actions: [
           TextButton(
             onPressed: () async {
-              await _flashcardService.clearSession();
+              await _flashcardService.clearSession(_session.itemType);
               if (mounted) {
                 Navigator.of(context).pop(); // Close dialog
                 Navigator.of(context).pop(); // Close flashcard screen
@@ -443,13 +450,20 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
   }
 
   Widget _buildCardFront(FlashcardItem item, FThemeData theme) {
-    // 일반적인 구분자들을 줄바꿈으로 변경
-    // · (middle dot), • (bullet), ・ (katakana middle dot),
-    // ∙ (bullet operator), / (slash), , (comma), ; (semicolon) 등
-    final displayText = item.frontText
-        .replaceAll(RegExp(r'[·•・∙/,;、]'), '\n')
-        .trim();
+    // itemType에 따라 적절한 카드 컴포넌트 사용
+    if (item.itemType == 'word') {
+      final word = _wordService.getWordById(item.id);
+      if (word != null) {
+        return WordFlashcardContent(word: word, isBack: false);
+      }
+    } else if (item.itemType == 'kanji') {
+      final kanji = _kanjiService.getKanjiById(item.id);
+      if (kanji != null) {
+        return KanjiFlashcardContent(kanji: kanji, isBack: false);
+      }
+    }
 
+    // Fallback: 기본 카드 표시
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(40),
@@ -457,145 +471,44 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
         color: theme.colors.background,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: theme.colors.border, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            displayText,
-            textAlign: TextAlign.center,
-            style: theme.typography.xl4.copyWith(
-              fontSize: 64,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Noto Serif Japanese',
-              height: 1.3,
-            ),
-          ),
-          if (item.frontBadge != null) ...[
-            const SizedBox(height: 32),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: item.frontBadgeColor != null
-                    ? Color(item.frontBadgeColor!).withOpacity(0.1)
-                    : theme.colors.muted,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                item.frontBadge!,
-                style: theme.typography.sm.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: item.frontBadgeColor != null
-                      ? Color(item.frontBadgeColor!)
-                      : theme.colors.mutedForeground,
-                  fontFamily: 'SUITE',
-                ),
-              ),
-            ),
-          ],
-        ],
+      child: Center(
+        child: Text(
+          '카드를 불러올 수 없습니다',
+          style: theme.typography.base.copyWith(fontFamily: 'SUITE'),
+        ),
       ),
     );
   }
 
   Widget _buildCardBack(FlashcardItem item, FThemeData theme) {
-    // 일반적인 구분자들을 줄바꿈으로 변경
-    final displayText = item.backText
-        .replaceAll(RegExp(r'[·•・∙/,;、]'), '\n')
-        .trim();
-    final displayReading = item.backReading != null
-        ? item.backReading!.replaceAll(RegExp(r'[·•・∙/,;、]'), '\n').trim()
-        : null;
+    // itemType에 따라 적절한 카드 컴포넌트 사용
+    if (item.itemType == 'word') {
+      final word = _wordService.getWordById(item.id);
+      if (word != null) {
+        return WordFlashcardContent(word: word, isBack: true);
+      }
+    } else if (item.itemType == 'kanji') {
+      final kanji = _kanjiService.getKanjiById(item.id);
+      if (kanji != null) {
+        return KanjiFlashcardContent(kanji: kanji, isBack: true);
+      }
+    }
 
+    // Fallback: 기본 카드 표시
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
         color: theme.colors.background,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: theme.colors.border, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Column(
-              children: [
-                Text(
-                  displayText,
-                  textAlign: TextAlign.center,
-                  style: theme.typography.xl2.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Noto Serif Japanese',
-                    height: 1.3,
-                  ),
-                ),
-                if (displayReading != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    displayReading,
-                    textAlign: TextAlign.center,
-                    style: theme.typography.lg.copyWith(
-                      color: theme.colors.mutedForeground,
-                      fontFamily: 'Noto Serif Japanese',
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          Divider(color: theme.colors.border),
-          const SizedBox(height: 24),
-          ...item.backMeanings.map((meaning) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: theme.colors.muted,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      meaning.category,
-                      style: theme.typography.xs.copyWith(
-                        color: theme.colors.mutedForeground,
-                        fontFamily: 'SUITE',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    meaning.meaning,
-                    style: theme.typography.lg.copyWith(
-                      fontFamily: 'SUITE',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ],
+      child: Center(
+        child: Text(
+          '카드를 불러올 수 없습니다',
+          style: theme.typography.base.copyWith(fontFamily: 'SUITE'),
+        ),
       ),
     );
   }

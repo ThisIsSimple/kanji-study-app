@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +8,7 @@ import '../models/kanji_flashcard_adapter.dart';
 import '../services/kanji_service.dart';
 import '../services/flashcard_service.dart';
 import '../utils/korean_formatter.dart';
+import '../widgets/flashcard_count_selector.dart';
 import 'study_screen.dart';
 import 'flashcard_screen.dart';
 
@@ -145,8 +147,8 @@ class _KanjiScreenState extends State<KanjiScreen> {
       return;
     }
 
-    // Check if there's an active session
-    final existingSession = await _flashcardService.loadSession();
+    // Check if there's an active kanji session
+    final existingSession = await _flashcardService.loadSessionByType('kanji');
 
     if (existingSession != null && !existingSession.isCompleted && mounted) {
       // Ask user if they want to resume or start new
@@ -169,10 +171,10 @@ class _KanjiScreenState extends State<KanjiScreen> {
             actions: [
               TextButton(
                 onPressed: () async {
-                  await _flashcardService.clearSession();
+                  await _flashcardService.clearSession('kanji');
                   if (mounted) {
                     Navigator.of(context).pop();
-                    _navigateToFlashcard(null);
+                    await _showCountSelectorAndStart();
                   }
                 },
                 child: Text(
@@ -183,7 +185,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  _navigateToFlashcard(existingSession);
+                  _navigateToFlashcard(_filteredKanji, existingSession);
                 },
                 child: Text(
                   '이어하기',
@@ -199,13 +201,38 @@ class _KanjiScreenState extends State<KanjiScreen> {
         },
       );
     } else {
-      _navigateToFlashcard(null);
+      await _showCountSelectorAndStart();
     }
   }
 
-  void _navigateToFlashcard(dynamic session) {
-    // Convert kanji to FlashcardItem using adapter
-    final flashcardItems = _filteredKanji.map((kanji) => KanjiFlashcardAdapter(kanji)).toList();
+  Future<void> _showCountSelectorAndStart() async {
+    // 개수 선택 다이얼로그 표시
+    final selectedCount = await FlashcardCountSelector.show(context, _filteredKanji.length);
+
+    if (selectedCount != null && mounted) {
+      // 랜덤으로 한자 선택
+      final selectedKanji = _selectRandomKanji(_filteredKanji, selectedCount);
+      _navigateToFlashcard(selectedKanji, null);
+    }
+  }
+
+  List<Kanji> _selectRandomKanji(List<Kanji> kanjiList, int count) {
+    if (count >= kanjiList.length) return kanjiList;
+
+    final random = Random();
+    final selectedIndices = <int>{};
+
+    // 중복 없이 랜덤 인덱스 생성
+    while (selectedIndices.length < count) {
+      selectedIndices.add(random.nextInt(kanjiList.length));
+    }
+
+    return selectedIndices.map((i) => kanjiList[i]).toList();
+  }
+
+  void _navigateToFlashcard(List<Kanji> selectedKanji, dynamic session) {
+    // Convert selected kanji to FlashcardItem using adapter
+    final flashcardItems = selectedKanji.map((kanji) => KanjiFlashcardAdapter(kanji)).toList();
 
     Navigator.push(
       context,
