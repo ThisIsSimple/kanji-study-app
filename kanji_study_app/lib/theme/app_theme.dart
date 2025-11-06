@@ -25,7 +25,7 @@ class AppTheme {
           fontSize: 36,
           height: 1.2,
         ),
-        
+
         // Headline
         headlineLarge: TextStyle(
           fontFamily: 'SUITE',
@@ -45,7 +45,7 @@ class AppTheme {
           fontSize: 24,
           height: 1.3,
         ),
-        
+
         // Title
         titleLarge: TextStyle(
           fontFamily: 'SUITE',
@@ -65,7 +65,7 @@ class AppTheme {
           fontSize: 14,
           height: 1.4,
         ),
-        
+
         // Body
         bodyLarge: TextStyle(
           fontFamily: 'SUITE',
@@ -85,7 +85,7 @@ class AppTheme {
           fontSize: 12,
           height: 1.5,
         ),
-        
+
         // Label
         labelLarge: TextStyle(
           fontFamily: 'SUITE',
@@ -108,5 +108,4 @@ class AppTheme {
       ),
     );
   }
-
 }

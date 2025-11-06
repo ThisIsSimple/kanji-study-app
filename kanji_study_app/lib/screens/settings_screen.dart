@@ -29,7 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _loadSettings();
   }
-  
+
   @override
   void dispose() {
     _apiKeyController.dispose();
@@ -40,10 +40,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final enabled = await _notificationService.areNotificationsEnabled();
     final scheduledTime = await _notificationService.getScheduledTime();
     await _geminiService.init();
-    
+
     // Load user info
     final user = _supabaseService.currentUser;
-    
+
     setState(() {
       _notificationsEnabled = enabled;
       if (scheduledTime != null) {
@@ -65,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _notificationsEnabled = value;
     });
-    
+
     if (value) {
       await _notificationService.scheduleDailyNotification(
         hour: _selectedTime.hour,
@@ -80,38 +80,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-          '로그아웃',
-          style: TextStyle(fontFamily: 'SUITE'),
-        ),
+        title: Text('로그아웃', style: TextStyle(fontFamily: 'SUITE')),
         content: Text(
-          _isAnonymous 
-            ? '게스트 계정에서 로그아웃하면 학습 기록이 삭제될 수 있습니다. 계속하시겠습니까?'
-            : '정말 로그아웃 하시겠습니까?',
+          _isAnonymous
+              ? '게스트 계정에서 로그아웃하면 학습 기록이 삭제될 수 있습니다. 계속하시겠습니까?'
+              : '정말 로그아웃 하시겠습니까?',
           style: TextStyle(fontFamily: 'SUITE'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
-              '취소',
-              style: TextStyle(fontFamily: 'SUITE'),
-            ),
+            child: Text('취소', style: TextStyle(fontFamily: 'SUITE')),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
               '로그아웃',
-              style: TextStyle(
-                fontFamily: 'SUITE',
-                color: Colors.red,
-              ),
+              style: TextStyle(fontFamily: 'SUITE', color: Colors.red),
             ),
           ),
         ],
       ),
     );
-    
+
     if (shouldLogout == true && mounted) {
       try {
         await _supabaseService.signOut();
@@ -132,7 +123,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
   }
-  
+
   Future<void> _selectTime() async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -144,12 +135,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       },
     );
-    
+
     if (picked != null && picked != _selectedTime) {
       setState(() {
         _selectedTime = picked;
       });
-      
+
       if (_notificationsEnabled) {
         await _notificationService.scheduleDailyNotification(
           hour: picked.hour,
@@ -162,17 +153,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    
+
     return FScaffold(
       header: FHeader.nested(
-        title: Text(
-          '설정',
-          style: TextStyle(fontFamily: 'SUITE'),
-        ),
+        title: Text('설정', style: TextStyle(fontFamily: 'SUITE')),
         prefixes: [
-          FHeaderAction.back(
-            onPress: () => Navigator.of(context).pop(),
-          ),
+          FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
         ],
       ),
       child: _isLoading
@@ -197,35 +183,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          
+
                           // User Info
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: theme.colors.secondary.withValues(alpha: 0.1),
+                              color: theme.colors.secondary.withValues(
+                                alpha: 0.1,
+                              ),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
                               children: [
                                 Icon(
-                                  _isAnonymous 
-                                    ? PhosphorIconsRegular.userCircle
-                                    : PhosphorIconsRegular.userCheck,
+                                  _isAnonymous
+                                      ? PhosphorIconsRegular.userCircle
+                                      : PhosphorIconsRegular.userCheck,
                                   size: 32,
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        _isAnonymous ? '게스트 사용자' : (_userEmail ?? '사용자'),
+                                        _isAnonymous
+                                            ? '게스트 사용자'
+                                            : (_userEmail ?? '사용자'),
                                         style: theme.typography.base.copyWith(
                                           fontWeight: FontWeight.bold,
                                           fontFamily: 'SUITE',
                                         ),
                                       ),
-                                      if (_isAnonymous) ...[  
+                                      if (_isAnonymous) ...[
                                         const SizedBox(height: 4),
                                         Text(
                                           'SNS 계정을 연동하여 데이터를 안전하게 보관하세요',
@@ -242,7 +233,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          
+
                           // Logout Button
                           FButton(
                             onPress: _handleLogout,
@@ -250,10 +241,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  PhosphorIconsRegular.signOut,
-                                  size: 18,
-                                ),
+                                Icon(PhosphorIconsRegular.signOut, size: 18),
                                 const SizedBox(width: 8),
                                 Text(
                                   '로그아웃',
@@ -267,7 +255,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Notification Settings Card
                   FCard(
                     child: Padding(
@@ -283,7 +271,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          
+
                           // Notification Toggle
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -300,24 +288,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                             ],
                           ),
-                          
+
                           if (_notificationsEnabled) ...[
                             const SizedBox(height: 24),
-                            
+
                             // Time Selection
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: theme.colors.secondary.withValues(alpha: 0.1),
+                                color: theme.colors.secondary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: GestureDetector(
                                 onTap: _selectTime,
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           '알림 시간',
@@ -346,7 +338,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Gemini API Settings Card
                   FCard(
                     child: Padding(
@@ -370,7 +362,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          
+
                           // API Key Input
                           Material(
                             color: Colors.transparent,
@@ -384,19 +376,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 labelStyle: TextStyle(fontFamily: 'SUITE'),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(color: theme.colors.border),
+                                  borderSide: BorderSide(
+                                    color: theme.colors.border,
+                                  ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(color: theme.colors.border),
+                                  borderSide: BorderSide(
+                                    color: theme.colors.border,
+                                  ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(color: theme.colors.primary),
+                                  borderSide: BorderSide(
+                                    color: theme.colors.primary,
+                                  ),
                                 ),
                                 suffixIcon: IconButton(
                                   icon: Icon(
-                                    _apiKeyVisible ? PhosphorIconsRegular.eyeSlash : PhosphorIconsRegular.eye,
+                                    _apiKeyVisible
+                                        ? PhosphorIconsRegular.eyeSlash
+                                        : PhosphorIconsRegular.eye,
                                   ),
                                   onPressed: () {
                                     setState(() {
@@ -457,7 +457,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // About Card
                   FCard(
                     child: Padding(

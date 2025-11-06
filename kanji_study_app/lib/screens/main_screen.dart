@@ -34,17 +34,12 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    
+
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: theme.colors.border,
-              width: 1,
-            ),
-          ),
+          border: Border(top: BorderSide(color: theme.colors.border, width: 1)),
         ),
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,

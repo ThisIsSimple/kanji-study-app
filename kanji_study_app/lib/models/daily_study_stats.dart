@@ -24,9 +24,11 @@ class DailyStudyStats {
       wordsStudied: json['words_studied'] ?? 0,
       totalCompleted: json['total_completed'] ?? 0,
       totalForgot: json['total_forgot'] ?? 0,
-      studyItems: (json['study_items'] as List?)
-          ?.map((item) => StudyItem.fromJson(item))
-          .toList() ?? [],
+      studyItems:
+          (json['study_items'] as List?)
+              ?.map((item) => StudyItem.fromJson(item))
+              .toList() ??
+          [],
     );
   }
 
@@ -42,13 +44,13 @@ class DailyStudyStats {
   }
 
   int get totalStudied => kanjiStudied + wordsStudied;
-  
+
   double get successRate {
     final total = totalCompleted + totalForgot;
     if (total == 0) return 0;
     return totalCompleted / total;
   }
-  
+
   Color getColorForCalendar() {
     if (totalStudied == 0) return Colors.transparent;
     if (totalStudied < 5) return Colors.blue.shade100;
@@ -56,7 +58,7 @@ class DailyStudyStats {
     if (totalStudied < 20) return Colors.blue.shade500;
     return Colors.blue.shade700;
   }
-  
+
   String get summaryText {
     if (totalStudied == 0) return '학습 없음';
     return '한자 $kanjiStudied개, 단어 $wordsStudied개';

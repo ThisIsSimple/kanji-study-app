@@ -16,14 +16,14 @@ class StudyCalendarScreen extends StatefulWidget {
 
 class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
   final SupabaseService _supabaseService = SupabaseService.instance;
-  
+
   final CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   Map<DateTime, DailyStudyStats> _monthlyStats = {};
   final Map<String, Map<DateTime, DailyStudyStats>> _monthlyStatsCache = {};
   bool _isLoading = true;
-  
+
   @override
   void initState() {
     super.initState();
@@ -32,7 +32,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
     _selectedDay = _focusedDay;
     _loadMonthlyStats();
   }
-  
+
   Future<void> _loadMonthlyStats({bool showLoading = true}) async {
     // Check cache first
     final cacheKey = '${_focusedDay.year}-${_focusedDay.month}';
@@ -45,22 +45,22 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
       });
       return;
     }
-    
+
     if (showLoading) {
       setState(() {
         _isLoading = true;
       });
     }
-    
+
     try {
       final stats = await _supabaseService.getMonthlyStudyStats(
         year: _focusedDay.year,
         month: _focusedDay.month,
       );
-      
+
       // Cache the results
       _monthlyStatsCache[cacheKey] = stats;
-      
+
       setState(() {
         _monthlyStats = stats;
         if (showLoading) {
@@ -76,27 +76,22 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
       });
     }
   }
-  
+
   List<DailyStudyStats> _getEventsForDay(DateTime day) {
     final normalizedDay = DateTime(day.year, day.month, day.day);
     final stats = _monthlyStats[normalizedDay];
     return stats != null ? [stats] : [];
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    
+
     return FScaffold(
       header: FHeader.nested(
-        title: const Text(
-          '학습 캘린더',
-          style: TextStyle(fontFamily: 'SUITE'),
-        ),
+        title: const Text('학습 캘린더', style: TextStyle(fontFamily: 'SUITE')),
         prefixes: [
-          FHeaderAction.back(
-            onPress: () => Navigator.of(context).pop(),
-          ),
+          FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
         ],
       ),
       child: _isLoading
@@ -150,18 +145,18 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                             color: theme.colors.secondary,
                             shape: BoxShape.circle,
                           ),
-                          defaultTextStyle: const TextStyle(
-                            fontSize: 14,
-                          ),
+                          defaultTextStyle: const TextStyle(fontSize: 14),
                         ),
                         headerStyle: HeaderStyle(
-                          formatButtonVisible: false,  // formatButton 숨기기
+                          formatButtonVisible: false, // formatButton 숨기기
                           titleCentered: true,
                           formatButtonShowsNext: false,
                           leftChevronVisible: true,
                           rightChevronVisible: true,
                           headerMargin: const EdgeInsets.only(bottom: 8),
-                          headerPadding: const EdgeInsets.symmetric(vertical: 8),
+                          headerPadding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                          ),
                           titleTextStyle: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
@@ -183,12 +178,14 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                               _selectedDay = selectedDay;
                               _focusedDay = focusedDay;
                             });
-                            
+
                             // Navigate to detail screen for any selected date
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => StudyCalendarDetailScreen(date: selectedDay),
+                                builder: (context) => StudyCalendarDetailScreen(
+                                  date: selectedDay,
+                                ),
                               ),
                             );
                           }
@@ -208,12 +205,12 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                         calendarBuilders: CalendarBuilders(
                           markerBuilder: (context, day, events) {
                             if (events.isEmpty) return null;
-                            
+
                             final stats = events.first;
                             final color = stats.getColorForCalendar();
-                            
+
                             if (color == Colors.transparent) return null;
-                            
+
                             return Positioned(
                               bottom: 1,
                               child: Container(
@@ -231,7 +228,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Summary Card
                   if (_selectedDay != null) ...[
                     FCard(
@@ -242,7 +239,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
-                  
+
                   // Monthly Statistics
                   FCard(
                     child: Padding(
@@ -255,11 +252,15 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
             ),
     );
   }
-  
+
   Widget _buildDaySummary(FThemeData theme) {
-    final normalizedDay = DateTime(_selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
+    final normalizedDay = DateTime(
+      _selectedDay!.year,
+      _selectedDay!.month,
+      _selectedDay!.day,
+    );
     final stats = _monthlyStats[normalizedDay];
-    
+
     if (stats == null || stats.totalStudied == 0) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,7 +277,10 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
               ),
               if (DateUtils.isSameDay(_selectedDay!, DateTime.now()))
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -303,7 +307,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
         ],
       );
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -415,7 +419,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
       ],
     );
   }
-  
+
   Widget _buildStatCard({
     required IconData icon,
     required String label,
@@ -454,14 +458,14 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
       ),
     );
   }
-  
+
   Widget _buildMonthlyStatistics(FThemeData theme) {
     int totalKanji = 0;
     int totalWords = 0;
     int totalCompleted = 0;
     int totalForgot = 0;
     int studyDays = 0;
-    
+
     for (final stats in _monthlyStats.values) {
       if (stats.totalStudied > 0) {
         studyDays++;
@@ -471,11 +475,11 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
         totalForgot += stats.totalForgot;
       }
     }
-    
+
     final successRate = (totalCompleted + totalForgot) > 0
         ? (totalCompleted / (totalCompleted + totalForgot) * 100)
         : 0.0;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -493,11 +497,15 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
         const SizedBox(height: 12),
         _buildMonthlyStatRow('단어', '$totalWords개', theme),
         const SizedBox(height: 12),
-        _buildMonthlyStatRow('성공률', '${successRate.toStringAsFixed(1)}%', theme),
+        _buildMonthlyStatRow(
+          '성공률',
+          '${successRate.toStringAsFixed(1)}%',
+          theme,
+        ),
       ],
     );
   }
-  
+
   Widget _buildMonthlyStatRow(String label, String value, FThemeData theme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

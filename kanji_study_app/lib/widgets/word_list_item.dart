@@ -21,7 +21,7 @@ class WordListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: FCard(
@@ -43,12 +43,14 @@ class WordListItem extends StatelessWidget {
                         Text(
                           word.reading,
                           style: theme.typography.sm.copyWith(
-                            color: theme.colors.mutedForeground.withValues(alpha: 0.7),
+                            color: theme.colors.mutedForeground.withValues(
+                              alpha: 0.7,
+                            ),
                             fontSize: 14,
                             height: 1.2,
                           ),
                         ),
-                      
+
                       // Word (main text)
                       Text(
                         word.word,
@@ -59,9 +61,9 @@ class WordListItem extends StatelessWidget {
                           height: 1.3,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 8),
-                      
+
                       // Meanings
                       Text(
                         word.meaningsText,
@@ -76,7 +78,7 @@ class WordListItem extends StatelessWidget {
                     ],
                   ),
                 ),
-                
+
                 // Right side content
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -84,9 +86,13 @@ class WordListItem extends StatelessWidget {
                     // Favorite button
                     IconButton(
                       icon: Icon(
-                        isFavorite ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+                        isFavorite
+                            ? PhosphorIconsFill.star
+                            : PhosphorIconsRegular.star,
                         size: 20,
-                        color: isFavorite ? Colors.amber : theme.colors.mutedForeground,
+                        color: isFavorite
+                            ? Colors.amber
+                            : theme.colors.mutedForeground,
                       ),
                       onPressed: onFavoriteToggle,
                       padding: EdgeInsets.zero,
@@ -95,17 +101,24 @@ class WordListItem extends StatelessWidget {
                         minHeight: 32,
                       ),
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // JLPT Level badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
-                        color: _getJlptColor(word.jlptLevel).withValues(alpha: 0.1),
+                        color: _getJlptColor(
+                          word.jlptLevel,
+                        ).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: _getJlptColor(word.jlptLevel).withValues(alpha: 0.5),
+                          color: _getJlptColor(
+                            word.jlptLevel,
+                          ).withValues(alpha: 0.5),
                           width: 1,
                         ),
                       ),

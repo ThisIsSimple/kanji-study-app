@@ -22,7 +22,7 @@ class _WordsScreenState extends State<WordsScreen> {
   final WordService _wordService = WordService.instance;
   final FlashcardService _flashcardService = FlashcardService.instance;
   final TextEditingController _searchController = TextEditingController();
-  
+
   List<Word> _filteredWords = [];
   String _searchQuery = '';
   final Set<int> _selectedJlptLevels = {};
@@ -45,7 +45,7 @@ class _WordsScreenState extends State<WordsScreen> {
   Future<void> _loadWords() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
-    
+
     try {
       if (!_wordService.isInitialized) {
         await _wordService.init();
@@ -65,23 +65,25 @@ class _WordsScreenState extends State<WordsScreen> {
   void _applyFilters() {
     setState(() {
       List<Word> words;
-      
+
       if (_showOnlyFavorites) {
         words = _wordService.getFavoriteWords();
       } else {
         words = _wordService.allWords;
       }
-      
+
       // Apply search filter
       if (_searchQuery.isNotEmpty) {
         words = words.where((word) => word.matchesQuery(_searchQuery)).toList();
       }
-      
+
       // Apply JLPT level filters
       if (_selectedJlptLevels.isNotEmpty) {
-        words = words.where((word) => _selectedJlptLevels.contains(word.jlptLevel)).toList();
+        words = words
+            .where((word) => _selectedJlptLevels.contains(word.jlptLevel))
+            .toList();
       }
-      
+
       _filteredWords = words;
     });
   }
@@ -125,10 +127,7 @@ class _WordsScreenState extends State<WordsScreen> {
       final theme = FTheme.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '학습할 단어가 없습니다',
-            style: TextStyle(fontFamily: 'SUITE'),
-          ),
+          content: Text('학습할 단어가 없습니다', style: TextStyle(fontFamily: 'SUITE')),
           backgroundColor: theme.colors.destructive,
         ),
       );
@@ -165,10 +164,7 @@ class _WordsScreenState extends State<WordsScreen> {
                     await _showCountSelectorAndStart();
                   }
                 },
-                child: Text(
-                  '새로 시작',
-                  style: TextStyle(fontFamily: 'SUITE'),
-                ),
+                child: Text('새로 시작', style: TextStyle(fontFamily: 'SUITE')),
               ),
               TextButton(
                 onPressed: () {
@@ -195,7 +191,10 @@ class _WordsScreenState extends State<WordsScreen> {
 
   Future<void> _showCountSelectorAndStart() async {
     // 개수 선택 다이얼로그 표시
-    final selectedCount = await FlashcardCountSelector.show(context, _filteredWords.length);
+    final selectedCount = await FlashcardCountSelector.show(
+      context,
+      _filteredWords.length,
+    );
 
     if (selectedCount != null && mounted) {
       // 랜덤으로 단어 선택
@@ -220,15 +219,15 @@ class _WordsScreenState extends State<WordsScreen> {
 
   void _navigateToFlashcard(List<Word> selectedWords, dynamic session) {
     // Convert selected words to FlashcardItem using adapter
-    final flashcardItems = selectedWords.map((word) => WordFlashcardAdapter(word)).toList();
+    final flashcardItems = selectedWords
+        .map((word) => WordFlashcardAdapter(word))
+        .toList();
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FlashcardScreen(
-          items: flashcardItems,
-          initialSession: session,
-        ),
+        builder: (context) =>
+            FlashcardScreen(items: flashcardItems, initialSession: session),
       ),
     ).then((_) {
       // Refresh when coming back
@@ -282,7 +281,7 @@ class _WordsScreenState extends State<WordsScreen> {
                   ...List.generate(5, (index) {
                     final level = 5 - index; // N5 to N1
                     final isSelected = _selectedJlptLevels.contains(level);
-                    
+
                     return ListTile(
                       leading: Checkbox(
                         value: isSelected,
@@ -298,7 +297,9 @@ class _WordsScreenState extends State<WordsScreen> {
                         'JLPT N$level',
                         style: theme.typography.base.copyWith(
                           fontFamily: 'SUITE',
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                       ),
                       onTap: () {
@@ -322,7 +323,7 @@ class _WordsScreenState extends State<WordsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    
+
     return FScaffold(
       header: Stack(
         children: [
@@ -333,8 +334,8 @@ class _WordsScreenState extends State<WordsScreen> {
                 _showOnlyFavorites
                     ? '즐겨찾기 ${_filteredWords.length}개'
                     : _selectedJlptLevels.isEmpty
-                        ? '전체 ${_filteredWords.length}개'
-                        : 'JLPT ${_selectedJlptLevels.map((l) => "N$l").join(", ")} - ${_filteredWords.length}개',
+                    ? '전체 ${_filteredWords.length}개'
+                    : 'JLPT ${_selectedJlptLevels.map((l) => "N$l").join(", ")} - ${_filteredWords.length}개',
                 style: theme.typography.sm.copyWith(
                   color: theme.colors.mutedForeground,
                   fontFamily: 'SUITE',
@@ -352,7 +353,9 @@ class _WordsScreenState extends State<WordsScreen> {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       icon: Icon(
-                        _showOnlyFavorites ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+                        _showOnlyFavorites
+                            ? PhosphorIconsFill.star
+                            : PhosphorIconsRegular.star,
                         color: _showOnlyFavorites ? Colors.amber : null,
                         size: 20,
                       ),
@@ -367,10 +370,7 @@ class _WordsScreenState extends State<WordsScreen> {
                       constraints: const BoxConstraints(),
                       icon: Stack(
                         children: [
-                          Icon(
-                            PhosphorIconsRegular.funnel,
-                            size: 20,
-                          ),
+                          Icon(PhosphorIconsRegular.funnel, size: 20),
                           if (_selectedJlptLevels.isNotEmpty)
                             Positioned(
                               right: 0,
@@ -439,10 +439,7 @@ class _WordsScreenState extends State<WordsScreen> {
                           child: IconButton(
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
-                            icon: Icon(
-                              PhosphorIconsRegular.x,
-                              size: 20,
-                            ),
+                            icon: Icon(PhosphorIconsRegular.x, size: 20),
                             onPressed: _toggleSearch,
                           ),
                         ),
@@ -462,7 +459,10 @@ class _WordsScreenState extends State<WordsScreen> {
                 if (_filteredWords.isNotEmpty)
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: FButton(
                       onPress: _startFlashcardSession,
                       child: Padding(

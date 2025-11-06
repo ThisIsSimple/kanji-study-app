@@ -46,11 +46,9 @@ class WordFlashcardAdapter implements FlashcardItem {
   String? get backReading => word.reading;
 
   @override
-  List<FlashcardMeaning> get backMeanings =>
-      word.meanings
-          .map((m) => FlashcardMeaning(
-                category: m.partOfSpeech,
-                meaning: m.meaning,
-              ))
-          .toList();
+  List<FlashcardMeaning> get backMeanings => word.meanings
+      .map(
+        (m) => FlashcardMeaning(category: m.partOfSpeech, meaning: m.meaning),
+      )
+      .toList();
 }

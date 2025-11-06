@@ -20,7 +20,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final SupabaseService _supabaseService = SupabaseService.instance;
-  
+
   bool _isLoading = true;
   bool _isLoadingProfile = true;
   String _username = '';
@@ -33,7 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _loadWeeklyStats();
     _loadUserProfile();
-    
+
     // Listen to auth state changes
     _supabaseService.authStateChanges().listen((authState) {
       if (authState.event == AuthChangeEvent.signedOut) {
@@ -58,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final stats = await _supabaseService.getWeeklyStudyStats();
       setState(() {
@@ -72,12 +72,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
   }
-  
+
   Future<void> _loadUserProfile() async {
     setState(() {
       _isLoadingProfile = true;
     });
-    
+
     try {
       // Get current user info
       final currentUser = _supabaseService.currentUser;
@@ -85,22 +85,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
       debugPrint('Current user email: ${currentUser?.email}');
       debugPrint('Is anonymous: ${_supabaseService.isAnonymousUser}');
       debugPrint('User metadata: ${currentUser?.userMetadata}');
-      
+
       // Get user profile from Supabase
       final profile = await _supabaseService.getUserProfile();
       debugPrint('Loaded profile: $profile');
-      
+
       // Check for username in profile or metadata
       String? username;
-      if (profile != null && profile['username'] != null && profile['username'].toString().isNotEmpty) {
+      if (profile != null &&
+          profile['username'] != null &&
+          profile['username'].toString().isNotEmpty) {
         username = profile['username'];
       } else if (currentUser?.userMetadata?['username'] != null) {
         username = currentUser!.userMetadata!['username'];
-      } else if (currentUser?.userMetadata?['provider'] == 'kakao' && 
-                 currentUser?.userMetadata?['username'] != null) {
+      } else if (currentUser?.userMetadata?['provider'] == 'kakao' &&
+          currentUser?.userMetadata?['username'] != null) {
         username = currentUser!.userMetadata!['username'];
       }
-      
+
       if (username != null) {
         setState(() {
           _username = username!;
@@ -124,7 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
         }
       }
-      
+
       // Get email from current user or metadata
       if (currentUser != null) {
         // Get avatar URL from metadata or profile
@@ -136,7 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         } else if (profile != null && profile['avatar_url'] != null) {
           avatarUrl = profile['avatar_url'];
         }
-        
+
         if (currentUser.email != null && currentUser.email!.isNotEmpty) {
           setState(() {
             _userEmail = currentUser.email!;
@@ -171,11 +173,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _navigateToSettings() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const SettingsScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const SettingsScreen()),
     );
-    
+
     if (result == true) {
       _loadWeeklyStats();
       _loadUserProfile();
@@ -185,11 +185,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _navigateToSocialLogin() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const SocialLoginScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const SocialLoginScreen()),
     );
-    
+
     if (result == true) {
       // Reload profile after successful SNS linking
       _loadUserProfile();
@@ -199,13 +197,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    
+
     return FScaffold(
       header: FHeader(
-        title: Text(
-          '프로필',
-          style: TextStyle(fontFamily: 'SUITE'),
-        ),
+        title: Text('프로필', style: TextStyle(fontFamily: 'SUITE')),
         suffixes: [
           IconButton(
             icon: Icon(PhosphorIconsRegular.gear),
@@ -245,7 +240,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: theme.colors.primary.withValues(alpha: 0.1),
+                                color: theme.colors.primary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -288,7 +285,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
-                  
+
                   // User Info Card
                   FCard(
                     child: Padding(
@@ -298,58 +295,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: theme.colors.secondary.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                              image: _avatarUrl != null
-                                  ? DecorationImage(
-                                      image: NetworkImage(_avatarUrl!),
-                                      fit: BoxFit.cover,
+                            Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: theme.colors.secondary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                shape: BoxShape.circle,
+                                image: _avatarUrl != null
+                                    ? DecorationImage(
+                                        image: NetworkImage(_avatarUrl!),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
+                              ),
+                              child: _avatarUrl == null
+                                  ? Icon(
+                                      PhosphorIconsFill.user,
+                                      size: 40,
+                                      color: theme.colors.primary,
                                     )
                                   : null,
                             ),
-                            child: _avatarUrl == null
-                                ? Icon(
-                                    PhosphorIconsFill.user,
-                                    size: 40,
-                                    color: theme.colors.primary,
+                            const SizedBox(height: 16),
+                            _isLoadingProfile
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   )
-                                : null,
-                          ),
-                          const SizedBox(height: 16),
-                          _isLoadingProfile
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : Text(
-                                  _username.isEmpty ? '로딩 중...' : _username,
-                                  style: theme.typography.lg.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'SUITE',
+                                : Text(
+                                    _username.isEmpty ? '로딩 중...' : _username,
+                                    style: theme.typography.lg.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'SUITE',
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  textAlign: TextAlign.center,
-                                ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _userEmail.isEmpty ? '익명 사용자' : _userEmail,
-                            style: theme.typography.sm.copyWith(
-                              color: theme.colors.mutedForeground,
-                              fontFamily: 'SUITE',
+                            const SizedBox(height: 8),
+                            Text(
+                              _userEmail.isEmpty ? '익명 사용자' : _userEmail,
+                              style: theme.typography.sm.copyWith(
+                                color: theme.colors.mutedForeground,
+                                fontFamily: 'SUITE',
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Weekly Calendar Card
                   FCard(
                     child: Padding(
@@ -372,7 +373,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const StudyCalendarScreen(),
+                                      builder: (context) =>
+                                          const StudyCalendarScreen(),
                                     ),
                                   );
                                 },
@@ -380,7 +382,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(PhosphorIconsRegular.calendar, size: 16),
+                                    const Icon(
+                                      PhosphorIconsRegular.calendar,
+                                      size: 16,
+                                    ),
                                     const SizedBox(width: 6),
                                     const Text(
                                       '전체 보기',
@@ -406,7 +411,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildWeeklyCalendar(FThemeData theme) {
     final now = DateTime.now();
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    
+
     return Column(
       children: [
         // Days of week header
@@ -415,7 +420,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             for (int i = 0; i < 7; i++)
               _buildDayHeader(
-                DateFormat('E', 'ko_KR').format(startOfWeek.add(Duration(days: i)))[0],
+                DateFormat(
+                  'E',
+                  'ko_KR',
+                ).format(startOfWeek.add(Duration(days: i)))[0],
                 theme,
               ),
           ],
@@ -426,10 +434,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             for (int i = 0; i < 7; i++)
-              _buildDayCell(
-                startOfWeek.add(Duration(days: i)),
-                theme,
-              ),
+              _buildDayCell(startOfWeek.add(Duration(days: i)), theme),
           ],
         ),
         const SizedBox(height: 16),
@@ -448,7 +453,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
-  
+
   Widget _buildDayHeader(String day, FThemeData theme) {
     return SizedBox(
       width: 36,
@@ -465,7 +470,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
+
   Widget _buildDayCell(DateTime date, FThemeData theme) {
     final isToday = DateUtils.isSameDay(date, DateTime.now());
     final stats = _weeklyStats.firstWhere(
@@ -479,7 +484,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         studyItems: [],
       ),
     );
-    
+
     Color getBackgroundColor() {
       final total = stats.totalStudied;
       if (total == 0) return Colors.grey.shade200;
@@ -487,7 +492,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (total < 10) return Colors.blue.shade300;
       return Colors.blue.shade500;
     }
-    
+
     return GestureDetector(
       onTap: () {
         if (stats.totalStudied > 0) {
@@ -517,7 +522,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 '${date.day}',
                 style: theme.typography.xs.copyWith(
                   fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
-                  color: stats.totalStudied > 9 ? Colors.white : theme.colors.foreground,
+                  color: stats.totalStudied > 9
+                      ? Colors.white
+                      : theme.colors.foreground,
                   fontSize: 12,
                 ),
               ),
@@ -526,7 +533,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   '${stats.totalStudied}',
                   style: theme.typography.xs.copyWith(
                     fontSize: 9,
-                    color: stats.totalStudied > 9 ? Colors.white : theme.colors.foreground,
+                    color: stats.totalStudied > 9
+                        ? Colors.white
+                        : theme.colors.foreground,
                   ),
                 ),
             ],
@@ -535,7 +544,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
+
   Widget _buildLegendItem(String label, Color color, FThemeData theme) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -559,5 +568,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
-
 }

@@ -4,8 +4,8 @@ import 'package:forui/forui.dart';
 
 /// 플래시카드 학습 개수 선택 다이얼로그
 class FlashcardCountSelector extends StatefulWidget {
-  final int totalCount;  // 필터링된 전체 항목 개수
-  final int defaultCount;  // 기본값 (10개)
+  final int totalCount; // 필터링된 전체 항목 개수
+  final int defaultCount; // 기본값 (10개)
 
   const FlashcardCountSelector({
     super.key,
@@ -111,9 +111,7 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
     final theme = FTheme.of(context);
 
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(
         '학습할 카드 개수를 선택하세요',
         style: theme.typography.lg.copyWith(
@@ -128,117 +126,119 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            // 미리 정의된 버튼들 (2x2 그리드)
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 2.5,
-              physics: const NeverScrollableScrollPhysics(),
-              children: _presetOptions.map((count) {
-                final isSelected = _selectedCount == count;
-                return GestureDetector(
-                  onTap: () => _selectPresetCount(count),
+              // 미리 정의된 버튼들 (2x2 그리드)
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 2.5,
+                physics: const NeverScrollableScrollPhysics(),
+                children: _presetOptions.map((count) {
+                  final isSelected = _selectedCount == count;
+                  return GestureDetector(
+                    onTap: () => _selectPresetCount(count),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? theme.colors.primary.withValues(alpha: 0.1)
+                            : theme.colors.muted,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isSelected
+                              ? theme.colors.primary
+                              : theme.colors.border,
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$count개',
+                          style: theme.typography.base.copyWith(
+                            fontFamily: 'SUITE',
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: isSelected
+                                ? theme.colors.primary
+                                : theme.colors.foreground,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 20),
+
+              // 직접 입력 필드
+              Text(
+                '또는 직접 입력:',
+                style: theme.typography.sm.copyWith(
+                  fontFamily: 'SUITE',
+                  color: theme.colors.mutedForeground,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _customCountController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(
+                  suffixText: '개',
+                  errorText: _errorMessage,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                ),
+                style: theme.typography.base.copyWith(fontFamily: 'SUITE'),
+                onChanged: _onCustomCountChanged,
+              ),
+
+              const SizedBox(height: 20),
+
+              // 전체 버튼
+              SizedBox(
+                width: double.infinity,
+                child: GestureDetector(
+                  onTap: _selectAllCount,
                   child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: isSelected
+                      color: _selectedCount == widget.totalCount
                           ? theme.colors.primary.withValues(alpha: 0.1)
-                          : theme.colors.muted,
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isSelected
+                        color: _selectedCount == widget.totalCount
                             ? theme.colors.primary
                             : theme.colors.border,
-                        width: isSelected ? 2 : 1,
+                        width: _selectedCount == widget.totalCount ? 2 : 1,
                       ),
                     ),
                     child: Center(
                       child: Text(
-                        '$count개',
+                        '전체 (${widget.totalCount}개)',
                         style: theme.typography.base.copyWith(
                           fontFamily: 'SUITE',
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? theme.colors.primary : theme.colors.foreground,
+                          fontWeight: _selectedCount == widget.totalCount
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color: _selectedCount == widget.totalCount
+                              ? theme.colors.primary
+                              : theme.colors.foreground,
                         ),
                       ),
                     ),
                   ),
-                );
-              }).toList(),
-            ),
-
-            const SizedBox(height: 20),
-
-            // 직접 입력 필드
-            Text(
-              '또는 직접 입력:',
-              style: theme.typography.sm.copyWith(
-                fontFamily: 'SUITE',
-                color: theme.colors.mutedForeground,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _customCountController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-              ],
-              decoration: InputDecoration(
-                suffixText: '개',
-                errorText: _errorMessage,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
                 ),
               ),
-              style: theme.typography.base.copyWith(fontFamily: 'SUITE'),
-              onChanged: _onCustomCountChanged,
-            ),
-
-            const SizedBox(height: 20),
-
-            // 전체 버튼
-            SizedBox(
-              width: double.infinity,
-              child: GestureDetector(
-                onTap: _selectAllCount,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: _selectedCount == widget.totalCount
-                        ? theme.colors.primary.withValues(alpha: 0.1)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: _selectedCount == widget.totalCount
-                          ? theme.colors.primary
-                          : theme.colors.border,
-                      width: _selectedCount == widget.totalCount ? 2 : 1,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '전체 (${widget.totalCount}개)',
-                      style: theme.typography.base.copyWith(
-                        fontFamily: 'SUITE',
-                        fontWeight: _selectedCount == widget.totalCount
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: _selectedCount == widget.totalCount
-                            ? theme.colors.primary
-                            : theme.colors.foreground,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+            ],
           ),
         ),
       ),

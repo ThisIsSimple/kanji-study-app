@@ -20,9 +20,11 @@ class Word {
       if (meaningsData == null || meaningsData is! List) {
         return [];
       }
-      
+
       return meaningsData
-          .map((meaning) => WordMeaning.fromJson(meaning as Map<String, dynamic>))
+          .map(
+            (meaning) => WordMeaning.fromJson(meaning as Map<String, dynamic>),
+          )
           .toList();
     }
 
@@ -53,19 +55,19 @@ class Word {
   // Helper method to check if word matches search query
   bool matchesQuery(String query) {
     final lowerQuery = query.toLowerCase();
-    
+
     // Check word
     if (word.toLowerCase().contains(lowerQuery)) return true;
-    
+
     // Check reading
     if (reading.toLowerCase().contains(lowerQuery)) return true;
-    
+
     // Check meanings
     for (final meaning in meanings) {
       if (meaning.meaning.toLowerCase().contains(lowerQuery)) return true;
       if (meaning.partOfSpeech.toLowerCase().contains(lowerQuery)) return true;
     }
-    
+
     return false;
   }
 }

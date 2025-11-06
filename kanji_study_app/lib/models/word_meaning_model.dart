@@ -2,10 +2,7 @@ class WordMeaning {
   final String partOfSpeech;
   final String meaning;
 
-  const WordMeaning({
-    required this.partOfSpeech,
-    required this.meaning,
-  });
+  const WordMeaning({required this.partOfSpeech, required this.meaning});
 
   factory WordMeaning.fromJson(Map<String, dynamic> json) {
     return WordMeaning(
@@ -15,9 +12,6 @@ class WordMeaning {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'part_of_speech': partOfSpeech,
-      'meaning': meaning,
-    };
+    return {'part_of_speech': partOfSpeech, 'meaning': meaning};
   }
 }

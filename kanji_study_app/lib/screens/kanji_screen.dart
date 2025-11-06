@@ -23,7 +23,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
   final FlashcardService _flashcardService = FlashcardService.instance;
   final TextEditingController _searchController = TextEditingController();
-  
+
   List<Kanji> _allKanji = [];
   List<Kanji> _filteredKanji = [];
   String _searchQuery = '';
@@ -69,7 +69,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
       if (_showOnlyFavorites && !_kanjiService.isFavorite(kanji.character)) {
         return false;
       }
-      
+
       // Apply search filter
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
@@ -84,8 +84,11 @@ class _KanjiScreenState extends State<KanjiScreen> {
           ...kanji.koreanOnReadings,
           ...kanji.koreanKunReadings,
         ].any((reading) => reading.toLowerCase().contains(query));
-        
-        if (!matchesCharacter && !matchesMeaning && !matchesJapaneseReading && !matchesKoreanReading) {
+
+        if (!matchesCharacter &&
+            !matchesMeaning &&
+            !matchesJapaneseReading &&
+            !matchesKoreanReading) {
           return false;
         }
       }
@@ -137,10 +140,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
       final theme = FTheme.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '학습할 한자가 없습니다',
-            style: TextStyle(fontFamily: 'SUITE'),
-          ),
+          content: Text('학습할 한자가 없습니다', style: TextStyle(fontFamily: 'SUITE')),
           backgroundColor: theme.colors.destructive,
         ),
       );
@@ -177,10 +177,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                     await _showCountSelectorAndStart();
                   }
                 },
-                child: Text(
-                  '새로 시작',
-                  style: TextStyle(fontFamily: 'SUITE'),
-                ),
+                child: Text('새로 시작', style: TextStyle(fontFamily: 'SUITE')),
               ),
               TextButton(
                 onPressed: () {
@@ -207,7 +204,10 @@ class _KanjiScreenState extends State<KanjiScreen> {
 
   Future<void> _showCountSelectorAndStart() async {
     // 개수 선택 다이얼로그 표시
-    final selectedCount = await FlashcardCountSelector.show(context, _filteredKanji.length);
+    final selectedCount = await FlashcardCountSelector.show(
+      context,
+      _filteredKanji.length,
+    );
 
     if (selectedCount != null && mounted) {
       // 랜덤으로 한자 선택
@@ -232,15 +232,15 @@ class _KanjiScreenState extends State<KanjiScreen> {
 
   void _navigateToFlashcard(List<Kanji> selectedKanji, dynamic session) {
     // Convert selected kanji to FlashcardItem using adapter
-    final flashcardItems = selectedKanji.map((kanji) => KanjiFlashcardAdapter(kanji)).toList();
+    final flashcardItems = selectedKanji
+        .map((kanji) => KanjiFlashcardAdapter(kanji))
+        .toList();
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FlashcardScreen(
-          items: flashcardItems,
-          initialSession: session,
-        ),
+        builder: (context) =>
+            FlashcardScreen(items: flashcardItems, initialSession: session),
       ),
     ).then((_) {
       // Refresh when coming back
@@ -251,7 +251,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    
+
     return FScaffold(
       header: Stack(
         children: [
@@ -279,7 +279,9 @@ class _KanjiScreenState extends State<KanjiScreen> {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       icon: Icon(
-                        _showOnlyFavorites ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+                        _showOnlyFavorites
+                            ? PhosphorIconsFill.star
+                            : PhosphorIconsRegular.star,
                         color: _showOnlyFavorites ? Colors.amber : null,
                         size: 20,
                       ),
@@ -335,10 +337,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                           child: IconButton(
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
-                            icon: Icon(
-                              PhosphorIconsRegular.x,
-                              size: 20,
-                            ),
+                            icon: Icon(PhosphorIconsRegular.x, size: 20),
                             onPressed: _toggleSearch,
                           ),
                         ),
@@ -358,7 +357,10 @@ class _KanjiScreenState extends State<KanjiScreen> {
                 if (_filteredKanji.isNotEmpty)
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: FButton(
                       onPress: _startFlashcardSession,
                       child: Padding(
@@ -414,12 +416,13 @@ class _KanjiScreenState extends State<KanjiScreen> {
                           )
                         : GridView.builder(
                             padding: const EdgeInsets.all(16.0),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              childAspectRatio: 0.75,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                            ),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 3,
+                                  childAspectRatio: 0.75,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                ),
                             itemCount: _filteredKanji.length,
                             itemBuilder: (context, index) {
                               final kanji = _filteredKanji[index];
@@ -428,7 +431,9 @@ class _KanjiScreenState extends State<KanjiScreen> {
                                 onTap: () => _navigateToStudy(kanji),
                                 onFavoriteToggle: () {
                                   setState(() {
-                                    _kanjiService.toggleFavorite(kanji.character);
+                                    _kanjiService.toggleFavorite(
+                                      kanji.character,
+                                    );
                                     if (_showOnlyFavorites) {
                                       _applyFilters();
                                     }
@@ -464,17 +469,14 @@ class KanjiGridCard extends StatelessWidget {
     final kanjiService = KanjiService.instance;
     final progress = kanjiService.getProgress(kanji.character);
     final isFavorite = kanjiService.isFavorite(kanji.character);
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: theme.colors.background,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colors.border,
-            width: 1,
-          ),
+          border: Border.all(color: theme.colors.border, width: 1),
         ),
         child: Column(
           children: [
@@ -502,20 +504,24 @@ class KanjiGridCard extends StatelessWidget {
                     )
                   else
                     const SizedBox(width: 20),
-                  
+
                   // Favorite button
                   GestureDetector(
                     onTap: onFavoriteToggle,
                     child: Icon(
-                      isFavorite ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+                      isFavorite
+                          ? PhosphorIconsFill.star
+                          : PhosphorIconsRegular.star,
                       size: 20,
-                      color: isFavorite ? Colors.amber : theme.colors.mutedForeground,
+                      color: isFavorite
+                          ? Colors.amber
+                          : theme.colors.mutedForeground,
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             // Main content
             Expanded(
               child: Padding(
@@ -534,11 +540,17 @@ class KanjiGridCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
+
                     // Korean readings
-                    if (hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings))
+                    if (hasKoreanReadings(
+                      kanji.koreanKunReadings,
+                      kanji.koreanOnReadings,
+                    ))
                       Text(
-                        formatKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings),
+                        formatKoreanReadings(
+                          kanji.koreanKunReadings,
+                          kanji.koreanOnReadings,
+                        ),
                         style: theme.typography.sm.copyWith(
                           color: theme.colors.primary,
                           fontWeight: FontWeight.w600,

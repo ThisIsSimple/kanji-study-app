@@ -61,26 +61,29 @@ class KanjiFlashcardAdapter implements FlashcardItem {
 
     // 의미
     if (kanji.meanings.isNotEmpty) {
-      meanings.add(FlashcardMeaning(
-        category: '의미',
-        meaning: kanji.meanings.join(', '),
-      ));
+      meanings.add(
+        FlashcardMeaning(category: '의미', meaning: kanji.meanings.join(', ')),
+      );
     }
 
     // 음독 (한글 표기)
     if (kanji.koreanOnReadings.isNotEmpty) {
-      meanings.add(FlashcardMeaning(
-        category: '음독',
-        meaning: kanji.koreanOnReadings.join(', '),
-      ));
+      meanings.add(
+        FlashcardMeaning(
+          category: '음독',
+          meaning: kanji.koreanOnReadings.join(', '),
+        ),
+      );
     }
 
     // 훈독 (한글 표기)
     if (kanji.koreanKunReadings.isNotEmpty) {
-      meanings.add(FlashcardMeaning(
-        category: '훈독',
-        meaning: kanji.koreanKunReadings.join(', '),
-      ));
+      meanings.add(
+        FlashcardMeaning(
+          category: '훈독',
+          meaning: kanji.koreanKunReadings.join(', '),
+        ),
+      );
     }
 
     return meanings;

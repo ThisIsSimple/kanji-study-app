@@ -40,13 +40,13 @@ class _LoginScreenState extends State<LoginScreen> {
       // Sign in anonymously
       await _supabaseService.signInAnonymously();
       debugPrint('Signed in anonymously');
-      
+
       // Generate and save nickname for anonymous user
       if (_supabaseService.isLoggedIn) {
         final userId = _supabaseService.currentUser!.id;
         final nickname = NicknameGenerator.instance.generate(userId);
         debugPrint('Generated nickname for guest: $nickname');
-        
+
         try {
           await _supabaseService.updateUserProfile(username: nickname);
           debugPrint('Successfully saved nickname to Supabase');
@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
           debugPrint('Failed to save nickname to Supabase: $updateError');
         }
       }
-      
+
       if (mounted) {
         // Navigate to main screen
         Navigator.of(context).pushReplacement(
@@ -156,12 +156,17 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     return FScaffold(
       child: SafeArea(
         child: SingleChildScrollView(
           child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: screenHeight - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom),
+            constraints: BoxConstraints(
+              minHeight:
+                  screenHeight -
+                  MediaQuery.of(context).padding.top -
+                  MediaQuery.of(context).padding.bottom,
+            ),
             child: IntrinsicHeight(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -170,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Spacer(flex: 2),
-                    
+
                     // App Logo and Title
                     Column(
                       children: [
@@ -211,9 +216,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                    
+
                     const Spacer(flex: 3),
-                    
+
                     // Social Login Buttons
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -225,10 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
-                                PhosphorIconsRegular.googleLogo,
-                                size: 20,
-                              ),
+                              Icon(PhosphorIconsRegular.googleLogo, size: 20),
                               const SizedBox(width: 12),
                               Text(
                                 'Google로 계속하기',
@@ -241,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        
+
                         // Apple Sign In
                         FButton(
                           onPress: _isLoading ? null : _handleAppleSignIn,
@@ -249,10 +251,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
-                                PhosphorIconsRegular.appleLogo,
-                                size: 20,
-                              ),
+                              Icon(PhosphorIconsRegular.appleLogo, size: 20),
                               const SizedBox(width: 12),
                               Text(
                                 'Apple로 계속하기',
@@ -265,7 +264,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        
+
                         // Kakao Sign In
                         Container(
                           decoration: BoxDecoration(
@@ -278,7 +277,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               onTap: _isLoading ? null : _handleKakaoSignIn,
                               borderRadius: BorderRadius.circular(8),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -302,9 +304,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Divider with text
                         Row(
                           children: [
@@ -315,7 +317,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               child: Text(
                                 '또는',
                                 style: theme.typography.sm.copyWith(
@@ -332,9 +336,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ],
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Guest Login Button
                         FButton(
                           onPress: _isLoading ? null : _handleGuestLogin,
@@ -342,10 +346,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
-                                PhosphorIconsRegular.userCircle,
-                                size: 20,
-                              ),
+                              Icon(PhosphorIconsRegular.userCircle, size: 20),
                               const SizedBox(width: 12),
                               Text(
                                 '게스트로 시작하기',
@@ -357,14 +358,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             ],
                           ),
                         ),
-                        
+
                         const SizedBox(height: 12),
-                        
+
                         // Guest login info
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: theme.colors.secondary.withValues(alpha: 0.1),
+                            color: theme.colors.secondary.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -391,14 +394,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                    
+
                     // Error Message
                     if (_errorMessage != null) ...[
                       const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: theme.colors.destructive.withValues(alpha: 0.1),
+                          color: theme.colors.destructive.withValues(
+                            alpha: 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -410,15 +415,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ],
-                    
+
                     // Loading Overlay
                     if (_isLoading) ...[
                       const SizedBox(height: 16),
-                      const Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      const Center(child: CircularProgressIndicator()),
                     ],
-                    
+
                     const Spacer(flex: 2),
                   ],
                 ),

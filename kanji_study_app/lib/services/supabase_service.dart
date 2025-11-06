@@ -13,20 +13,20 @@ import '../models/daily_study_stats.dart';
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
   static SupabaseService get instance => _instance;
-  
+
   SupabaseService._internal();
-  
+
   late final SupabaseClient _client;
-  
+
   /// Get the Supabase client
   SupabaseClient get client => _client;
-  
+
   /// Get the current user
   User? get currentUser => _client.auth.currentUser;
-  
+
   /// Check if user is logged in
   bool get isLoggedIn => currentUser != null;
-  
+
   /// Initialize Supabase
   Future<void> init() async {
     try {
@@ -41,9 +41,9 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   // ============= Auth Methods =============
-  
+
   /// Sign in anonymously
   Future<AuthResponse> signInAnonymously() async {
     try {
@@ -54,7 +54,7 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   /// Sign up with email and password
   Future<AuthResponse> signUp({
     required String email,
@@ -73,7 +73,7 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   /// Sign in with email and password
   Future<AuthResponse> signIn({
     required String email,
@@ -90,7 +90,7 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   /// Sign out
   Future<void> signOut() async {
     try {
@@ -100,7 +100,7 @@ class SupabaseService {
         await googleSignIn.signOut();
         debugPrint('Signed out from Google');
       }
-      
+
       // Sign out from Supabase with global scope to clear all sessions
       await _client.auth.signOut(scope: SignOutScope.global);
       debugPrint('Signed out from Supabase');
@@ -109,29 +109,31 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   /// Listen to auth state changes
   Stream<AuthState> authStateChanges() {
     return _client.auth.onAuthStateChange;
   }
-  
+
   /// Sign in with Google
   Future<bool> signInWithGoogle() async {
     try {
       debugPrint('Starting Google Sign In process...');
-      
+
       // Check if current user is anonymous
       final isAnonymous = currentUser?.isAnonymous ?? false;
       final anonymousUserId = currentUser?.id;
-      debugPrint('Current user anonymous status: $isAnonymous, ID: $anonymousUserId');
-      
+      debugPrint(
+        'Current user anonymous status: $isAnonymous, ID: $anonymousUserId',
+      );
+
       if (isAnonymous) {
         // If anonymous user, link with Google identity
         debugPrint('Linking anonymous user with Google identity...');
         try {
           await _client.auth.linkIdentity(OAuthProvider.google);
           debugPrint('Successfully linked Google account to anonymous user');
-          
+
           // Update user metadata to indicate successful linking
           await _client.auth.updateUser(
             UserAttributes(
@@ -141,7 +143,7 @@ class SupabaseService {
               },
             ),
           );
-          
+
           return true;
         } catch (e) {
           debugPrint('Failed to link Google identity: $e');
@@ -149,41 +151,42 @@ class SupabaseService {
           debugPrint('Falling back to regular Google sign in...');
         }
       }
-      
+
       // Regular Google sign in flow (for non-anonymous users or if linking fails)
       final GoogleSignIn googleSignIn = GoogleSignIn(
         scopes: ['email', 'profile'],
       );
-      
+
       // Sign out first to ensure fresh sign in
       await googleSignIn.signOut();
       debugPrint('Cleared previous Google session');
-      
+
       // Trigger the Google Sign In process
       debugPrint('Triggering Google Sign In dialog...');
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      
+
       if (googleUser == null) {
         debugPrint('Google sign in was cancelled by user');
         throw Exception('Google sign in was cancelled');
       }
-      
+
       debugPrint('Google user signed in: ${googleUser.email}');
-      
+
       // Obtain the auth details from the request
       debugPrint('Getting Google authentication tokens...');
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
       final accessToken = googleAuth.accessToken;
       final idToken = googleAuth.idToken;
-      
+
       debugPrint('Access token received: ${accessToken != null}');
       debugPrint('ID token received: ${idToken != null}');
-      
+
       if (accessToken == null || idToken == null) {
         throw Exception('Failed to get Google tokens');
       }
-      
+
       // Sign in with Google OAuth
       debugPrint('Signing in with Supabase using Google tokens...');
       await _client.auth.signInWithIdToken(
@@ -191,9 +194,9 @@ class SupabaseService {
         idToken: idToken,
         accessToken: accessToken,
       );
-      
+
       debugPrint('Successfully signed in with Supabase');
-      
+
       return true;
     } catch (e) {
       debugPrint('Google sign in error: $e');
@@ -201,7 +204,7 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   /// Sign in with Apple
   Future<bool> signInWithApple() async {
     try {
@@ -210,19 +213,21 @@ class SupabaseService {
       if (!isAvailable) {
         throw Exception('Apple Sign In is not available on this device');
       }
-      
+
       // Check if current user is anonymous
       final isAnonymous = currentUser?.isAnonymous ?? false;
       final anonymousUserId = currentUser?.id;
-      debugPrint('Current user anonymous status: $isAnonymous, ID: $anonymousUserId');
-      
+      debugPrint(
+        'Current user anonymous status: $isAnonymous, ID: $anonymousUserId',
+      );
+
       if (isAnonymous) {
         // If anonymous user, link with Apple identity
         debugPrint('Linking anonymous user with Apple identity...');
         try {
           await _client.auth.linkIdentity(OAuthProvider.apple);
           debugPrint('Successfully linked Apple account to anonymous user');
-          
+
           // Update user metadata to indicate successful linking
           await _client.auth.updateUser(
             UserAttributes(
@@ -232,7 +237,7 @@ class SupabaseService {
               },
             ),
           );
-          
+
           return true;
         } catch (e) {
           debugPrint('Failed to link Apple identity: $e');
@@ -240,7 +245,7 @@ class SupabaseService {
           debugPrint('Falling back to regular Apple sign in...');
         }
       }
-      
+
       // Regular Apple sign in flow (for non-anonymous users or if linking fails)
       // Request credential for Apple ID
       final credential = await SignInWithApple.getAppleIDCredential(
@@ -249,53 +254,51 @@ class SupabaseService {
           AppleIDAuthorizationScopes.fullName,
         ],
       );
-      
+
       final idToken = credential.identityToken;
       if (idToken == null) {
         throw Exception('Failed to get Apple ID token');
       }
-      
+
       // Sign in with Apple OAuth
       await _client.auth.signInWithIdToken(
         provider: OAuthProvider.apple,
         idToken: idToken,
       );
-      
+
       debugPrint('Successfully signed in with Apple');
-      
+
       // Update user metadata with Apple display name if available
       try {
         String? displayName;
         if (credential.givenName != null || credential.familyName != null) {
-          displayName = '${credential.givenName ?? ''} ${credential.familyName ?? ''}'.trim();
+          displayName =
+              '${credential.givenName ?? ''} ${credential.familyName ?? ''}'
+                  .trim();
         }
-        
+
         if (displayName != null && displayName.isNotEmpty) {
           await _client.auth.updateUser(
-            UserAttributes(
-              data: {
-                'username': displayName,
-              },
-            ),
+            UserAttributes(data: {'username': displayName}),
           );
         }
       } catch (e) {
         debugPrint('Failed to update user metadata: $e');
       }
-      
+
       return true;
     } catch (e) {
       debugPrint('Apple sign in error: $e');
       rethrow;
     }
   }
-  
+
   /// Sign in with Kakao
   Future<bool> signInWithKakao() async {
     try {
       // Check if KakaoTalk is installed
       bool isInstalled = await kakao.isKakaoTalkInstalled();
-      
+
       if (isInstalled) {
         try {
           await kakao.UserApi.instance.loginWithKakaoTalk();
@@ -308,28 +311,32 @@ class SupabaseService {
         // Login with Kakao account (web browser)
         await kakao.UserApi.instance.loginWithKakaoAccount();
       }
-      
+
       // Get user information from Kakao
       kakao.User kakaoUser = await kakao.UserApi.instance.me();
-      debugPrint('Kakao user info: ${kakaoUser.id}, ${kakaoUser.kakaoAccount?.email}');
-      
+      debugPrint(
+        'Kakao user info: ${kakaoUser.id}, ${kakaoUser.kakaoAccount?.email}',
+      );
+
       // Check if user is currently anonymous
       final isAnonymous = currentUser?.isAnonymous ?? false;
       final anonymousUserId = currentUser?.id;
-      
+
       if (isAnonymous && anonymousUserId != null) {
-        debugPrint('Current user is anonymous, attempting to link with Kakao account');
-        
+        debugPrint(
+          'Current user is anonymous, attempting to link with Kakao account',
+        );
+
         // Since Kakao is not a native Supabase provider, we need to use a different approach
         // Option 1: Use email/password with Kakao email (if available)
         final kakaoEmail = kakaoUser.kakaoAccount?.email;
-        
+
         if (kakaoEmail != null && kakaoEmail.isNotEmpty) {
           try {
             // First, try to sign up with the Kakao email
             // Use Kakao ID as a pseudo-password (this should be handled more securely in production)
             final pseudoPassword = 'kakao_${kakaoUser.id}_user';
-            
+
             // Try to sign in first in case user already exists
             try {
               await _client.auth.signInWithPassword(
@@ -344,27 +351,29 @@ class SupabaseService {
                 password: pseudoPassword,
                 data: {
                   'provider': 'kakao',
-                  'username': kakaoUser.kakaoAccount?.profile?.nickname ?? 'Kakao User',
+                  'username':
+                      kakaoUser.kakaoAccount?.profile?.nickname ?? 'Kakao User',
                   'kakao_id': kakaoUser.id.toString(),
                   'previous_anonymous_id': anonymousUserId,
                 },
               );
               debugPrint('Created new Kakao-linked account');
             }
-            
+
             // TODO: Migrate anonymous user data to new account
             // This would require backend functions to transfer data from anonymous user to new user
-            
+
             return true;
           } catch (e) {
             debugPrint('Failed to link Kakao account: $e');
-            
+
             // Fallback: Just update the anonymous user's metadata
             await _client.auth.updateUser(
               UserAttributes(
                 data: {
                   'provider': 'kakao',
-                  'username': kakaoUser.kakaoAccount?.profile?.nickname ?? 'Kakao User',
+                  'username':
+                      kakaoUser.kakaoAccount?.profile?.nickname ?? 'Kakao User',
                   'kakao_id': kakaoUser.id.toString(),
                   'kakao_email': kakaoEmail,
                 },
@@ -379,12 +388,15 @@ class SupabaseService {
             UserAttributes(
               data: {
                 'provider': 'kakao',
-                'username': kakaoUser.kakaoAccount?.profile?.nickname ?? 'Kakao User',
+                'username':
+                    kakaoUser.kakaoAccount?.profile?.nickname ?? 'Kakao User',
                 'kakao_id': kakaoUser.id.toString(),
               },
             ),
           );
-          debugPrint('Updated anonymous user metadata with Kakao info (no email)');
+          debugPrint(
+            'Updated anonymous user metadata with Kakao info (no email)',
+          );
           return true;
         }
       } else {
@@ -402,24 +414,24 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   /// Check if current user is anonymous
   bool get isAnonymousUser {
     return currentUser?.isAnonymous ?? false;
   }
-  
+
   /// Get linked providers for current user
   List<String> get linkedProviders {
     final identities = currentUser?.appMetadata['providers'] as List<dynamic>?;
     return identities?.map((e) => e.toString()).toList() ?? [];
   }
-  
+
   // ============= User Progress Methods =============
-  
+
   /// Save user progress to database
   Future<void> saveUserProgress(UserProgress progress) async {
     if (!isLoggedIn) return;
-    
+
     try {
       await _client.from(SupabaseConfig.userProgressTable).upsert({
         'user_id': currentUser!.id,
@@ -433,35 +445,37 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   /// Get all user progress
   Future<List<UserProgress>> getUserProgress() async {
     if (!isLoggedIn) return [];
-    
+
     try {
       final response = await _client
           .from(SupabaseConfig.userProgressTable)
           .select()
           .eq('user_id', currentUser!.id);
-      
+
       return (response as List)
-          .map((data) => UserProgress(
-                kanjiCharacter: data['kanji_character'],
-                lastStudied: DateTime.parse(data['last_studied']),
-                studyCount: data['study_count'],
-                mastered: data['mastered'],
-              ))
+          .map(
+            (data) => UserProgress(
+              kanjiCharacter: data['kanji_character'],
+              lastStudied: DateTime.parse(data['last_studied']),
+              studyCount: data['study_count'],
+              mastered: data['mastered'],
+            ),
+          )
           .toList();
     } catch (e) {
       debugPrint('Error getting user progress: $e');
       rethrow;
     }
   }
-  
+
   /// Get progress for specific kanji
   Future<UserProgress?> getKanjiProgress(String character) async {
     if (!isLoggedIn) return null;
-    
+
     try {
       final response = await _client
           .from(SupabaseConfig.userProgressTable)
@@ -469,9 +483,9 @@ class SupabaseService {
           .eq('user_id', currentUser!.id)
           .eq('kanji_character', character)
           .maybeSingle();
-      
+
       if (response == null) return null;
-      
+
       return UserProgress(
         kanjiCharacter: response['kanji_character'],
         lastStudied: DateTime.parse(response['last_studied']),
@@ -483,32 +497,41 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   // ============= Kanji Examples Methods =============
-  
+
   /// Save generated kanji examples to database
-  Future<void> saveKanjiExamples(String character, List<KanjiExample> examples) async {
+  Future<void> saveKanjiExamples(
+    String character,
+    List<KanjiExample> examples,
+  ) async {
     if (!isLoggedIn) return;
-    
+
     try {
-      final data = examples.map((example) => {
-        'user_id': currentUser!.id,
-        'kanji_character': character,
-        'japanese': example.japanese,
-        'furigana': example.furigana,
-        'korean': example.korean,
-        'explanation': example.explanation,
-        'source': example.source ?? 'gemini',
-        'created_at': example.createdAt?.toIso8601String() ?? DateTime.now().toIso8601String(),
-      }).toList();
-      
+      final data = examples
+          .map(
+            (example) => {
+              'user_id': currentUser!.id,
+              'kanji_character': character,
+              'japanese': example.japanese,
+              'furigana': example.furigana,
+              'korean': example.korean,
+              'explanation': example.explanation,
+              'source': example.source ?? 'gemini',
+              'created_at':
+                  example.createdAt?.toIso8601String() ??
+                  DateTime.now().toIso8601String(),
+            },
+          )
+          .toList();
+
       await _client.from(SupabaseConfig.kanjiExamplesTable).insert(data);
     } catch (e) {
       debugPrint('Error saving kanji examples: $e');
       rethrow;
     }
   }
-  
+
   /// Get kanji examples from database by kanji_id
   Future<List<KanjiExample>> getKanjiExamples(int kanjiId) async {
     try {
@@ -517,7 +540,7 @@ class SupabaseService {
           .from(SupabaseConfig.kanjiExamplesTable)
           .select()
           .eq('kanji_id', kanjiId);
-      
+
       // If logged in, get user's examples and public examples
       // If not logged in, only get public examples (user_id is null)
       if (isLoggedIn) {
@@ -525,36 +548,38 @@ class SupabaseService {
       } else {
         query = query.isFilter('user_id', null);
       }
-      
+
       final response = await query.order('created_at', ascending: false);
-      
+
       return (response as List)
-          .map((data) => KanjiExample(
-                japanese: data['japanese'],
-                furigana: data['furigana'] ?? data['hiragana'] ?? '', // DB에서 furigana 컬럼 사용
-                korean: data['korean'],
-                explanation: data['explanation'],
-                source: data['source'],
-                createdAt: data['created_at'] != null 
-                    ? DateTime.parse(data['created_at']) 
-                    : null,
-              ))
+          .map(
+            (data) => KanjiExample(
+              japanese: data['japanese'],
+              furigana:
+                  data['furigana'] ??
+                  data['hiragana'] ??
+                  '', // DB에서 furigana 컬럼 사용
+              korean: data['korean'],
+              explanation: data['explanation'],
+              source: data['source'],
+              createdAt: data['created_at'] != null
+                  ? DateTime.parse(data['created_at'])
+                  : null,
+            ),
+          )
           .toList();
     } catch (e) {
       debugPrint('Error getting kanji examples: $e');
       return []; // Return empty list instead of rethrowing
     }
   }
-  
+
   /// Get word examples from database by word_id
   Future<List<WordExample>> getWordExamples(int wordId) async {
     try {
       // Get both public examples and user's own examples
-      var query = _client
-          .from('word_examples')
-          .select()
-          .eq('word_id', wordId);
-      
+      var query = _client.from('word_examples').select().eq('word_id', wordId);
+
       // If logged in, get user's examples and public examples
       // If not logged in, only get public examples (user_id is null)
       if (isLoggedIn) {
@@ -562,9 +587,9 @@ class SupabaseService {
       } else {
         query = query.isFilter('user_id', null);
       }
-      
+
       final response = await query.order('created_at', ascending: false);
-      
+
       return (response as List)
           .map((data) => WordExample.fromJson(data))
           .toList();
@@ -573,9 +598,9 @@ class SupabaseService {
       return [];
     }
   }
-  
+
   // ============= Study Session Methods =============
-  
+
   /// Record a study session
   Future<void> recordStudySession({
     required DateTime startTime,
@@ -584,7 +609,7 @@ class SupabaseService {
     required int kanjiMastered,
   }) async {
     if (!isLoggedIn) return;
-    
+
     try {
       await _client.from(SupabaseConfig.studySessionsTable).insert({
         'user_id': currentUser!.id,
@@ -599,11 +624,11 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   /// Get study statistics
   Future<Map<String, dynamic>> getStudyStatistics() async {
     if (!isLoggedIn) return {};
-    
+
     try {
       // Get total study sessions
       final sessionsResponse = await _client
@@ -611,25 +636,25 @@ class SupabaseService {
           .select('count')
           .eq('user_id', currentUser!.id)
           .single();
-      
+
       // Get total study time
       final timeResponse = await _client
           .from(SupabaseConfig.studySessionsTable)
           .select('duration_minutes')
           .eq('user_id', currentUser!.id);
-      
+
       int totalMinutes = 0;
       for (final session in timeResponse as List) {
         totalMinutes += (session['duration_minutes'] as int?) ?? 0;
       }
-      
+
       // Get streak (consecutive days)
       final streakResponse = await _client
           .from(SupabaseConfig.studySessionsTable)
           .select('start_time')
           .eq('user_id', currentUser!.id)
           .order('start_time', ascending: false);
-      
+
       int streak = 0;
       final streakList = streakResponse as List;
       if (streakList.isNotEmpty) {
@@ -650,7 +675,7 @@ class SupabaseService {
           }
         }
       }
-      
+
       return {
         'total_sessions': sessionsResponse['count'] ?? 0,
         'total_minutes': totalMinutes,
@@ -661,21 +686,18 @@ class SupabaseService {
       return {};
     }
   }
-  
+
   // ============= User Profile Methods =============
-  
+
   /// Update user profile
-  Future<void> updateUserProfile({
-    String? username,
-    String? avatarUrl,
-  }) async {
+  Future<void> updateUserProfile({String? username, String? avatarUrl}) async {
     if (!isLoggedIn) return;
-    
+
     try {
       final updates = <String, dynamic>{};
       if (username != null) updates['username'] = username;
       if (avatarUrl != null) updates['avatar_url'] = avatarUrl;
-      
+
       await _client.from(SupabaseConfig.usersTable).upsert({
         'id': currentUser!.id,
         ...updates,
@@ -686,27 +708,27 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   /// Get user profile
   Future<Map<String, dynamic>?> getUserProfile() async {
     if (!isLoggedIn) return null;
-    
+
     try {
       final response = await _client
           .from(SupabaseConfig.usersTable)
           .select()
           .eq('id', currentUser!.id)
           .maybeSingle();
-      
+
       return response;
     } catch (e) {
       debugPrint('Error getting user profile: $e');
       return null;
     }
   }
-  
+
   // ============= Quiz Methods =============
-  
+
   /// Create a new quiz set
   Future<QuizSet?> createQuizSet({
     required String title,
@@ -717,7 +739,7 @@ class SupabaseService {
     bool isPublic = false,
   }) async {
     if (!isLoggedIn) return null;
-    
+
     try {
       final data = {
         'title': title,
@@ -728,44 +750,44 @@ class SupabaseService {
         'kanji_ids': kanjiIds,
         'is_public': isPublic,
       };
-      
+
       final response = await _client
           .from(SupabaseConfig.quizSetsTable)
           .insert(data)
           .select()
           .single();
-      
+
       return QuizSet.fromJson(response);
     } catch (e) {
       debugPrint('Error creating quiz set: $e');
       rethrow;
     }
   }
-  
+
   /// Get public quiz sets and user's own quiz sets
   Future<List<QuizSet>> getQuizSets({String? category}) async {
     try {
       var query = _client.from(SupabaseConfig.quizSetsTable).select();
-      
+
       if (category != null) {
         query = query.eq('category', category);
       }
-      
+
       if (isLoggedIn) {
         query = query.or('is_public.eq.true,created_by.eq.${currentUser!.id}');
       } else {
         query = query.eq('is_public', true);
       }
-      
+
       final response = await query.order('created_at', ascending: false);
-      
+
       return (response as List).map((data) => QuizSet.fromJson(data)).toList();
     } catch (e) {
       debugPrint('Error getting quiz sets: $e');
       rethrow;
     }
   }
-  
+
   /// Get quiz questions for a quiz set
   Future<List<QuizQuestion>> getQuizQuestions(int quizSetId) async {
     try {
@@ -774,18 +796,20 @@ class SupabaseService {
           .select()
           .eq('quiz_set_id', quizSetId)
           .order('order_index');
-      
-      return (response as List).map((data) => QuizQuestion.fromJson(data)).toList();
+
+      return (response as List)
+          .map((data) => QuizQuestion.fromJson(data))
+          .toList();
     } catch (e) {
       debugPrint('Error getting quiz questions: $e');
       rethrow;
     }
   }
-  
+
   /// Create quiz questions
   Future<void> createQuizQuestions(List<QuizQuestion> questions) async {
     if (!isLoggedIn) return;
-    
+
     try {
       final data = questions.map((q) => q.toJsonForCreate()).toList();
       await _client.from(SupabaseConfig.quizQuestionsTable).insert(data);
@@ -794,30 +818,27 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   /// Start a quiz attempt
   Future<QuizAttempt?> startQuizAttempt(int quizSetId) async {
     if (!isLoggedIn) return null;
-    
+
     try {
-      final data = {
-        'user_id': currentUser!.id,
-        'quiz_set_id': quizSetId,
-      };
-      
+      final data = {'user_id': currentUser!.id, 'quiz_set_id': quizSetId};
+
       final response = await _client
           .from(SupabaseConfig.quizAttemptsTable)
           .insert(data)
           .select()
           .single();
-      
+
       return QuizAttempt.fromJson(response);
     } catch (e) {
       debugPrint('Error starting quiz attempt: $e');
       rethrow;
     }
   }
-  
+
   /// Complete a quiz attempt
   Future<void> completeQuizAttempt({
     required int attemptId,
@@ -826,7 +847,7 @@ class SupabaseService {
     required int timeTakenSeconds,
   }) async {
     if (!isLoggedIn) return;
-    
+
     try {
       final data = {
         'completed_at': DateTime.now().toIso8601String(),
@@ -834,7 +855,7 @@ class SupabaseService {
         'total_points': totalPoints,
         'time_taken_seconds': timeTakenSeconds,
       };
-      
+
       await _client
           .from(SupabaseConfig.quizAttemptsTable)
           .update(data)
@@ -844,11 +865,11 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   /// Save quiz answer
   Future<void> saveQuizAnswer(QuizAnswer answer) async {
     if (!isLoggedIn) return;
-    
+
     try {
       await _client
           .from(SupabaseConfig.quizAnswersTable)
@@ -858,64 +879,72 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   /// Get user's quiz attempts
   Future<List<QuizAttempt>> getUserQuizAttempts({int? quizSetId}) async {
     if (!isLoggedIn) return [];
-    
+
     try {
       var query = _client
           .from(SupabaseConfig.quizAttemptsTable)
           .select()
           .eq('user_id', currentUser!.id);
-      
+
       if (quizSetId != null) {
         query = query.eq('quiz_set_id', quizSetId);
       }
-      
+
       final response = await query.order('started_at', ascending: false);
-      
-      return (response as List).map((data) => QuizAttempt.fromJson(data)).toList();
+
+      return (response as List)
+          .map((data) => QuizAttempt.fromJson(data))
+          .toList();
     } catch (e) {
       debugPrint('Error getting user quiz attempts: $e');
       rethrow;
     }
   }
-  
+
   /// Get quiz answers for an attempt
   Future<List<QuizAnswer>> getQuizAnswers(int attemptId) async {
     if (!isLoggedIn) return [];
-    
+
     try {
       final response = await _client
           .from(SupabaseConfig.quizAnswersTable)
           .select()
           .eq('attempt_id', attemptId)
           .order('answered_at');
-      
-      return (response as List).map((data) => QuizAnswer.fromJson(data)).toList();
+
+      return (response as List)
+          .map((data) => QuizAnswer.fromJson(data))
+          .toList();
     } catch (e) {
       debugPrint('Error getting quiz answers: $e');
       rethrow;
     }
   }
-  
+
   /// Get all kanji from database
-  Future<List<Map<String, dynamic>>> getAllKanji({int? grade, int? jlpt}) async {
+  Future<List<Map<String, dynamic>>> getAllKanji({
+    int? grade,
+    int? jlpt,
+  }) async {
     try {
-      var query = _client.from(SupabaseConfig.kanjiTable)
+      var query = _client
+          .from(SupabaseConfig.kanjiTable)
           .select('*, korean_on_readings, korean_kun_readings');
-      
+
       if (grade != null) {
         query = query.eq('grade', grade);
       }
-      
+
       if (jlpt != null) {
         query = query.eq('jlpt', jlpt);
       }
-      
+
       final response = await query.order('id', ascending: true);
-      
+
       // Transform data to match expected format
       final List<Map<String, dynamic>> result = [];
       for (final item in response as List) {
@@ -936,16 +965,16 @@ class SupabaseService {
           'examples': [],
         });
       }
-      
+
       return result;
     } catch (e) {
       debugPrint('Error getting all kanji: $e');
       rethrow;
     }
   }
-  
+
   // ============= Study Records Methods =============
-  
+
   /// Record a study session for a kanji or word
   Future<void> recordStudy({
     required StudyType type,
@@ -954,7 +983,7 @@ class SupabaseService {
     String? notes,
   }) async {
     if (!isLoggedIn) return;
-    
+
     try {
       final record = StudyRecord(
         userId: currentUser!.id,
@@ -964,14 +993,14 @@ class SupabaseService {
         notes: notes,
         createdAt: DateTime.now().toUtc(), // Save in UTC
       );
-      
+
       await _client.from('study_records').insert(record.toJsonForCreate());
     } catch (e) {
       debugPrint('Error recording study: $e');
       rethrow;
     }
   }
-  
+
   /// Get all study records for current user
   Future<List<StudyRecord>> getStudyRecords({
     StudyType? type,
@@ -980,32 +1009,32 @@ class SupabaseService {
     int? limit,
   }) async {
     if (!isLoggedIn) return [];
-    
+
     try {
       var query = _client
           .from('study_records')
           .select()
           .eq('user_id', currentUser!.id);
-      
+
       if (type != null) {
         query = query.eq('type', type.value);
       }
-      
+
       if (targetId != null) {
         query = query.eq('target_id', targetId);
       }
-      
+
       if (status != null) {
         query = query.eq('status', status.value);
       }
-      
+
       // Apply ordering and limit in one chain
-      final finalQuery = limit != null 
+      final finalQuery = limit != null
           ? query.order('created_at', ascending: false).limit(limit)
           : query.order('created_at', ascending: false);
-      
+
       final response = await finalQuery;
-      
+
       return (response as List)
           .map((data) => StudyRecord.fromJson(data))
           .toList();
@@ -1014,20 +1043,17 @@ class SupabaseService {
       return [];
     }
   }
-  
+
   /// Get study statistics for a specific kanji or word
   Future<StudyStats?> getStudyStats({
     required StudyType type,
     required int targetId,
   }) async {
     if (!isLoggedIn) return null;
-    
+
     try {
-      final records = await getStudyRecords(
-        type: type,
-        targetId: targetId,
-      );
-      
+      final records = await getStudyRecords(type: type, targetId: targetId);
+
       if (records.isEmpty) {
         return StudyStats(
           targetId: targetId,
@@ -1040,12 +1066,12 @@ class SupabaseService {
           recentRecords: [],
         );
       }
-      
+
       int completedCount = 0;
       int forgotCount = 0;
       int reviewingCount = 0;
       int masteredCount = 0;
-      
+
       for (final record in records) {
         switch (record.status) {
           case StudyStatus.completed:
@@ -1062,7 +1088,7 @@ class SupabaseService {
             break;
         }
       }
-      
+
       return StudyStats(
         targetId: targetId,
         type: type,
@@ -1080,14 +1106,14 @@ class SupabaseService {
       return null;
     }
   }
-  
+
   /// Get recent study records for all items
   Future<Map<String, StudyStatus>> getRecentStudyStatuses({
     required StudyType type,
     required List<int> targetIds,
   }) async {
     if (!isLoggedIn || targetIds.isEmpty) return {};
-    
+
     try {
       final response = await _client
           .from('study_records')
@@ -1096,11 +1122,11 @@ class SupabaseService {
           .eq('type', type.value)
           .inFilter('target_id', targetIds)
           .order('created_at', ascending: false);
-      
+
       final records = (response as List)
           .map((data) => StudyRecord.fromJson(data))
           .toList();
-      
+
       // Group by target_id and get the most recent status
       final Map<String, StudyStatus> statuses = {};
       for (final record in records) {
@@ -1109,18 +1135,18 @@ class SupabaseService {
           statuses[key] = record.status;
         }
       }
-      
+
       return statuses;
     } catch (e) {
       debugPrint('Error getting recent study statuses: $e');
       return {};
     }
   }
-  
+
   /// Delete a study record
   Future<void> deleteStudyRecord(int recordId) async {
     if (!isLoggedIn) return;
-    
+
     try {
       await _client
           .from('study_records')
@@ -1132,21 +1158,32 @@ class SupabaseService {
       rethrow;
     }
   }
-  
+
   // ============= Calendar Methods =============
-  
+
   /// Get daily study statistics for a date range
   Future<List<DailyStudyStats>> getDailyStudyStats({
     required DateTime startDate,
     required DateTime endDate,
   }) async {
     if (!isLoggedIn) return [];
-    
+
     try {
       // Convert local dates to UTC for querying
-      final utcStartDate = DateTime(startDate.year, startDate.month, startDate.day).toUtc();
-      final utcEndDate = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59).toUtc();
-      
+      final utcStartDate = DateTime(
+        startDate.year,
+        startDate.month,
+        startDate.day,
+      ).toUtc();
+      final utcEndDate = DateTime(
+        endDate.year,
+        endDate.month,
+        endDate.day,
+        23,
+        59,
+        59,
+      ).toUtc();
+
       // Get study records for the date range
       final response = await _client
           .from('study_records')
@@ -1155,122 +1192,141 @@ class SupabaseService {
           .gte('created_at', utcStartDate.toIso8601String())
           .lte('created_at', utcEndDate.toIso8601String())
           .order('created_at', ascending: true);
-      
+
       final records = (response as List)
           .map((data) => StudyRecord.fromJson(data))
           .toList();
-      
+
       // Group records by local date
       final Map<String, List<StudyRecord>> groupedRecords = {};
       for (final record in records) {
         // Use local time for grouping
         final localDate = record.createdAt!;
-        final dateKey = '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
+        final dateKey =
+            '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
         if (!groupedRecords.containsKey(dateKey)) {
           groupedRecords[dateKey] = [];
         }
         groupedRecords[dateKey]!.add(record);
       }
-      
+
       // Create DailyStudyStats for each date
       final List<DailyStudyStats> dailyStats = [];
       for (final entry in groupedRecords.entries) {
         final date = DateTime.parse(entry.key);
         final dayRecords = entry.value;
-        
+
         int kanjiStudied = 0;
         int wordsStudied = 0;
         int totalCompleted = 0;
         int totalForgot = 0;
         final List<StudyItem> studyItems = [];
-        
+
         // Track unique items studied
         final Set<String> uniqueKanji = {};
         final Set<String> uniqueWords = {};
-        
+
         for (final record in dayRecords) {
           final itemKey = '${record.type.value}-${record.targetId}';
-          
-          if (record.type == StudyType.kanji && !uniqueKanji.contains(itemKey)) {
+
+          if (record.type == StudyType.kanji &&
+              !uniqueKanji.contains(itemKey)) {
             uniqueKanji.add(itemKey);
             kanjiStudied++;
-          } else if (record.type == StudyType.word && !uniqueWords.contains(itemKey)) {
+          } else if (record.type == StudyType.word &&
+              !uniqueWords.contains(itemKey)) {
             uniqueWords.add(itemKey);
             wordsStudied++;
           }
-          
+
           if (record.status == StudyStatus.completed) {
             totalCompleted++;
           } else if (record.status == StudyStatus.forgot) {
             totalForgot++;
           }
-          
+
           // Create StudyItem
-          studyItems.add(StudyItem(
-            id: record.targetId,
-            type: record.type.value,
-            name: '', // We'll need to fetch the actual names if needed
-            status: record.status.value,
-            studiedAt: record.createdAt!,
-          ));
+          studyItems.add(
+            StudyItem(
+              id: record.targetId,
+              type: record.type.value,
+              name: '', // We'll need to fetch the actual names if needed
+              status: record.status.value,
+              studiedAt: record.createdAt!,
+            ),
+          );
         }
-        
-        dailyStats.add(DailyStudyStats(
-          date: date,
-          kanjiStudied: kanjiStudied,
-          wordsStudied: wordsStudied,
-          totalCompleted: totalCompleted,
-          totalForgot: totalForgot,
-          studyItems: studyItems,
-        ));
+
+        dailyStats.add(
+          DailyStudyStats(
+            date: date,
+            kanjiStudied: kanjiStudied,
+            wordsStudied: wordsStudied,
+            totalCompleted: totalCompleted,
+            totalForgot: totalForgot,
+            studyItems: studyItems,
+          ),
+        );
       }
-      
+
       return dailyStats;
     } catch (e) {
       debugPrint('Error getting daily study stats: $e');
       return [];
     }
   }
-  
+
   /// Get monthly study statistics
   Future<Map<DateTime, DailyStudyStats>> getMonthlyStudyStats({
     required int year,
     required int month,
   }) async {
     if (!isLoggedIn) return {};
-    
+
     try {
       final startDate = DateTime(year, month, 1);
       final endDate = DateTime(year, month + 1, 0, 23, 59, 59);
-      
+
       final dailyStats = await getDailyStudyStats(
         startDate: startDate,
         endDate: endDate,
       );
-      
+
       final Map<DateTime, DailyStudyStats> statsMap = {};
       for (final stats in dailyStats) {
         // Normalize date to remove time component
-        final normalizedDate = DateTime(stats.date.year, stats.date.month, stats.date.day);
+        final normalizedDate = DateTime(
+          stats.date.year,
+          stats.date.month,
+          stats.date.day,
+        );
         statsMap[normalizedDate] = stats;
       }
-      
+
       return statsMap;
     } catch (e) {
       debugPrint('Error getting monthly study stats: $e');
       return {};
     }
   }
-  
+
   /// Get weekly study statistics (for ProfileScreen)
   Future<List<DailyStudyStats>> getWeeklyStudyStats() async {
     if (!isLoggedIn) return [];
-    
+
     try {
       final now = DateTime.now();
-      final startOfWeek = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
-      final endOfWeek = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day).add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
-      
+      final startOfWeek = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: now.weekday - 1));
+      final endOfWeek = DateTime(
+        startOfWeek.year,
+        startOfWeek.month,
+        startOfWeek.day,
+      ).add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+
       return await getDailyStudyStats(
         startDate: startOfWeek,
         endDate: endOfWeek,
@@ -1280,16 +1336,23 @@ class SupabaseService {
       return [];
     }
   }
-  
+
   /// Get study items for a specific date with details
   Future<List<Map<String, dynamic>>> getDateStudyDetails(DateTime date) async {
     if (!isLoggedIn) return [];
-    
+
     try {
       // Convert local date to UTC for querying
       final startOfDay = DateTime(date.year, date.month, date.day).toUtc();
-      final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59).toUtc();
-      
+      final endOfDay = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        23,
+        59,
+        59,
+      ).toUtc();
+
       // Get study records for the specific date
       final response = await _client
           .from('study_records')
@@ -1298,17 +1361,17 @@ class SupabaseService {
           .gte('created_at', startOfDay.toIso8601String())
           .lte('created_at', endOfDay.toIso8601String())
           .order('created_at', ascending: false);
-      
+
       final records = (response as List)
           .map((data) => StudyRecord.fromJson(data))
           .toList();
-      
+
       // Fetch details for each item
       final List<Map<String, dynamic>> detailedItems = [];
-      
+
       for (final record in records) {
         Map<String, dynamic>? itemDetails;
-        
+
         if (record.type == StudyType.kanji) {
           // Fetch kanji details
           final kanjiResponse = await _client
@@ -1316,7 +1379,7 @@ class SupabaseService {
               .select('character, meanings')
               .eq('id', record.targetId)
               .maybeSingle();
-          
+
           if (kanjiResponse != null) {
             itemDetails = {
               'type': 'kanji',
@@ -1333,7 +1396,7 @@ class SupabaseService {
               .select('word, reading')
               .eq('id', record.targetId)
               .maybeSingle();
-          
+
           if (wordResponse != null) {
             itemDetails = {
               'type': 'word',
@@ -1344,12 +1407,12 @@ class SupabaseService {
             };
           }
         }
-        
+
         if (itemDetails != null) {
           detailedItems.add(itemDetails);
         }
       }
-      
+
       return detailedItems;
     } catch (e) {
       debugPrint('Error getting date study details: $e');

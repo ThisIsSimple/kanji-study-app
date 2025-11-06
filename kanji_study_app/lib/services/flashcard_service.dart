@@ -30,7 +30,10 @@ class FlashcardService {
   }
 
   /// Create a new flashcard session from a list of items
-  Future<FlashcardSession> createSession(String itemType, List<int> itemIds) async {
+  Future<FlashcardSession> createSession(
+    String itemType,
+    List<int> itemIds,
+  ) async {
     if (itemIds.isEmpty) {
       throw Exception('Cannot create flashcard session with empty item list');
     }
@@ -50,7 +53,9 @@ class FlashcardService {
 
     await _saveSession(session);
 
-    debugPrint('Created flashcard session with ${itemIds.length} $itemType items');
+    debugPrint(
+      'Created flashcard session with ${itemIds.length} $itemType items',
+    );
     return session;
   }
 
@@ -71,7 +76,9 @@ class FlashcardService {
           _kanjiSession = session;
         }
 
-        debugPrint('Loaded $itemType flashcard session with ${session.itemIds.length} items');
+        debugPrint(
+          'Loaded $itemType flashcard session with ${session.itemIds.length} items',
+        );
         return session;
       }
     } catch (e) {
@@ -129,7 +136,7 @@ class FlashcardService {
   Future<FlashcardSession> recordResult({
     required int itemId,
     required bool isCorrect,
-    required String itemType,  // itemType 파라미터 추가
+    required String itemType, // itemType 파라미터 추가
   }) async {
     final currentSession = getSession(itemType);
 
@@ -218,7 +225,9 @@ class FlashcardService {
         await _supabaseService.client.from('study_records').insert(record);
       }
 
-      debugPrint('Recorded ${session.results.length} ${session.itemType} flashcard results to study_records');
+      debugPrint(
+        'Recorded ${session.results.length} ${session.itemType} flashcard results to study_records',
+      );
     } catch (e) {
       debugPrint('Error recording study session: $e');
     }
@@ -238,7 +247,10 @@ class FlashcardService {
   }
 
   /// Resume or create new session
-  Future<FlashcardSession?> resumeOrCreateSession(String itemType, List<int> itemIds) async {
+  Future<FlashcardSession?> resumeOrCreateSession(
+    String itemType,
+    List<int> itemIds,
+  ) async {
     // Try to load existing session for this specific type
     final existingSession = await loadSessionByType(itemType);
 

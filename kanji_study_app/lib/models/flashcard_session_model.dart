@@ -2,9 +2,9 @@ import 'dart:convert';
 
 /// Represents a single flashcard result
 class FlashcardResult {
-  final String itemType;  // 'word' or 'kanji'
-  final int itemId;       // word_id or kanji_id
-  final bool isCorrect;   // true = knew it, false = didn't know
+  final String itemType; // 'word' or 'kanji'
+  final int itemId; // word_id or kanji_id
+  final bool isCorrect; // true = knew it, false = didn't know
   final DateTime timestamp;
 
   const FlashcardResult({
@@ -25,8 +25,8 @@ class FlashcardResult {
 
   factory FlashcardResult.fromJson(Map<String, dynamic> json) {
     return FlashcardResult(
-      itemType: json['itemType'] as String? ?? 'word',  // 하위 호환성
-      itemId: json['itemId'] as int? ?? json['wordId'] as int,  // 하위 호환성
+      itemType: json['itemType'] as String? ?? 'word', // 하위 호환성
+      itemId: json['itemId'] as int? ?? json['wordId'] as int, // 하위 호환성
       isCorrect: json['isCorrect'] as bool,
       timestamp: DateTime.parse(json['timestamp'] as String),
     );
@@ -35,8 +35,8 @@ class FlashcardResult {
 
 /// Represents a flashcard study session
 class FlashcardSession {
-  final String itemType;  // 'word' or 'kanji'
-  final List<int> itemIds;  // word_ids or kanji_ids
+  final String itemType; // 'word' or 'kanji'
+  final List<int> itemIds; // word_ids or kanji_ids
   final int currentIndex;
   final List<FlashcardResult> results;
   final DateTime startTime;
@@ -123,9 +123,10 @@ class FlashcardSession {
   /// Create from JSON
   factory FlashcardSession.fromJson(Map<String, dynamic> json) {
     return FlashcardSession(
-      itemType: json['itemType'] as String? ?? 'word',  // 하위 호환성
-      itemIds: (json['itemIds'] as List?)?.cast<int>() ??
-               (json['wordIds'] as List).cast<int>(),  // 하위 호환성
+      itemType: json['itemType'] as String? ?? 'word', // 하위 호환성
+      itemIds:
+          (json['itemIds'] as List?)?.cast<int>() ??
+          (json['wordIds'] as List).cast<int>(), // 하위 호환성
       currentIndex: json['currentIndex'] as int,
       results: (json['results'] as List)
           .map((r) => FlashcardResult.fromJson(r as Map<String, dynamic>))

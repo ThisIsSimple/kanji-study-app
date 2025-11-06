@@ -1,11 +1,9 @@
-import 'package:flutter/foundation.dart';
-
 enum StudyType {
   kanji,
   word;
 
   String get value => name;
-  
+
   static StudyType fromString(String value) {
     return StudyType.values.firstWhere(
       (type) => type.value == value,
@@ -21,14 +19,14 @@ enum StudyStatus {
   mastered;
 
   String get value => name;
-  
+
   static StudyStatus fromString(String value) {
     return StudyStatus.values.firstWhere(
       (status) => status.value == value,
       orElse: () => StudyStatus.completed,
     );
   }
-  
+
   String get displayText {
     switch (this) {
       case StudyStatus.completed:
@@ -41,7 +39,7 @@ enum StudyStatus {
         return '완벽 습득';
     }
   }
-  
+
   String get emoji {
     switch (this) {
       case StudyStatus.completed:
@@ -134,26 +132,26 @@ class StudyRecord {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-  
+
     return other is StudyRecord &&
-      other.id == id &&
-      other.userId == userId &&
-      other.type == type &&
-      other.targetId == targetId &&
-      other.status == status &&
-      other.notes == notes &&
-      other.createdAt == createdAt;
+        other.id == id &&
+        other.userId == userId &&
+        other.type == type &&
+        other.targetId == targetId &&
+        other.status == status &&
+        other.notes == notes &&
+        other.createdAt == createdAt;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
-      userId.hashCode ^
-      type.hashCode ^
-      targetId.hashCode ^
-      status.hashCode ^
-      notes.hashCode ^
-      createdAt.hashCode;
+        userId.hashCode ^
+        type.hashCode ^
+        targetId.hashCode ^
+        status.hashCode ^
+        notes.hashCode ^
+        createdAt.hashCode;
   }
 
   @override
@@ -206,8 +204,8 @@ class StudyStats {
 
   String get summaryText {
     if (totalRecords == 0) return '학습 기록 없음';
-    
+
     final successPercent = (successRate * 100).toStringAsFixed(0);
-    return '총 ${totalRecords}회 학습 (성공률 $successPercent%)';
+    return '총 $totalRecords회 학습 (성공률 $successPercent%)';
   }
 }

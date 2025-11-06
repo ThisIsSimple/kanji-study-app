@@ -27,37 +27,37 @@ class _QuizResultScreenState extends State<QuizResultScreen>
   late AnimationController _scoreAnimationController;
   late Animation<double> _scoreAnimation;
   late AnimationController _celebrationController;
-  
+
   int get correctCount => widget.attempt.score ?? 0;
   int get totalCount => widget.attempt.totalPoints ?? widget.questions.length;
-  double get percentage => totalCount > 0 ? (correctCount / totalCount) * 100 : 0;
-  
+  double get percentage =>
+      totalCount > 0 ? (correctCount / totalCount) * 100 : 0;
+
   @override
   void initState() {
     super.initState();
-    
+
     _scoreAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
-    _scoreAnimation = Tween<double>(
-      begin: 0.0,
-      end: percentage,
-    ).animate(CurvedAnimation(
-      parent: _scoreAnimationController,
-      curve: Curves.easeOutBack,
-    ));
-    
+
+    _scoreAnimation = Tween<double>(begin: 0.0, end: percentage).animate(
+      CurvedAnimation(
+        parent: _scoreAnimationController,
+        curve: Curves.easeOutBack,
+      ),
+    );
+
     _celebrationController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
-    
+
     // Start animations
     Future.delayed(const Duration(milliseconds: 500), () {
       _scoreAnimationController.forward();
-      
+
       if (percentage >= 80) {
         Future.delayed(const Duration(milliseconds: 1000), () {
           _celebrationController.forward();
@@ -108,9 +108,11 @@ class _QuizResultScreenState extends State<QuizResultScreen>
   }
 
   void _retryQuiz() {
-    Navigator.pushReplacementNamed(context, '/quiz-playing', arguments: {
-      'quizSet': widget.quizSet,
-    });
+    Navigator.pushReplacementNamed(
+      context,
+      '/quiz-playing',
+      arguments: {'quizSet': widget.quizSet},
+    );
   }
 
   void _backToQuizList() {
@@ -133,7 +135,7 @@ class _QuizResultScreenState extends State<QuizResultScreen>
               color: theme.colors.secondary.withValues(alpha: 0.3),
             ),
           ),
-          
+
           // Animated progress circle
           AnimatedBuilder(
             animation: _scoreAnimation,
@@ -148,7 +150,7 @@ class _QuizResultScreenState extends State<QuizResultScreen>
               );
             },
           ),
-          
+
           // Score text
           AnimatedBuilder(
             animation: _scoreAnimation,
@@ -178,20 +180,21 @@ class _QuizResultScreenState extends State<QuizResultScreen>
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     final theme = FTheme.of(context);
-    
+
     return FCard(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
+            Icon(icon, color: color, size: 24),
             const SizedBox(height: 8),
             Text(
               value,
@@ -218,7 +221,7 @@ class _QuizResultScreenState extends State<QuizResultScreen>
     final theme = FTheme.of(context);
     final question = wrongAnswer['question'] as QuizQuestionData;
     final userAnswer = wrongAnswer['userAnswer'] as String?;
-    
+
     return FCard(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -252,8 +255,8 @@ class _QuizResultScreenState extends State<QuizResultScreen>
                     question.questionType == 'meaning_to_kanji'
                         ? '"${question.questionText.replaceAll('"의 한자는?', '').replaceAll('"', '')}"의 한자'
                         : question.questionType == 'kanji_to_meaning'
-                            ? '${question.questionText}의 뜻'
-                            : '${question.questionText}의 읽기',
+                        ? '${question.questionText}의 뜻'
+                        : '${question.questionText}의 읽기',
                     style: theme.typography.base.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -262,7 +265,7 @@ class _QuizResultScreenState extends State<QuizResultScreen>
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Question text (for non-meaning questions)
             if (question.questionType != 'meaning_to_kanji') ...[
               Center(
@@ -276,7 +279,7 @@ class _QuizResultScreenState extends State<QuizResultScreen>
               ),
               const SizedBox(height: 12),
             ],
-            
+
             // Answers
             Row(
               children: [
@@ -333,8 +336,8 @@ class _QuizResultScreenState extends State<QuizResultScreen>
                           userAnswer ?? '무응답',
                           style: theme.typography.base.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: userAnswer == null 
-                                ? theme.colors.mutedForeground 
+                            color: userAnswer == null
+                                ? theme.colors.mutedForeground
                                 : null,
                           ),
                         ),
@@ -358,9 +361,7 @@ class _QuizResultScreenState extends State<QuizResultScreen>
       header: FHeader(
         title: Row(
           children: [
-            const Expanded(
-              child: Text('퀴즈 결과'),
-            ),
+            const Expanded(child: Text('퀴즈 결과')),
             IconButton(
               icon: const Icon(Icons.close),
               onPressed: _backToQuizList,
@@ -455,12 +456,13 @@ class _QuizResultScreenState extends State<QuizResultScreen>
                 ],
               ),
               const SizedBox(height: 12),
-              
+
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: _wrongAnswers.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   return _buildWrongAnswerItem(_wrongAnswers[index]);
                 },
@@ -527,7 +529,7 @@ class ScoreCirclePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final sweepAngle = (percentage / 100) * 2 * 3.14159;
-    
+
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -3.14159 / 2, // Start from top

@@ -8,54 +8,60 @@ import '../models/daily_study_stats.dart';
 
 class StudyCalendarDetailScreen extends StatefulWidget {
   final DateTime date;
-  
-  const StudyCalendarDetailScreen({
-    super.key,
-    required this.date,
-  });
+
+  const StudyCalendarDetailScreen({super.key, required this.date});
 
   @override
-  State<StudyCalendarDetailScreen> createState() => _StudyCalendarDetailScreenState();
+  State<StudyCalendarDetailScreen> createState() =>
+      _StudyCalendarDetailScreenState();
 }
 
 class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
   final SupabaseService _supabaseService = SupabaseService.instance;
-  
+
   late PageController _pageController;
   late DateTime _currentDate;
   final int _totalDays = 365 * 3; // 3 years of days
   late int _initialPage;
-  
+
   final Map<DateTime, List<Map<String, dynamic>>> _studyDetailsCache = {};
   final Map<DateTime, DailyStudyStats?> _dailyStatsCache = {};
   bool _isLoading = true;
-  
+
   @override
   void initState() {
     super.initState();
-    _currentDate = DateTime(widget.date.year, widget.date.month, widget.date.day);
+    _currentDate = DateTime(
+      widget.date.year,
+      widget.date.month,
+      widget.date.day,
+    );
     _initialPage = _totalDays ~/ 2;
     _pageController = PageController(initialPage: _initialPage);
     _loadStudyDetailsForDate(_currentDate);
   }
-  
+
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
-  
+
   DateTime _getDateFromPageIndex(int pageIndex) {
     final daysDifference = pageIndex - _initialPage;
-    final normalizedInitialDate = DateTime(widget.date.year, widget.date.month, widget.date.day);
+    final normalizedInitialDate = DateTime(
+      widget.date.year,
+      widget.date.month,
+      widget.date.day,
+    );
     return normalizedInitialDate.add(Duration(days: daysDifference));
   }
-  
+
   Future<void> _loadStudyDetailsForDate(DateTime date) async {
     final normalizedDate = DateTime(date.year, date.month, date.day);
-    
+
     // Check cache first
-    if (_studyDetailsCache.containsKey(normalizedDate) && 
+    if (_studyDetailsCache.containsKey(normalizedDate) &&
         _dailyStatsCache.containsKey(normalizedDate)) {
       setState(() {
         _currentDate = normalizedDate;
@@ -63,24 +69,30 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
       });
       return;
     }
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       // Load detailed study items
-      final details = await _supabaseService.getDateStudyDetails(normalizedDate);
-      
+      final details = await _supabaseService.getDateStudyDetails(
+        normalizedDate,
+      );
+
       // Load daily statistics
       final stats = await _supabaseService.getDailyStudyStats(
         startDate: normalizedDate,
-        endDate: normalizedDate.add(const Duration(hours: 23, minutes: 59, seconds: 59)),
+        endDate: normalizedDate.add(
+          const Duration(hours: 23, minutes: 59, seconds: 59),
+        ),
       );
-      
+
       setState(() {
         _studyDetailsCache[normalizedDate] = details;
-        _dailyStatsCache[normalizedDate] = stats.isNotEmpty ? stats.first : null;
+        _dailyStatsCache[normalizedDate] = stats.isNotEmpty
+            ? stats.first
+            : null;
         _currentDate = normalizedDate;
         _isLoading = false;
       });
@@ -94,16 +106,16 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
       });
     }
   }
-  
+
   void _onPageChanged(int pageIndex) {
     final newDate = _getDateFromPageIndex(pageIndex);
     _loadStudyDetailsForDate(newDate);
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    
+
     return FScaffold(
       header: FHeader.nested(
         title: Text(
@@ -111,9 +123,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
           style: const TextStyle(fontFamily: 'SUITE'),
         ),
         prefixes: [
-          FHeaderAction.back(
-            onPress: () => Navigator.of(context).pop(),
-          ),
+          FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
         ],
       ),
       child: PageView.builder(
@@ -122,14 +132,18 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
         itemCount: _totalDays,
         itemBuilder: (context, index) {
           final pageDate = _getDateFromPageIndex(index);
-          final normalizedPageDate = DateTime(pageDate.year, pageDate.month, pageDate.day);
+          final normalizedPageDate = DateTime(
+            pageDate.year,
+            pageDate.month,
+            pageDate.day,
+          );
           final studyDetails = _studyDetailsCache[normalizedPageDate] ?? [];
           final dailyStats = _dailyStatsCache[normalizedPageDate];
-          
+
           if (_isLoading && normalizedPageDate == _currentDate) {
             return const Center(child: CircularProgressIndicator());
           }
-          
+
           if (studyDetails.isEmpty) {
             return Center(
               child: Column(
@@ -152,7 +166,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
               ),
             );
           }
-          
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -168,7 +182,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
-                
+
                 // Study Items Header
                 Text(
                   '학습 항목',
@@ -178,12 +192,14 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Study Items List
-                ...studyDetails.map((item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: _buildStudyItemCard(item, theme),
-                )),
+                ...studyDetails.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: _buildStudyItemCard(item, theme),
+                  ),
+                ),
               ],
             ),
           );
@@ -191,7 +207,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
       ),
     );
   }
-  
+
   Widget _buildSummaryCard(FThemeData theme, DailyStudyStats dailyStats) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,7 +299,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
       ],
     );
   }
-  
+
   Widget _buildStatItem({
     required IconData icon,
     required String label,
@@ -322,12 +338,12 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
       ),
     );
   }
-  
+
   Widget _buildStudyItemCard(Map<String, dynamic> item, FThemeData theme) {
     final isKanji = item['type'] == 'kanji';
     final status = item['status'] as String;
     final studiedAt = DateTime.parse(item['studiedAt']);
-    
+
     Color getStatusColor() {
       switch (status) {
         case 'completed':
@@ -342,7 +358,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
           return theme.colors.mutedForeground;
       }
     }
-    
+
     String getStatusText() {
       switch (status) {
         case 'completed':
@@ -357,7 +373,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
           return status;
       }
     }
-    
+
     IconData getStatusIcon() {
       switch (status) {
         case 'completed':
@@ -372,7 +388,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
           return PhosphorIconsRegular.circle;
       }
     }
-    
+
     return FCard(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -384,21 +400,25 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: isKanji 
+                color: isKanji
                     ? theme.colors.primary.withValues(alpha: 0.1)
                     : theme.colors.secondary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
                 child: Icon(
-                  isKanji ? PhosphorIconsRegular.translate : PhosphorIconsRegular.bookOpen,
+                  isKanji
+                      ? PhosphorIconsRegular.translate
+                      : PhosphorIconsRegular.bookOpen,
                   size: 20,
-                  color: isKanji ? theme.colors.primary : theme.colors.secondary,
+                  color: isKanji
+                      ? theme.colors.primary
+                      : theme.colors.secondary,
                 ),
               ),
             ),
             const SizedBox(width: 12),
-            
+
             // Content
             Expanded(
               child: Column(
@@ -430,7 +450,8 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
                         color: theme.colors.foreground,
                       ),
                     ),
-                    if (item['reading'] != null && item['reading'].isNotEmpty) ...[
+                    if (item['reading'] != null &&
+                        item['reading'].isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
                         item['reading'],
@@ -443,13 +464,16 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
                 ],
               ),
             ),
-            
+
             // Status and Time
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: getStatusColor().withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -457,11 +481,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        getStatusIcon(),
-                        size: 14,
-                        color: getStatusColor(),
-                      ),
+                      Icon(getStatusIcon(), size: 14, color: getStatusColor()),
                       const SizedBox(width: 4),
                       Text(
                         getStatusText(),

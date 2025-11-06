@@ -8,7 +8,7 @@ import '../models/word_model.dart';
 /// 뒷면: 단어 + 후리가나 + 뜻 + 획순 버튼
 class WordFlashcardContent extends StatefulWidget {
   final Word word;
-  final bool isBack;  // true: 뒷면, false: 앞면
+  final bool isBack; // true: 뒷면, false: 앞면
 
   const WordFlashcardContent({
     super.key,
@@ -53,10 +53,7 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
             decoration: BoxDecoration(
               color: theme.colors.muted,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: theme.colors.border,
-                width: 1,
-              ),
+              border: Border.all(color: theme.colors.border, width: 1),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -116,7 +113,7 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 40),  // 획순 버튼 공간
+              const SizedBox(height: 40), // 획순 버튼 공간
               Text(
                 displayWord,
                 textAlign: TextAlign.center,
@@ -137,9 +134,14 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
               ),
               const SizedBox(height: 32),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
-                  color: _getJlptColor(widget.word.jlptLevel).withValues(alpha: 0.1),
+                  color: _getJlptColor(
+                    widget.word.jlptLevel,
+                  ).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -188,7 +190,7 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 32),  // 획순 버튼 공간
+              const SizedBox(height: 32), // 획순 버튼 공간
               Center(
                 child: Column(
                   children: [
@@ -232,7 +234,10 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: theme.colors.muted,
                           borderRadius: BorderRadius.circular(4),
@@ -256,7 +261,7 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),

@@ -13,27 +13,27 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Kakao SDK
   // TODO: Replace with your actual Kakao native app key
   KakaoSdk.init(nativeAppKey: '88ec2313b07c9ce230ae930ac839549c');
-  
+
   // Initialize timezone
   tz.initializeTimeZones();
-  
+
   // Initialize date formatting for Korean and Japanese locales
   await initializeDateFormatting('ko_KR', null);
   await initializeDateFormatting('ja_JP', null);
-  
+
   // Initialize Supabase
   await SupabaseService.instance.init();
-  
+
   // Initialize notification service
   await NotificationService.instance.init();
-  
+
   // Initialize Gemini service
   await GeminiService.instance.init();
-  
+
   runApp(const KanjiStudyApp());
 }
 

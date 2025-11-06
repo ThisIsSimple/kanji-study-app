@@ -37,11 +37,11 @@ class _QuizListScreenState extends State<QuizListScreen> {
       setState(() {
         _isLoading = true;
       });
-      
+
       final quizSets = await _supabaseService.getQuizSets(
         category: _selectedCategory,
       );
-      
+
       setState(() {
         _quizSets = quizSets;
         _isLoading = false;
@@ -50,11 +50,11 @@ class _QuizListScreenState extends State<QuizListScreen> {
       setState(() {
         _isLoading = false;
       });
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('퀴즈 목록을 불러오는데 실패했습니다: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('퀴즈 목록을 불러오는데 실패했습니다: $e')));
       }
     }
   }
@@ -63,10 +63,13 @@ class _QuizListScreenState extends State<QuizListScreen> {
     if (_searchQuery.isEmpty) {
       return _quizSets;
     }
-    
+
     return _quizSets.where((quiz) {
       return quiz.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             (quiz.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+          (quiz.description?.toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ) ??
+              false);
     }).toList();
   }
 
@@ -123,13 +126,10 @@ class _QuizListScreenState extends State<QuizListScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    
+
     return FScaffold(
       header: FHeader(
-        title: Text(
-          '퀴즈',
-          style: TextStyle(fontFamily: 'SUITE'),
-        ),
+        title: Text('퀴즈', style: TextStyle(fontFamily: 'SUITE')),
       ),
       child: Column(
         children: [
@@ -139,10 +139,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
             decoration: BoxDecoration(
               color: theme.colors.background,
               border: Border(
-                bottom: BorderSide(
-                  color: theme.colors.border,
-                  width: 1,
-                ),
+                bottom: BorderSide(color: theme.colors.border, width: 1),
               ),
             ),
             child: Column(
@@ -186,7 +183,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
                   },
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Category Filter
                 Row(
                   children: [
@@ -241,131 +238,133 @@ class _QuizListScreenState extends State<QuizListScreen> {
               ],
             ),
           ),
-          
+
           // Quiz List
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredQuizSets.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              PhosphorIconsRegular.question,
-                              size: 64,
-                              color: theme.colors.mutedForeground,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _searchQuery.isNotEmpty
-                                  ? '검색 결과가 없습니다'
-                                  : '사용 가능한 퀴즈가 없습니다',
-                              style: theme.typography.lg.copyWith(
-                                color: theme.colors.mutedForeground,
-                                fontFamily: 'SUITE',
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          PhosphorIconsRegular.question,
+                          size: 64,
+                          color: theme.colors.mutedForeground,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _searchQuery.isNotEmpty
+                              ? '검색 결과가 없습니다'
+                              : '사용 가능한 퀴즈가 없습니다',
+                          style: theme.typography.lg.copyWith(
+                            color: theme.colors.mutedForeground,
+                            fontFamily: 'SUITE',
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16.0),
+                    itemCount: _filteredQuizSets.length,
+                    itemBuilder: (context, index) {
+                      final quizSet = _filteredQuizSets[index];
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12.0),
+                        child: FCard(
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(16.0),
+                            onTap: () => _navigateToQuizDetail(quizSet),
+                            title: Text(
+                              quizSet.title,
+                              style: theme.typography.base.copyWith(
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16.0),
-                        itemCount: _filteredQuizSets.length,
-                        itemBuilder: (context, index) {
-                          final quizSet = _filteredQuizSets[index];
-                          
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
-                            child: FCard(
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.all(16.0),
-                                onTap: () => _navigateToQuizDetail(quizSet),
-                                title: Text(
-                                  quizSet.title,
-                                  style: theme.typography.base.copyWith(
-                                    fontWeight: FontWeight.w600,
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (quizSet.description != null) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    quizSet.description!,
+                                    style: theme.typography.sm.copyWith(
+                                      color: theme.colors.mutedForeground,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                ],
+                                const SizedBox(height: 8),
+                                Row(
                                   children: [
-                                    if (quizSet.description != null) ...[
-                                      const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: _getDifficultyColor(
+                                          theme,
+                                          quizSet.difficultyLevel,
+                                        ).withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: _getDifficultyColor(
+                                            theme,
+                                            quizSet.difficultyLevel,
+                                          ),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        _getDifficultyText(
+                                          quizSet.difficultyLevel,
+                                        ),
+                                        style: theme.typography.xs.copyWith(
+                                          color: _getDifficultyColor(
+                                            theme,
+                                            quizSet.difficultyLevel,
+                                          ),
+                                          fontWeight: FontWeight.w600,
+                                          fontFamily: 'SUITE',
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${quizSet.kanjiIds.length}문제',
+                                      style: theme.typography.xs.copyWith(
+                                        color: theme.colors.mutedForeground,
+                                        fontFamily: 'SUITE',
+                                      ),
+                                    ),
+                                    if (quizSet.category != null) ...[
+                                      const SizedBox(width: 8),
                                       Text(
-                                        quizSet.description!,
-                                        style: theme.typography.sm.copyWith(
+                                        '• ${quizSet.category}',
+                                        style: theme.typography.xs.copyWith(
                                           color: theme.colors.mutedForeground,
                                         ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: _getDifficultyColor(
-                                              theme,
-                                              quizSet.difficultyLevel,
-                                            ).withValues(alpha: 0.1),
-                                            borderRadius: BorderRadius.circular(12),
-                                            border: Border.all(
-                                              color: _getDifficultyColor(
-                                                theme,
-                                                quizSet.difficultyLevel,
-                                              ),
-                                              width: 1,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            _getDifficultyText(quizSet.difficultyLevel),
-                                            style: theme.typography.xs.copyWith(
-                                              color: _getDifficultyColor(
-                                                theme,
-                                                quizSet.difficultyLevel,
-                                              ),
-                                              fontWeight: FontWeight.w600,
-                                              fontFamily: 'SUITE',
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          '${quizSet.kanjiIds.length}문제',
-                                          style: theme.typography.xs.copyWith(
-                                            color: theme.colors.mutedForeground,
-                                            fontFamily: 'SUITE',
-                                          ),
-                                        ),
-                                        if (quizSet.category != null) ...[
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            '• ${quizSet.category}',
-                                            style: theme.typography.xs.copyWith(
-                                              color: theme.colors.mutedForeground,
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
                                   ],
                                 ),
-                                trailing: Icon(
-                                  PhosphorIconsRegular.caretRight,
-                                  size: 16,
-                                  color: theme.colors.mutedForeground,
-                                ),
-                              ),
+                              ],
                             ),
-                          );
-                        },
-                      ),
+                            trailing: Icon(
+                              PhosphorIconsRegular.caretRight,
+                              size: 16,
+                              color: theme.colors.mutedForeground,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -387,23 +386,16 @@ class _CategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 6,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected
-              ? theme.colors.primary
-              : theme.colors.secondary,
+          color: isSelected ? theme.colors.primary : theme.colors.secondary,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? theme.colors.primary
-                : theme.colors.border,
+            color: isSelected ? theme.colors.primary : theme.colors.border,
             width: 1,
           ),
         ),

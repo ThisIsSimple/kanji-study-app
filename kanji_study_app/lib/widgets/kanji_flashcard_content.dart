@@ -8,7 +8,7 @@ import '../models/kanji_model.dart';
 /// 뒷면: 한자 + 음독/훈독 + 뜻 + 획순 버튼
 class KanjiFlashcardContent extends StatefulWidget {
   final Kanji kanji;
-  final bool isBack;  // true: 뒷면, false: 앞면
+  final bool isBack; // true: 뒷면, false: 앞면
 
   const KanjiFlashcardContent({
     super.key,
@@ -53,10 +53,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
             decoration: BoxDecoration(
               color: theme.colors.muted,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: theme.colors.border,
-                width: 1,
-              ),
+              border: Border.all(color: theme.colors.border, width: 1),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -112,7 +109,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 40),  // 획순 버튼 공간
+              const SizedBox(height: 40), // 획순 버튼 공간
               Text(
                 widget.kanji.character,
                 textAlign: TextAlign.center,
@@ -133,9 +130,14 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
               ),
               const SizedBox(height: 32),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
-                  color: _getJlptColor(widget.kanji.jlpt).withValues(alpha: 0.1),
+                  color: _getJlptColor(
+                    widget.kanji.jlpt,
+                  ).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -177,8 +179,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 32),  // 획순 버튼 공간
-
+              const SizedBox(height: 32), // 획순 버튼 공간
               // 한자 중앙 표시
               Center(
                 child: Text(
@@ -300,7 +301,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),

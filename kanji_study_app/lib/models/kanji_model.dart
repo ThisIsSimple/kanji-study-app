@@ -5,8 +5,8 @@ class Kanji {
   final String character;
   final List<String> meanings;
   final KanjiReadings readings;
-  final List<String> koreanOnReadings;   // 한글 음독
-  final List<String> koreanKunReadings;  // 한글 훈독
+  final List<String> koreanOnReadings; // 한글 음독
+  final List<String> koreanKunReadings; // 한글 훈독
   final int grade;
   final int jlpt;
   final int strokeCount;
@@ -33,7 +33,7 @@ class Kanji {
       if (examplesData == null || examplesData is! List) {
         return [];
       }
-      
+
       final List<KanjiExample> result = [];
       for (final example in examplesData) {
         if (example is String) {
@@ -53,8 +53,10 @@ class Kanji {
       id: json['id'] as int,
       character: json['character'] as String,
       meanings: List<String>.from(json['meanings'] as List),
-      readings: KanjiReadings.fromJson(json['readings'] as Map<String, dynamic>),
-      koreanOnReadings: json['korean_on_readings'] != null 
+      readings: KanjiReadings.fromJson(
+        json['readings'] as Map<String, dynamic>,
+      ),
+      koreanOnReadings: json['korean_on_readings'] != null
           ? List<String>.from(json['korean_on_readings'] as List)
           : [],
       koreanKunReadings: json['korean_kun_readings'] != null
@@ -86,13 +88,10 @@ class Kanji {
 }
 
 class KanjiReadings {
-  final List<String> on;  // 음독
+  final List<String> on; // 음독
   final List<String> kun; // 훈독
 
-  const KanjiReadings({
-    required this.on,
-    required this.kun,
-  });
+  const KanjiReadings({required this.on, required this.kun});
 
   factory KanjiReadings.fromJson(Map<String, dynamic> json) {
     return KanjiReadings(
@@ -102,12 +101,8 @@ class KanjiReadings {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'on': on,
-      'kun': kun,
-    };
+    return {'on': on, 'kun': kun};
   }
 
   List<String> get all => [...on, ...kun];
 }
-

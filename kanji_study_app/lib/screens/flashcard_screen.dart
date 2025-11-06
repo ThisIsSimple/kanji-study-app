@@ -14,17 +14,14 @@ class FlashcardScreen extends StatefulWidget {
   final List<FlashcardItem> items;
   final FlashcardSession? initialSession;
 
-  const FlashcardScreen({
-    super.key,
-    required this.items,
-    this.initialSession,
-  });
+  const FlashcardScreen({super.key, required this.items, this.initialSession});
 
   @override
   State<FlashcardScreen> createState() => _FlashcardScreenState();
 }
 
-class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProviderStateMixin {
+class _FlashcardScreenState extends State<FlashcardScreen>
+    with SingleTickerProviderStateMixin {
   final FlashcardService _flashcardService = FlashcardService.instance;
   final WordService _wordService = WordService.instance;
   final KanjiService _kanjiService = KanjiService.instance;
@@ -38,11 +35,13 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _session = widget.initialSession ?? FlashcardSession(
-      itemType: widget.items.first.itemType,
-      itemIds: widget.items.map((i) => i.id).toList(),
-      startTime: DateTime.now(),
-    );
+    _session =
+        widget.initialSession ??
+        FlashcardSession(
+          itemType: widget.items.first.itemType,
+          itemIds: widget.items.map((i) => i.id).toList(),
+          startTime: DateTime.now(),
+        );
 
     _flipController = AnimationController(
       duration: const Duration(milliseconds: 400),
@@ -102,7 +101,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
       final updatedSession = await _flashcardService.recordResult(
         itemId: _session.currentItemId!,
         isCorrect: isCorrect,
-        itemType: _session.itemType,  // itemType 파라미터 추가
+        itemType: _session.itemType, // itemType 파라미터 추가
       );
 
       if (mounted) {
@@ -193,7 +192,12 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildStatRow(String label, String value, FThemeData theme, [Color? valueColor]) {
+  Widget _buildStatRow(
+    String label,
+    String value,
+    FThemeData theme, [
+    Color? valueColor,
+  ]) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -219,7 +223,9 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
   FlashcardItem? _getCurrentItem() {
     if (_session.currentItemId == null) return null;
     try {
-      return widget.items.firstWhere((item) => item.id == _session.currentItemId);
+      return widget.items.firstWhere(
+        (item) => item.id == _session.currentItemId,
+      );
     } catch (e) {
       return null;
     }
@@ -232,9 +238,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
 
     if (_session.isCompleted) {
       return FScaffold(
-        header: FHeader(
-          title: const Text('플래시카드 학습'),
-        ),
+        header: FHeader(title: const Text('플래시카드 학습')),
         child: Center(
           child: Text(
             '모든 카드를 학습했습니다!',
@@ -246,9 +250,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
 
     if (currentItem == null) {
       return FScaffold(
-        header: FHeader(
-          title: const Text('플래시카드 학습'),
-        ),
+        header: FHeader(title: const Text('플래시카드 학습')),
         child: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -294,10 +296,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: Text(
-                        '취소',
-                        style: TextStyle(fontFamily: 'SUITE'),
-                      ),
+                      child: Text('취소', style: TextStyle(fontFamily: 'SUITE')),
                     ),
                     TextButton(
                       onPressed: () {
@@ -328,7 +327,9 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
                 LinearProgressIndicator(
                   value: _session.progressPercentage / 100,
                   backgroundColor: theme.colors.muted,
-                  valueColor: AlwaysStoppedAnimation<Color>(theme.colors.primary),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    theme.colors.primary,
+                  ),
                 ),
                 Expanded(
                   child: Padding(
@@ -353,9 +354,13 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
                                   alignment: Alignment.center,
                                   child: angle >= math.pi / 2
                                       ? Transform(
-                                          transform: Matrix4.identity()..rotateY(math.pi),
+                                          transform: Matrix4.identity()
+                                            ..rotateY(math.pi),
                                           alignment: Alignment.center,
-                                          child: _buildCardBack(currentItem, theme),
+                                          child: _buildCardBack(
+                                            currentItem,
+                                            theme,
+                                          ),
                                         )
                                       : _buildCardFront(currentItem, theme),
                                 );
@@ -382,13 +387,19 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
                                 child: GestureDetector(
                                   onTap: () => _recordAnswer(false),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
                                     decoration: BoxDecoration(
-                                      border: Border.all(color: theme.colors.border, width: 1),
+                                      border: Border.all(
+                                        color: theme.colors.border,
+                                        width: 1,
+                                      ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(
                                           PhosphorIconsRegular.x,
@@ -414,9 +425,12 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
                                 child: FButton(
                                   onPress: () => _recordAnswer(true),
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 4,
+                                    ),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(
                                           PhosphorIconsRegular.check,
@@ -512,5 +526,4 @@ class _FlashcardScreenState extends State<FlashcardScreen> with SingleTickerProv
       ),
     );
   }
-
 }

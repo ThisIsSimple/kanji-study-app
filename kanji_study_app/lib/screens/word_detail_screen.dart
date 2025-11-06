@@ -16,7 +16,7 @@ class WordDetailScreen extends StatefulWidget {
   final Word word;
   final List<Word>? wordList;
   final int? currentIndex;
-  
+
   const WordDetailScreen({
     super.key,
     required this.word,
@@ -32,12 +32,12 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
   final WordService _wordService = WordService.instance;
   final GeminiService _geminiService = GeminiService.instance;
   final SupabaseService _supabaseService = SupabaseService.instance;
-  
+
   late PageController _pageController;
   late int _currentIndex;
   late List<Word> _wordList;
   late Word _currentWord;
-  
+
   late bool _isFavorite;
   bool _isGeneratingExamples = false;
   List<WordExample>? _generatedExamples;
@@ -60,13 +60,13 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
     _loadDatabaseExamples();
     _loadStudyStats();
   }
-  
+
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
-  
+
   void _onPageChanged(int index) {
     setState(() {
       _currentIndex = index;
@@ -81,12 +81,12 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
     _loadDatabaseExamples();
     _loadStudyStats();
   }
-  
+
   Future<void> _loadDatabaseExamples() async {
     setState(() {
       _isLoadingExamples = true;
     });
-    
+
     try {
       // Load examples from database using word id
       final examples = await _supabaseService.getWordExamples(_currentWord.id);
@@ -101,12 +101,12 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       debugPrint('Error loading database examples: $e');
     }
   }
-  
+
   Future<void> _loadStudyStats() async {
     setState(() {
       _isLoadingStats = true;
     });
-    
+
     try {
       final stats = await _supabaseService.getStudyStats(
         type: StudyType.word,
@@ -123,24 +123,24 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       debugPrint('Error loading study stats: $e');
     }
   }
-  
+
   Future<void> _recordStudy(StudyStatus status) async {
     if (_isRecordingStudy) return;
-    
+
     setState(() {
       _isRecordingStudy = true;
     });
-    
+
     try {
       await _supabaseService.recordStudy(
         type: StudyType.word,
         targetId: _currentWord.id,
         status: status,
       );
-      
+
       // Reload stats after recording
       await _loadStudyStats();
-      
+
       if (mounted) {
         // Use showDialog instead of SnackBar for better visibility
         showDialog(
@@ -153,7 +153,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                 Navigator.pop(dialogContext);
               }
             });
-            
+
             return Align(
               alignment: Alignment.topCenter,
               child: Padding(
@@ -161,7 +161,10 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                 child: Material(
                   color: Colors.transparent,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: status == StudyStatus.completed
                           ? FTheme.of(context).colors.primary
@@ -217,7 +220,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                 Navigator.pop(dialogContext);
               }
             });
-            
+
             return Align(
               alignment: Alignment.topCenter,
               child: Padding(
@@ -225,7 +228,10 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                 child: Material(
                   color: Colors.transparent,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: FTheme.of(context).colors.destructive,
                       borderRadius: BorderRadius.circular(25),
@@ -286,7 +292,8 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
 
     try {
       // Create prompt for Gemini
-      final prompt = '''
+      final prompt =
+          '''
 다음 일본어 단어에 대한 예문을 3개 만들어주세요. 각 예문은 일상생활에서 자연스럽게 사용할 수 있는 문장이어야 합니다.
 
 단어: ${widget.word.word}
@@ -312,10 +319,8 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
 
       // Use flutter_gemini directly
       final gemini = Gemini.instance;
-      final response = await gemini.prompt(parts: [
-        Part.text(prompt),
-      ]);
-      
+      final response = await gemini.prompt(parts: [Part.text(prompt)]);
+
       if (response?.output != null) {
         // Parse the response to extract examples
         final examples = _parseExamples(response!.output!);
@@ -343,11 +348,11 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
   List<WordExample> _parseExamples(String response) {
     final examples = <WordExample>[];
     final lines = response.split('\n');
-    
+
     String? japanese;
     String? furigana;
     String? korean;
-    
+
     for (final line in lines) {
       if (line.startsWith('일본어:')) {
         japanese = line.substring(5).trim();
@@ -355,17 +360,19 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
         furigana = line.substring(line.indexOf(':') + 1).trim();
       } else if (line.startsWith('한국어:')) {
         korean = line.substring(5).trim();
-        
+
         // If we have all three components, create an example
-        if (japanese != null && furigana != null && korean != null) {
-          examples.add(WordExample(
-            japanese: japanese,
-            furigana: furigana,
-            korean: korean,
-            source: 'AI Generated',
-            createdAt: DateTime.now(),
-          ));
-          
+        if (japanese != null && furigana != null) {
+          examples.add(
+            WordExample(
+              japanese: japanese,
+              furigana: furigana,
+              korean: korean,
+              source: 'AI Generated',
+              createdAt: DateTime.now(),
+            ),
+          );
+
           // Reset for next example
           japanese = null;
           furigana = null;
@@ -373,10 +380,10 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
         }
       }
     }
-    
+
     return examples;
   }
-  
+
   String _getSourceLabel(String? source) {
     switch (source) {
       case 'gemini':
@@ -399,12 +406,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: theme.colors.background,
-          border: Border(
-            top: BorderSide(
-              color: theme.colors.border,
-              width: 1,
-            ),
-          ),
+          border: Border(top: BorderSide(color: theme.colors.border, width: 1)),
         ),
         child: SafeArea(
           top: false,
@@ -417,75 +419,69 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                   ),
                 )
               : _studyStats == null || _studyStats!.totalRecords == 0
-                  ? FButton(
+              ? FButton(
+                  onPress: _isRecordingStudy
+                      ? null
+                      : () => _recordStudy(StudyStatus.completed),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(PhosphorIconsRegular.checkCircle, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        _isRecordingStudy ? '기록 중...' : '학습 완료',
+                        style: TextStyle(fontFamily: 'SUITE'),
+                      ),
+                    ],
+                  ),
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _studyStats!.lastStudied != null
+                                ? '${DateFormat('yyyy년 MM월 dd일').format(_studyStats!.lastStudied!)} 학습'
+                                : '학습 기록',
+                            style: theme.typography.sm.copyWith(
+                              color: theme.colors.mutedForeground,
+                              fontFamily: 'SUITE',
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _studyStats!.summaryText,
+                            style: theme.typography.base.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'SUITE',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    FButton(
                       onPress: _isRecordingStudy
                           ? null
-                          : () => _recordStudy(StudyStatus.completed),
+                          : () => _recordStudy(StudyStatus.forgot),
+                      style: FButtonStyle.outline(),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            PhosphorIconsRegular.checkCircle,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
+                          Icon(PhosphorIconsRegular.warningCircle, size: 18),
+                          const SizedBox(width: 6),
                           Text(
-                            _isRecordingStudy ? '기록 중...' : '학습 완료',
+                            _isRecordingStudy ? '기록 중...' : '까먹음',
                             style: TextStyle(fontFamily: 'SUITE'),
                           ),
                         ],
                       ),
-                    )
-                  : Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                _studyStats!.lastStudied != null
-                                    ? '${DateFormat('yyyy년 MM월 dd일').format(_studyStats!.lastStudied!)} 학습'
-                                    : '학습 기록',
-                                style: theme.typography.sm.copyWith(
-                                  color: theme.colors.mutedForeground,
-                                  fontFamily: 'SUITE',
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _studyStats!.summaryText,
-                                style: theme.typography.base.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: 'SUITE',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        FButton(
-                          onPress: _isRecordingStudy
-                              ? null
-                              : () => _recordStudy(StudyStatus.forgot),
-                          style: FButtonStyle.outline(),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                PhosphorIconsRegular.warningCircle,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                _isRecordingStudy ? '기록 중...' : '까먹음',
-                                style: TextStyle(fontFamily: 'SUITE'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
                     ),
+                  ],
+                ),
         ),
       ),
     );
@@ -497,401 +493,430 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-            // Word Information Card
-            FCard(
-              child: Stack(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Centered word section
-                        Center(
-                          child: Column(
-                            children: [
-                              // Reading (furigana)
-                              if (word.reading.isNotEmpty && word.reading != word.word)
-                                Text(
-                                  word.reading,
-                                  style: theme.typography.base.copyWith(
-                                    color: theme.colors.mutedForeground,
-                                    fontSize: 18,
-                                  ),
-                                ),
-
-                              // Main word
-                              Text(
-                                word.word,
-                                style: _showStrokeOrder
-                                    ? TextStyle(
-                                        fontFamily: 'KanjiStrokeOrders',
-                                        fontSize: 90,  // 100pt 이상 권장
-                                        fontWeight: FontWeight.normal,
-                                        color: theme.colors.foreground,
-                                        height: 1.2,
-                                      )
-                                    : GoogleFonts.notoSerifJp(
-                                        fontSize: 48,
-                                        fontWeight: FontWeight.bold,
-                                        color: theme.colors.foreground,
-                                        height: 1.2,
-                                      ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // JLPT Level - Center aligned
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _getJlptColor(word.jlptLevel).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: _getJlptColor(word.jlptLevel).withValues(alpha: 0.5),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          'JLPT N${word.jlptLevel}',
-                          style: theme.typography.sm.copyWith(
-                            color: _getJlptColor(word.jlptLevel),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Meanings by part of speech - Center aligned
-                    Center(
-                      child: Text(
-                        '의미',
-                        style: theme.typography.lg.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'SUITE',
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),  // 8 → 4로 더 줄임
-                    ...word.meanings.map((meaning) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 2),  // 6 → 2로 더 줄임
-                        child: Center(
-                          child: Column(
-                            children: [
-                              // Part of speech badge
-                              if (meaning.partOfSpeech.isNotEmpty)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  margin: const EdgeInsets.only(bottom: 2),  // 4 → 2로 더 줄임
-                                  decoration: BoxDecoration(
-                                    color: theme.colors.secondary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    meaning.partOfSpeech,
-                                    style: theme.typography.sm.copyWith(
-                                      color: theme.colors.secondary,
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ),
-                              // Meaning text
-                              Text(
-                                meaning.meaning,
-                                style: theme.typography.base.copyWith(
-                                  fontFamily: 'SUITE',
-                                  height: 1.2,  // 1.3 → 1.2로 더 줄임
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
-                      ],
-                    ),
-                  ),
-                  // Stroke Order Toggle Button
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            _showStrokeOrder = !_showStrokeOrder;
-                          });
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: _showStrokeOrder
-                                ? theme.colors.primary
-                                : theme.colors.secondary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: _showStrokeOrder
-                                  ? theme.colors.primary
-                                  : theme.colors.border,
-                              width: 1,
-                            ),
-                          ),
-                          child: Icon(
-                            PhosphorIconsRegular.path,
-                            size: 20,
-                            color: _showStrokeOrder
-                                ? Colors.white
-                                : theme.colors.mutedForeground,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Examples Section Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Word Information Card
+          FCard(
+            child: Stack(
               children: [
-                Text(
-                  '예문',
-                  style: theme.typography.lg.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'SUITE',
-                  ),
-                ),
-                if (_geminiService.isInitialized)
-                  FButton(
-                    onPress: _isGeneratingExamples ? null : _generateExamples,
-                    style: FButtonStyle.outline(),
-                    child: _isGeneratingExamples
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            'AI 예문 생성',
-                            style: TextStyle(fontFamily: 'SUITE'),
-                          ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            // Display examples
-            if (_isLoadingExamples) ...[
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 32),
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            ] else if (_databaseExamples.isNotEmpty || _generatedExamples != null) ...[
-              // Display database examples first
-              if (_databaseExamples.isNotEmpty) ...[
-                ..._databaseExamples.map((example) {
-                  final sourceLabel = _getSourceLabel(example.source);
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: FCard(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Centered word section
+                      Center(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Source label
-                            if (sourceLabel.isNotEmpty) ...[ 
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: theme.colors.primary.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  sourceLabel,
-                                  style: theme.typography.xs.copyWith(
-                                    color: theme.colors.primary,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: 'SUITE',
-                                  ),
+                            // Reading (furigana)
+                            if (word.reading.isNotEmpty &&
+                                word.reading != word.word)
+                              Text(
+                                word.reading,
+                                style: theme.typography.base.copyWith(
+                                  color: theme.colors.mutedForeground,
+                                  fontSize: 18,
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                            ],
-                            FuriganaText(
-                              text: example.furigana.contains('[') ? example.furigana : example.japanese,
-                              style: GoogleFonts.notoSerifJp(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500,
-                                color: theme.colors.foreground,
-                                height: 1.5,  // 행간 조절
-                              ),
-                              rubyStyle: theme.typography.sm.copyWith(
-                                color: theme.colors.mutedForeground,
-                                fontSize: 11,
-                              ),
-                              spacing: -1.0,  // 한자와 후리가나 사이 간격을 더 좁게
-                            ),
-                            const SizedBox(height: 12),
+
+                            // Main word
                             Text(
-                              example.korean,
-                              style: theme.typography.base.copyWith(
-                                fontWeight: FontWeight.w500,
-                                fontFamily: 'SUITE',
-                                fontSize: 16,
-                              ),
+                              word.word,
+                              style: _showStrokeOrder
+                                  ? TextStyle(
+                                      fontFamily: 'KanjiStrokeOrders',
+                                      fontSize: 90, // 100pt 이상 권장
+                                      fontWeight: FontWeight.normal,
+                                      color: theme.colors.foreground,
+                                      height: 1.2,
+                                    )
+                                  : GoogleFonts.notoSerifJp(
+                                      fontSize: 48,
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colors.foreground,
+                                      height: 1.2,
+                                    ),
                             ),
-                            // Explanation if exists
-                            if (example.explanation != null && example.explanation!.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: theme.colors.mutedForeground.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  example.explanation!,
-                                  style: theme.typography.sm.copyWith(
-                                    color: theme.colors.mutedForeground,
-                                    fontFamily: 'SUITE',
-                                  ),
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                       ),
+
+                      const SizedBox(height: 24),
+
+                      // JLPT Level - Center aligned
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getJlptColor(
+                              word.jlptLevel,
+                            ).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: _getJlptColor(
+                                word.jlptLevel,
+                              ).withValues(alpha: 0.5),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            'JLPT N${word.jlptLevel}',
+                            style: theme.typography.sm.copyWith(
+                              color: _getJlptColor(word.jlptLevel),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Meanings by part of speech - Center aligned
+                      Center(
+                        child: Text(
+                          '의미',
+                          style: theme.typography.lg.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'SUITE',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4), // 8 → 4로 더 줄임
+                      ...word.meanings.map((meaning) {
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: 2,
+                          ), // 6 → 2로 더 줄임
+                          child: Center(
+                            child: Column(
+                              children: [
+                                // Part of speech badge
+                                if (meaning.partOfSpeech.isNotEmpty)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    margin: const EdgeInsets.only(
+                                      bottom: 2,
+                                    ), // 4 → 2로 더 줄임
+                                    decoration: BoxDecoration(
+                                      color: theme.colors.secondary.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      meaning.partOfSpeech,
+                                      style: theme.typography.sm.copyWith(
+                                        color: theme.colors.secondary,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ),
+                                // Meaning text
+                                Text(
+                                  meaning.meaning,
+                                  style: theme.typography.base.copyWith(
+                                    fontFamily: 'SUITE',
+                                    height: 1.2, // 1.3 → 1.2로 더 줄임
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+                // Stroke Order Toggle Button
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _showStrokeOrder = !_showStrokeOrder;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _showStrokeOrder
+                              ? theme.colors.primary
+                              : theme.colors.secondary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _showStrokeOrder
+                                ? theme.colors.primary
+                                : theme.colors.border,
+                            width: 1,
+                          ),
+                        ),
+                        child: Icon(
+                          PhosphorIconsRegular.path,
+                          size: 20,
+                          color: _showStrokeOrder
+                              ? Colors.white
+                              : theme.colors.mutedForeground,
+                        ),
+                      ),
                     ),
-                  );
-                }),
+                  ),
+                ),
               ],
-              // Then display AI generated examples
-              if (_generatedExamples != null) ...[
-                ..._generatedExamples!.map((example) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: FCard(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // AI Generated label
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Examples Section Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '예문',
+                style: theme.typography.lg.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'SUITE',
+                ),
+              ),
+              if (_geminiService.isInitialized)
+                FButton(
+                  onPress: _isGeneratingExamples ? null : _generateExamples,
+                  style: FButtonStyle.outline(),
+                  child: _isGeneratingExamples
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text('AI 예문 생성', style: TextStyle(fontFamily: 'SUITE')),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Display examples
+          if (_isLoadingExamples) ...[
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 32),
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ] else if (_databaseExamples.isNotEmpty ||
+              _generatedExamples != null) ...[
+            // Display database examples first
+            if (_databaseExamples.isNotEmpty) ...[
+              ..._databaseExamples.map((example) {
+                final sourceLabel = _getSourceLabel(example.source);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: FCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Source label
+                          if (sourceLabel.isNotEmpty) ...[
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
-                                color: theme.colors.secondary.withValues(alpha: 0.1),
+                                color: theme.colors.primary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                'AI 생성',
+                                sourceLabel,
                                 style: theme.typography.xs.copyWith(
-                                  color: theme.colors.secondary,
+                                  color: theme.colors.primary,
                                   fontWeight: FontWeight.w600,
                                   fontFamily: 'SUITE',
                                 ),
                               ),
                             ),
                             const SizedBox(height: 8),
-                            FuriganaText(
-                              text: example.furigana.contains('[') ? example.furigana : example.japanese,
-                              style: GoogleFonts.notoSerifJp(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500,
-                                color: theme.colors.foreground,
-                                height: 1.5,  // 행간 조절
-                              ),
-                              rubyStyle: theme.typography.sm.copyWith(
-                                color: theme.colors.mutedForeground,
-                                fontSize: 11,
-                              ),
-                              spacing: -1.0,  // 한자와 후리가나 사이 간격을 더 좁게
+                          ],
+                          FuriganaText(
+                            text: example.furigana.contains('[')
+                                ? example.furigana
+                                : example.japanese,
+                            style: GoogleFonts.notoSerifJp(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              color: theme.colors.foreground,
+                              height: 1.5, // 행간 조절
                             ),
-                            const SizedBox(height: 12),
-                            Text(
-                              example.korean,
-                              style: theme.typography.base.copyWith(
-                                fontWeight: FontWeight.w500,
-                                fontFamily: 'SUITE',
-                                fontSize: 16,
+                            rubyStyle: theme.typography.sm.copyWith(
+                              color: theme.colors.mutedForeground,
+                              fontSize: 11,
+                            ),
+                            spacing: -1.0, // 한자와 후리가나 사이 간격을 더 좁게
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            example.korean,
+                            style: theme.typography.base.copyWith(
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'SUITE',
+                              fontSize: 16,
+                            ),
+                          ),
+                          // Explanation if exists
+                          if (example.explanation != null &&
+                              example.explanation!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: theme.colors.mutedForeground.withValues(
+                                  alpha: 0.05,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                example.explanation!,
+                                style: theme.typography.sm.copyWith(
+                                  color: theme.colors.mutedForeground,
+                                  fontFamily: 'SUITE',
+                                ),
                               ),
                             ),
                           ],
-                        ),
+                        ],
                       ),
                     ),
-                  );
-                }),
-              ],
-            ] else ...[
-              FCard(
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(
-                          PhosphorIconsRegular.sparkle,
-                          size: 48,
-                          color: theme.colors.mutedForeground,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'AI로 예문을 생성해보세요',
-                          style: theme.typography.base.copyWith(
-                            color: theme.colors.mutedForeground,
-                            fontFamily: 'SUITE',
+                  ),
+                );
+              }),
+            ],
+            // Then display AI generated examples
+            if (_generatedExamples != null) ...[
+              ..._generatedExamples!.map((example) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: FCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // AI Generated label
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colors.secondary.withValues(
+                                alpha: 0.1,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'AI 생성',
+                              style: theme.typography.xs.copyWith(
+                                color: theme.colors.secondary,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'SUITE',
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          FuriganaText(
+                            text: example.furigana.contains('[')
+                                ? example.furigana
+                                : example.japanese,
+                            style: GoogleFonts.notoSerifJp(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              color: theme.colors.foreground,
+                              height: 1.5, // 행간 조절
+                            ),
+                            rubyStyle: theme.typography.sm.copyWith(
+                              color: theme.colors.mutedForeground,
+                              fontSize: 11,
+                            ),
+                            spacing: -1.0, // 한자와 후리가나 사이 간격을 더 좁게
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            example.korean,
+                            style: theme.typography.base.copyWith(
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'SUITE',
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                  ),
+                );
+              }),
+            ],
+          ] else ...[
+            FCard(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        PhosphorIconsRegular.sparkle,
+                        size: 48,
+                        color: theme.colors.mutedForeground,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'AI로 예문을 생성해보세요',
+                        style: theme.typography.base.copyWith(
+                          color: theme.colors.mutedForeground,
+                          fontFamily: 'SUITE',
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ],
+            ),
+          ],
         ],
       ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    
+
     // If no wordList provided, show single word without swipe
     if (_wordList.length == 1) {
       return FScaffold(
         header: FHeader.nested(
-          title: Text(
-            '단어 상세',
-            style: TextStyle(fontFamily: 'SUITE'),
-          ),
+          title: Text('단어 상세', style: TextStyle(fontFamily: 'SUITE')),
           prefixes: [
-            FHeaderAction.back(
-              onPress: () => Navigator.of(context).pop(),
-            ),
+            FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
           ],
           suffixes: [
             IconButton(
               icon: Icon(
-                _isFavorite ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+                _isFavorite
+                    ? PhosphorIconsFill.star
+                    : PhosphorIconsRegular.star,
                 color: _isFavorite ? Colors.amber : null,
               ),
               onPressed: _toggleFavorite,
@@ -909,7 +934,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
         ),
       );
     }
-    
+
     // Show with PageView for swipe navigation
     return FScaffold(
       header: FHeader.nested(
@@ -918,9 +943,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
           style: TextStyle(fontFamily: 'SUITE'),
         ),
         prefixes: [
-          FHeaderAction.back(
-            onPress: () => Navigator.of(context).pop(),
-          ),
+          FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
         ],
         suffixes: [
           IconButton(

@@ -23,7 +23,7 @@ class QuizPlayingScreen extends StatefulWidget {
 class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
   final SupabaseService _supabaseService = SupabaseService.instance;
   final PageController _pageController = PageController();
-  
+
   List<QuizQuestionData> _questions = [];
   List<String?> _userAnswers = [];
   int _currentQuestionIndex = 0;
@@ -57,25 +57,31 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('퀴즈 데이터를 불러오는데 실패했습니다: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('퀴즈 데이터를 불러오는데 실패했습니다: $e')));
         Navigator.pop(context);
       }
     }
   }
 
-  Future<List<QuizQuestionData>> _generateQuestions(List<Map<String, dynamic>> kanjiData) async {
+  Future<List<QuizQuestionData>> _generateQuestions(
+    List<Map<String, dynamic>> kanjiData,
+  ) async {
     final questions = <QuizQuestionData>[];
     final random = Random();
 
     for (int i = 0; i < kanjiData.length; i++) {
       final kanji = kanjiData[i];
-      final questionTypes = ['meaning_to_kanji', 'kanji_to_meaning', 'kanji_to_reading'];
+      final questionTypes = [
+        'meaning_to_kanji',
+        'kanji_to_meaning',
+        'kanji_to_reading',
+      ];
       final questionType = questionTypes[random.nextInt(questionTypes.length)];
 
       QuizQuestionData question;
-      
+
       switch (questionType) {
         case 'meaning_to_kanji':
           question = _generateMeaningToKanjiQuestion(kanji, kanjiData, i);
@@ -104,11 +110,12 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
     final random = Random();
     final correctAnswer = targetKanji['character'] as String;
     final meaning = (targetKanji['meanings'] as List<dynamic>).first as String;
-    
+
     // Generate wrong options
     final wrongOptions = <String>[];
-    final otherKanji = List<Map<String, dynamic>>.from(allKanji)..removeAt(index);
-    
+    final otherKanji = List<Map<String, dynamic>>.from(allKanji)
+      ..removeAt(index);
+
     while (wrongOptions.length < 3 && otherKanji.isNotEmpty) {
       final randomKanji = otherKanji[random.nextInt(otherKanji.length)];
       final character = randomKanji['character'] as String;
@@ -117,9 +124,9 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
       }
       otherKanji.remove(randomKanji);
     }
-    
+
     final options = [correctAnswer, ...wrongOptions]..shuffle();
-    
+
     return QuizQuestionData(
       questionType: 'meaning_to_kanji',
       questionText: '"$meaning"의 한자는?',
@@ -136,12 +143,14 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
   ) {
     final random = Random();
     final character = targetKanji['character'] as String;
-    final correctAnswer = (targetKanji['meanings'] as List<dynamic>).first as String;
-    
+    final correctAnswer =
+        (targetKanji['meanings'] as List<dynamic>).first as String;
+
     // Generate wrong options
     final wrongOptions = <String>[];
-    final otherKanji = List<Map<String, dynamic>>.from(allKanji)..removeAt(index);
-    
+    final otherKanji = List<Map<String, dynamic>>.from(allKanji)
+      ..removeAt(index);
+
     while (wrongOptions.length < 3 && otherKanji.isNotEmpty) {
       final randomKanji = otherKanji[random.nextInt(otherKanji.length)];
       final meanings = randomKanji['meanings'] as List<dynamic>;
@@ -153,9 +162,9 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
       }
       otherKanji.remove(randomKanji);
     }
-    
+
     final options = [correctAnswer, ...wrongOptions]..shuffle();
-    
+
     return QuizQuestionData(
       questionType: 'kanji_to_meaning',
       questionText: character,
@@ -172,11 +181,13 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
   ) {
     final random = Random();
     final character = targetKanji['character'] as String;
-    
+
     // Prefer Korean on reading, fallback to kun reading
-    final koreanOnReadings = targetKanji['korean_on_readings'] as List<dynamic>?;
-    final koreanKunReadings = targetKanji['korean_kun_readings'] as List<dynamic>?;
-    
+    final koreanOnReadings =
+        targetKanji['korean_on_readings'] as List<dynamic>?;
+    final koreanKunReadings =
+        targetKanji['korean_kun_readings'] as List<dynamic>?;
+
     String correctAnswer;
     if (koreanOnReadings != null && koreanOnReadings.isNotEmpty) {
       correctAnswer = koreanOnReadings.first as String;
@@ -186,7 +197,7 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
       // Fallback to Japanese reading
       final onReadings = targetKanji['on_readings'] as List<dynamic>?;
       final kunReadings = targetKanji['kun_readings'] as List<dynamic>?;
-      
+
       if (onReadings != null && onReadings.isNotEmpty) {
         correctAnswer = onReadings.first as String;
       } else if (kunReadings != null && kunReadings.isNotEmpty) {
@@ -195,14 +206,15 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
         correctAnswer = '불명';
       }
     }
-    
+
     // Generate wrong options
     final wrongOptions = <String>[];
-    final otherKanji = List<Map<String, dynamic>>.from(allKanji)..removeAt(index);
-    
+    final otherKanji = List<Map<String, dynamic>>.from(allKanji)
+      ..removeAt(index);
+
     while (wrongOptions.length < 3 && otherKanji.isNotEmpty) {
       final randomKanji = otherKanji[random.nextInt(otherKanji.length)];
-      
+
       // Try Korean readings first
       final readings = [
         ...(randomKanji['korean_on_readings'] as List<dynamic>? ?? []),
@@ -210,7 +222,7 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
         ...(randomKanji['on_readings'] as List<dynamic>? ?? []),
         ...(randomKanji['kun_readings'] as List<dynamic>? ?? []),
       ];
-      
+
       if (readings.isNotEmpty) {
         final reading = readings[random.nextInt(readings.length)] as String;
         if (reading != correctAnswer && !wrongOptions.contains(reading)) {
@@ -219,9 +231,9 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
       }
       otherKanji.remove(randomKanji);
     }
-    
+
     final options = [correctAnswer, ...wrongOptions]..shuffle();
-    
+
     return QuizQuestionData(
       questionType: 'kanji_to_reading',
       questionText: character,
@@ -233,7 +245,7 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
 
   void _selectAnswer(String answer) {
     if (_showFeedback) return;
-    
+
     setState(() {
       _selectedAnswer = answer;
       _userAnswers[_currentQuestionIndex] = answer;
@@ -255,7 +267,7 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
     try {
       final question = _questions[_currentQuestionIndex];
       final isCorrect = answer == question.correctAnswer;
-      
+
       final quizAnswer = QuizAnswer(
         id: 0, // Will be set by database
         attemptId: widget.attempt.id,
@@ -306,7 +318,7 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
     try {
       final endTime = DateTime.now();
       final timeTaken = endTime.difference(_startTime!).inSeconds;
-      
+
       // Calculate score
       int correctCount = 0;
       for (int i = 0; i < _questions.length; i++) {
@@ -346,9 +358,9 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('퀴즈를 완료하는데 실패했습니다: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('퀴즈를 완료하는데 실패했습니다: $e')));
       }
     }
   }
@@ -443,7 +455,9 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
                 LinearProgressIndicator(
                   value: (_currentQuestionIndex + 1) / _questions.length,
                   backgroundColor: theme.colors.secondary,
-                  valueColor: AlwaysStoppedAnimation<Color>(theme.colors.primary),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    theme.colors.primary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -470,7 +484,7 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
               itemCount: _questions.length,
               itemBuilder: (context, index) {
                 final currentQuestion = _questions[index];
-                
+
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -482,11 +496,13 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
                           child: Column(
                             children: [
                               Text(
-                                currentQuestion.questionType == 'meaning_to_kanji'
+                                currentQuestion.questionType ==
+                                        'meaning_to_kanji'
                                     ? '다음 뜻의 한자를 고르세요'
-                                    : currentQuestion.questionType == 'kanji_to_meaning'
-                                        ? '다음 한자의 뜻을 고르세요'
-                                        : '다음 한자의 읽기를 고르세요',
+                                    : currentQuestion.questionType ==
+                                          'kanji_to_meaning'
+                                    ? '다음 한자의 뜻을 고르세요'
+                                    : '다음 한자의 읽기를 고르세요',
                                 style: theme.typography.base.copyWith(
                                   color: theme.colors.mutedForeground,
                                 ),
@@ -494,7 +510,9 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
                               const SizedBox(height: 16),
                               Text(
                                 currentQuestion.questionText,
-                                style: currentQuestion.questionType == 'meaning_to_kanji'
+                                style:
+                                    currentQuestion.questionType ==
+                                        'meaning_to_kanji'
                                     ? theme.typography.xl2.copyWith(
                                         fontWeight: FontWeight.bold,
                                       )
@@ -513,18 +531,21 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
                       // Options
                       Expanded(
                         child: GridView.builder(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 2.5,
-                          ),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 2.5,
+                              ),
                           itemCount: currentQuestion.options.length,
                           itemBuilder: (context, optionIndex) {
                             final option = currentQuestion.options[optionIndex];
-                            
+
                             return GestureDetector(
-                              onTap: _showFeedback ? null : () => _selectAnswer(option),
+                              onTap: _showFeedback
+                                  ? null
+                                  : () => _selectAnswer(option),
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: _getOptionColor(theme, option),
@@ -537,8 +558,11 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
                                 child: Center(
                                   child: Text(
                                     option,
-                                    style: currentQuestion.questionType == 'kanji_to_meaning' || 
-                                           currentQuestion.questionType == 'kanji_to_reading'
+                                    style:
+                                        currentQuestion.questionType ==
+                                                'kanji_to_meaning' ||
+                                            currentQuestion.questionType ==
+                                                'kanji_to_reading'
                                         ? theme.typography.lg.copyWith(
                                             fontWeight: FontWeight.w600,
                                           )
@@ -566,12 +590,11 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
                                 child: const Text('이전'),
                               ),
                             ),
-                          if (_currentQuestionIndex > 0) const SizedBox(width: 12),
+                          if (_currentQuestionIndex > 0)
+                            const SizedBox(width: 12),
                           Expanded(
                             child: FButton(
-                              onPress: _showFeedback 
-                                  ? _nextQuestion
-                                  : null,
+                              onPress: _showFeedback ? _nextQuestion : null,
                               child: Text(
                                 _currentQuestionIndex == _questions.length - 1
                                     ? '결과 보기'

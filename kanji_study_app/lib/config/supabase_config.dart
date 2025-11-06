@@ -2,8 +2,9 @@
 class SupabaseConfig {
   // Supabase URL and Anon Key
   static const String supabaseUrl = 'https://kasxghygpyiyxsjzhomn.supabase.co';
-  static const String supabaseAnonKey = 'sb_publishable_0d_TYnZ1PBpAkuJW5sgmuA_Kfu6EtYr';
-  
+  static const String supabaseAnonKey =
+      'sb_publishable_0d_TYnZ1PBpAkuJW5sgmuA_Kfu6EtYr';
+
   // Table names
   static const String usersTable = 'users';
   static const String userProgressTable = 'user_progress';
@@ -15,7 +16,7 @@ class SupabaseConfig {
   static const String quizAttemptsTable = 'quiz_attempts';
   static const String quizAnswersTable = 'quiz_answers';
   static const String audioFilesTable = 'audio_files';
-  
+
   // Storage buckets
   static const String profilePicturesBucket = 'profile-pictures';
   static const String studyMaterialsBucket = 'study-materials';

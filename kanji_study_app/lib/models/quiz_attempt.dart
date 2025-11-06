@@ -25,7 +25,7 @@ class QuizAttempt {
       userId: json['user_id'] as String,
       quizSetId: json['quiz_set_id'] as int,
       startedAt: DateTime.parse(json['started_at'] as String),
-      completedAt: json['completed_at'] != null 
+      completedAt: json['completed_at'] != null
           ? DateTime.parse(json['completed_at'] as String)
           : null,
       score: json['score'] as int?,
@@ -49,10 +49,7 @@ class QuizAttempt {
 
   // For creating new attempts
   Map<String, dynamic> toJsonForCreate() {
-    return {
-      'user_id': userId,
-      'quiz_set_id': quizSetId,
-    };
+    return {'user_id': userId, 'quiz_set_id': quizSetId};
   }
 
   // For updating an attempt when completed

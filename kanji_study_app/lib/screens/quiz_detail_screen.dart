@@ -8,10 +8,7 @@ import 'quiz_playing_screen.dart';
 class QuizDetailScreen extends StatefulWidget {
   final QuizSet quizSet;
 
-  const QuizDetailScreen({
-    super.key,
-    required this.quizSet,
-  });
+  const QuizDetailScreen({super.key, required this.quizSet});
 
   @override
   State<QuizDetailScreen> createState() => _QuizDetailScreenState();
@@ -58,9 +55,9 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('데이터를 불러오는데 실패했습니다: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('데이터를 불러오는데 실패했습니다: $e')));
       }
     }
   }
@@ -68,16 +65,16 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
   void _startQuiz() async {
     try {
       // Start quiz attempt
-      final attempt = await _supabaseService.startQuizAttempt(widget.quizSet.id);
-      
+      final attempt = await _supabaseService.startQuizAttempt(
+        widget.quizSet.id,
+      );
+
       if (attempt != null && mounted) {
         final result = await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => QuizPlayingScreen(
-              quizSet: widget.quizSet,
-              attempt: attempt,
-            ),
+            builder: (context) =>
+                QuizPlayingScreen(quizSet: widget.quizSet, attempt: attempt),
           ),
         );
 
@@ -88,9 +85,9 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('퀴즈를 시작할 수 없습니다: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('퀴즈를 시작할 수 없습니다: $e')));
       }
     }
   }
@@ -129,20 +126,21 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     }
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     final theme = FTheme.of(context);
-    
+
     return FCard(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
+            Icon(icon, color: color, size: 24),
             const SizedBox(height: 8),
             Text(
               value,
@@ -170,9 +168,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     final theme = FTheme.of(context);
 
     return FScaffold(
-      header: FHeader(
-        title: Text(widget.quizSet.title),
-      ),
+      header: FHeader(title: Text(widget.quizSet.title)),
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -217,7 +213,9 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  _getDifficultyText(widget.quizSet.difficultyLevel),
+                                  _getDifficultyText(
+                                    widget.quizSet.difficultyLevel,
+                                  ),
                                   style: theme.typography.sm.copyWith(
                                     color: _getDifficultyColor(
                                       theme,
@@ -285,7 +283,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
+
                     Row(
                       children: [
                         Expanded(
@@ -328,7 +326,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
+
                     FCard(
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -348,7 +346,8 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      (kanji['meanings'] as List<dynamic>).first,
+                                      (kanji['meanings'] as List<dynamic>)
+                                          .first,
                                       style: theme.typography.xs,
                                     ),
                                   ],
@@ -380,22 +379,26 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
+
                     FCard(
                       child: Column(
                         children: _previousAttempts.take(3).map((attempt) {
                           final completedAt = attempt.completedAt;
                           final score = attempt.score ?? 0;
-                          final totalPoints = attempt.totalPoints ?? widget.quizSet.kanjiIds.length;
-                          final percentage = totalPoints > 0 ? (score / totalPoints * 100).round() : 0;
-                          
+                          final totalPoints =
+                              attempt.totalPoints ??
+                              widget.quizSet.kanjiIds.length;
+                          final percentage = totalPoints > 0
+                              ? (score / totalPoints * 100).round()
+                              : 0;
+
                           return ListTile(
                             leading: CircleAvatar(
                               backgroundColor: percentage >= 80
                                   ? Colors.green.withValues(alpha: 0.1)
                                   : percentage >= 60
-                                      ? Colors.orange.withValues(alpha: 0.1)
-                                      : Colors.red.withValues(alpha: 0.1),
+                                  ? Colors.orange.withValues(alpha: 0.1)
+                                  : Colors.red.withValues(alpha: 0.1),
                               child: Text(
                                 '$percentage%',
                                 style: theme.typography.xs.copyWith(
@@ -403,8 +406,8 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                                   color: percentage >= 80
                                       ? Colors.green
                                       : percentage >= 60
-                                          ? Colors.orange
-                                          : Colors.red,
+                                      ? Colors.orange
+                                      : Colors.red,
                                 ),
                               ),
                             ),

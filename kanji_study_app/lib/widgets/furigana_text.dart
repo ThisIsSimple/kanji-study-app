@@ -3,7 +3,7 @@ import 'package:ruby_text/ruby_text.dart';
 import '../utils/furigana_parser.dart';
 
 /// Furigana 형식의 텍스트를 표시하는 위젯
-/// 
+///
 /// 예시:
 /// ```dart
 /// FuriganaText(
@@ -22,7 +22,7 @@ class FuriganaText extends StatelessWidget {
   final TextOverflow? overflow;
   final int? maxLines;
   final double spacing;
-  
+
   const FuriganaText({
     super.key,
     required this.text,
@@ -33,9 +33,9 @@ class FuriganaText extends StatelessWidget {
     this.softWrap,
     this.overflow,
     this.maxLines,
-    this.spacing = -0.5,  // 기본값을 -0.5로 설정해서 간격을 좁힘
+    this.spacing = -0.5, // 기본값을 -0.5로 설정해서 간격을 좁힘
   });
-  
+
   @override
   Widget build(BuildContext context) {
     // 텍스트가 비어있거나 대괄호가 없으면 일반 Text 위젯 사용
@@ -50,10 +50,10 @@ class FuriganaText extends StatelessWidget {
         maxLines: maxLines,
       );
     }
-    
+
     // Furigana 파싱
     final rubyData = FuriganaParser.parse(text);
-    
+
     // RubyText 위젯 사용
     return RubyText(
       rubyData,
@@ -64,10 +64,10 @@ class FuriganaText extends StatelessWidget {
       softWrap: softWrap,
       overflow: overflow,
       maxLines: maxLines,
-      spacing: spacing,  // 한자와 후리가나 사이 간격 조절
+      spacing: spacing, // 한자와 후리가나 사이 간격 조절
     );
   }
-  
+
   /// 기본 ruby 스타일 생성
   TextStyle _getDefaultRubyStyle(TextStyle? baseStyle) {
     final baseFontSize = baseStyle?.fontSize ?? 14.0;
@@ -89,7 +89,7 @@ class FuriganaHelper {
     final data = FuriganaParser.parse(furiganaText);
     return FuriganaParser.toPlainText(data);
   }
-  
+
   /// 후리가나 텍스트에서 읽기만 추출
   static String extractReading(String furiganaText) {
     if (!furiganaText.contains('[')) {

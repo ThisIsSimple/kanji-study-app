@@ -267,19 +267,13 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
-            border: borderColor != null
-                ? Border.all(color: borderColor)
-                : null,
+            border: borderColor != null ? Border.all(color: borderColor) : null,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: 24,
-                color: foregroundColor,
-              ),
+              Icon(icon, size: 24, color: foregroundColor),
               const SizedBox(width: 12),
               Text(
                 label,

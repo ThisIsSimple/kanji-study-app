@@ -64,6 +64,7 @@ class QuizQuestion {
   }
 
   bool checkAnswer(String userAnswer) {
-    return userAnswer.trim().toLowerCase() == correctAnswer.trim().toLowerCase();
+    return userAnswer.trim().toLowerCase() ==
+        correctAnswer.trim().toLowerCase();
   }
 }

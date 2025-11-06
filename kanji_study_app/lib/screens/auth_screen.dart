@@ -14,7 +14,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _usernameController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _isSignUp = false;
   String? _errorMessage;
@@ -58,20 +58,15 @@ class _AuthScreenState extends State<AuthScreen> {
           password: password,
           username: username,
         );
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('회원가입이 완료되었습니다. 이메일을 확인해주세요.'),
-            ),
+            const SnackBar(content: Text('회원가입이 완료되었습니다. 이메일을 확인해주세요.')),
           );
         }
       } else {
-        await _supabaseService.signIn(
-          email: email,
-          password: password,
-        );
-        
+        await _supabaseService.signIn(email: email, password: password);
+
         // 로그인 성공 시 메인 화면으로 이동
         if (mounted) {
           Navigator.of(context).pop(true);
@@ -93,11 +88,9 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    
+
     return FScaffold(
-      header: FHeader(
-        title: Text(_isSignUp ? '회원가입' : '로그인'),
-      ),
+      header: FHeader(title: Text(_isSignUp ? '회원가입' : '로그인')),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -105,57 +98,24 @@ class _AuthScreenState extends State<AuthScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Logo or App Name
-            Icon(
-              Icons.book,
-              size: 80,
-              color: theme.colors.primary,
-            ),
+            Icon(Icons.book, size: 80, color: theme.colors.primary),
             const SizedBox(height: 8),
             Text(
               '한자 학습',
-              style: theme.typography.xl.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 48),
-            
+
             // Email Input
             Material(
               color: Colors.transparent,
               child: TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                labelText: '이메일',
-                hintText: 'your@email.com',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: theme.colors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: theme.colors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: theme.colors.primary),
-                ),
-                prefixIcon: const Icon(Icons.email),
-              ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Username Input (Sign Up only)
-            if (_isSignUp) ...[
-              Material(
-                color: Colors.transparent,
-                child: TextField(
-                controller: _usernameController,
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  labelText: '사용자 이름',
-                  hintText: '닉네임',
+                  labelText: '이메일',
+                  hintText: 'your@email.com',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: theme.colors.border),
@@ -168,39 +128,66 @@ class _AuthScreenState extends State<AuthScreen> {
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: theme.colors.primary),
                   ),
-                  prefixIcon: const Icon(Icons.person),
+                  prefixIcon: const Icon(Icons.email),
                 ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Username Input (Sign Up only)
+            if (_isSignUp) ...[
+              Material(
+                color: Colors.transparent,
+                child: TextField(
+                  controller: _usernameController,
+                  decoration: InputDecoration(
+                    labelText: '사용자 이름',
+                    hintText: '닉네임',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: theme.colors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: theme.colors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: theme.colors.primary),
+                    ),
+                    prefixIcon: const Icon(Icons.person),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
             ],
-            
+
             // Password Input
             Material(
               color: Colors.transparent,
               child: TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: '비밀번호',
-                hintText: '••••••••',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: theme.colors.border),
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: '비밀번호',
+                  hintText: '••••••••',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: theme.colors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: theme.colors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: theme.colors.primary),
+                  ),
+                  prefixIcon: const Icon(Icons.lock),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: theme.colors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: theme.colors.primary),
-                ),
-                prefixIcon: const Icon(Icons.lock),
-              ),
               ),
             ),
-            
+
             // Error Message
             if (_errorMessage != null) ...[
               const SizedBox(height: 16),
@@ -218,9 +205,9 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
               ),
             ],
-            
+
             const SizedBox(height: 24),
-            
+
             // Submit Button
             FButton(
               onPress: _isLoading ? null : _handleAuth,
@@ -232,9 +219,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     )
                   : Text(_isSignUp ? '회원가입' : '로그인'),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Toggle Sign Up/Sign In
             FButton(
               onPress: () {
@@ -244,11 +231,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 });
               },
               style: FButtonStyle.outline(),
-              child: Text(
-                _isSignUp
-                    ? '이미 계정이 있으신가요? 로그인'
-                    : '계정이 없으신가요? 회원가입',
-              ),
+              child: Text(_isSignUp ? '이미 계정이 있으신가요? 로그인' : '계정이 없으신가요? 회원가입'),
             ),
           ],
         ),

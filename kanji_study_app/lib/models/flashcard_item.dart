@@ -28,11 +28,8 @@ abstract class FlashcardItem {
 
 /// 플래시카드 의미 정보
 class FlashcardMeaning {
-  final String category;  // 품사, 음/훈독 구분 등
-  final String meaning;   // 실제 의미
+  final String category; // 품사, 음/훈독 구분 등
+  final String meaning; // 실제 의미
 
-  const FlashcardMeaning({
-    required this.category,
-    required this.meaning,
-  });
+  const FlashcardMeaning({required this.category, required this.meaning});
 }
