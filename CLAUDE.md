@@ -153,7 +153,7 @@ The app follows a layered architecture with clear separation of concerns:
 ## Important Dependencies
 
 ### Flutter Packages
-- `forui: ^0.14.1` - UI component library (zinc theme)
+- `forui: ^0.16.0` - UI component library (zinc theme)
 - `supabase_flutter: ^2.9.1` - Backend integration
 - `flutter_gemini: ^3.0.0` - AI example generation
 - `flutter_local_notifications: ^19.4.0` - Study reminders

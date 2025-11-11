@@ -1642,12 +1642,12 @@ class $SyncQueueTableTable extends SyncQueueTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _tableNameMeta = const VerificationMeta(
-    'tableName',
+  static const VerificationMeta _targetTableMeta = const VerificationMeta(
+    'targetTable',
   );
   @override
-  late final GeneratedColumn<String> tableName = GeneratedColumn<String>(
-    'table_name',
+  late final GeneratedColumn<String> targetTable = GeneratedColumn<String>(
+    'target_table',
     aliasedName,
     false,
     type: DriftSqlType.string,
@@ -1678,7 +1678,7 @@ class $SyncQueueTableTable extends SyncQueueTable
   List<GeneratedColumn> get $columns => [
     id,
     operation,
-    tableName,
+    targetTable,
     data,
     createdAt,
   ];
@@ -1705,13 +1705,16 @@ class $SyncQueueTableTable extends SyncQueueTable
     } else if (isInserting) {
       context.missing(_operationMeta);
     }
-    if (data.containsKey('table_name')) {
+    if (data.containsKey('target_table')) {
       context.handle(
-        _tableNameMeta,
-        tableName.isAcceptableOrUnknown(data['table_name']!, _tableNameMeta),
+        _targetTableMeta,
+        targetTable.isAcceptableOrUnknown(
+          data['target_table']!,
+          _targetTableMeta,
+        ),
       );
     } else if (isInserting) {
-      context.missing(_tableNameMeta);
+      context.missing(_targetTableMeta);
     }
     if (data.containsKey('data')) {
       context.handle(
@@ -1744,9 +1747,9 @@ class $SyncQueueTableTable extends SyncQueueTable
         DriftSqlType.string,
         data['${effectivePrefix}operation'],
       )!,
-      tableName: attachedDatabase.typeMapping.read(
+      targetTable: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}table_name'],
+        data['${effectivePrefix}target_table'],
       )!,
       data: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -1769,13 +1772,13 @@ class SyncQueueTableData extends DataClass
     implements Insertable<SyncQueueTableData> {
   final int id;
   final String operation;
-  final String tableName;
+  final String targetTable;
   final String data;
   final DateTime createdAt;
   const SyncQueueTableData({
     required this.id,
     required this.operation,
-    required this.tableName,
+    required this.targetTable,
     required this.data,
     required this.createdAt,
   });
@@ -1784,7 +1787,7 @@ class SyncQueueTableData extends DataClass
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['operation'] = Variable<String>(operation);
-    map['table_name'] = Variable<String>(tableName);
+    map['target_table'] = Variable<String>(targetTable);
     map['data'] = Variable<String>(data);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -1794,7 +1797,7 @@ class SyncQueueTableData extends DataClass
     return SyncQueueTableCompanion(
       id: Value(id),
       operation: Value(operation),
-      tableName: Value(tableName),
+      targetTable: Value(targetTable),
       data: Value(data),
       createdAt: Value(createdAt),
     );
@@ -1808,7 +1811,7 @@ class SyncQueueTableData extends DataClass
     return SyncQueueTableData(
       id: serializer.fromJson<int>(json['id']),
       operation: serializer.fromJson<String>(json['operation']),
-      tableName: serializer.fromJson<String>(json['tableName']),
+      targetTable: serializer.fromJson<String>(json['targetTable']),
       data: serializer.fromJson<String>(json['data']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -1819,7 +1822,7 @@ class SyncQueueTableData extends DataClass
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'operation': serializer.toJson<String>(operation),
-      'tableName': serializer.toJson<String>(tableName),
+      'targetTable': serializer.toJson<String>(targetTable),
       'data': serializer.toJson<String>(data),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -1828,13 +1831,13 @@ class SyncQueueTableData extends DataClass
   SyncQueueTableData copyWith({
     int? id,
     String? operation,
-    String? tableName,
+    String? targetTable,
     String? data,
     DateTime? createdAt,
   }) => SyncQueueTableData(
     id: id ?? this.id,
     operation: operation ?? this.operation,
-    tableName: tableName ?? this.tableName,
+    targetTable: targetTable ?? this.targetTable,
     data: data ?? this.data,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -1842,7 +1845,9 @@ class SyncQueueTableData extends DataClass
     return SyncQueueTableData(
       id: data.id.present ? data.id.value : this.id,
       operation: data.operation.present ? data.operation.value : this.operation,
-      tableName: data.tableName.present ? data.tableName.value : this.tableName,
+      targetTable: data.targetTable.present
+          ? data.targetTable.value
+          : this.targetTable,
       data: data.data.present ? data.data.value : this.data,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -1853,7 +1858,7 @@ class SyncQueueTableData extends DataClass
     return (StringBuffer('SyncQueueTableData(')
           ..write('id: $id, ')
           ..write('operation: $operation, ')
-          ..write('tableName: $tableName, ')
+          ..write('targetTable: $targetTable, ')
           ..write('data: $data, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -1861,14 +1866,14 @@ class SyncQueueTableData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(id, operation, tableName, data, createdAt);
+  int get hashCode => Object.hash(id, operation, targetTable, data, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SyncQueueTableData &&
           other.id == this.id &&
           other.operation == this.operation &&
-          other.tableName == this.tableName &&
+          other.targetTable == this.targetTable &&
           other.data == this.data &&
           other.createdAt == this.createdAt);
 }
@@ -1876,36 +1881,36 @@ class SyncQueueTableData extends DataClass
 class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueTableData> {
   final Value<int> id;
   final Value<String> operation;
-  final Value<String> tableName;
+  final Value<String> targetTable;
   final Value<String> data;
   final Value<DateTime> createdAt;
   const SyncQueueTableCompanion({
     this.id = const Value.absent(),
     this.operation = const Value.absent(),
-    this.tableName = const Value.absent(),
+    this.targetTable = const Value.absent(),
     this.data = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   SyncQueueTableCompanion.insert({
     this.id = const Value.absent(),
     required String operation,
-    required String tableName,
+    required String targetTable,
     required String data,
     this.createdAt = const Value.absent(),
   }) : operation = Value(operation),
-       tableName = Value(tableName),
+       targetTable = Value(targetTable),
        data = Value(data);
   static Insertable<SyncQueueTableData> custom({
     Expression<int>? id,
     Expression<String>? operation,
-    Expression<String>? tableName,
+    Expression<String>? targetTable,
     Expression<String>? data,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (operation != null) 'operation': operation,
-      if (tableName != null) 'table_name': tableName,
+      if (targetTable != null) 'target_table': targetTable,
       if (data != null) 'data': data,
       if (createdAt != null) 'created_at': createdAt,
     });
@@ -1914,14 +1919,14 @@ class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueTableData> {
   SyncQueueTableCompanion copyWith({
     Value<int>? id,
     Value<String>? operation,
-    Value<String>? tableName,
+    Value<String>? targetTable,
     Value<String>? data,
     Value<DateTime>? createdAt,
   }) {
     return SyncQueueTableCompanion(
       id: id ?? this.id,
       operation: operation ?? this.operation,
-      tableName: tableName ?? this.tableName,
+      targetTable: targetTable ?? this.targetTable,
       data: data ?? this.data,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -1936,8 +1941,8 @@ class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueTableData> {
     if (operation.present) {
       map['operation'] = Variable<String>(operation.value);
     }
-    if (tableName.present) {
-      map['table_name'] = Variable<String>(tableName.value);
+    if (targetTable.present) {
+      map['target_table'] = Variable<String>(targetTable.value);
     }
     if (data.present) {
       map['data'] = Variable<String>(data.value);
@@ -1953,7 +1958,7 @@ class SyncQueueTableCompanion extends UpdateCompanion<SyncQueueTableData> {
     return (StringBuffer('SyncQueueTableCompanion(')
           ..write('id: $id, ')
           ..write('operation: $operation, ')
-          ..write('tableName: $tableName, ')
+          ..write('targetTable: $targetTable, ')
           ..write('data: $data, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -2810,7 +2815,7 @@ typedef $$SyncQueueTableTableCreateCompanionBuilder =
     SyncQueueTableCompanion Function({
       Value<int> id,
       required String operation,
-      required String tableName,
+      required String targetTable,
       required String data,
       Value<DateTime> createdAt,
     });
@@ -2818,7 +2823,7 @@ typedef $$SyncQueueTableTableUpdateCompanionBuilder =
     SyncQueueTableCompanion Function({
       Value<int> id,
       Value<String> operation,
-      Value<String> tableName,
+      Value<String> targetTable,
       Value<String> data,
       Value<DateTime> createdAt,
     });
@@ -2842,8 +2847,8 @@ class $$SyncQueueTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get tableName => $composableBuilder(
-    column: $table.tableName,
+  ColumnFilters<String> get targetTable => $composableBuilder(
+    column: $table.targetTable,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2877,8 +2882,8 @@ class $$SyncQueueTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get tableName => $composableBuilder(
-    column: $table.tableName,
+  ColumnOrderings<String> get targetTable => $composableBuilder(
+    column: $table.targetTable,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2908,8 +2913,10 @@ class $$SyncQueueTableTableAnnotationComposer
   GeneratedColumn<String> get operation =>
       $composableBuilder(column: $table.operation, builder: (column) => column);
 
-  GeneratedColumn<String> get tableName =>
-      $composableBuilder(column: $table.tableName, builder: (column) => column);
+  GeneratedColumn<String> get targetTable => $composableBuilder(
+    column: $table.targetTable,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get data =>
       $composableBuilder(column: $table.data, builder: (column) => column);
@@ -2957,13 +2964,13 @@ class $$SyncQueueTableTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> operation = const Value.absent(),
-                Value<String> tableName = const Value.absent(),
+                Value<String> targetTable = const Value.absent(),
                 Value<String> data = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => SyncQueueTableCompanion(
                 id: id,
                 operation: operation,
-                tableName: tableName,
+                targetTable: targetTable,
                 data: data,
                 createdAt: createdAt,
               ),
@@ -2971,13 +2978,13 @@ class $$SyncQueueTableTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required String operation,
-                required String tableName,
+                required String targetTable,
                 required String data,
                 Value<DateTime> createdAt = const Value.absent(),
               }) => SyncQueueTableCompanion.insert(
                 id: id,
                 operation: operation,
-                tableName: tableName,
+                targetTable: targetTable,
                 data: data,
                 createdAt: createdAt,
               ),

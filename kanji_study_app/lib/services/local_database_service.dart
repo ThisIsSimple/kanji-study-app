@@ -30,7 +30,7 @@ class LocalDatabaseService {
   Future<void> downloadAndCacheKanjiData() async {
     try {
       print('Downloading kanji data from Supabase...');
-      final supabaseService = SupabaseService();
+      final supabaseService = SupabaseService.instance;
       final response = await supabaseService.client
           .from('kanji')
           .select()
@@ -57,7 +57,7 @@ class LocalDatabaseService {
   Future<void> downloadAndCacheWordsData() async {
     try {
       print('Downloading words data from Supabase...');
-      final supabaseService = SupabaseService();
+      final supabaseService = SupabaseService.instance;
       final response = await supabaseService.client
           .from('words')
           .select()
@@ -157,7 +157,7 @@ class LocalDatabaseService {
       jlpt: json['jlpt'] as int,
       strokeCount: json['strokeCount'] as int,
       frequency: json['frequency'] as int,
-      examples: [], // 예문은 별도 테이블로 관리 예정
+      examples: const Value([]), // 예문은 별도 테이블로 관리 예정
     );
   }
 

@@ -55,7 +55,7 @@ class StudyRecordsTable extends Table {
 class SyncQueueTable extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get operation => text()(); // 'insert', 'update', 'delete'
-  TextColumn get tableName => text()();
+  TextColumn get targetTable => text()(); // 대상 테이블명
   TextColumn get data => text()(); // JSON
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

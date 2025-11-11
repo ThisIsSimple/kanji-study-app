@@ -118,20 +118,27 @@ class _HomeScreenState extends State<HomeScreen> {
     return FScaffold(
       header: FHeader(
         title: Text('한자 학습', style: TextStyle(fontFamily: 'SUITE')),
-        actions: [
+      ),
+      child: Column(
+        children: [
+          // 오프라인 배너
           if (!_isOnline)
-            Padding(
-              padding: const EdgeInsets.only(right: 16.0),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              color: theme.colors.muted,
               child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     PhosphorIconsRegular.wifiSlash,
-                    size: 18,
+                    size: 16,
                     color: theme.colors.mutedForeground,
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '오프라인',
+                    '오프라인 모드',
                     style: theme.typography.sm.copyWith(
                       color: theme.colors.mutedForeground,
                       fontFamily: 'SUITE',
@@ -140,9 +147,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-        ],
-      ),
-      child: _isLoading
+          // 메인 컨텐츠
+          Expanded(
+            child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : todayKanji == null
           ? Center(
@@ -264,6 +271,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
     );
   }
 }

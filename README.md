@@ -40,7 +40,7 @@
 ## 기술 스택
 
 - **Frontend**: Flutter 3.8.1+
-- **UI Library**: Forui 0.14.1
+- **UI Library**: Forui 0.16.0
 - **State Management**: SharedPreferences
 - **Notifications**: flutter_local_notifications
 - **Data Source**: Excel → JSON 변환
