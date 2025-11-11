@@ -35,10 +35,10 @@ class SupabaseService {
       // Development: localhost for web, app scheme for mobile
       return kIsWeb
           ? 'http://localhost:3000/auth/callback'
-          : 'io.supabase.kanji://login-callback';
+          : 'space.cordelia273.konnakanji://login-callback';
     } else {
       // Production: always use app scheme
-      return 'io.supabase.kanji://login-callback';
+      return 'space.cordelia273.konnakanji://login-callback';
     }
   }
 

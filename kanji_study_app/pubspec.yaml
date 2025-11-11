@@ -1,5 +1,5 @@
-name: kanji_study_app
-description: "A new Flutter project."
+name: konnakanji
+description: "콘나칸지 (こんな漢字) - 일본어 공부, 바로 이런 느낌!"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev

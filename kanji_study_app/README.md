@@ -1,6 +1,6 @@
-# kanji_study_app
+# 콘나칸지 (こんな漢字)
 
-A new Flutter project.
+일본어 공부, 바로 이런 느낌!
 
 ## Getting Started
 
@@ -32,8 +32,8 @@ samples, guidance on mobile development, and a full API reference.
     - "Create Credentials" > "OAuth client ID" 선택
     - Application type: Android 선택
     - 다음 정보 입력:
-        - Name: Kanji Study App Android (또는 원하는 이름)
-      - Package name: space.cordelia273.kanji_study_app
+        - Name: 콘나칸지 Android
+      - Package name: space.cordelia273.konnakanji
       - SHA-1 certificate fingerprint:
   93:8E:25:AE:EF:4F:B4:18:10:B8:50:1C:07:16:BE:C6:6B:F1:F9:D9
   3. google-services.json 파일 다운로드:

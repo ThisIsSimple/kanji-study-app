@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../models/kanji_model.dart';
 import '../models/kanji_example.dart';
 import '../models/study_record_model.dart';
-import '../services/kanji_service.dart';
 import '../services/gemini_service.dart';
 import '../services/supabase_service.dart';
 import '../widgets/furigana_text.dart';

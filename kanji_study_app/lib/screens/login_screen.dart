@@ -200,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          '한자 학습',
+                          '콘나칸지',
                           style: theme.typography.xl2.copyWith(
                             fontWeight: FontWeight.bold,
                             fontFamily: 'SUITE',
@@ -208,7 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '일본어 한자를 쉽고 재미있게',
+                          '일본어 공부, 바로 이런 느낌!',
                           style: theme.typography.base.copyWith(
                             color: theme.colors.mutedForeground,
                             fontFamily: 'SUITE',

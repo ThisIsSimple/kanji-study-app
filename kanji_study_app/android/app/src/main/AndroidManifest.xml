@@ -11,7 +11,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     
     <application
-        android:label="kanji_study_app"
+        android:label="콘나칸지"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -43,7 +43,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- Accepts URIs that begin with YOUR_SCHEME://YOUR_HOST -->
                 <data
-                    android:scheme="io.supabase.kanji"
+                    android:scheme="space.cordelia273.konnakanji"
                     android:host="login-callback" />
             </intent-filter>
         </activity>

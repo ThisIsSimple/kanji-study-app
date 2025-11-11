@@ -7,7 +7,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:kanji_study_app/main.dart';
+import 'package:konnakanji/main.dart';
 
 void main() {
   testWidgets('App loads successfully', (WidgetTester tester) async {
@@ -15,6 +15,6 @@ void main() {
     await tester.pumpWidget(const KanjiStudyApp());
 
     // Verify that the app loads with the home screen
-    expect(find.text('한자 학습'), findsOneWidget);
+    expect(find.text('콘나칸지'), findsOneWidget);
   });
 }

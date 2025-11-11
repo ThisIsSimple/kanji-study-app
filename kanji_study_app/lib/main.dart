@@ -89,7 +89,7 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
     debugPrint('Handling deep link: $uri');
 
     // Check if this is a Supabase OAuth callback
-    if (uri.scheme == 'io.supabase.kanji' && uri.host == 'login-callback') {
+    if (uri.scheme == 'space.cordelia273.konnakanji' && uri.host == 'login-callback') {
       debugPrint('Supabase OAuth callback detected');
 
       // Supabase SDK will automatically handle the OAuth callback
@@ -101,7 +101,7 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Kanji Study',
+      title: '콘나칸지',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.getLightTheme(),
       builder: (context, child) => FTheme(
