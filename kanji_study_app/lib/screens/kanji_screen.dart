@@ -172,10 +172,9 @@ class _KanjiScreenState extends State<KanjiScreen> {
               TextButton(
                 onPressed: () async {
                   await _flashcardService.clearSession('kanji');
-                  if (mounted) {
-                    Navigator.of(context).pop();
-                    await _showCountSelectorAndStart();
-                  }
+                  if (!mounted) return;
+                  Navigator.of(context).pop();
+                  await _showCountSelectorAndStart();
                 },
                 child: Text('새로 시작', style: TextStyle(fontFamily: 'SUITE')),
               ),

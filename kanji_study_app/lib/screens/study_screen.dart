@@ -29,7 +29,6 @@ class StudyScreen extends StatefulWidget {
 }
 
 class _StudyScreenState extends State<StudyScreen> {
-  final KanjiService _kanjiService = KanjiService.instance;
   final GeminiService _geminiService = GeminiService.instance;
   final SupabaseService _supabaseService = SupabaseService.instance;
 
@@ -38,7 +37,6 @@ class _StudyScreenState extends State<StudyScreen> {
   List<Kanji>? _kanjiList;
   Kanji? _currentKanji;
 
-  bool _isCompleted = false;
   bool _isGeneratingExamples = false;
   List<KanjiExample>? _generatedExamples;
   List<KanjiExample> _databaseExamples = [];
@@ -71,7 +69,6 @@ class _StudyScreenState extends State<StudyScreen> {
       setState(() {
         _currentIndex = index;
         _currentKanji = _kanjiList![index];
-        _isCompleted = false;
         _generatedExamples = null;
         _databaseExamples = [];
         _studyStats = null;
@@ -147,10 +144,10 @@ class _StudyScreenState extends State<StudyScreen> {
       // Reload stats after recording
       await _loadStudyStats();
 
-      if (mounted) {
-        // Use showDialog instead of SnackBar for better visibility
-        showDialog(
-          context: context,
+      if (!mounted) return;
+      // Use showDialog instead of SnackBar for better visibility
+      showDialog(
+        context: context,
           barrierDismissible: true,
           barrierColor: Colors.transparent,
           builder: (BuildContext dialogContext) {
@@ -173,12 +170,12 @@ class _StudyScreenState extends State<StudyScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: status == StudyStatus.completed
-                          ? FTheme.of(context).colors.primary
-                          : FTheme.of(context).colors.destructive,
+                          ? FTheme.of(dialogContext).colors.primary
+                          : FTheme.of(dialogContext).colors.destructive,
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -212,12 +209,11 @@ class _StudyScreenState extends State<StudyScreen> {
               ),
             );
           },
-        );
-      }
+      );
     } catch (e) {
-      if (mounted) {
-        showDialog(
-          context: context,
+      if (!mounted) return;
+      showDialog(
+        context: context,
           barrierDismissible: true,
           barrierColor: Colors.transparent,
           builder: (BuildContext dialogContext) {
@@ -239,11 +235,11 @@ class _StudyScreenState extends State<StudyScreen> {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: FTheme.of(context).colors.destructive,
+                      color: FTheme.of(dialogContext).colors.destructive,
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -273,8 +269,7 @@ class _StudyScreenState extends State<StudyScreen> {
               ),
             );
           },
-        );
-      }
+      );
     } finally {
       setState(() {
         _isRecordingStudy = false;
@@ -309,34 +304,6 @@ class _StudyScreenState extends State<StudyScreen> {
           ),
         );
       }
-    }
-  }
-
-  void _markAsStudied() async {
-    if (_currentKanji == null) return;
-    await _kanjiService.markAsStudied(_currentKanji!.character);
-    setState(() {
-      _isCompleted = true;
-    });
-
-    // Show completion dialog
-    if (mounted) {
-      await showAdaptiveDialog(
-        context: context,
-        builder: (context) => FDialog(
-          title: const Text('학습 완료!'),
-          body: Text('${_currentKanji?.character ?? ""} 한자를 학습했습니다.'),
-          actions: [
-            FButton(
-              onPress: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop(true);
-              },
-              child: const Text('확인'),
-            ),
-          ],
-        ),
-      );
     }
   }
 

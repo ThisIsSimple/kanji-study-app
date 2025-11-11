@@ -354,6 +354,7 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
         );
 
         // Return result to previous screen
+        if (!mounted) return;
         Navigator.pop(context, result);
       }
     } catch (e) {

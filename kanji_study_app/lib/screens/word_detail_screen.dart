@@ -141,10 +141,10 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       // Reload stats after recording
       await _loadStudyStats();
 
-      if (mounted) {
-        // Use showDialog instead of SnackBar for better visibility
-        showDialog(
-          context: context,
+      if (!mounted) return;
+      // Use showDialog instead of SnackBar for better visibility
+      showDialog(
+        context: context,
           barrierDismissible: true,
           barrierColor: Colors.transparent,
           builder: (BuildContext dialogContext) {
@@ -167,12 +167,12 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: status == StudyStatus.completed
-                          ? FTheme.of(context).colors.primary
-                          : FTheme.of(context).colors.destructive,
+                          ? FTheme.of(dialogContext).colors.primary
+                          : FTheme.of(dialogContext).colors.destructive,
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -206,12 +206,11 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
               ),
             );
           },
-        );
-      }
+      );
     } catch (e) {
-      if (mounted) {
-        showDialog(
-          context: context,
+      if (!mounted) return;
+      showDialog(
+        context: context,
           barrierDismissible: true,
           barrierColor: Colors.transparent,
           builder: (BuildContext dialogContext) {
@@ -233,11 +232,11 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: FTheme.of(context).colors.destructive,
+                      color: FTheme.of(dialogContext).colors.destructive,
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -267,8 +266,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
               ),
             );
           },
-        );
-      }
+      );
     } finally {
       setState(() {
         _isRecordingStudy = false;

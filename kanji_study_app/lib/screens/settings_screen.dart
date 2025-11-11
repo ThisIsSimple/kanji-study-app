@@ -111,7 +111,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         debugPrint('User signed out successfully');
       } catch (e) {
         debugPrint('Logout error: $e');
-        if (!context.mounted) return;
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
