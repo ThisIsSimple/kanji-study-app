@@ -27,6 +27,21 @@ class SupabaseService {
   /// Check if user is logged in
   bool get isLoggedIn => currentUser != null;
 
+  /// Get OAuth redirect URL based on environment and platform
+  String get _oauthRedirectUrl {
+    // In production, use app scheme
+    // In development, localhost can be used for web testing
+    if (kDebugMode) {
+      // Development: localhost for web, app scheme for mobile
+      return kIsWeb
+          ? 'http://localhost:3000/auth/callback'
+          : 'io.supabase.kanji://login-callback';
+    } else {
+      // Production: always use app scheme
+      return 'io.supabase.kanji://login-callback';
+    }
+  }
+
   /// Initialize Supabase
   Future<void> init() async {
     try {
@@ -406,6 +421,7 @@ class SupabaseService {
         await _client.auth.signInWithOAuth(
           OAuthProvider.kakao,
           authScreenLaunchMode: LaunchMode.inAppWebView,
+          redirectTo: _oauthRedirectUrl,
         );
         return true;
       }
