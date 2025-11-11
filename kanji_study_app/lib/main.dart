@@ -4,6 +4,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:app_links/app_links.dart';
 import 'services/notification_service.dart';
 import 'services/gemini_service.dart';
 import 'services/supabase_service.dart';
@@ -45,8 +46,57 @@ void main() async {
   runApp(const KanjiStudyApp());
 }
 
-class KanjiStudyApp extends StatelessWidget {
+class KanjiStudyApp extends StatefulWidget {
   const KanjiStudyApp({super.key});
+
+  @override
+  State<KanjiStudyApp> createState() => _KanjiStudyAppState();
+}
+
+class _KanjiStudyAppState extends State<KanjiStudyApp> {
+  final _appLinks = AppLinks();
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  /// Initialize deep link handling for OAuth callbacks
+  Future<void> _initDeepLinks() async {
+    // Handle initial link if app was opened from a deep link
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        debugPrint('Initial deep link: $initialUri');
+        _handleDeepLink(initialUri);
+      }
+    } catch (e) {
+      debugPrint('Failed to get initial link: $e');
+    }
+
+    // Listen for deep links while app is running
+    _appLinks.uriLinkStream.listen((uri) {
+      debugPrint('Deep link received: $uri');
+      _handleDeepLink(uri);
+    }, onError: (err) {
+      debugPrint('Deep link error: $err');
+    });
+  }
+
+  /// Handle incoming deep links (OAuth callbacks)
+  void _handleDeepLink(Uri uri) {
+    debugPrint('Handling deep link: $uri');
+
+    // Check if this is a Supabase OAuth callback
+    if (uri.scheme == 'io.supabase.kanji' && uri.host == 'login-callback') {
+      debugPrint('Supabase OAuth callback detected');
+
+      // Supabase SDK will automatically handle the OAuth callback
+      // The auth state change listener will be triggered
+      // No additional handling needed here
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

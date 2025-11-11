@@ -83,7 +83,13 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
     });
 
     try {
-      await _supabaseService.signInWithKakao();
+      // Add timeout to prevent infinite loading
+      await _supabaseService.signInWithKakao().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('로그인 시간이 초과되었습니다. 다시 시도해주세요.');
+        },
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -94,9 +100,11 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
         Navigator.of(context).pop(true);
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = '카카오 로그인 실패: ${e.toString()}';
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = '카카오 로그인 실패: ${e.toString()}';
+        });
+      }
     } finally {
       if (mounted) {
         setState(() {
