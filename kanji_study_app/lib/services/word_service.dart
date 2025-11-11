@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/word_model.dart';
-import 'supabase_service.dart';
+import '../repositories/word_repository.dart';
 
 class WordService {
   static final WordService _instance = WordService._internal();
@@ -10,7 +10,7 @@ class WordService {
 
   WordService._internal();
 
-  final SupabaseService _supabaseService = SupabaseService.instance;
+  final WordRepository _wordRepository = WordRepository.instance;
   List<Word> _allWords = [];
   final Set<int> _favoriteWordIds = {};
   bool _isInitialized = false;
@@ -37,22 +37,17 @@ class WordService {
     await init();
   }
 
-  // Load words from Supabase
+  // Load words from Repository (로컬 DB 우선)
   Future<void> _loadWords() async {
     try {
-      final response = await _supabaseService.client
-          .from('words')
-          .select('*')
-          .order('id', ascending: true);
-
-      _allWords = (response as List)
-          .map((data) => Word.fromJson(data))
-          .toList();
+      await _wordRepository.loadWordsData();
+      _allWords = _wordRepository.getAllWords();
 
       debugPrint('Loaded ${_allWords.length} words from database');
     } catch (e) {
       debugPrint('Error loading words: $e');
       _allWords = [];
+      rethrow;
     }
   }
 

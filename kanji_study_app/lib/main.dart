@@ -7,6 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/notification_service.dart';
 import 'services/gemini_service.dart';
 import 'services/supabase_service.dart';
+import 'services/connectivity_service.dart';
+import 'services/local_database_service.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
@@ -25,8 +27,14 @@ void main() async {
   await initializeDateFormatting('ko_KR', null);
   await initializeDateFormatting('ja_JP', null);
 
+  // Initialize connectivity service (before other services)
+  await ConnectivityService.instance.initialize();
+
   // Initialize Supabase
   await SupabaseService.instance.init();
+
+  // Initialize local database service
+  await LocalDatabaseService.instance.initialize();
 
   // Initialize notification service
   await NotificationService.instance.init();

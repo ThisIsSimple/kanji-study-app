@@ -5,6 +5,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
 import '../services/kanji_service.dart';
 import '../services/notification_service.dart';
+import '../services/connectivity_service.dart';
 import 'study_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,16 +17,30 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
+  final ConnectivityService _connectivityService = ConnectivityService.instance;
   Kanji? todayKanji;
   int studiedCount = 0;
   int masteredCount = 0;
   double progress = 0.0;
   bool _isLoading = true;
+  bool _isOnline = true;
 
   @override
   void initState() {
     super.initState();
     _initializeServices();
+
+    // 연결 상태 변경 감지
+    _connectivityService.onConnectivityChanged.listen((isOnline) {
+      if (mounted) {
+        setState(() {
+          _isOnline = isOnline;
+        });
+      }
+    });
+
+    // 초기 연결 상태
+    _isOnline = _connectivityService.isOnline;
   }
 
   Future<void> _initializeServices() async {
@@ -50,6 +65,16 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _isLoading = false;
         });
+
+        // 오프라인 상태에서 초기 다운로드 실패 시 안내
+        if (!_connectivityService.isOnline) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('초기 데이터 다운로드를 위해 인터넷 연결이 필요합니다.'),
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
       }
     }
   }
@@ -93,6 +118,29 @@ class _HomeScreenState extends State<HomeScreen> {
     return FScaffold(
       header: FHeader(
         title: Text('한자 학습', style: TextStyle(fontFamily: 'SUITE')),
+        actions: [
+          if (!_isOnline)
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Row(
+                children: [
+                  Icon(
+                    PhosphorIconsRegular.wifiSlash,
+                    size: 18,
+                    color: theme.colors.mutedForeground,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '오프라인',
+                    style: theme.typography.sm.copyWith(
+                      color: theme.colors.mutedForeground,
+                      fontFamily: 'SUITE',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())

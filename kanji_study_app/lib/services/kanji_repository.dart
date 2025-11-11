@@ -1,5 +1,7 @@
 import '../models/kanji_model.dart';
 import 'supabase_service.dart';
+import 'local_database_service.dart';
+import 'connectivity_service.dart';
 
 class KanjiRepository {
   static final KanjiRepository _instance = KanjiRepository._internal();
@@ -8,6 +10,9 @@ class KanjiRepository {
   KanjiRepository._internal();
 
   final SupabaseService _supabaseService = SupabaseService.instance;
+  final LocalDatabaseService _localDbService = LocalDatabaseService.instance;
+  final ConnectivityService _connectivityService = ConnectivityService.instance;
+
   List<Kanji>? _kanjiList;
   Map<String, Kanji>? _kanjiMap;
 
@@ -15,18 +20,42 @@ class KanjiRepository {
     if (_kanjiList != null) return; // Already loaded
 
     try {
-      // Load data from Supabase
-      final supabaseData = await _supabaseService.getAllKanji();
+      // 1. 로컬 DB에서 먼저 로드 시도
+      _kanjiList = await _localDbService.getAllKanji();
 
-      // Convert to Kanji objects
-      _kanjiList = supabaseData.map((data) => Kanji.fromJson(data)).toList();
+      // 2. 로컬 DB가 비어있으면 초기 다운로드 필요
+      if (_kanjiList!.isEmpty) {
+        if (_connectivityService.isOnline) {
+          print('Local DB is empty. Downloading from Supabase...');
+          await _localDbService.downloadAndCacheKanjiData();
+          _kanjiList = await _localDbService.getAllKanji();
+        } else {
+          print('Offline and no cached data. Cannot load kanji.');
+          throw Exception('초기 데이터 다운로드를 위해 인터넷 연결이 필요합니다.');
+        }
+      }
 
-      // Create lookup maps for efficient access
+      // 3. Create lookup maps for efficient access
       _createLookupMaps();
+
+      // 4. 백그라운드에서 업데이트 확인 (온라인인 경우)
+      if (_connectivityService.isOnline) {
+        _checkForUpdatesInBackground();
+      }
     } catch (e) {
-      // In production, you might want to use a proper logging service
-      // For now, we'll just initialize with empty list
+      print('Error loading kanji data: $e');
       _kanjiList = [];
+      rethrow;
+    }
+  }
+
+  /// 백그라운드에서 Supabase 업데이트 확인 (비차단)
+  Future<void> _checkForUpdatesInBackground() async {
+    try {
+      // TODO: 마지막 업데이트 시간 확인 후 필요시에만 동기화
+      // 현재는 매번 확인하지 않음 (성능상)
+    } catch (e) {
+      print('Background update check failed: $e');
     }
   }
 
