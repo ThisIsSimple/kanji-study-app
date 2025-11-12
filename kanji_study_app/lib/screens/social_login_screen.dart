@@ -15,103 +15,55 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
-  Future<void> _handleGoogleSignIn() async {
+  Future<void> _handleSocialLogin(
+    Future<bool> Function() loginFunction,
+    String providerName,
+  ) async {
+    if (_isLoading) return;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
-      await _supabaseService.signInWithGoogle();
-      if (mounted) {
+      final success = await loginFunction();
+
+      if (!mounted) return;
+
+      if (success) {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Google 계정으로 연동되었습니다.'),
+          SnackBar(
+            content: Text('$providerName 계정으로 연동되었습니다.'),
             backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
           ),
         );
+
+        // Close the login screen
         Navigator.of(context).pop(true);
       }
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
-        _errorMessage = 'Google 로그인 실패: ${e.toString()}';
+        _errorMessage = '$providerName 로그인 실패: ${e.toString()}';
+        _isLoading = false;
       });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    await _handleSocialLogin(_supabaseService.signInWithGoogle, 'Google');
   }
 
   Future<void> _handleAppleSignIn() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      await _supabaseService.signInWithApple();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Apple 계정으로 연동되었습니다.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).pop(true);
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Apple 로그인 실패: ${e.toString()}';
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
+    await _handleSocialLogin(_supabaseService.signInWithApple, 'Apple');
   }
 
   Future<void> _handleKakaoSignIn() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      // Add timeout to prevent infinite loading
-      await _supabaseService.signInWithKakao().timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          throw Exception('로그인 시간이 초과되었습니다. 다시 시도해주세요.');
-        },
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('카카오 계정으로 연동되었습니다.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).pop(true);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = '카카오 로그인 실패: ${e.toString()}';
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
+    await _handleSocialLogin(_supabaseService.signInWithKakao, '카카오');
   }
 
   void _continueAsGuest() {
@@ -132,7 +84,7 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
         suffixes: [
           IconButton(
             icon: const Icon(PhosphorIconsRegular.x),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
           ),
         ],
       ),
@@ -158,7 +110,7 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                '한자 학습',
+                '콘나칸지',
                 style: theme.typography.xl2.copyWith(
                   fontWeight: FontWeight.bold,
                   fontFamily: 'SUITE',
@@ -178,34 +130,43 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
               ),
               const SizedBox(height: 48),
 
-              // Social Login Buttons
-              _buildSocialButton(
-                onPressed: _isLoading ? null : _handleGoogleSignIn,
-                icon: Icons.g_mobiledata_rounded,
-                label: 'Google로 계속하기',
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black87,
-                borderColor: Colors.grey.shade300,
-                theme: theme,
-              ),
-              const SizedBox(height: 12),
-              _buildSocialButton(
-                onPressed: _isLoading ? null : _handleAppleSignIn,
-                icon: PhosphorIconsFill.appleLogo,
-                label: 'Apple로 계속하기',
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                theme: theme,
-              ),
-              const SizedBox(height: 12),
-              _buildSocialButton(
-                onPressed: _isLoading ? null : _handleKakaoSignIn,
-                icon: Icons.chat_bubble_rounded,
-                label: '카카오로 계속하기',
-                backgroundColor: const Color(0xFFFEE500),
-                foregroundColor: const Color(0xFF000000),
-                theme: theme,
-              ),
+              // Loading indicator or Social Login Buttons
+              if (_isLoading)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              else ...[
+                _buildSocialButton(
+                  onPressed: _handleGoogleSignIn,
+                  icon: Icons.g_mobiledata_rounded,
+                  label: 'Google로 계속하기',
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black87,
+                  borderColor: Colors.grey.shade300,
+                  theme: theme,
+                ),
+                const SizedBox(height: 12),
+                _buildSocialButton(
+                  onPressed: _handleAppleSignIn,
+                  icon: PhosphorIconsFill.appleLogo,
+                  label: 'Apple로 계속하기',
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  theme: theme,
+                ),
+                const SizedBox(height: 12),
+                _buildSocialButton(
+                  onPressed: _handleKakaoSignIn,
+                  icon: Icons.chat_bubble_rounded,
+                  label: '카카오로 계속하기',
+                  backgroundColor: const Color(0xFFFEE500),
+                  foregroundColor: const Color(0xFF000000),
+                  theme: theme,
+                ),
+              ],
 
               // Error Message
               if (_errorMessage != null) ...[
@@ -227,7 +188,7 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
               ],
 
               // Guest Continue Button
-              if (isAnonymous) ...[
+              if (isAnonymous && !_isLoading) ...[
                 const SizedBox(height: 48),
                 const Divider(),
                 const SizedBox(height: 16),
@@ -258,7 +219,7 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
   }
 
   Widget _buildSocialButton({
-    required VoidCallback? onPressed,
+    required VoidCallback onPressed,
     required IconData icon,
     required String label,
     required Color backgroundColor,
