@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_links/app_links.dart';
 import 'services/notification_service.dart';
@@ -16,10 +15,6 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Kakao SDK
-  // TODO: Replace with your actual Kakao native app key
-  KakaoSdk.init(nativeAppKey: '88ec2313b07c9ce230ae930ac839549c');
 
   // Initialize timezone
   tz.initializeTimeZones();
