@@ -128,8 +128,6 @@ class LocalDatabaseService {
 
   /// Supabase JSON → Drift Companion 변환 (한자)
   KanjiTableCompanion _kanjiJsonToCompanion(Map<String, dynamic> json) {
-    final readings = json['readings'] as Map<String, dynamic>? ?? {};
-
     return KanjiTableCompanion.insert(
       id: Value(json['id'] as int),
       character: json['character'] as String,
@@ -137,11 +135,11 @@ class LocalDatabaseService {
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      readingsOn: (readings['on'] as List<dynamic>?)
+      readingsOn: (json['on_readings'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      readingsKun: (readings['kun'] as List<dynamic>?)
+      readingsKun: (json['kun_readings'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
@@ -155,7 +153,7 @@ class LocalDatabaseService {
           [],
       grade: json['grade'] as int,
       jlpt: json['jlpt'] as int,
-      strokeCount: json['strokeCount'] as int,
+      strokeCount: json['stroke_count'] as int,
       frequency: json['frequency'] as int,
       examples: const Value([]), // 예문은 별도 테이블로 관리 예정
     );
