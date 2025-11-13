@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
 
 class SocialLoginScreen extends StatefulWidget {
@@ -14,6 +15,25 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
   final SupabaseService _supabaseService = SupabaseService.instance;
   bool _isLoading = false;
   String? _errorMessage;
+  String? _waitingMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupAuthListener();
+  }
+
+  void _setupAuthListener() {
+    _supabaseService.authStateChanges().listen((AuthState state) {
+      if (!mounted) return;
+
+      // OAuth 로그인이 완료되면 자동으로 화면 닫기
+      if (state.session != null && _isLoading) {
+        // 로그인 성공
+        Navigator.of(context).pop(true);
+      }
+    });
+  }
 
   Future<void> _handleSocialLogin(
     Future<bool> Function() loginFunction,
@@ -24,6 +44,7 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _waitingMessage = null;
     });
 
     try {
@@ -32,17 +53,10 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
       if (!mounted) return;
 
       if (success) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$providerName 계정으로 연동되었습니다.'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-
-        // Close the login screen
-        Navigator.of(context).pop(true);
+        // OAuth 브라우저가 열렸으므로 대기 메시지 표시
+        setState(() {
+          _waitingMessage = '브라우저에서 $providerName 로그인을 완료하세요';
+        });
       }
     } catch (e) {
       if (!mounted) return;
@@ -50,6 +64,7 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
       setState(() {
         _errorMessage = '$providerName 로그인 실패: ${e.toString()}';
         _isLoading = false;
+        _waitingMessage = null;
       });
     }
   }
@@ -165,6 +180,37 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
                   backgroundColor: const Color(0xFFFEE500),
                   foregroundColor: const Color(0xFF000000),
                   theme: theme,
+                ),
+              ],
+
+              // Waiting Message
+              if (_waitingMessage != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        PhosphorIconsRegular.browser,
+                        size: 16,
+                        color: theme.colors.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _waitingMessage!,
+                          style: theme.typography.sm.copyWith(
+                            color: theme.colors.primary,
+                            fontFamily: 'SUITE',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
 
