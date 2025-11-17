@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -16,6 +17,7 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
   bool _isLoading = false;
   String? _errorMessage;
   String? _waitingMessage;
+  StreamSubscription<AuthState>? _authSubscription;
 
   @override
   void initState() {
@@ -23,14 +25,24 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
     _setupAuthListener();
   }
 
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
+
   void _setupAuthListener() {
-    _supabaseService.authStateChanges().listen((AuthState state) {
+    _authSubscription = _supabaseService.authStateChanges().listen((AuthState state) {
       if (!mounted) return;
 
       // OAuth 로그인이 완료되면 자동으로 화면 닫기
       if (state.session != null && _isLoading) {
-        // 로그인 성공
-        Navigator.of(context).pop(true);
+        // 로그인 성공 - WidgetsBinding을 사용하여 안전하게 Navigator 호출
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && Navigator.canPop(context)) {
+            Navigator.of(context).pop(true);
+          }
+        });
       }
     });
   }
