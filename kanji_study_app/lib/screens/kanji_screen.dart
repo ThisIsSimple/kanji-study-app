@@ -328,13 +328,13 @@ class _KanjiScreenState extends State<KanjiScreen> {
                             ),
                           )
                         : GridView.builder(
-                            padding: AppSpacing.screenPadding,
+                            padding: EdgeInsets.zero,
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 3,
                                   childAspectRatio: 0.75,
-                                  crossAxisSpacing: AppSpacing.md,
-                                  mainAxisSpacing: AppSpacing.md,
+                                  crossAxisSpacing: AppSpacing.base,
+                                  mainAxisSpacing: AppSpacing.base,
                                 ),
                             itemCount: _filteredKanji.length,
                             itemBuilder: (context, index) {

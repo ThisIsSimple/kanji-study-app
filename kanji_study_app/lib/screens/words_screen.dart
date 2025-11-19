@@ -417,7 +417,7 @@ class _WordsScreenState extends State<WordsScreen> {
                             ),
                           )
                         : ListView.builder(
-                            padding: AppSpacing.screenPadding,
+                            padding: EdgeInsets.zero,
                             itemCount: _filteredWords.length,
                             key: ValueKey(_filteredWords.length),
                             itemBuilder: (context, index) {

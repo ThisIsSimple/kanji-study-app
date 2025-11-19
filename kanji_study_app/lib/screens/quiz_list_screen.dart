@@ -264,7 +264,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: EdgeInsets.zero,
                     itemCount: _filteredQuizSets.length,
                     itemBuilder: (context, index) {
                       final quizSet = _filteredQuizSets[index];
