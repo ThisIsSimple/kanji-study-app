@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/quiz_set.dart';
 import '../services/supabase_service.dart';
+import '../widgets/app_scaffold.dart';
 import 'quiz_detail_screen.dart';
 
 class QuizListScreen extends StatefulWidget {
@@ -127,14 +128,12 @@ class _QuizListScreenState extends State<QuizListScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return FScaffold(
-      header: FHeader(
-        title: Text(
-          '퀴즈',
-          style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
-        ),
+    return AppScaffold(
+      title: Text(
+        '퀴즈',
+        style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
       ),
-      child: Column(
+      body: Column(
         children: [
           // Search and Filter Bar
           Container(

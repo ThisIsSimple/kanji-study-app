@@ -9,6 +9,7 @@ import '../services/connectivity_service.dart';
 import 'study_screen.dart';
 import '../widgets/progress_card.dart';
 import '../widgets/today_kanji_card.dart';
+import '../widgets/app_scaffold.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -117,14 +118,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return FScaffold(
-      header: FHeader(
-        title: Text(
-          '한자 학습',
-          style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
-        ),
+    return AppScaffold(
+      title: Text(
+        '한자 학습',
+        style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
       ),
-      child: Column(
+      body: Column(
         children: [
           // 오프라인 배너
           if (!_isOnline)

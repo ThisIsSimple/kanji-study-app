@@ -8,6 +8,7 @@ import '../services/word_service.dart';
 import '../services/flashcard_service.dart';
 import '../widgets/word_list_item.dart';
 import '../widgets/flashcard_count_selector.dart';
+import '../widgets/app_scaffold.dart';
 import 'word_detail_screen.dart';
 import 'flashcard_screen.dart';
 
@@ -28,7 +29,7 @@ class _WordsScreenState extends State<WordsScreen> {
   final Set<int> _selectedJlptLevels = {};
   bool _isLoading = true;
   bool _showOnlyFavorites = false;
-  bool _showSearchBar = false;
+
 
   @override
   void initState() {
@@ -111,16 +112,7 @@ class _WordsScreenState extends State<WordsScreen> {
     });
   }
 
-  void _toggleSearch() {
-    setState(() {
-      _showSearchBar = !_showSearchBar;
-      if (!_showSearchBar) {
-        _searchController.clear();
-        _searchQuery = '';
-        _applyFilters();
-      }
-    });
-  }
+
 
   Future<void> _startFlashcardSession() async {
     if (_filteredWords.isEmpty) {
@@ -318,132 +310,63 @@ class _WordsScreenState extends State<WordsScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return FScaffold(
-      header: Stack(
-        children: [
-          FHeader(
-            title: Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Text(
-                _showOnlyFavorites
-                    ? '즐겨찾기 ${_filteredWords.length}개'
-                    : _selectedJlptLevels.isEmpty
-                    ? '전체 ${_filteredWords.length}개'
-                    : 'JLPT ${_selectedJlptLevels.map((l) => "N$l").join(", ")} - ${_filteredWords.length}개',
-                style: theme.typography.sm.copyWith(
-                  color: theme.colors.mutedForeground,
+    return AppScaffold(
+      title: Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: Text(
+          _showOnlyFavorites
+              ? '즐겨찾기 ${_filteredWords.length}개'
+              : _selectedJlptLevels.isEmpty
+              ? '전체 ${_filteredWords.length}개'
+              : 'JLPT ${_selectedJlptLevels.map((l) => "N$l").join(", ")} - ${_filteredWords.length}개',
+          style: theme.typography.sm.copyWith(
+            color: theme.colors.mutedForeground,
+          ),
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: Icon(
+            _showOnlyFavorites
+                ? PhosphorIconsFill.star
+                : PhosphorIconsRegular.star,
+            color: _showOnlyFavorites ? Colors.amber : null,
+            size: 20,
+          ),
+          onPressed: _toggleFavoriteFilter,
+        ),
+        IconButton(
+          icon: Stack(
+            children: [
+              Icon(PhosphorIconsRegular.funnel, size: 20),
+              if (_selectedJlptLevels.isNotEmpty)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: theme.colors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            suffixes: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 36,
-                    height: 36,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: Icon(
-                        _showOnlyFavorites
-                            ? PhosphorIconsFill.star
-                            : PhosphorIconsRegular.star,
-                        color: _showOnlyFavorites ? Colors.amber : null,
-                        size: 20,
-                      ),
-                      onPressed: _toggleFavoriteFilter,
-                    ),
-                  ),
-                  SizedBox(
-                    width: 36,
-                    height: 36,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: Stack(
-                        children: [
-                          Icon(PhosphorIconsRegular.funnel, size: 20),
-                          if (_selectedJlptLevels.isNotEmpty)
-                            Positioned(
-                              right: 0,
-                              top: 0,
-                              child: Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: theme.colors.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      onPressed: _showFilterBottomSheet,
-                    ),
-                  ),
-                  SizedBox(
-                    width: 36,
-                    height: 36,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: Icon(
-                        PhosphorIconsRegular.magnifyingGlass,
-                        size: 20,
-                      ),
-                      onPressed: _toggleSearch,
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
-          if (_showSearchBar)
-            Positioned.fill(
-              child: Container(
-                color: theme.colors.background,
-                child: SafeArea(
-                  child: Container(
-                    height: 56,
-                    margin: const EdgeInsets.only(top: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            autofocus: true,
-                            onChanged: _onSearchChanged,
-                            decoration: InputDecoration(
-                              hintText: '일본어, 한글, 후리가나로 검색...',
-                              hintStyle: TextStyle(),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            style: theme.typography.lg.copyWith(
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 36,
-                          height: 36,
-                          child: IconButton(
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: Icon(PhosphorIconsRegular.x, size: 20),
-                            onPressed: _toggleSearch,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-      child: _isLoading
+          onPressed: _showFilterBottomSheet,
+        ),
+      ],
+      searchController: _searchController,
+      onSearchChanged: (value) => _onSearchChanged(value),
+      onSearchClosed: () {
+        setState(() {
+          _searchQuery = '';
+          _applyFilters();
+        });
+      },
+      searchHint: '일본어, 한글, 후리가나로 검색...',
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
@@ -509,7 +432,7 @@ class _WordsScreenState extends State<WordsScreen> {
                             ),
                           )
                         : ListView.builder(
-                            padding: const EdgeInsets.only(top: 8, bottom: 16),
+                            padding: const EdgeInsets.all(16.0),
                             itemCount: _filteredWords.length,
                             key: ValueKey(_filteredWords.length),
                             itemBuilder: (context, index) {

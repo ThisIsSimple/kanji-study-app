@@ -1,5 +1,4 @@
 import '../models/word_model.dart';
-import '../services/supabase_service.dart';
 import '../services/local_database_service.dart';
 import '../services/connectivity_service.dart';
 
@@ -9,7 +8,6 @@ class WordRepository {
 
   WordRepository._internal();
 
-  final SupabaseService _supabaseService = SupabaseService.instance;
   final LocalDatabaseService _localDbService = LocalDatabaseService.instance;
   final ConnectivityService _connectivityService = ConnectivityService.instance;
 

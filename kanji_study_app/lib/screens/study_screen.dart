@@ -8,6 +8,7 @@ import '../models/kanji_example.dart';
 import '../models/study_record_model.dart';
 import '../services/gemini_service.dart';
 import '../services/supabase_service.dart';
+import '../services/kanji_service.dart';
 import '../widgets/furigana_text.dart';
 import '../utils/korean_formatter.dart';
 
@@ -30,11 +31,13 @@ class StudyScreen extends StatefulWidget {
 class _StudyScreenState extends State<StudyScreen> {
   final GeminiService _geminiService = GeminiService.instance;
   final SupabaseService _supabaseService = SupabaseService.instance;
+  final KanjiService _kanjiService = KanjiService.instance;
 
   PageController? _pageController;
   int _currentIndex = 0;
   List<Kanji>? _kanjiList;
   Kanji? _currentKanji;
+  bool _isFavorite = false;
 
   bool _isGeneratingExamples = false;
   List<KanjiExample>? _generatedExamples;
@@ -53,6 +56,7 @@ class _StudyScreenState extends State<StudyScreen> {
     _currentIndex = widget.currentIndex ?? 0;
     _currentKanji = _kanjiList![_currentIndex];
     _pageController = PageController(initialPage: _currentIndex);
+    _isFavorite = _kanjiService.isFavorite(_currentKanji!.character);
     _loadDatabaseExamples();
     _loadStudyStats();
   }
@@ -68,6 +72,7 @@ class _StudyScreenState extends State<StudyScreen> {
       setState(() {
         _currentIndex = index;
         _currentKanji = _kanjiList![index];
+        _isFavorite = _kanjiService.isFavorite(_currentKanji!.character);
         _generatedExamples = null;
         _databaseExamples = [];
         _studyStats = null;
@@ -272,6 +277,14 @@ class _StudyScreenState extends State<StudyScreen> {
         _isRecordingStudy = false;
       });
     }
+  }
+
+  void _toggleFavorite() {
+    if (_currentKanji == null) return;
+    setState(() {
+      _kanjiService.toggleFavorite(_currentKanji!.character);
+      _isFavorite = !_isFavorite;
+    });
   }
 
   Future<void> _generateExamples() async {
@@ -855,6 +868,17 @@ class _StudyScreenState extends State<StudyScreen> {
           prefixes: [
             FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
           ],
+          suffixes: [
+            IconButton(
+              icon: Icon(
+                _isFavorite
+                    ? PhosphorIconsFill.star
+                    : PhosphorIconsRegular.star,
+                color: _isFavorite ? Colors.amber : null,
+              ),
+              onPressed: _toggleFavorite,
+            ),
+          ],
         ),
         child: Stack(
           children: [
@@ -877,6 +901,15 @@ class _StudyScreenState extends State<StudyScreen> {
         ),
         prefixes: [
           FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
+        ],
+        suffixes: [
+          IconButton(
+            icon: Icon(
+              _isFavorite ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+              color: _isFavorite ? Colors.amber : null,
+            ),
+            onPressed: _toggleFavorite,
+          ),
         ],
       ),
       child: Stack(

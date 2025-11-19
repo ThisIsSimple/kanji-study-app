@@ -1,5 +1,4 @@
 import '../models/kanji_model.dart';
-import 'supabase_service.dart';
 import 'local_database_service.dart';
 import 'connectivity_service.dart';
 
@@ -9,7 +8,6 @@ class KanjiRepository {
 
   KanjiRepository._internal();
 
-  final SupabaseService _supabaseService = SupabaseService.instance;
   final LocalDatabaseService _localDbService = LocalDatabaseService.instance;
   final ConnectivityService _connectivityService = ConnectivityService.instance;
 

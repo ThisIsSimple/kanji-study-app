@@ -10,6 +10,7 @@ import '../services/flashcard_service.dart';
 
 import '../widgets/flashcard_count_selector.dart';
 import '../widgets/kanji_grid_card.dart';
+import '../widgets/app_scaffold.dart';
 import 'study_screen.dart';
 import 'flashcard_screen.dart';
 
@@ -29,7 +30,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
   List<Kanji> _filteredKanji = [];
   String _searchQuery = '';
   bool _isLoading = true;
-  bool _showSearchBar = false;
+
   bool _showOnlyFavorites = false;
 
   @override
@@ -104,16 +105,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
     });
   }
 
-  void _toggleSearch() {
-    setState(() {
-      _showSearchBar = !_showSearchBar;
-      if (!_showSearchBar) {
-        _searchController.clear();
-        _searchQuery = '';
-        _applyFilters();
-      }
-    });
-  }
+
 
   void _toggleFavoriteFilter() {
     setState(() {
@@ -133,7 +125,10 @@ class _KanjiScreenState extends State<KanjiScreen> {
           currentIndex: index >= 0 ? index : 0,
         ),
       ),
-    );
+    ).then((_) {
+      // Refresh the UI when returning from detail screen
+      setState(() {});
+    });
   }
 
   Future<void> _startFlashcardSession() async {
@@ -249,100 +244,40 @@ class _KanjiScreenState extends State<KanjiScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return FScaffold(
-      header: Stack(
-        children: [
-          FHeader(
-            title: Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Text(
-                _showOnlyFavorites
-                    ? '즐겨찾기 ${_filteredKanji.length}개'
-                    : '전체 ${_filteredKanji.length}개',
-                style: theme.typography.sm.copyWith(
-                  color: theme.colors.mutedForeground,
-                ),
-              ),
-            ),
-            suffixes: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 36,
-                    height: 36,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: Icon(
-                        _showOnlyFavorites
-                            ? PhosphorIconsFill.star
-                            : PhosphorIconsRegular.star,
-                        color: _showOnlyFavorites ? Colors.amber : null,
-                        size: 20,
-                      ),
-                      onPressed: _toggleFavoriteFilter,
-                    ),
-                  ),
-                  SizedBox(
-                    width: 36,
-                    height: 36,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: Icon(
-                        PhosphorIconsRegular.magnifyingGlass,
-                        size: 20,
-                      ),
-                      onPressed: _toggleSearch,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+    return AppScaffold(
+      title: Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: Text(
+          _showOnlyFavorites
+              ? '즐겨찾기 ${_filteredKanji.length}개'
+              : '전체 ${_filteredKanji.length}개',
+          style: theme.typography.sm.copyWith(
+            color: theme.colors.mutedForeground,
           ),
-          if (_showSearchBar)
-            Positioned.fill(
-              child: Container(
-                color: theme.colors.background,
-                child: SafeArea(
-                  child: Container(
-                    height: 56,
-                    margin: const EdgeInsets.only(top: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            autofocus: true,
-                            decoration: InputDecoration(
-                              hintText: '한자, 의미, 읽기로 검색...',
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            style: theme.typography.lg,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 36,
-                          height: 36,
-                          child: IconButton(
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: Icon(PhosphorIconsRegular.x, size: 20),
-                            onPressed: _toggleSearch,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
+        ),
       ),
-      child: _isLoading
+      actions: [
+        IconButton(
+          icon: Icon(
+            _showOnlyFavorites
+                ? PhosphorIconsFill.star
+                : PhosphorIconsRegular.star,
+            color: _showOnlyFavorites ? Colors.amber : null,
+            size: 20,
+          ),
+          onPressed: _toggleFavoriteFilter,
+        ),
+      ],
+      searchController: _searchController,
+      onSearchChanged: (value) => _onSearchChanged(),
+      onSearchClosed: () {
+        setState(() {
+          _searchQuery = '';
+          _applyFilters();
+        });
+      },
+      searchHint: '한자, 의미, 읽기로 검색...',
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [

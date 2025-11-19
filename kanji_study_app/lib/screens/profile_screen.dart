@@ -10,6 +10,7 @@ import 'settings_screen.dart';
 import 'study_calendar_screen.dart';
 import 'study_calendar_detail_screen.dart';
 import 'social_login_screen.dart';
+import '../widgets/app_scaffold.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -198,20 +199,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return FScaffold(
-      header: FHeader(
-        title: Text(
-          '프로필',
-          style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
-        ),
-        suffixes: [
-          IconButton(
-            icon: Icon(PhosphorIconsRegular.gear),
-            onPressed: _navigateToSettings,
-          ),
-        ],
+    return AppScaffold(
+      title: Text(
+        '프로필',
+        style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
       ),
-      child: _isLoading
+      actions: [
+        IconButton(
+          icon: Icon(PhosphorIconsRegular.gear),
+          onPressed: _navigateToSettings,
+        ),
+      ],
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
