@@ -10,6 +10,7 @@ import 'study_screen.dart';
 import '../widgets/progress_card.dart';
 import '../widgets/today_kanji_card.dart';
 import '../widgets/app_scaffold.dart';
+import '../constants/app_spacing.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -119,10 +120,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = FTheme.of(context);
 
     return AppScaffold(
-      title: Text(
-        '한자 학습',
-        style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
-      ),
       body: Column(
         children: [
           // 오프라인 배너
@@ -153,46 +150,43 @@ class _HomeScreenState extends State<HomeScreen> {
           // 메인 컨텐츠
           Expanded(
             child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : todayKanji == null
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(PhosphorIconsRegular.warningCircle, size: 64),
-                  const SizedBox(height: 16),
-                  Text(
-                    '한자 데이터를 불러올 수 없습니다',
-                    style: theme.typography.lg,
-                  ),
-                ],
-              ),
-            )
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Progress Card
-                  ProgressCard(
-                    progress: progress,
-                    studiedCount: studiedCount,
-                    masteredCount: masteredCount,
-                  ),
-                  const SizedBox(height: 24),
+                ? const Center(child: CircularProgressIndicator())
+                : todayKanji == null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(PhosphorIconsRegular.warningCircle, size: 64),
+                        const SizedBox(height: 16),
+                        Text('한자 데이터를 불러올 수 없습니다', style: theme.typography.lg),
+                      ],
+                    ),
+                  )
+                : Padding(
+                    padding: AppSpacing.screenPadding,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Progress Card
+                        ProgressCard(
+                          progress: progress,
+                          studiedCount: studiedCount,
+                          masteredCount: masteredCount,
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
 
-                  // Today's Kanji Card
-                  TodayKanjiCard(kanji: todayKanji!),
-                  const SizedBox(height: 32),
+                        // Today's Kanji Card
+                        TodayKanjiCard(kanji: todayKanji!),
+                        const SizedBox(height: AppSpacing.xxl),
 
-                  // Study Button
-                  FButton(
-                    onPress: _navigateToStudy,
-                    child: Text('학습 시작'),
+                        // Study Button
+                        FButton(
+                          onPress: _navigateToStudy,
+                          child: Text('학습 시작'),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
           ),
         ],
       ),

@@ -11,6 +11,7 @@ import '../widgets/flashcard_count_selector.dart';
 import '../widgets/app_scaffold.dart';
 import 'word_detail_screen.dart';
 import 'flashcard_screen.dart';
+import '../constants/app_spacing.dart';
 
 class WordsScreen extends StatefulWidget {
   const WordsScreen({super.key});
@@ -311,19 +312,6 @@ class _WordsScreenState extends State<WordsScreen> {
     final theme = FTheme.of(context);
 
     return AppScaffold(
-      title: Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: Text(
-          _showOnlyFavorites
-              ? '즐겨찾기 ${_filteredWords.length}개'
-              : _selectedJlptLevels.isEmpty
-              ? '전체 ${_filteredWords.length}개'
-              : 'JLPT ${_selectedJlptLevels.map((l) => "N$l").join(", ")} - ${_filteredWords.length}개',
-          style: theme.typography.sm.copyWith(
-            color: theme.colors.mutedForeground,
-          ),
-        ),
-      ),
       actions: [
         IconButton(
           icon: Icon(
@@ -374,14 +362,11 @@ class _WordsScreenState extends State<WordsScreen> {
                 if (_filteredWords.isNotEmpty)
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                    padding: AppSpacing.buttonPadding,
                     child: FButton(
                       onPress: _startFlashcardSession,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -432,7 +417,7 @@ class _WordsScreenState extends State<WordsScreen> {
                             ),
                           )
                         : ListView.builder(
-                            padding: const EdgeInsets.all(16.0),
+                            padding: AppSpacing.screenPadding,
                             itemCount: _filteredWords.length,
                             key: ValueKey(_filteredWords.length),
                             itemBuilder: (context, index) {

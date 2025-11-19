@@ -5,6 +5,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
 import '../services/kanji_service.dart';
 import '../utils/korean_formatter.dart';
+import '../constants/app_spacing.dart';
 
 class KanjiGridCard extends StatelessWidget {
   final Kanji kanji;
@@ -38,7 +39,7 @@ class KanjiGridCard extends StatelessWidget {
             // Top bar with check and favorite
             Container(
               height: 32,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -80,7 +81,7 @@ class KanjiGridCard extends StatelessWidget {
             // Main content
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Column(
                   children: [
                     const SizedBox(height: 4),

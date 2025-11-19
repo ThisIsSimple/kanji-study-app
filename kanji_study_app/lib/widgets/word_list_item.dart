@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/word_model.dart';
+import '../constants/app_spacing.dart';
 
 class WordListItem extends StatelessWidget {
   final Word word;
@@ -23,13 +24,13 @@ class WordListItem extends StatelessWidget {
     final theme = FTheme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: AppSpacing.listItemSpacing,
       child: FCard(
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: AppSpacing.cardPadding,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

@@ -59,16 +59,31 @@ class _AppScaffoldState extends State<AppScaffold> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    // Build actions list
+    // Build actions list - search button at the end (rightmost)
     final List<Widget> effectiveActions = [
+      ...?widget.actions,
       if (widget.searchController != null && !_isSearchActive)
         IconButton(
           icon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20),
           onPressed: _toggleSearch,
         ),
-      ...?widget.actions,
     ];
 
+    // Determine if header should be shown
+    final bool hasHeader = widget.title != null || effectiveActions.isNotEmpty;
+
+    // When there's no header, use Scaffold with SafeArea only for top
+    if (!hasHeader) {
+      return Scaffold(
+        backgroundColor: theme.colors.background,
+        body: SafeArea(
+          bottom: false, // Allow bottom content to extend to edge (for bottom nav)
+          child: widget.body,
+        ),
+      );
+    }
+
+    // When there's a header, use FScaffold
     return FScaffold(
       header: Stack(
         children: [
@@ -125,7 +140,6 @@ class _AppScaffoldState extends State<AppScaffold> {
             ),
         ],
       ),
-
       child: widget.body,
     );
   }

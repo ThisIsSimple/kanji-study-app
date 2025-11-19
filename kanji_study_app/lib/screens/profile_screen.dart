@@ -11,6 +11,7 @@ import 'study_calendar_screen.dart';
 import 'study_calendar_detail_screen.dart';
 import 'social_login_screen.dart';
 import '../widgets/app_scaffold.dart';
+import '../constants/app_spacing.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -200,10 +201,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final theme = FTheme.of(context);
 
     return AppScaffold(
-      title: Text(
-        '프로필',
-        style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
-      ),
       actions: [
         IconButton(
           icon: Icon(PhosphorIconsRegular.gear),
@@ -213,7 +210,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: AppSpacing.screenPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -289,7 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // User Info Card
                   FCard(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: AppSpacing.cardPadding,
                       child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -352,7 +349,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // Weekly Calendar Card
                   FCard(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: AppSpacing.cardPadding,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
