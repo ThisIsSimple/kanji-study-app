@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:drift/drift.dart' hide JsonKey;
+import 'package:flutter/foundation.dart';
 import '../database/app_database.dart';
 import '../models/kanji_model.dart';
 import '../models/word_model.dart';
@@ -23,13 +24,13 @@ class LocalDatabaseService {
   Future<void> initialize() async {
     _database = AppDatabase();
     _isInitialized = await _database.isInitialized();
-    print('LocalDatabaseService initialized: $_isInitialized');
+    debugPrint('LocalDatabaseService initialized: $_isInitialized');
   }
 
   /// Supabase에서 전체 한자 데이터 다운로드 및 저장
   Future<void> downloadAndCacheKanjiData() async {
     try {
-      print('Downloading kanji data from Supabase...');
+      debugPrint('Downloading kanji data from Supabase...');
       final supabaseService = SupabaseService.instance;
       final response = await supabaseService.client
           .from('kanji')
@@ -46,9 +47,9 @@ class LocalDatabaseService {
       await _database.insertKanjiBatch(kanjis);
 
       _isInitialized = true;
-      print('Successfully cached ${kanjis.length} kanji characters');
+      debugPrint('Successfully cached ${kanjis.length} kanji characters');
     } catch (e) {
-      print('Error downloading kanji data: $e');
+      debugPrint('Error downloading kanji data: $e');
       rethrow;
     }
   }
@@ -56,7 +57,7 @@ class LocalDatabaseService {
   /// Supabase에서 전체 단어 데이터 다운로드 및 저장
   Future<void> downloadAndCacheWordsData() async {
     try {
-      print('Downloading words data from Supabase...');
+      debugPrint('Downloading words data from Supabase...');
       final supabaseService = SupabaseService.instance;
       final response = await supabaseService.client
           .from('words')
@@ -72,9 +73,9 @@ class LocalDatabaseService {
       await _database.clearWords();
       await _database.insertWordsBatch(words);
 
-      print('Successfully cached ${words.length} words');
+      debugPrint('Successfully cached ${words.length} words');
     } catch (e) {
-      print('Error downloading words data: $e');
+      debugPrint('Error downloading words data: $e');
       rethrow;
     }
   }

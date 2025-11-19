@@ -171,10 +171,11 @@ class _FlashcardScreenState extends State<FlashcardScreen>
         actions: [
           TextButton(
             onPressed: () async {
+              final navigator = Navigator.of(context);
               await _flashcardService.clearSession(_session.itemType);
               if (!mounted) return;
-              Navigator.of(context).pop(); // Close dialog
-              Navigator.of(context).pop(); // Close flashcard screen
+              navigator.pop(); // Close dialog
+              navigator.pop(); // Close flashcard screen
             },
             child: Text(
               '완료',

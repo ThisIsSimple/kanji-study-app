@@ -150,9 +150,10 @@ class _WordsScreenState extends State<WordsScreen> {
             actions: [
               TextButton(
                 onPressed: () async {
+                  final navigator = Navigator.of(context);
                   await _flashcardService.clearSession('word');
                   if (!mounted) return;
-                  Navigator.of(context).pop();
+                  navigator.pop();
                   await _showCountSelectorAndStart();
                 },
                 child: Text('새로 시작', style: TextStyle()),

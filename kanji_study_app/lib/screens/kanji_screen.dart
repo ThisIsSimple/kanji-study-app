@@ -106,8 +106,6 @@ class _KanjiScreenState extends State<KanjiScreen> {
     });
   }
 
-
-
   void _toggleFavoriteFilter() {
     setState(() {
       _showOnlyFavorites = !_showOnlyFavorites;
@@ -156,19 +154,16 @@ class _KanjiScreenState extends State<KanjiScreen> {
           return AlertDialog(
             title: Text(
               '진행 중인 학습',
-              style: theme.typography.lg.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: theme.typography.lg.copyWith(fontWeight: FontWeight.bold),
             ),
-            content: Text(
-              '이전에 진행 중이던 플래시카드 학습이 있습니다.\n계속하시겠습니까?',
-            ),
+            content: Text('이전에 진행 중이던 플래시카드 학습이 있습니다.\n계속하시겠습니까?'),
             actions: [
               TextButton(
                 onPressed: () async {
+                  final navigator = Navigator.of(context);
                   await _flashcardService.clearSession('kanji');
                   if (!mounted) return;
-                  Navigator.of(context).pop();
+                  navigator.pop();
                   await _showCountSelectorAndStart();
                 },
                 child: Text('새로 시작'),
@@ -279,7 +274,9 @@ class _KanjiScreenState extends State<KanjiScreen> {
                     child: FButton(
                       onPress: _startFlashcardSession,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.xs,
+                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -333,8 +330,8 @@ class _KanjiScreenState extends State<KanjiScreen> {
                                 const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 3,
                                   childAspectRatio: 0.75,
-                                  crossAxisSpacing: AppSpacing.base,
-                                  mainAxisSpacing: AppSpacing.base,
+                                  crossAxisSpacing: AppSpacing.sm,
+                                  mainAxisSpacing: AppSpacing.sm,
                                 ),
                             itemCount: _filteredKanji.length,
                             itemBuilder: (context, index) {
@@ -362,5 +359,3 @@ class _KanjiScreenState extends State<KanjiScreen> {
     );
   }
 }
-
-

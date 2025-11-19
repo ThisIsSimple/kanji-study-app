@@ -148,9 +148,10 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
           barrierDismissible: true,
           barrierColor: Colors.transparent,
           builder: (BuildContext dialogContext) {
+            final navigator = Navigator.of(dialogContext);
             Future.delayed(const Duration(seconds: 2), () {
-              if (Navigator.canPop(dialogContext)) {
-                Navigator.pop(dialogContext);
+              if (navigator.canPop()) {
+                navigator.pop();
               }
             });
 
@@ -213,9 +214,10 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
           barrierDismissible: true,
           barrierColor: Colors.transparent,
           builder: (BuildContext dialogContext) {
+            final navigator = Navigator.of(dialogContext);
             Future.delayed(const Duration(seconds: 2), () {
-              if (Navigator.canPop(dialogContext)) {
-                Navigator.pop(dialogContext);
+              if (navigator.canPop()) {
+                navigator.pop();
               }
             });
 

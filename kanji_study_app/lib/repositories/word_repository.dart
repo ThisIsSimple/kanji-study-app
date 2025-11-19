@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../models/word_model.dart';
 import '../services/local_database_service.dart';
 import '../services/connectivity_service.dart';
@@ -24,11 +25,11 @@ class WordRepository {
       // 2. 로컬 DB가 비어있으면 초기 다운로드 필요
       if (_wordList!.isEmpty) {
         if (_connectivityService.isOnline) {
-          print('Local DB is empty. Downloading words from Supabase...');
+          debugPrint('Local DB is empty. Downloading words from Supabase...');
           await _localDbService.downloadAndCacheWordsData();
           _wordList = await _localDbService.getAllWords();
         } else {
-          print('Offline and no cached data. Cannot load words.');
+          debugPrint('Offline and no cached data. Cannot load words.');
           throw Exception('초기 데이터 다운로드를 위해 인터넷 연결이 필요합니다.');
         }
       }
@@ -41,7 +42,7 @@ class WordRepository {
         _checkForUpdatesInBackground();
       }
     } catch (e) {
-      print('Error loading words data: $e');
+      debugPrint('Error loading words data: $e');
       _wordList = [];
       rethrow;
     }
@@ -63,7 +64,7 @@ class WordRepository {
       // TODO: 마지막 업데이트 시간 확인 후 필요시에만 동기화
       // 현재는 매번 확인하지 않음 (성능상)
     } catch (e) {
-      print('Background update check failed: $e');
+      debugPrint('Background update check failed: $e');
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../models/kanji_model.dart';
 import 'local_database_service.dart';
 import 'connectivity_service.dart';
@@ -24,11 +25,11 @@ class KanjiRepository {
       // 2. 로컬 DB가 비어있으면 초기 다운로드 필요
       if (_kanjiList!.isEmpty) {
         if (_connectivityService.isOnline) {
-          print('Local DB is empty. Downloading from Supabase...');
+          debugPrint('Local DB is empty. Downloading from Supabase...');
           await _localDbService.downloadAndCacheKanjiData();
           _kanjiList = await _localDbService.getAllKanji();
         } else {
-          print('Offline and no cached data. Cannot load kanji.');
+          debugPrint('Offline and no cached data. Cannot load kanji.');
           throw Exception('초기 데이터 다운로드를 위해 인터넷 연결이 필요합니다.');
         }
       }
@@ -41,7 +42,7 @@ class KanjiRepository {
         _checkForUpdatesInBackground();
       }
     } catch (e) {
-      print('Error loading kanji data: $e');
+      debugPrint('Error loading kanji data: $e');
       _kanjiList = [];
       rethrow;
     }
@@ -53,7 +54,7 @@ class KanjiRepository {
       // TODO: 마지막 업데이트 시간 확인 후 필요시에만 동기화
       // 현재는 매번 확인하지 않음 (성능상)
     } catch (e) {
-      print('Background update check failed: $e');
+      debugPrint('Background update check failed: $e');
     }
   }
 

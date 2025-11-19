@@ -210,7 +210,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: EdgeInsets.zero,
+              padding: AppSpacing.screenPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -219,7 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     GestureDetector(
                       onTap: _navigateToSocialLogin,
                       child: Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: AppSpacing.cardPadding,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -280,7 +280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.base),
                   ],
 
                   // User Info Card
@@ -344,7 +344,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.base),
 
                   // Weekly Calendar Card
                   FCard(

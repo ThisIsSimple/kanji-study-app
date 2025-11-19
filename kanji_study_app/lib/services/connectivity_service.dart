@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 
 /// 네트워크 연결 상태를 감지하고 관리하는 싱글톤 서비스
 class ConnectivityService {
@@ -30,7 +31,7 @@ class ConnectivityService {
     _subscription = _connectivity.onConnectivityChanged.listen(
       _updateConnectionStatus,
       onError: (error) {
-        print('Connectivity error: $error');
+        debugPrint('Connectivity error: $error');
         _updateOnlineStatus(false);
       },
     );
@@ -50,7 +51,7 @@ class ConnectivityService {
     if (_isOnline != isOnline) {
       _isOnline = isOnline;
       _connectivityController.add(_isOnline);
-      print('Connectivity changed: ${_isOnline ? "Online" : "Offline"}');
+      debugPrint('Connectivity changed: ${_isOnline ? "Online" : "Offline"}');
     }
   }
 

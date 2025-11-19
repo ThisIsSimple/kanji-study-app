@@ -31,7 +31,7 @@ class KanjiGridCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: theme.colors.background,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: theme.colors.border, width: 1),
         ),
         child: Column(
@@ -81,7 +81,9 @@ class KanjiGridCard extends StatelessWidget {
             // Main content
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.base,
+                ),
                 child: Column(
                   children: [
                     const SizedBox(height: 4),
