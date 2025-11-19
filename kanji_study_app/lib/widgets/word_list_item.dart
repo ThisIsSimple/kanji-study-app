@@ -23,119 +23,100 @@ class WordListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return Padding(
-      padding: AppSpacing.listItemSpacing,
-      child: FCard(
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: AppSpacing.cardPadding,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Main content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Reading (furigana) - small gray text
-                      if (word.reading.isNotEmpty && word.reading != word.word)
-                        Text(
-                          word.reading,
-                          style: theme.typography.sm.copyWith(
-                            color: theme.colors.mutedForeground.withValues(
-                              alpha: 0.7,
+    return FCard(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          children: [
+            Positioned(
+              right: 0,
+              top: 0,
+              child: // Favorite button
+              IconButton(
+                icon: Icon(
+                  isFavorite
+                      ? PhosphorIconsFill.star
+                      : PhosphorIconsRegular.star,
+                  size: 20,
+                  color: isFavorite
+                      ? Colors.amber
+                      : theme.colors.mutedForeground,
+                ),
+                onPressed: onFavoriteToggle,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(AppSpacing.md),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Main content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // JLPT Level badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getJlptColor(
+                              word.jlptLevel,
+                            ).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _getJlptColor(
+                                word.jlptLevel,
+                              ).withValues(alpha: 0.5),
+                              width: 1,
                             ),
-                            fontSize: 14,
-                            height: 1.2,
+                          ),
+                          child: Text(
+                            'N${word.jlptLevel}',
+                            style: theme.typography.sm.copyWith(
+                              color: _getJlptColor(word.jlptLevel),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                        // Word (main text)
+                        Text(
+                          word.word,
+                          style: GoogleFonts.notoSerifJp(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colors.foreground,
+                            height: 1.3,
                           ),
                         ),
 
-                      // Word (main text)
-                      Text(
-                        word.word,
-                        style: GoogleFonts.notoSerifJp(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colors.foreground,
-                          height: 1.3,
-                        ),
-                      ),
+                        const SizedBox(height: 8),
 
-                      const SizedBox(height: 8),
-
-                      // Meanings
-                      Text(
-                        word.meaningsText,
-                        style: theme.typography.sm.copyWith(
-                          color: theme.colors.foreground.withValues(alpha: 0.8),
-                          height: 1.4,
+                        // Meanings
+                        Text(
+                          word.meaningsText,
+                          style: theme.typography.sm.copyWith(
+                            color: theme.colors.foreground.withValues(
+                              alpha: 0.8,
+                            ),
+                            height: 1.4,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-
-                // Right side content
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // Favorite button
-                    IconButton(
-                      icon: Icon(
-                        isFavorite
-                            ? PhosphorIconsFill.star
-                            : PhosphorIconsRegular.star,
-                        size: 20,
-                        color: isFavorite
-                            ? Colors.amber
-                            : theme.colors.mutedForeground,
-                      ),
-                      onPressed: onFavoriteToggle,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // JLPT Level badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getJlptColor(
-                          word.jlptLevel,
-                        ).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _getJlptColor(
-                            word.jlptLevel,
-                          ).withValues(alpha: 0.5),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        'N${word.jlptLevel}',
-                        style: theme.typography.sm.copyWith(
-                          color: _getJlptColor(word.jlptLevel),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

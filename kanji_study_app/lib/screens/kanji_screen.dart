@@ -280,32 +280,24 @@ class _KanjiScreenState extends State<KanjiScreen> {
               onRefresh: () => _loadKanji(forceReload: true),
               child: _filteredKanji.isEmpty
                   ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        child: FCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(AppSpacing.xl),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  PhosphorIconsRegular.magnifyingGlass,
-                                  size: 48,
-                                  color: theme.colors.mutedForeground,
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                Text(
-                                  _showOnlyFavorites
-                                      ? '즐겨찾기한 한자가 없습니다'
-                                      : '검색 결과가 없습니다',
-                                  style: theme.typography.base.copyWith(
-                                    color: theme.colors.mutedForeground,
-                                  ),
-                                ),
-                              ],
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            PhosphorIconsRegular.magnifyingGlass,
+                            size: 48,
+                            color: theme.colors.mutedForeground,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            _showOnlyFavorites
+                                ? '즐겨찾기한 한자가 없습니다'
+                                : '검색 결과가 없습니다',
+                            style: theme.typography.base.copyWith(
+                              color: theme.colors.mutedForeground,
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     )
                   : GridView.builder(

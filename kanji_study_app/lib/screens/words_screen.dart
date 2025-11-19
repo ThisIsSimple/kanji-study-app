@@ -31,7 +31,6 @@ class _WordsScreenState extends State<WordsScreen> {
   bool _isLoading = true;
   bool _showOnlyFavorites = false;
 
-
   @override
   void initState() {
     super.initState();
@@ -113,8 +112,6 @@ class _WordsScreenState extends State<WordsScreen> {
     });
   }
 
-
-
   Future<void> _startFlashcardSession() async {
     if (_filteredWords.isEmpty) {
       final theme = FTheme.of(context);
@@ -139,9 +136,7 @@ class _WordsScreenState extends State<WordsScreen> {
           return AlertDialog(
             title: Text(
               '진행 중인 학습',
-              style: theme.typography.lg.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: theme.typography.lg.copyWith(fontWeight: FontWeight.bold),
             ),
             content: Text(
               '이전에 진행 중이던 플래시카드 학습이 있습니다.\n계속하시겠습니까?',
@@ -258,9 +253,7 @@ class _WordsScreenState extends State<WordsScreen> {
                           },
                           child: Text(
                             '완료',
-                            style: TextStyle(
-                              color: theme.colors.primary,
-                            ),
+                            style: TextStyle(color: theme.colors.primary),
                           ),
                         ),
                       ],
@@ -378,41 +371,35 @@ class _WordsScreenState extends State<WordsScreen> {
               },
               child: _filteredWords.isEmpty
                   ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        child: FCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(AppSpacing.xl),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  PhosphorIconsRegular.magnifyingGlass,
-                                  size: 48,
-                                  color: theme.colors.mutedForeground,
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                Text(
-                                  _showOnlyFavorites
-                                      ? '즐겨찾기한 단어가 없습니다'
-                                      : '검색 결과가 없습니다',
-                                  style: theme.typography.base.copyWith(
-                                    color: theme.colors.mutedForeground,
-                                  ),
-                                ),
-                              ],
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            PhosphorIconsRegular.magnifyingGlass,
+                            size: 48,
+                            color: theme.colors.mutedForeground,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            _showOnlyFavorites
+                                ? '즐겨찾기한 단어가 없습니다'
+                                : '검색 결과가 없습니다',
+                            style: theme.typography.base.copyWith(
+                              color: theme.colors.mutedForeground,
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
+                  : ListView.separated(
+                      padding: EdgeInsets.all(AppSpacing.md),
                       itemCount: _filteredWords.length,
                       key: ValueKey(_filteredWords.length),
+                      separatorBuilder: (context, index) {
+                        return const SizedBox(
+                          height: 12,
+                        ); // 원하는 간격(px) 만큼 높이 지정
+                      },
                       itemBuilder: (context, index) {
                         // Safety check to prevent RangeError
                         if (index >= _filteredWords.length) {

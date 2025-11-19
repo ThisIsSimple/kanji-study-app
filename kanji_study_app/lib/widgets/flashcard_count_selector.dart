@@ -17,11 +17,11 @@ class FlashcardCountSelector extends StatefulWidget {
 
   /// Show bottom sheet and return selected count (or null if canceled)
   static Future<int?> show(BuildContext context, int totalCount) {
-    return showFSheet<int>(
+    return showModalBottomSheet<int>(
       context: context,
-      side: FLayout.btt,
-      barrierDismissible: true,
-      draggable: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (context) => FlashcardCountSelector(totalCount: totalCount),
     );
   }
