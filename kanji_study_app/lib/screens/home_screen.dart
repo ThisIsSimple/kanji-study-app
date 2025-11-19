@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+
 import '../models/kanji_model.dart';
+import '../models/user_stats_model.dart';
+import '../models/daily_study_stats.dart';
+import '../models/leaderboard_model.dart';
 import '../services/kanji_service.dart';
 import '../services/notification_service.dart';
 import '../services/connectivity_service.dart';
+import '../services/analytics_service.dart';
+import '../services/social_service.dart';
 import 'study_screen.dart';
-import '../widgets/progress_card.dart';
-import '../widgets/today_kanji_card.dart';
 import '../widgets/app_scaffold.dart';
+import '../widgets/streak_stats_row.dart';
+import '../widgets/enhanced_progress_card.dart';
+import '../widgets/weekly_heatmap.dart';
+import '../widgets/quick_study_cards.dart';
+import '../widgets/leaderboard_card.dart';
+import '../widgets/today_kanji_card.dart';
 import '../constants/app_spacing.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -22,10 +31,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
   final ConnectivityService _connectivityService = ConnectivityService.instance;
+  final AnalyticsService _analyticsService = AnalyticsService.instance;
+  final SocialService _socialService = SocialService.instance;
+
   Kanji? todayKanji;
-  int studiedCount = 0;
-  int masteredCount = 0;
-  double progress = 0.0;
+  UserStats? _stats;
+  List<DailyStudyStats> _weeklyData = [];
+  List<LeaderboardEntry> _leaderboard = [];
   bool _isLoading = true;
   bool _isOnline = true;
 
@@ -83,20 +95,34 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _loadData() {
+  Future<void> _loadData() async {
     if (!mounted) return;
 
     try {
       final kanji = _kanjiService.getTodayKanji();
+
+      // Load all data in parallel
+      final results = await Future.wait([
+        _analyticsService.getUserStats(),
+        _analyticsService.getWeeklyStats(),
+        _socialService.getLeaderboardWithUser(topCount: 5),
+      ]);
+
+      if (!mounted) return;
+
       setState(() {
         todayKanji = kanji;
-        studiedCount = _kanjiService.getStudiedCount();
-        masteredCount = _kanjiService.getMasteredCount();
-        progress = _kanjiService.getOverallProgress();
+        _stats = results[0] as UserStats;
+        _weeklyData = results[1] as List<DailyStudyStats>;
+        _leaderboard = results[2] as List<LeaderboardEntry>;
         _isLoading = false;
       });
     } catch (e) {
+      debugPrint('Error loading home data: $e');
+      if (!mounted) return;
+
       setState(() {
+        _stats = UserStats.empty();
         _isLoading = false;
       });
     }
@@ -151,42 +177,87 @@ class _HomeScreenState extends State<HomeScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : todayKanji == null
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(PhosphorIconsRegular.warningCircle, size: 64),
-                        const SizedBox(height: 16),
-                        Text('한자 데이터를 불러올 수 없습니다', style: theme.typography.lg),
-                      ],
-                    ),
-                  )
-                : Padding(
-                    padding: AppSpacing.screenPadding,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Progress Card
-                        ProgressCard(
-                          progress: progress,
-                          studiedCount: studiedCount,
-                          masteredCount: masteredCount,
+                : _stats == null || todayKanji == null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(PhosphorIconsRegular.warningCircle, size: 64),
+                            const SizedBox(height: 16),
+                            Text('데이터를 불러올 수 없습니다', style: theme.typography.lg),
+                          ],
                         ),
-                        const SizedBox(height: AppSpacing.xl),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadData,
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: AppSpacing.screenPadding,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Streak/XP/Goal Row
+                              StreakStatsRow(
+                                streak: _stats!.streak,
+                                xp: _stats!.totalXP,
+                                todayProgress: _stats!.todayProgress,
+                                dailyGoal: _stats!.dailyGoal,
+                              ),
+                              const SizedBox(height: 24),
 
-                        // Today's Kanji Card
-                        TodayKanjiCard(kanji: todayKanji!),
-                        const SizedBox(height: AppSpacing.xxl),
+                              // Enhanced Progress Card
+                              EnhancedProgressCard(
+                                studiedCount: _stats!.totalStudied,
+                                masteredCount: _stats!.totalMastered,
+                                weeklyCount: _stats!.weeklyCount,
+                                weeklyAverage: _stats!.weeklyAverage,
+                                nextMilestone: _stats!.nextMilestone,
+                                remainingToMilestone: _stats!.remainingToMilestone,
+                              ),
+                              const SizedBox(height: 24),
 
-                        // Study Button
-                        FButton(
-                          onPress: _navigateToStudy,
-                          child: Text('학습 시작'),
+                              // Weekly Heatmap
+                              if (_weeklyData.isNotEmpty)
+                                WeeklyHeatmap(data: _weeklyData),
+                              if (_weeklyData.isNotEmpty) const SizedBox(height: 24),
+
+                              // Quick Study Cards
+                              QuickStudyCards(
+                                reviewQueueSize: _stats!.reviewQueueSize,
+                                onTodayTap: _navigateToStudy,
+                                onReviewTap: () {
+                                  // TODO: Navigate to review screen
+                                },
+                                onFavoritesTap: () {
+                                  // TODO: Navigate to favorites
+                                },
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Today's Kanji Card
+                              TodayKanjiCard(kanji: todayKanji!),
+                              const SizedBox(height: 24),
+
+                              // Leaderboard Card
+                              if (_leaderboard.isNotEmpty)
+                                LeaderboardCard(
+                                  entries: _leaderboard,
+                                  currentUserId: null, // TODO: Get from SupabaseService
+                                  onViewAll: () {
+                                    // TODO: Navigate to full leaderboard
+                                  },
+                                ),
+                              if (_leaderboard.isNotEmpty) const SizedBox(height: 32),
+
+                              // Study Button
+                              FButton(
+                                onPress: _navigateToStudy,
+                                child: const Text('📖 오늘의 한자 학습'),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
           ),
         ],
       ),
