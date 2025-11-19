@@ -39,7 +39,7 @@ class KanjiGridCard extends StatelessWidget {
             // Top bar with check and favorite
             Container(
               height: 32,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

@@ -129,10 +129,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
     final theme = FTheme.of(context);
 
     return AppScaffold(
-      title: Text(
-        '퀴즈',
-        style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
-      ),
+      title: const SizedBox.shrink(),
       body: Column(
         children: [
           // Search and Filter Bar
