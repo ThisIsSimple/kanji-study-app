@@ -268,29 +268,56 @@ class _KanjiScreenState extends State<KanjiScreen> {
               children: [
                 // Flashcard start button
                 if (_filteredKanji.isNotEmpty)
-                  Container(
-                    width: double.infinity,
+                  Padding(
                     padding: AppSpacing.buttonPadding,
-                    child: FButton(
-                      onPress: _startFlashcardSession,
+                    child: FCard(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.xs,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              PhosphorIconsRegular.cards,
-                              size: 20,
-                              color: Colors.white,
+                            Row(
+                              children: [
+                                Icon(
+                                  PhosphorIconsRegular.graduationCap,
+                                  size: 20,
+                                  color: theme.colors.primary,
+                                ),
+                                const SizedBox(width: AppSpacing.xs),
+                                Text(
+                                  '학습 시작',
+                                  style: theme.typography.sm.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.colors.foreground,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '플래시카드 학습 시작 (${_filteredKanji.length}개)',
-                              style: theme.typography.base.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                            const SizedBox(height: AppSpacing.sm),
+                            FButton(
+                              onPress: _startFlashcardSession,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.xs,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      PhosphorIconsRegular.cards,
+                                      size: 20,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '플래시카드 학습 (${_filteredKanji.length}개)',
+                                      style: theme.typography.base.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -304,28 +331,36 @@ class _KanjiScreenState extends State<KanjiScreen> {
                     onRefresh: () => _loadKanji(forceReload: true),
                     child: _filteredKanji.isEmpty
                         ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  PhosphorIconsRegular.magnifyingGlass,
-                                  size: 48,
-                                  color: theme.colors.mutedForeground,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _showOnlyFavorites
-                                      ? '즐겨찾기한 한자가 없습니다'
-                                      : '검색 결과가 없습니다',
-                                  style: theme.typography.base.copyWith(
-                                    color: theme.colors.mutedForeground,
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppSpacing.lg),
+                              child: FCard(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(AppSpacing.xl),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        PhosphorIconsRegular.magnifyingGlass,
+                                        size: 48,
+                                        color: theme.colors.mutedForeground,
+                                      ),
+                                      const SizedBox(height: AppSpacing.md),
+                                      Text(
+                                        _showOnlyFavorites
+                                            ? '즐겨찾기한 한자가 없습니다'
+                                            : '검색 결과가 없습니다',
+                                        style: theme.typography.base.copyWith(
+                                          color: theme.colors.mutedForeground,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
                           )
                         : GridView.builder(
-                            padding: EdgeInsets.zero,
+                            padding: const EdgeInsets.all(AppSpacing.md),
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 3,

@@ -113,7 +113,6 @@ class AppTheme {
         xl6: baseTypography.xl6.copyWith(fontFamily: 'SUITE'),
         xl7: baseTypography.xl7.copyWith(fontFamily: 'SUITE'),
         xl8: baseTypography.xl8.copyWith(fontFamily: 'SUITE'),
-
       ),
     );
   }

@@ -88,16 +88,21 @@ class KanjiGridCard extends StatelessWidget {
                   children: [
                     const SizedBox(height: 4),
                     // Kanji Character
-                    Text(
-                      kanji.character,
-                      style: GoogleFonts.notoSerifJp(
-                        fontSize: 42,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colors.foreground,
-                        height: 1,
+                    Container(
+                      width: 50,
+                      height: 50,
+                      alignment: Alignment.center,
+                      child: Text(
+                        kanji.character,
+                        style: GoogleFonts.notoSerifJp(
+                          fontSize: 42,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colors.foreground,
+                          height: 1,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
 
                     // Korean readings
                     if (hasKoreanReadings(
@@ -119,7 +124,6 @@ class KanjiGridCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    const Spacer(),
                   ],
                 ),
               ),

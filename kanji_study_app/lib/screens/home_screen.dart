@@ -12,7 +12,6 @@ import '../services/connectivity_service.dart';
 import '../services/analytics_service.dart';
 import '../services/social_service.dart';
 import 'study_screen.dart';
-import '../widgets/app_scaffold.dart';
 import '../widgets/streak_stats_row.dart';
 import '../widgets/enhanced_progress_card.dart';
 import '../widgets/weekly_heatmap.dart';
@@ -145,8 +144,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return AppScaffold(
-      body: Column(
+    return Scaffold(
+      backgroundColor: theme.colors.background,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
         children: [
           // 오프라인 배너
           if (!_isOnline)
@@ -178,88 +180,101 @@ class _HomeScreenState extends State<HomeScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _stats == null || todayKanji == null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(PhosphorIconsRegular.warningCircle, size: 64),
-                            const SizedBox(height: 16),
-                            Text('데이터를 불러올 수 없습니다', style: theme.typography.lg),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          PhosphorIconsRegular.warningCircle,
+                          size: 64,
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadData,
-                        child: SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: AppSpacing.screenPadding,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Streak/XP/Goal Row
-                              StreakStatsRow(
-                                streak: _stats!.streak,
-                                xp: _stats!.totalXP,
-                                todayProgress: _stats!.todayProgress,
-                                dailyGoal: _stats!.dailyGoal,
-                              ),
-                              const SizedBox(height: 24),
-
-                              // Enhanced Progress Card
-                              EnhancedProgressCard(
-                                studiedCount: _stats!.totalStudied,
-                                masteredCount: _stats!.totalMastered,
-                                weeklyCount: _stats!.weeklyCount,
-                                weeklyAverage: _stats!.weeklyAverage,
-                                nextMilestone: _stats!.nextMilestone,
-                                remainingToMilestone: _stats!.remainingToMilestone,
-                              ),
-                              const SizedBox(height: 24),
-
-                              // Weekly Heatmap
-                              if (_weeklyData.isNotEmpty)
-                                WeeklyHeatmap(data: _weeklyData),
-                              if (_weeklyData.isNotEmpty) const SizedBox(height: 24),
-
-                              // Quick Study Cards
-                              QuickStudyCards(
-                                reviewQueueSize: _stats!.reviewQueueSize,
-                                onTodayTap: _navigateToStudy,
-                                onReviewTap: () {
-                                  // TODO: Navigate to review screen
-                                },
-                                onFavoritesTap: () {
-                                  // TODO: Navigate to favorites
-                                },
-                              ),
-                              const SizedBox(height: 24),
-
-                              // Today's Kanji Card
-                              TodayKanjiCard(kanji: todayKanji!),
-                              const SizedBox(height: 24),
-
-                              // Leaderboard Card
-                              if (_leaderboard.isNotEmpty)
-                                LeaderboardCard(
-                                  entries: _leaderboard,
-                                  currentUserId: null, // TODO: Get from SupabaseService
-                                  onViewAll: () {
-                                    // TODO: Navigate to full leaderboard
-                                  },
-                                ),
-                              if (_leaderboard.isNotEmpty) const SizedBox(height: 32),
-
-                              // Study Button
-                              FButton(
-                                onPress: _navigateToStudy,
-                                child: const Text('📖 오늘의 한자 학습'),
-                              ),
-                            ],
+                        const SizedBox(height: 16),
+                        Text('데이터를 불러올 수 없습니다', style: theme.typography.lg),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: AppSpacing.screenPadding,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Streak/XP/Goal Row
+                          StreakStatsRow(
+                            streak: _stats!.streak,
+                            xp: _stats!.totalXP,
+                            todayProgress: _stats!.todayProgress,
+                            dailyGoal: _stats!.dailyGoal,
                           ),
-                        ),
+                          const SizedBox(height: 24),
+
+                          // Enhanced Progress Card
+                          EnhancedProgressCard(
+                            studiedCount: _stats!.totalStudied,
+                            masteredCount: _stats!.totalMastered,
+                            weeklyCount: _stats!.weeklyCount,
+                            weeklyAverage: _stats!.weeklyAverage,
+                            nextMilestone: _stats!.nextMilestone,
+                            remainingToMilestone: _stats!.remainingToMilestone,
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Weekly Heatmap
+                          if (_weeklyData.isNotEmpty)
+                            WeeklyHeatmap(data: _weeklyData),
+                          if (_weeklyData.isNotEmpty)
+                            const SizedBox(height: 24),
+
+                          // Quick Study Cards
+                          QuickStudyCards(
+                            reviewQueueSize: _stats!.reviewQueueSize,
+                            onTodayTap: _navigateToStudy,
+                            onReviewTap: () {
+                              // TODO: Navigate to review screen
+                            },
+                            onFavoritesTap: () {
+                              // TODO: Navigate to favorites
+                            },
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Today's Kanji Card
+                          TodayKanjiCard(kanji: todayKanji!),
+                          const SizedBox(height: 24),
+
+                          // Leaderboard Card
+                          if (_leaderboard.isNotEmpty)
+                            LeaderboardCard(
+                              entries: _leaderboard,
+                              currentUserId:
+                                  null, // TODO: Get from SupabaseService
+                              onViewAll: () {
+                                // TODO: Navigate to full leaderboard
+                              },
+                            ),
+                          if (_leaderboard.isNotEmpty)
+                            const SizedBox(height: 32),
+
+                          // Study Button
+                          FButton(
+                            onPress: _navigateToStudy,
+                            child: Text(
+                              '📖 오늘의 한자 학습',
+                              style: theme.typography.base.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                  ),
           ),
         ],
+        ),
       ),
     );
   }

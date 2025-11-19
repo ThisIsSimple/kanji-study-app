@@ -109,17 +109,11 @@ class _AppScaffoldState extends State<AppScaffold> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: TextField(
+                          child: FTextField(
                             controller: widget.searchController,
                             focusNode: _searchFocusNode,
-                            onChanged: widget.onSearchChanged,
-                            decoration: InputDecoration(
-                              hintText: widget.searchHint ?? '검색...',
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                              isDense: true,
-                            ),
-                            style: theme.typography.lg,
+                            onChange: widget.onSearchChanged,
+                            hint: widget.searchHint ?? '검색...',
                           ),
                         ),
                         SizedBox(

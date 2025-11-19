@@ -33,56 +33,53 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
-
     return Scaffold(
       body: _screens[_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: theme.colors.border, width: 1)),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: theme.colors.background,
-          selectedItemColor: theme.colors.primary,
-          unselectedItemColor: theme.colors.mutedForeground,
-          selectedLabelStyle: theme.typography.sm.copyWith(
-            fontWeight: FontWeight.w600,
-            fontFamily: 'SUITE',
+      bottomNavigationBar: FBottomNavigationBar(
+        index: _selectedIndex,
+        onChange: _onItemTapped,
+        children: [
+          FBottomNavigationBarItem(
+            icon: Icon(
+              _selectedIndex == 0
+                  ? PhosphorIconsFill.house
+                  : PhosphorIconsRegular.house,
+            ),
+            label: const Text('홈'),
           ),
-          unselectedLabelStyle: theme.typography.sm.copyWith(
-            fontFamily: 'SUITE',
+          FBottomNavigationBarItem(
+            icon: Icon(
+              _selectedIndex == 1
+                  ? PhosphorIconsFill.translate
+                  : PhosphorIconsRegular.translate,
+            ),
+            label: const Text('한자'),
           ),
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(PhosphorIconsRegular.house),
-              activeIcon: Icon(PhosphorIconsFill.house),
-              label: '홈',
+          FBottomNavigationBarItem(
+            icon: Icon(
+              _selectedIndex == 2
+                  ? PhosphorIconsFill.bookOpen
+                  : PhosphorIconsRegular.bookOpen,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(PhosphorIconsRegular.translate),
-              activeIcon: Icon(PhosphorIconsFill.translate),
-              label: '한자',
+            label: const Text('단어'),
+          ),
+          FBottomNavigationBarItem(
+            icon: Icon(
+              _selectedIndex == 3
+                  ? PhosphorIconsFill.question
+                  : PhosphorIconsRegular.question,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(PhosphorIconsRegular.bookOpen),
-              activeIcon: Icon(PhosphorIconsFill.bookOpen),
-              label: '단어',
+            label: const Text('퀴즈'),
+          ),
+          FBottomNavigationBarItem(
+            icon: Icon(
+              _selectedIndex == 4
+                  ? PhosphorIconsFill.user
+                  : PhosphorIconsRegular.user,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(PhosphorIconsRegular.question),
-              activeIcon: Icon(PhosphorIconsFill.question),
-              label: '퀴즈',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(PhosphorIconsRegular.user),
-              activeIcon: Icon(PhosphorIconsFill.user),
-              label: '프로필',
-            ),
-          ],
-        ),
+            label: const Text('프로필'),
+          ),
+        ],
       ),
     );
   }
