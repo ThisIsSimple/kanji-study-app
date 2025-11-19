@@ -69,7 +69,6 @@ class WordListItem extends StatelessWidget {
                         word.meaningsText,
                         style: theme.typography.sm.copyWith(
                           color: theme.colors.foreground.withValues(alpha: 0.8),
-                          fontFamily: 'SUITE',
                           height: 1.4,
                         ),
                         maxLines: 2,

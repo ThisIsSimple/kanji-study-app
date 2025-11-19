@@ -200,7 +200,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return FScaffold(
       header: FHeader(
-        title: Text('프로필', style: TextStyle(fontFamily: 'SUITE')),
+        title: Text(
+          '프로필',
+          style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
+        ),
         suffixes: [
           IconButton(
             icon: Icon(PhosphorIconsRegular.gear),
@@ -260,7 +263,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     'SNS 계정 연동해서 데이터 안전하게 보관하기',
                                     style: theme.typography.sm.copyWith(
                                       fontWeight: FontWeight.w600,
-                                      fontFamily: 'SUITE',
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -268,7 +270,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     '다른 기기에서도 학습 기록을 이어가세요',
                                     style: theme.typography.xs.copyWith(
                                       color: theme.colors.mutedForeground,
-                                      fontFamily: 'SUITE',
                                     ),
                                   ),
                                 ],
@@ -331,7 +332,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     _username.isEmpty ? '로딩 중...' : _username,
                                     style: theme.typography.lg.copyWith(
                                       fontWeight: FontWeight.bold,
-                                      fontFamily: 'SUITE',
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -340,7 +340,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               _userEmail.isEmpty ? '익명 사용자' : _userEmail,
                               style: theme.typography.sm.copyWith(
                                 color: theme.colors.mutedForeground,
-                                fontFamily: 'SUITE',
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -365,7 +364,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 '이번 주 학습',
                                 style: theme.typography.lg.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  fontFamily: 'SUITE',
                                 ),
                               ),
                               FButton(
@@ -389,7 +387,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     const SizedBox(width: 6),
                                     const Text(
                                       '전체 보기',
-                                      style: TextStyle(fontFamily: 'SUITE'),
+                                      style: TextStyle(),
                                     ),
                                   ],
                                 ),
@@ -462,7 +460,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           day,
           style: theme.typography.xs.copyWith(
             color: theme.colors.mutedForeground,
-            fontFamily: 'SUITE',
             fontWeight: FontWeight.w600,
             fontSize: 11,
           ),
@@ -562,7 +559,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           label,
           style: theme.typography.xs.copyWith(
             color: theme.colors.mutedForeground,
-            fontFamily: 'SUITE',
           ),
         ),
       ],

@@ -100,7 +100,7 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.getLightTheme(),
       builder: (context, child) => FTheme(
-        data: FThemes.zinc.light,
+        data: AppTheme.getFTheme(),
         child: StreamBuilder<AuthState>(
           stream: SupabaseService.instance.authStateChanges(),
           builder: (context, snapshot) {

@@ -1,14 +1,15 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
 import '../models/kanji_flashcard_adapter.dart';
 import '../services/kanji_service.dart';
 import '../services/flashcard_service.dart';
-import '../utils/korean_formatter.dart';
+
 import '../widgets/flashcard_count_selector.dart';
+import '../widgets/kanji_grid_card.dart';
 import 'study_screen.dart';
 import 'flashcard_screen.dart';
 
@@ -140,7 +141,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
       final theme = FTheme.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('학습할 한자가 없습니다', style: TextStyle(fontFamily: 'SUITE')),
+          content: Text('학습할 한자가 없습니다'),
           backgroundColor: theme.colors.destructive,
         ),
       );
@@ -161,12 +162,10 @@ class _KanjiScreenState extends State<KanjiScreen> {
               '진행 중인 학습',
               style: theme.typography.lg.copyWith(
                 fontWeight: FontWeight.bold,
-                fontFamily: 'SUITE',
               ),
             ),
             content: Text(
               '이전에 진행 중이던 플래시카드 학습이 있습니다.\n계속하시겠습니까?',
-              style: theme.typography.base.copyWith(fontFamily: 'SUITE'),
             ),
             actions: [
               TextButton(
@@ -176,7 +175,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                   Navigator.of(context).pop();
                   await _showCountSelectorAndStart();
                 },
-                child: Text('새로 시작', style: TextStyle(fontFamily: 'SUITE')),
+                child: Text('새로 시작'),
               ),
               TextButton(
                 onPressed: () {
@@ -186,7 +185,6 @@ class _KanjiScreenState extends State<KanjiScreen> {
                 child: Text(
                   '이어하기',
                   style: TextStyle(
-                    fontFamily: 'SUITE',
                     color: theme.colors.primary,
                     fontWeight: FontWeight.w600,
                   ),
@@ -263,7 +261,6 @@ class _KanjiScreenState extends State<KanjiScreen> {
                     : '전체 ${_filteredKanji.length}개',
                 style: theme.typography.sm.copyWith(
                   color: theme.colors.mutedForeground,
-                  fontFamily: 'SUITE',
                 ),
               ),
             ),
@@ -321,13 +318,10 @@ class _KanjiScreenState extends State<KanjiScreen> {
                             autofocus: true,
                             decoration: InputDecoration(
                               hintText: '한자, 의미, 읽기로 검색...',
-                              hintStyle: TextStyle(fontFamily: 'SUITE'),
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.zero,
                             ),
-                            style: theme.typography.lg.copyWith(
-                              fontFamily: 'SUITE',
-                            ),
+                            style: theme.typography.lg,
                           ),
                         ),
                         SizedBox(
@@ -376,7 +370,6 @@ class _KanjiScreenState extends State<KanjiScreen> {
                             Text(
                               '플래시카드 학습 시작 (${_filteredKanji.length}개)',
                               style: theme.typography.base.copyWith(
-                                fontFamily: 'SUITE',
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
                               ),
@@ -407,7 +400,6 @@ class _KanjiScreenState extends State<KanjiScreen> {
                                       : '검색 결과가 없습니다',
                                   style: theme.typography.base.copyWith(
                                     color: theme.colors.mutedForeground,
-                                    fontFamily: 'SUITE',
                                   ),
                                 ),
                               ],
@@ -449,126 +441,4 @@ class _KanjiScreenState extends State<KanjiScreen> {
   }
 }
 
-// Separate widget for the grid card
-class KanjiGridCard extends StatelessWidget {
-  final Kanji kanji;
-  final VoidCallback onTap;
-  final VoidCallback onFavoriteToggle;
 
-  const KanjiGridCard({
-    super.key,
-    required this.kanji,
-    required this.onTap,
-    required this.onFavoriteToggle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
-    final kanjiService = KanjiService.instance;
-    final progress = kanjiService.getProgress(kanji.character);
-    final isFavorite = kanjiService.isFavorite(kanji.character);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.colors.background,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.colors.border, width: 1),
-        ),
-        child: Column(
-          children: [
-            // Top bar with check and favorite
-            Container(
-              height: 32,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Check mark
-                  if (progress != null && progress.mastered)
-                    Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: theme.colors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        PhosphorIconsFill.check,
-                        size: 14,
-                        color: theme.colors.background,
-                      ),
-                    )
-                  else
-                    const SizedBox(width: 20),
-
-                  // Favorite button
-                  GestureDetector(
-                    onTap: onFavoriteToggle,
-                    child: Icon(
-                      isFavorite
-                          ? PhosphorIconsFill.star
-                          : PhosphorIconsRegular.star,
-                      size: 20,
-                      color: isFavorite
-                          ? Colors.amber
-                          : theme.colors.mutedForeground,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Main content
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 4),
-                    // Kanji Character
-                    Text(
-                      kanji.character,
-                      style: GoogleFonts.notoSerifJp(
-                        fontSize: 42,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colors.foreground,
-                        height: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Korean readings
-                    if (hasKoreanReadings(
-                      kanji.koreanKunReadings,
-                      kanji.koreanOnReadings,
-                    ))
-                      Text(
-                        formatKoreanReadings(
-                          kanji.koreanKunReadings,
-                          kanji.koreanOnReadings,
-                        ),
-                        style: theme.typography.sm.copyWith(
-                          color: theme.colors.primary,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'SUITE',
-                          fontSize: 13,
-                          height: 1.2,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    const Spacer(),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

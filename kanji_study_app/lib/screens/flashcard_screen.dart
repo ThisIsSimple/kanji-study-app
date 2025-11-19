@@ -146,7 +146,6 @@ class _FlashcardScreenState extends State<FlashcardScreen>
               '학습 완료!',
               style: theme.typography.xl.copyWith(
                 fontWeight: FontWeight.bold,
-                fontFamily: 'SUITE',
               ),
             ),
           ],
@@ -180,7 +179,6 @@ class _FlashcardScreenState extends State<FlashcardScreen>
             child: Text(
               '완료',
               style: TextStyle(
-                fontFamily: 'SUITE',
                 color: theme.colors.primary,
                 fontWeight: FontWeight.w600,
               ),
@@ -203,14 +201,12 @@ class _FlashcardScreenState extends State<FlashcardScreen>
         Text(
           label,
           style: theme.typography.base.copyWith(
-            fontFamily: 'SUITE',
             color: theme.colors.mutedForeground,
           ),
         ),
         Text(
           value,
           style: theme.typography.base.copyWith(
-            fontFamily: 'SUITE',
             fontWeight: FontWeight.bold,
             color: valueColor ?? theme.colors.foreground,
           ),
@@ -241,7 +237,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
         child: Center(
           child: Text(
             '모든 카드를 학습했습니다!',
-            style: theme.typography.lg.copyWith(fontFamily: 'SUITE'),
+            style: theme.typography.lg.copyWith(),
           ),
         ),
       );
@@ -262,14 +258,12 @@ class _FlashcardScreenState extends State<FlashcardScreen>
               '${_session.currentIndex + 1}',
               style: theme.typography.lg.copyWith(
                 fontWeight: FontWeight.bold,
-                fontFamily: 'SUITE',
               ),
             ),
             Text(
               ' / ${_session.itemIds.length}',
               style: theme.typography.lg.copyWith(
                 color: theme.colors.mutedForeground,
-                fontFamily: 'SUITE',
               ),
             ),
           ],
@@ -285,17 +279,16 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                     '학습 종료',
                     style: theme.typography.lg.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'SUITE',
                     ),
                   ),
                   content: Text(
                     '플래시카드 학습을 종료하시겠습니까?\n진행 상태가 저장됩니다.',
-                    style: theme.typography.base.copyWith(fontFamily: 'SUITE'),
+                    style: theme.typography.base.copyWith(),
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: Text('취소', style: TextStyle(fontFamily: 'SUITE')),
+                      child: Text('취소', style: TextStyle()),
                     ),
                     TextButton(
                       onPressed: () {
@@ -305,7 +298,6 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                       child: Text(
                         '종료',
                         style: TextStyle(
-                          fontFamily: 'SUITE',
                           color: theme.colors.primary,
                           fontWeight: FontWeight.w600,
                         ),
@@ -374,7 +366,6 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                             '카드를 탭하여 뒤집기',
                             style: theme.typography.sm.copyWith(
                               color: theme.colors.mutedForeground,
-                              fontFamily: 'SUITE',
                             ),
                           ),
                         const SizedBox(height: 20),
@@ -409,7 +400,6 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                                         Text(
                                           '모르겠어요',
                                           style: theme.typography.base.copyWith(
-                                            fontFamily: 'SUITE',
                                             fontWeight: FontWeight.w600,
                                             color: Colors.red,
                                           ),
@@ -440,7 +430,6 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                                         Text(
                                           '알았어요',
                                           style: theme.typography.base.copyWith(
-                                            fontFamily: 'SUITE',
                                             fontWeight: FontWeight.w600,
                                             color: Colors.white,
                                           ),
@@ -488,7 +477,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
       child: Center(
         child: Text(
           '카드를 불러올 수 없습니다',
-          style: theme.typography.base.copyWith(fontFamily: 'SUITE'),
+          style: theme.typography.base.copyWith(),
         ),
       ),
     );
@@ -520,7 +509,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
       child: Center(
         child: Text(
           '카드를 불러올 수 없습니다',
-          style: theme.typography.base.copyWith(fontFamily: 'SUITE'),
+          style: theme.typography.base.copyWith(),
         ),
       ),
     );

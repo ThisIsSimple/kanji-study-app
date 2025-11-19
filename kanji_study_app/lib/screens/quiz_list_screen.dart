@@ -129,7 +129,10 @@ class _QuizListScreenState extends State<QuizListScreen> {
 
     return FScaffold(
       header: FHeader(
-        title: Text('퀴즈', style: TextStyle(fontFamily: 'SUITE')),
+        title: Text(
+          '퀴즈',
+          style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
+        ),
       ),
       child: Column(
         children: [
@@ -191,7 +194,6 @@ class _QuizListScreenState extends State<QuizListScreen> {
                       '카테고리:',
                       style: theme.typography.sm.copyWith(
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'SUITE',
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -260,7 +262,6 @@ class _QuizListScreenState extends State<QuizListScreen> {
                               : '사용 가능한 퀴즈가 없습니다',
                           style: theme.typography.lg.copyWith(
                             color: theme.colors.mutedForeground,
-                            fontFamily: 'SUITE',
                           ),
                         ),
                       ],
@@ -330,7 +331,6 @@ class _QuizListScreenState extends State<QuizListScreen> {
                                             quizSet.difficultyLevel,
                                           ),
                                           fontWeight: FontWeight.w600,
-                                          fontFamily: 'SUITE',
                                         ),
                                       ),
                                     ),
@@ -339,7 +339,6 @@ class _QuizListScreenState extends State<QuizListScreen> {
                                       '${quizSet.kanjiIds.length}문제',
                                       style: theme.typography.xs.copyWith(
                                         color: theme.colors.mutedForeground,
-                                        fontFamily: 'SUITE',
                                       ),
                                     ),
                                     if (quizSet.category != null) ...[
@@ -406,7 +405,6 @@ class _CategoryChip extends StatelessWidget {
                 ? theme.colors.primaryForeground
                 : theme.colors.foreground,
             fontWeight: FontWeight.w500,
-            fontFamily: 'SUITE',
           ),
         ),
       ),

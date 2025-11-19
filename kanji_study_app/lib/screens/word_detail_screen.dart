@@ -195,7 +195,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                               : '까먹음을 기록했습니다.',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontFamily: 'SUITE',
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -255,7 +254,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                           '기록 저장 실패: $e',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontFamily: 'SUITE',
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -428,7 +426,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                       const SizedBox(width: 8),
                       Text(
                         _isRecordingStudy ? '기록 중...' : '학습 완료',
-                        style: TextStyle(fontFamily: 'SUITE'),
+                        style: TextStyle(),
                       ),
                     ],
                   ),
@@ -446,7 +444,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                                 : '학습 기록',
                             style: theme.typography.sm.copyWith(
                               color: theme.colors.mutedForeground,
-                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -454,7 +451,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                             _studyStats!.summaryText,
                             style: theme.typography.base.copyWith(
                               fontWeight: FontWeight.w600,
-                              fontFamily: 'SUITE',
                             ),
                           ),
                         ],
@@ -473,7 +469,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                           const SizedBox(width: 6),
                           Text(
                             _isRecordingStudy ? '기록 중...' : '까먹음',
-                            style: TextStyle(fontFamily: 'SUITE'),
+                            style: TextStyle(),
                           ),
                         ],
                       ),
@@ -576,7 +572,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                           '의미',
                           style: theme.typography.lg.copyWith(
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'SUITE',
                           ),
                         ),
                       ),
@@ -618,7 +613,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                                 Text(
                                   meaning.meaning,
                                   style: theme.typography.base.copyWith(
-                                    fontFamily: 'SUITE',
                                     height: 1.2, // 1.3 → 1.2로 더 줄임
                                   ),
                                   textAlign: TextAlign.center,
@@ -683,7 +677,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                 '예문',
                 style: theme.typography.lg.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'SUITE',
                 ),
               ),
               if (_geminiService.isInitialized)
@@ -696,7 +689,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text('AI 예문 생성', style: TextStyle(fontFamily: 'SUITE')),
+                      : Text('AI 예문 생성', style: TextStyle()),
                 ),
             ],
           ),
@@ -742,7 +735,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                                 style: theme.typography.xs.copyWith(
                                   color: theme.colors.primary,
                                   fontWeight: FontWeight.w600,
-                                  fontFamily: 'SUITE',
                                 ),
                               ),
                             ),
@@ -769,7 +761,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                             example.korean,
                             style: theme.typography.base.copyWith(
                               fontWeight: FontWeight.w500,
-                              fontFamily: 'SUITE',
                               fontSize: 16,
                             ),
                           ),
@@ -789,7 +780,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                                 example.explanation!,
                                 style: theme.typography.sm.copyWith(
                                   color: theme.colors.mutedForeground,
-                                  fontFamily: 'SUITE',
                                 ),
                               ),
                             ),
@@ -829,7 +819,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                               style: theme.typography.xs.copyWith(
                                 color: theme.colors.secondary,
                                 fontWeight: FontWeight.w600,
-                                fontFamily: 'SUITE',
                               ),
                             ),
                           ),
@@ -855,7 +844,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                             example.korean,
                             style: theme.typography.base.copyWith(
                               fontWeight: FontWeight.w500,
-                              fontFamily: 'SUITE',
                               fontSize: 16,
                             ),
                           ),
@@ -883,7 +871,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                         'AI로 예문을 생성해보세요',
                         style: theme.typography.base.copyWith(
                           color: theme.colors.mutedForeground,
-                          fontFamily: 'SUITE',
                         ),
                       ),
                     ],
@@ -905,7 +892,10 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
     if (_wordList.length == 1) {
       return FScaffold(
         header: FHeader.nested(
-          title: Text('단어 상세', style: TextStyle(fontFamily: 'SUITE')),
+          title: Text(
+            '단어 상세',
+            style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
+          ),
           prefixes: [
             FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
           ],
@@ -938,7 +928,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       header: FHeader.nested(
         title: Text(
           '단어 상세 (${_currentIndex + 1}/${_wordList.length})',
-          style: TextStyle(fontFamily: 'SUITE'),
+          style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
         ),
         prefixes: [
           FHeaderAction.back(onPress: () => Navigator.of(context).pop()),

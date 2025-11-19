@@ -50,8 +50,11 @@ class _MainScreenState extends State<MainScreen> {
           unselectedItemColor: theme.colors.mutedForeground,
           selectedLabelStyle: theme.typography.sm.copyWith(
             fontWeight: FontWeight.w600,
+            fontFamily: 'SUITE',
           ),
-          unselectedLabelStyle: theme.typography.sm,
+          unselectedLabelStyle: theme.typography.sm.copyWith(
+            fontFamily: 'SUITE',
+          ),
           items: [
             BottomNavigationBarItem(
               icon: Icon(PhosphorIconsRegular.house),

@@ -197,7 +197,6 @@ class _StudyScreenState extends State<StudyScreen> {
                               : '까먹음을 기록했습니다.',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontFamily: 'SUITE',
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -257,7 +256,6 @@ class _StudyScreenState extends State<StudyScreen> {
                           '기록 저장 실패: $e',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontFamily: 'SUITE',
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -357,7 +355,6 @@ class _StudyScreenState extends State<StudyScreen> {
                   style: theme.typography.xs.copyWith(
                     color: theme.colors.primary,
                     fontWeight: FontWeight.w600,
-                    fontFamily: 'SUITE',
                   ),
                 ),
               ),
@@ -386,7 +383,6 @@ class _StudyScreenState extends State<StudyScreen> {
               example.korean,
               style: theme.typography.base.copyWith(
                 fontWeight: FontWeight.w500,
-                fontFamily: 'SUITE',
               ),
             ),
             // Explanation if exists
@@ -403,7 +399,6 @@ class _StudyScreenState extends State<StudyScreen> {
                   example.explanation!,
                   style: theme.typography.sm.copyWith(
                     color: theme.colors.mutedForeground,
-                    fontFamily: 'SUITE',
                   ),
                 ),
               ),
@@ -447,7 +442,7 @@ class _StudyScreenState extends State<StudyScreen> {
                       const SizedBox(width: 8),
                       Text(
                         _isRecordingStudy ? '기록 중...' : '학습 완료',
-                        style: TextStyle(fontFamily: 'SUITE'),
+                        style: TextStyle(),
                       ),
                     ],
                   ),
@@ -465,7 +460,6 @@ class _StudyScreenState extends State<StudyScreen> {
                                 : '학습 기록',
                             style: theme.typography.sm.copyWith(
                               color: theme.colors.mutedForeground,
-                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -473,7 +467,6 @@ class _StudyScreenState extends State<StudyScreen> {
                             _studyStats!.summaryText,
                             style: theme.typography.base.copyWith(
                               fontWeight: FontWeight.w600,
-                              fontFamily: 'SUITE',
                             ),
                           ),
                         ],
@@ -492,7 +485,7 @@ class _StudyScreenState extends State<StudyScreen> {
                           const SizedBox(width: 6),
                           Text(
                             _isRecordingStudy ? '기록 중...' : '까먹음',
-                            style: TextStyle(fontFamily: 'SUITE'),
+                            style: TextStyle(),
                           ),
                         ],
                       ),
@@ -554,7 +547,6 @@ class _StudyScreenState extends State<StudyScreen> {
                                 '의미',
                                 style: theme.typography.sm.copyWith(
                                   color: theme.colors.mutedForeground,
-                                  fontFamily: 'SUITE',
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -562,7 +554,6 @@ class _StudyScreenState extends State<StudyScreen> {
                                 kanji.meanings.join(', '),
                                 style: theme.typography.lg.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  fontFamily: 'SUITE',
                                 ),
                               ),
                             ],
@@ -627,7 +618,6 @@ class _StudyScreenState extends State<StudyScreen> {
                     '읽기',
                     style: theme.typography.lg.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'SUITE',
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -643,7 +633,6 @@ class _StudyScreenState extends State<StudyScreen> {
                           '한국어',
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.mutedForeground,
-                            fontFamily: 'SUITE',
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -664,7 +653,6 @@ class _StudyScreenState extends State<StudyScreen> {
                             style: theme.typography.base.copyWith(
                               fontWeight: FontWeight.w600,
                               color: theme.colors.primary,
-                              fontFamily: 'SUITE',
                             ),
                           ),
                         ),
@@ -676,7 +664,6 @@ class _StudyScreenState extends State<StudyScreen> {
                           '일본어 음독 (音読み)',
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.mutedForeground,
-                            fontFamily: 'SUITE',
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -711,7 +698,6 @@ class _StudyScreenState extends State<StudyScreen> {
                           '일본어 훈독 (訓読み)',
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.mutedForeground,
-                            fontFamily: 'SUITE',
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -754,7 +740,6 @@ class _StudyScreenState extends State<StudyScreen> {
                 '예시',
                 style: theme.typography.lg.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'SUITE',
                 ),
               ),
               if (_geminiService.isInitialized)
@@ -767,7 +752,7 @@ class _StudyScreenState extends State<StudyScreen> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text('AI 예문 생성', style: TextStyle(fontFamily: 'SUITE')),
+                      : Text('AI 예문 생성', style: TextStyle()),
                 ),
             ],
           ),
@@ -829,7 +814,6 @@ class _StudyScreenState extends State<StudyScreen> {
                   '예문이 없습니다.',
                   style: theme.typography.base.copyWith(
                     color: theme.colors.mutedForeground,
-                    fontFamily: 'SUITE',
                   ),
                 ),
               ),
@@ -848,7 +832,10 @@ class _StudyScreenState extends State<StudyScreen> {
     if (_kanjiList == null || _currentKanji == null) {
       return FScaffold(
         header: FHeader.nested(
-          title: Text('한자 학습', style: TextStyle(fontFamily: 'SUITE')),
+          title: Text(
+            '한자 학습',
+            style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
+          ),
           prefixes: [
             FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
           ],
@@ -861,7 +848,10 @@ class _StudyScreenState extends State<StudyScreen> {
     if (_kanjiList!.length == 1) {
       return FScaffold(
         header: FHeader.nested(
-          title: Text('한자 학습', style: TextStyle(fontFamily: 'SUITE')),
+          title: Text(
+            '한자 학습',
+            style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
+          ),
           prefixes: [
             FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
           ],
@@ -883,7 +873,7 @@ class _StudyScreenState extends State<StudyScreen> {
       header: FHeader.nested(
         title: Text(
           '한자 학습 (${_currentIndex + 1}/${_kanjiList!.length})',
-          style: TextStyle(fontFamily: 'SUITE'),
+          style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
         ),
         prefixes: [
           FHeaderAction.back(onPress: () => Navigator.of(context).pop()),

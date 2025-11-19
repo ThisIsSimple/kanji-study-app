@@ -69,7 +69,6 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                 Text(
                   _showStrokeOrder ? '획순 숨기기' : '획순 보기',
                   style: theme.typography.sm.copyWith(
-                    fontFamily: 'SUITE',
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -145,7 +144,6 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                   style: theme.typography.sm.copyWith(
                     fontWeight: FontWeight.bold,
                     color: _getJlptColor(widget.kanji.jlpt),
-                    fontFamily: 'SUITE',
                   ),
                 ),
               ),
@@ -210,7 +208,6 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                 Text(
                   '音読み',
                   style: theme.typography.sm.copyWith(
-                    fontFamily: 'SUITE',
                     fontWeight: FontWeight.w600,
                     color: theme.colors.mutedForeground,
                   ),
@@ -239,7 +236,6 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                 Text(
                   '訓読み',
                   style: theme.typography.sm.copyWith(
-                    fontFamily: 'SUITE',
                     fontWeight: FontWeight.w600,
                     color: theme.colors.mutedForeground,
                   ),
@@ -270,7 +266,6 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
               Text(
                 '의미',
                 style: theme.typography.sm.copyWith(
-                  fontFamily: 'SUITE',
                   fontWeight: FontWeight.w600,
                   color: theme.colors.mutedForeground,
                 ),
@@ -285,7 +280,6 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                       Text(
                         '•  ',
                         style: theme.typography.base.copyWith(
-                          fontFamily: 'SUITE',
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -293,7 +287,6 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                         child: Text(
                           meaning,
                           style: theme.typography.base.copyWith(
-                            fontFamily: 'SUITE',
                             fontWeight: FontWeight.w500,
                           ),
                         ),

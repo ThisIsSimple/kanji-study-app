@@ -80,23 +80,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('로그아웃', style: TextStyle(fontFamily: 'SUITE')),
+        title: Text('로그아웃', style: TextStyle()),
         content: Text(
           _isAnonymous
               ? '게스트 계정에서 로그아웃하면 학습 기록이 삭제될 수 있습니다. 계속하시겠습니까?'
               : '정말 로그아웃 하시겠습니까?',
-          style: TextStyle(fontFamily: 'SUITE'),
+          style: TextStyle(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('취소', style: TextStyle(fontFamily: 'SUITE')),
+            child: Text('취소', style: TextStyle()),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
               '로그아웃',
-              style: TextStyle(fontFamily: 'SUITE', color: Colors.red),
             ),
           ),
         ],
@@ -116,7 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SnackBar(
             content: Text(
               '로그아웃 중 오류가 발생했습니다.',
-              style: TextStyle(fontFamily: 'SUITE'),
+              style: TextStyle(),
             ),
           ),
         );
@@ -156,7 +155,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return FScaffold(
       header: FHeader.nested(
-        title: Text('설정', style: TextStyle(fontFamily: 'SUITE')),
+        title: Text('설정', style: TextStyle()),
         prefixes: [
           FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
         ],
@@ -179,7 +178,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             '계정 관리',
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -213,7 +211,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                             : (_userEmail ?? '사용자'),
                                         style: theme.typography.base.copyWith(
                                           fontWeight: FontWeight.bold,
-                                          fontFamily: 'SUITE',
                                         ),
                                       ),
                                       if (_isAnonymous) ...[
@@ -222,7 +219,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           'SNS 계정을 연동하여 데이터를 안전하게 보관하세요',
                                           style: theme.typography.sm.copyWith(
                                             color: theme.colors.mutedForeground,
-                                            fontFamily: 'SUITE',
                                           ),
                                         ),
                                       ],
@@ -245,7 +241,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 const SizedBox(width: 8),
                                 Text(
                                   '로그아웃',
-                                  style: TextStyle(fontFamily: 'SUITE'),
+                                  style: TextStyle(),
                                 ),
                               ],
                             ),
@@ -267,7 +263,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             '알림 설정',
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -279,7 +274,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               Text(
                                 '학습 알림',
                                 style: theme.typography.base.copyWith(
-                                  fontFamily: 'SUITE',
                                 ),
                               ),
                               FSwitch(
@@ -315,7 +309,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           '알림 시간',
                                           style: theme.typography.sm.copyWith(
                                             color: theme.colors.mutedForeground,
-                                            fontFamily: 'SUITE',
                                           ),
                                         ),
                                         const SizedBox(height: 4),
@@ -350,7 +343,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             'AI 설정',
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -358,7 +350,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             'Gemini API를 사용하여 예문 생성 및 학습 콘텐츠를 만들 수 있습니다.',
                             style: theme.typography.sm.copyWith(
                               color: theme.colors.mutedForeground,
-                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -372,8 +363,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Gemini API Key',
                                 hintText: 'API 키를 입력하세요',
-                                hintStyle: TextStyle(fontFamily: 'SUITE'),
-                                labelStyle: TextStyle(fontFamily: 'SUITE'),
+                                hintStyle: TextStyle(),
+                                labelStyle: TextStyle(),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                   borderSide: BorderSide(
@@ -418,7 +409,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   SnackBar(
                                     content: Text(
                                       'API 키가 저장되었습니다.',
-                                      style: TextStyle(fontFamily: 'SUITE'),
+                                      style: TextStyle(),
                                     ),
                                   ),
                                 );
@@ -427,7 +418,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             style: FButtonStyle.outline(),
                             child: Text(
                               'API 키 저장',
-                              style: TextStyle(fontFamily: 'SUITE'),
+                              style: TextStyle(),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -438,7 +429,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 SnackBar(
                                   content: Text(
                                     '브라우저에서 ai.google.dev를 방문하여 API 키를 생성하세요.',
-                                    style: TextStyle(fontFamily: 'SUITE'),
+                                    style: TextStyle(),
                                   ),
                                 ),
                               );
@@ -448,7 +439,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               style: theme.typography.sm.copyWith(
                                 color: theme.colors.primary,
                                 decoration: TextDecoration.underline,
-                                fontFamily: 'SUITE',
                               ),
                             ),
                           ),
@@ -469,7 +459,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             '앱 정보',
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'SUITE',
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -479,7 +468,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               Text(
                                 '버전',
                                 style: theme.typography.base.copyWith(
-                                  fontFamily: 'SUITE',
                                 ),
                               ),
                               Text(
@@ -497,7 +485,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               Text(
                                 '개발자',
                                 style: theme.typography.base.copyWith(
-                                  fontFamily: 'SUITE',
                                 ),
                               ),
                               Text(

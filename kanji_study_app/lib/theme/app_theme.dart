@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 
 class AppTheme {
   static ThemeData getLightTheme() {
@@ -8,19 +9,16 @@ class AppTheme {
       textTheme: const TextTheme(
         // Display
         displayLarge: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w700,
           fontSize: 57,
           height: 1.2,
         ),
         displayMedium: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w700,
           fontSize: 45,
           height: 1.2,
         ),
         displaySmall: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w600,
           fontSize: 36,
           height: 1.2,
@@ -28,19 +26,16 @@ class AppTheme {
 
         // Headline
         headlineLarge: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w600,
           fontSize: 32,
           height: 1.3,
         ),
         headlineMedium: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w600,
           fontSize: 28,
           height: 1.3,
         ),
         headlineSmall: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w500,
           fontSize: 24,
           height: 1.3,
@@ -48,19 +43,16 @@ class AppTheme {
 
         // Title
         titleLarge: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w600,
           fontSize: 22,
           height: 1.4,
         ),
         titleMedium: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w500,
           fontSize: 16,
           height: 1.4,
         ),
         titleSmall: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w500,
           fontSize: 14,
           height: 1.4,
@@ -68,19 +60,16 @@ class AppTheme {
 
         // Body
         bodyLarge: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w400,
           fontSize: 16,
           height: 1.5,
         ),
         bodyMedium: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w400,
           fontSize: 14,
           height: 1.5,
         ),
         bodySmall: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w400,
           fontSize: 12,
           height: 1.5,
@@ -88,23 +77,43 @@ class AppTheme {
 
         // Label
         labelLarge: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w500,
           fontSize: 14,
           height: 1.4,
         ),
         labelMedium: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w500,
           fontSize: 12,
           height: 1.4,
         ),
         labelSmall: TextStyle(
-          fontFamily: 'SUITE',
           fontWeight: FontWeight.w500,
           fontSize: 11,
           height: 1.4,
         ),
+      ),
+    );
+  }
+
+  static FThemeData getFTheme() {
+    final baseTheme = FThemes.zinc.light;
+    final baseTypography = baseTheme.typography;
+
+    return baseTheme.copyWith(
+      typography: FTypography(
+        base: baseTypography.base.copyWith(fontFamily: 'SUITE'),
+        sm: baseTypography.sm.copyWith(fontFamily: 'SUITE'),
+        xs: baseTypography.xs.copyWith(fontFamily: 'SUITE'),
+        lg: baseTypography.lg.copyWith(fontFamily: 'SUITE'),
+        xl: baseTypography.xl.copyWith(fontFamily: 'SUITE'),
+        xl2: baseTypography.xl2.copyWith(fontFamily: 'SUITE'),
+        xl3: baseTypography.xl3.copyWith(fontFamily: 'SUITE'),
+        xl4: baseTypography.xl4.copyWith(fontFamily: 'SUITE'),
+        xl5: baseTypography.xl5.copyWith(fontFamily: 'SUITE'),
+        xl6: baseTypography.xl6.copyWith(fontFamily: 'SUITE'),
+        xl7: baseTypography.xl7.copyWith(fontFamily: 'SUITE'),
+        xl8: baseTypography.xl8.copyWith(fontFamily: 'SUITE'),
+
       ),
     );
   }

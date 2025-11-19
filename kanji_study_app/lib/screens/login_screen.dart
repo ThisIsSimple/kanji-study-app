@@ -203,7 +203,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           '콘나칸지',
                           style: theme.typography.xl2.copyWith(
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'SUITE',
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -211,7 +210,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           '일본어 공부, 바로 이런 느낌!',
                           style: theme.typography.base.copyWith(
                             color: theme.colors.mutedForeground,
-                            fontFamily: 'SUITE',
                           ),
                         ),
                       ],
@@ -235,7 +233,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               Text(
                                 'Google로 계속하기',
                                 style: TextStyle(
-                                  fontFamily: 'SUITE',
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -256,7 +253,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               Text(
                                 'Apple로 계속하기',
                                 style: TextStyle(
-                                  fontFamily: 'SUITE',
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -293,7 +289,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                     Text(
                                       '카카오로 계속하기',
                                       style: TextStyle(
-                                        fontFamily: 'SUITE',
                                         fontWeight: FontWeight.w500,
                                         color: Colors.black87,
                                       ),
@@ -324,7 +319,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 '또는',
                                 style: theme.typography.sm.copyWith(
                                   color: theme.colors.mutedForeground,
-                                  fontFamily: 'SUITE',
                                 ),
                               ),
                             ),
@@ -351,7 +345,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               Text(
                                 '게스트로 시작하기',
                                 style: TextStyle(
-                                  fontFamily: 'SUITE',
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -384,7 +377,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   '게스트로 시작하면 나중에 SNS 계정을 연동하여 데이터를 안전하게 보관할 수 있습니다.',
                                   style: theme.typography.xs.copyWith(
                                     color: theme.colors.mutedForeground,
-                                    fontFamily: 'SUITE',
                                     height: 1.4,
                                   ),
                                 ),
@@ -410,7 +402,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           _errorMessage!,
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.destructive,
-                            fontFamily: 'SUITE',
                           ),
                         ),
                       ),

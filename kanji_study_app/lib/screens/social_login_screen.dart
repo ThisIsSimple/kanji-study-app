@@ -106,7 +106,7 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
       header: FHeader(
         title: Text(
           isAnonymous ? 'SNS 계정 연동' : '로그인',
-          style: const TextStyle(fontFamily: 'SUITE'),
+          style: const TextStyle(),
         ),
         suffixes: [
           IconButton(
@@ -140,7 +140,6 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
                 '콘나칸지',
                 style: theme.typography.xl2.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'SUITE',
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -151,7 +150,6 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
                     : 'SNS 계정으로 간편하게 로그인하세요',
                 style: theme.typography.sm.copyWith(
                   color: theme.colors.mutedForeground,
-                  fontFamily: 'SUITE',
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -217,7 +215,6 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
                           _waitingMessage!,
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.primary,
-                            fontFamily: 'SUITE',
                           ),
                         ),
                       ),
@@ -239,7 +236,6 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
                     _errorMessage!,
                     style: theme.typography.sm.copyWith(
                       color: theme.colors.destructive,
-                      fontFamily: 'SUITE',
                     ),
                   ),
                 ),
@@ -255,7 +251,7 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
                   style: FButtonStyle.outline(),
                   child: const Text(
                     '게스트로 계속 사용하기',
-                    style: TextStyle(fontFamily: 'SUITE'),
+                    style: TextStyle(),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -263,7 +259,6 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
                   '게스트로 사용하면 기기 변경 시 데이터가 유실될 수 있습니다',
                   style: theme.typography.xs.copyWith(
                     color: theme.colors.mutedForeground,
-                    fontFamily: 'SUITE',
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -307,7 +302,6 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
                 style: theme.typography.base.copyWith(
                   color: foregroundColor,
                   fontWeight: FontWeight.w600,
-                  fontFamily: 'SUITE',
                 ),
               ),
             ],

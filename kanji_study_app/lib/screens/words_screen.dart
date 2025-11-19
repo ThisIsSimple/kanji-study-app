@@ -127,7 +127,7 @@ class _WordsScreenState extends State<WordsScreen> {
       final theme = FTheme.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('학습할 단어가 없습니다', style: TextStyle(fontFamily: 'SUITE')),
+          content: Text('학습할 단어가 없습니다', style: TextStyle()),
           backgroundColor: theme.colors.destructive,
         ),
       );
@@ -148,12 +148,11 @@ class _WordsScreenState extends State<WordsScreen> {
               '진행 중인 학습',
               style: theme.typography.lg.copyWith(
                 fontWeight: FontWeight.bold,
-                fontFamily: 'SUITE',
               ),
             ),
             content: Text(
               '이전에 진행 중이던 플래시카드 학습이 있습니다.\n계속하시겠습니까?',
-              style: theme.typography.base.copyWith(fontFamily: 'SUITE'),
+              style: theme.typography.base.copyWith(),
             ),
             actions: [
               TextButton(
@@ -163,7 +162,7 @@ class _WordsScreenState extends State<WordsScreen> {
                   Navigator.of(context).pop();
                   await _showCountSelectorAndStart();
                 },
-                child: Text('새로 시작', style: TextStyle(fontFamily: 'SUITE')),
+                child: Text('새로 시작', style: TextStyle()),
               ),
               TextButton(
                 onPressed: () {
@@ -173,7 +172,6 @@ class _WordsScreenState extends State<WordsScreen> {
                 child: Text(
                   '이어하기',
                   style: TextStyle(
-                    fontFamily: 'SUITE',
                     color: theme.colors.primary,
                     fontWeight: FontWeight.w600,
                   ),
@@ -258,7 +256,6 @@ class _WordsScreenState extends State<WordsScreen> {
                           'JLPT 레벨 필터',
                           style: theme.typography.lg.copyWith(
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'SUITE',
                           ),
                         ),
                         TextButton(
@@ -268,7 +265,6 @@ class _WordsScreenState extends State<WordsScreen> {
                           child: Text(
                             '완료',
                             style: TextStyle(
-                              fontFamily: 'SUITE',
                               color: theme.colors.primary,
                             ),
                           ),
@@ -295,7 +291,6 @@ class _WordsScreenState extends State<WordsScreen> {
                       title: Text(
                         'JLPT N$level',
                         style: theme.typography.base.copyWith(
-                          fontFamily: 'SUITE',
                           fontWeight: isSelected
                               ? FontWeight.w600
                               : FontWeight.normal,
@@ -337,7 +332,6 @@ class _WordsScreenState extends State<WordsScreen> {
                     : 'JLPT ${_selectedJlptLevels.map((l) => "N$l").join(", ")} - ${_filteredWords.length}개',
                 style: theme.typography.sm.copyWith(
                   color: theme.colors.mutedForeground,
-                  fontFamily: 'SUITE',
                 ),
               ),
             ),
@@ -423,12 +417,11 @@ class _WordsScreenState extends State<WordsScreen> {
                             onChanged: _onSearchChanged,
                             decoration: InputDecoration(
                               hintText: '일본어, 한글, 후리가나로 검색...',
-                              hintStyle: TextStyle(fontFamily: 'SUITE'),
+                              hintStyle: TextStyle(),
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.zero,
                             ),
                             style: theme.typography.lg.copyWith(
-                              fontFamily: 'SUITE',
                             ),
                           ),
                         ),
@@ -478,7 +471,6 @@ class _WordsScreenState extends State<WordsScreen> {
                             Text(
                               '플래시카드 학습 시작 (${_filteredWords.length}개)',
                               style: theme.typography.base.copyWith(
-                                fontFamily: 'SUITE',
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
                               ),
@@ -511,7 +503,6 @@ class _WordsScreenState extends State<WordsScreen> {
                                       : '검색 결과가 없습니다',
                                   style: theme.typography.base.copyWith(
                                     color: theme.colors.mutedForeground,
-                                    fontFamily: 'SUITE',
                                   ),
                                 ),
                               ],

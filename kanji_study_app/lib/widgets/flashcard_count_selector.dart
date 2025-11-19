@@ -116,7 +116,6 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
         '학습할 카드 개수를 선택하세요',
         style: theme.typography.lg.copyWith(
           fontWeight: FontWeight.bold,
-          fontFamily: 'SUITE',
         ),
       ),
       content: SizedBox(
@@ -155,7 +154,6 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
                         child: Text(
                           '$count개',
                           style: theme.typography.base.copyWith(
-                            fontFamily: 'SUITE',
                             fontWeight: isSelected
                                 ? FontWeight.bold
                                 : FontWeight.normal,
@@ -176,7 +174,6 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
               Text(
                 '또는 직접 입력:',
                 style: theme.typography.sm.copyWith(
-                  fontFamily: 'SUITE',
                   color: theme.colors.mutedForeground,
                 ),
               ),
@@ -196,7 +193,7 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
                     vertical: 12,
                   ),
                 ),
-                style: theme.typography.base.copyWith(fontFamily: 'SUITE'),
+                style: theme.typography.base.copyWith(),
                 onChanged: _onCustomCountChanged,
               ),
 
@@ -225,7 +222,6 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
                       child: Text(
                         '전체 (${widget.totalCount}개)',
                         style: theme.typography.base.copyWith(
-                          fontFamily: 'SUITE',
                           fontWeight: _selectedCount == widget.totalCount
                               ? FontWeight.bold
                               : FontWeight.normal,
@@ -248,7 +244,6 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
           child: Text(
             '취소',
             style: TextStyle(
-              fontFamily: 'SUITE',
               color: theme.colors.mutedForeground,
             ),
           ),
@@ -258,7 +253,6 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
           child: Text(
             '시작',
             style: TextStyle(
-              fontFamily: 'SUITE',
               color: _errorMessage == null
                   ? theme.colors.primary
                   : theme.colors.mutedForeground,

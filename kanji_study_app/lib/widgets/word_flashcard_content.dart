@@ -69,7 +69,6 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
                 Text(
                   _showStrokeOrder ? '획순 숨기기' : '획순 보기',
                   style: theme.typography.sm.copyWith(
-                    fontFamily: 'SUITE',
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -149,7 +148,6 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
                   style: theme.typography.sm.copyWith(
                     fontWeight: FontWeight.bold,
                     color: _getJlptColor(widget.word.jlptLevel),
-                    fontFamily: 'SUITE',
                   ),
                 ),
               ),
@@ -246,7 +244,6 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
                           meaning.partOfSpeech,
                           style: theme.typography.xs.copyWith(
                             color: theme.colors.mutedForeground,
-                            fontFamily: 'SUITE',
                           ),
                         ),
                       ),
@@ -254,7 +251,6 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
                       Text(
                         meaning.meaning,
                         style: theme.typography.lg.copyWith(
-                          fontFamily: 'SUITE',
                           fontWeight: FontWeight.w500,
                         ),
                       ),

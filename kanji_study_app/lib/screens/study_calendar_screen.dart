@@ -89,7 +89,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
 
     return FScaffold(
       header: FHeader.nested(
-        title: const Text('학습 캘린더', style: TextStyle(fontFamily: 'SUITE')),
+        title: const Text('학습 캘린더', style: TextStyle()),
         prefixes: [
           FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
         ],
@@ -272,7 +272,6 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                 DateFormat('yyyy년 MM월 dd일').format(_selectedDay!),
                 style: theme.typography.lg.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'SUITE',
                 ),
               ),
               if (DateUtils.isSameDay(_selectedDay!, DateTime.now()))
@@ -290,7 +289,6 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                     style: theme.typography.xs.copyWith(
                       color: theme.colors.primary,
                       fontWeight: FontWeight.w600,
-                      fontFamily: 'SUITE',
                     ),
                   ),
                 ),
@@ -301,7 +299,6 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
             '학습 기록이 없습니다',
             style: theme.typography.base.copyWith(
               color: theme.colors.mutedForeground,
-              fontFamily: 'SUITE',
             ),
           ),
         ],
@@ -318,7 +315,6 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
               DateFormat('yyyy년 MM월 dd일').format(_selectedDay!),
               style: theme.typography.lg.copyWith(
                 fontWeight: FontWeight.bold,
-                fontFamily: 'SUITE',
               ),
             ),
             if (DateUtils.isSameDay(_selectedDay!, DateTime.now()))
@@ -333,7 +329,6 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                   style: theme.typography.xs.copyWith(
                     color: theme.colors.primary,
                     fontWeight: FontWeight.w600,
-                    fontFamily: 'SUITE',
                   ),
                 ),
               ),
@@ -409,7 +404,6 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                   style: theme.typography.base.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colors.secondary,
-                    fontFamily: 'SUITE',
                   ),
                 ),
               ],
@@ -442,7 +436,6 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
             label,
             style: theme.typography.xs.copyWith(
               color: theme.colors.mutedForeground,
-              fontFamily: 'SUITE',
             ),
           ),
           const SizedBox(height: 4),
@@ -451,7 +444,6 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
             style: theme.typography.base.copyWith(
               fontWeight: FontWeight.bold,
               color: color,
-              fontFamily: 'SUITE',
             ),
           ),
         ],
@@ -487,7 +479,6 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
           '${_focusedDay.month}월 통계',
           style: theme.typography.lg.copyWith(
             fontWeight: FontWeight.bold,
-            fontFamily: 'SUITE',
           ),
         ),
         const SizedBox(height: 16),
@@ -514,14 +505,12 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
           label,
           style: theme.typography.base.copyWith(
             color: theme.colors.mutedForeground,
-            fontFamily: 'SUITE',
           ),
         ),
         Text(
           value,
           style: theme.typography.base.copyWith(
             fontWeight: FontWeight.w600,
-            fontFamily: 'SUITE',
           ),
         ),
       ],
