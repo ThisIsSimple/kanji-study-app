@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 
 /// 플래시카드 학습 개수 선택 다이얼로그
@@ -16,10 +15,13 @@ class FlashcardCountSelector extends StatefulWidget {
   @override
   State<FlashcardCountSelector> createState() => _FlashcardCountSelectorState();
 
-  /// Show dialog and return selected count (or null if canceled)
+  /// Show bottom sheet and return selected count (or null if canceled)
   static Future<int?> show(BuildContext context, int totalCount) {
-    return showDialog<int>(
+    return showFSheet<int>(
       context: context,
+      side: FLayout.btt,
+      barrierDismissible: true,
+      draggable: true,
       builder: (context) => FlashcardCountSelector(totalCount: totalCount),
     );
   }
@@ -110,28 +112,57 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Text(
-        '학습할 카드 개수를 선택하세요',
-        style: theme.typography.lg.copyWith(
-          fontWeight: FontWeight.bold,
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colors.background,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
         ),
       ),
-      content: SizedBox(
-        width: 300,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Scrollable content
+            Flexible(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: theme.colors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+
+              // Title
+              Text(
+                '학습할 카드 개수를 선택하세요',
+                style: theme.typography.lg.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
               // 미리 정의된 버튼들 (2x2 그리드)
               GridView.count(
                 crossAxisCount: 2,
                 shrinkWrap: true,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 2.5,
+                childAspectRatio: 3.5,
                 physics: const NeverScrollableScrollPhysics(),
                 children: _presetOptions.map((count) {
                   final isSelected = _selectedCount == count;
@@ -178,23 +209,38 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
                 ),
               ),
               const SizedBox(height: 8),
-              TextField(
-                controller: _customCountController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: InputDecoration(
-                  suffixText: '개',
-                  errorText: _errorMessage,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FTextField(
+                          controller: _customCountController,
+                          keyboardType: TextInputType.number,
+                          maxLines: 1,
+                          onChange: _onCustomCountChanged,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '개',
+                        style: theme.typography.base.copyWith(
+                          color: theme.colors.mutedForeground,
+                        ),
+                      ),
+                    ],
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
-                ),
-                style: theme.typography.base.copyWith(),
-                onChanged: _onCustomCountChanged,
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      _errorMessage!,
+                      style: theme.typography.xs.copyWith(
+                        color: theme.colors.error,
+                      ),
+                    ),
+                  ],
+                ],
               ),
 
               const SizedBox(height: 20),
@@ -234,33 +280,26 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
                   ),
                 ),
               ),
-            ],
-          ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Fixed bottom button
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: SizedBox(
+                width: double.infinity,
+                child: FButton(
+                  onPress: _errorMessage == null ? _onConfirm : null,
+                  child: const Text('시작'),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            '취소',
-            style: TextStyle(
-              color: theme.colors.mutedForeground,
-            ),
-          ),
-        ),
-        TextButton(
-          onPressed: _errorMessage == null ? _onConfirm : null,
-          child: Text(
-            '시작',
-            style: TextStyle(
-              color: _errorMessage == null
-                  ? theme.colors.primary
-                  : theme.colors.mutedForeground,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

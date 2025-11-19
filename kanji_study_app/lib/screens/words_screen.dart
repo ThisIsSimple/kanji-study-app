@@ -372,7 +372,9 @@ class _WordsScreenState extends State<WordsScreen> {
           : RefreshIndicator(
               onRefresh: () async {
                 await _wordService.reloadData();
-                _applyFilters();
+                if (mounted) {
+                  _applyFilters();
+                }
               },
               child: _filteredWords.isEmpty
                   ? Center(

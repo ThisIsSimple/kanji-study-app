@@ -33,8 +33,10 @@ class WordService {
   // Force reload data
   Future<void> reloadData() async {
     _isInitialized = false;
-    _allWords.clear();
-    await init();
+    _wordRepository.clearCache(); // Clear repository cache first
+    await _loadWords();
+    await _loadFavorites();
+    _isInitialized = true;
   }
 
   // Load words from Repository (로컬 DB 우선)
