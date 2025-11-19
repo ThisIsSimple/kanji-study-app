@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart';
 import '../services/supabase_service.dart';
 import '../models/daily_study_stats.dart';
+import '../constants/app_spacing.dart';
+import '../widgets/daily_summary_card.dart';
 import 'study_calendar_detail_screen.dart';
 
 class StudyCalendarScreen extends StatefulWidget {
@@ -89,7 +89,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
 
     return FScaffold(
       header: FHeader.nested(
-        title: const Text('학습 캘린더', style: TextStyle()),
+        title: const Text('학습 캘린더'),
         prefixes: [
           FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
         ],
@@ -97,14 +97,14 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: AppSpacing.screenPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Calendar Card
                   FCard(
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: AppSpacing.cardPadding,
                       child: TableCalendar<DailyStudyStats>(
                         locale: 'ja_JP',
                         firstDay: DateTime(2024, 1, 1),
@@ -233,8 +233,15 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                   if (_selectedDay != null) ...[
                     FCard(
                       child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: _buildDaySummary(theme),
+                        padding: AppSpacing.cardPadding,
+                        child: DailySummaryCard(
+                          date: _selectedDay!,
+                          stats: _monthlyStats[DateTime(
+                            _selectedDay!.year,
+                            _selectedDay!.month,
+                            _selectedDay!.day,
+                          )],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -243,211 +250,13 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                   // Monthly Statistics
                   FCard(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: AppSpacing.cardPadding,
                       child: _buildMonthlyStatistics(theme),
                     ),
                   ),
                 ],
               ),
             ),
-    );
-  }
-
-  Widget _buildDaySummary(FThemeData theme) {
-    final normalizedDay = DateTime(
-      _selectedDay!.year,
-      _selectedDay!.month,
-      _selectedDay!.day,
-    );
-    final stats = _monthlyStats[normalizedDay];
-
-    if (stats == null || stats.totalStudied == 0) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                DateFormat('yyyy년 MM월 dd일').format(_selectedDay!),
-                style: theme.typography.lg.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (DateUtils.isSameDay(_selectedDay!, DateTime.now()))
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '오늘',
-                    style: theme.typography.xs.copyWith(
-                      color: theme.colors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '학습 기록이 없습니다',
-            style: theme.typography.base.copyWith(
-              color: theme.colors.mutedForeground,
-            ),
-          ),
-        ],
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              DateFormat('yyyy년 MM월 dd일').format(_selectedDay!),
-              style: theme.typography.lg.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (DateUtils.isSameDay(_selectedDay!, DateTime.now()))
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: theme.colors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '오늘',
-                  style: theme.typography.xs.copyWith(
-                    color: theme.colors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                icon: PhosphorIconsRegular.translate,
-                label: '한자',
-                value: '${stats.kanjiStudied}개',
-                color: theme.colors.primary,
-                theme: theme,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                icon: PhosphorIconsRegular.bookOpen,
-                label: '단어',
-                value: '${stats.wordsStudied}개',
-                color: theme.colors.secondary,
-                theme: theme,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                icon: PhosphorIconsRegular.checkCircle,
-                label: '완료',
-                value: '${stats.totalCompleted}회',
-                color: Colors.green,
-                theme: theme,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                icon: PhosphorIconsRegular.warningCircle,
-                label: '까먹음',
-                value: '${stats.totalForgot}회',
-                color: Colors.orange,
-                theme: theme,
-              ),
-            ),
-          ],
-        ),
-        if (stats.successRate > 0) ...[
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: theme.colors.secondary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  PhosphorIconsRegular.chartLine,
-                  size: 20,
-                  color: theme.colors.secondary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '성공률: ${(stats.successRate * 100).toStringAsFixed(1)}%',
-                  style: theme.typography.base.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colors.secondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildStatCard({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-    required FThemeData theme,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: theme.typography.xs.copyWith(
-              color: theme.colors.mutedForeground,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: theme.typography.base.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
-      ),
     );
   }
 

@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../services/notification_service.dart';
 import '../services/gemini_service.dart';
 import '../services/supabase_service.dart';
+import '../constants/app_spacing.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -80,23 +81,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('로그아웃', style: TextStyle()),
+        title: const Text('로그아웃'),
         content: Text(
           _isAnonymous
               ? '게스트 계정에서 로그아웃하면 학습 기록이 삭제될 수 있습니다. 계속하시겠습니까?'
               : '정말 로그아웃 하시겠습니까?',
-          style: TextStyle(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('취소', style: TextStyle()),
+            child: const Text('취소'),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(
-              '로그아웃',
-            ),
+            child: const Text('로그아웃'),
           ),
         ],
       ),
@@ -112,11 +110,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         debugPrint('Logout error: $e');
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '로그아웃 중 오류가 발생했습니다.',
-              style: TextStyle(),
-            ),
+          const SnackBar(
+            content: Text('로그아웃 중 오류가 발생했습니다.'),
           ),
         );
       }
@@ -155,7 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return FScaffold(
       header: FHeader.nested(
-        title: Text('설정', style: TextStyle()),
+        title: const Text('설정'),
         prefixes: [
           FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
         ],
@@ -163,14 +158,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: AppSpacing.screenPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Account Management Card
                   FCard(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: AppSpacing.cardPadding,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -234,15 +229,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           FButton(
                             onPress: _handleLogout,
                             style: FButtonStyle.destructive(),
-                            child: Row(
+                            child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(PhosphorIconsRegular.signOut, size: 18),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '로그아웃',
-                                  style: TextStyle(),
-                                ),
+                                SizedBox(width: 8),
+                                Text('로그아웃'),
                               ],
                             ),
                           ),
@@ -255,7 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Notification Settings Card
                   FCard(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: AppSpacing.cardPadding,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -335,7 +327,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Gemini API Settings Card
                   FCard(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: AppSpacing.cardPadding,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -354,49 +346,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           const SizedBox(height: 16),
 
-                          // API Key Input
-                          Material(
-                            color: Colors.transparent,
-                            child: TextField(
-                              controller: _apiKeyController,
-                              obscureText: !_apiKeyVisible,
-                              decoration: InputDecoration(
-                                labelText: 'Gemini API Key',
-                                hintText: 'API 키를 입력하세요',
-                                hintStyle: TextStyle(),
-                                labelStyle: TextStyle(),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(
-                                    color: theme.colors.border,
-                                  ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(
-                                    color: theme.colors.border,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(
-                                    color: theme.colors.primary,
-                                  ),
-                                ),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _apiKeyVisible
-                                        ? PhosphorIconsRegular.eyeSlash
-                                        : PhosphorIconsRegular.eye,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _apiKeyVisible = !_apiKeyVisible;
-                                    });
-                                  },
+                          // API Key Input with visibility toggle
+                          Row(
+                            children: [
+                              Expanded(
+                                child: FTextField(
+                                  controller: _apiKeyController,
+                                  label: Text('Gemini API Key'),
+                                  hint: 'API 키를 입력하세요',
+                                  obscureText: !_apiKeyVisible,
                                 ),
                               ),
-                            ),
+                              const SizedBox(width: AppSpacing.sm),
+                              IconButton(
+                                icon: Icon(
+                                  _apiKeyVisible
+                                      ? PhosphorIconsRegular.eyeSlash
+                                      : PhosphorIconsRegular.eye,
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _apiKeyVisible = !_apiKeyVisible;
+                                  });
+                                },
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 12),
                           FButton(
@@ -406,30 +381,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 await _geminiService.setApiKey(apiKey);
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'API 키가 저장되었습니다.',
-                                      style: TextStyle(),
-                                    ),
+                                  const SnackBar(
+                                    content: Text('API 키가 저장되었습니다.'),
                                   ),
                                 );
                               }
                             },
                             style: FButtonStyle.outline(),
-                            child: Text(
-                              'API 키 저장',
-                              style: TextStyle(),
-                            ),
+                            child: const Text('API 키 저장'),
                           ),
                           const SizedBox(height: 8),
                           GestureDetector(
                             onTap: () {
                               // Open AI Studio link
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
+                                const SnackBar(
                                   content: Text(
                                     '브라우저에서 ai.google.dev를 방문하여 API 키를 생성하세요.',
-                                    style: TextStyle(),
                                   ),
                                 ),
                               );
@@ -451,7 +419,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // About Card
                   FCard(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: AppSpacing.cardPadding,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

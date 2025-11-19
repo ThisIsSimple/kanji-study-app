@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/supabase_service.dart';
 import '../models/daily_study_stats.dart';
+import '../constants/app_spacing.dart';
+import '../widgets/daily_summary_card.dart';
 
 class StudyCalendarDetailScreen extends StatefulWidget {
   final DateTime date;
@@ -120,7 +122,6 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
       header: FHeader.nested(
         title: Text(
           DateFormat('yyyy년 MM월 dd일').format(_currentDate),
-          style: const TextStyle(),
         ),
         prefixes: [
           FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
@@ -167,7 +168,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: AppSpacing.screenPadding,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -175,8 +176,11 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
                 if (dailyStats != null) ...[
                   FCard(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: _buildSummaryCard(theme, dailyStats),
+                      padding: AppSpacing.cardPadding,
+                      child: DailySummaryCard(
+                        date: normalizedPageDate,
+                        stats: dailyStats,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -202,133 +206,6 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(FThemeData theme, DailyStudyStats dailyStats) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '일일 요약',
-          style: theme.typography.lg.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatItem(
-                icon: PhosphorIconsRegular.translate,
-                label: '한자',
-                value: '${dailyStats.kanjiStudied}개',
-                color: theme.colors.primary,
-                theme: theme,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatItem(
-                icon: PhosphorIconsRegular.bookOpen,
-                label: '단어',
-                value: '${dailyStats.wordsStudied}개',
-                color: theme.colors.secondary,
-                theme: theme,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatItem(
-                icon: PhosphorIconsRegular.checkCircle,
-                label: '학습 완료',
-                value: '${dailyStats.totalCompleted}회',
-                color: Colors.green,
-                theme: theme,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatItem(
-                icon: PhosphorIconsRegular.warningCircle,
-                label: '까먹음',
-                value: '${dailyStats.totalForgot}회',
-                color: Colors.orange,
-                theme: theme,
-              ),
-            ),
-          ],
-        ),
-        if (dailyStats.successRate > 0) ...[
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: theme.colors.secondary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  PhosphorIconsRegular.chartLine,
-                  size: 20,
-                  color: theme.colors.secondary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '성공률: ${(dailyStats.successRate * 100).toStringAsFixed(1)}%',
-                  style: theme.typography.base.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colors.secondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildStatItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-    required FThemeData theme,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: theme.typography.xs.copyWith(
-              color: theme.colors.mutedForeground,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: theme.typography.base.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
       ),
     );
   }
