@@ -10,6 +10,8 @@ class AppScaffold extends StatefulWidget {
   final ValueChanged<String>? onSearchChanged;
   final VoidCallback? onSearchClosed;
   final String? searchHint;
+  final Widget? floatingActionButton;
+  final FloatingActionButtonLocation? floatingActionButtonLocation;
 
   const AppScaffold({
     super.key,
@@ -20,6 +22,8 @@ class AppScaffold extends StatefulWidget {
     this.onSearchChanged,
     this.onSearchClosed,
     this.searchHint,
+    this.floatingActionButton,
+    this.floatingActionButtonLocation,
   });
 
   @override
@@ -80,61 +84,71 @@ class _AppScaffoldState extends State<AppScaffold> {
           bottom: false, // Allow bottom content to extend to edge (for bottom nav)
           child: widget.body,
         ),
+        floatingActionButton: widget.floatingActionButton,
+        floatingActionButtonLocation: widget.floatingActionButtonLocation,
       );
     }
 
-    // When there's a header, use FScaffold
-    return FScaffold(
-      header: Stack(
-        children: [
-          // Standard Header
-          Opacity(
-            opacity: _isSearchActive ? 0.0 : 1.0,
-            child: FHeader(
-              title: widget.title ?? const SizedBox.shrink(),
-              suffixes: effectiveActions,
-            ),
-          ),
-
-          // Search Overlay
-          if (_isSearchActive && widget.searchController != null)
-            Positioned.fill(
-              child: Container(
-                color: theme.colors.background,
-                child: SafeArea(
-                  child: Container(
-                    height: 56, // Match FHeader height roughly
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    alignment: Alignment.center,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: FTextField(
-                            controller: widget.searchController,
-                            focusNode: _searchFocusNode,
-                            onChange: widget.onSearchChanged,
-                            hint: widget.searchHint ?? '검색...',
-                          ),
-                        ),
-                        SizedBox(
-                          width: 36,
-                          height: 36,
-                          child: IconButton(
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: Icon(PhosphorIconsRegular.x, size: 20),
-                            onPressed: _toggleSearch,
-                          ),
-                        ),
-                      ],
-                    ),
+    // When there's a header, use Scaffold with FHeader
+    return Scaffold(
+      backgroundColor: theme.colors.background,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Stack(
+              children: [
+                // Standard Header
+                Opacity(
+                  opacity: _isSearchActive ? 0.0 : 1.0,
+                  child: FHeader(
+                    title: widget.title ?? const SizedBox.shrink(),
+                    suffixes: effectiveActions,
                   ),
                 ),
-              ),
+
+                // Search Overlay
+                if (_isSearchActive && widget.searchController != null)
+                  Positioned.fill(
+                    child: Container(
+                      color: theme.colors.background,
+                      child: Container(
+                        height: 56, // Match FHeader height roughly
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        alignment: Alignment.center,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: FTextField(
+                                controller: widget.searchController,
+                                focusNode: _searchFocusNode,
+                                onChange: widget.onSearchChanged,
+                                hint: widget.searchHint ?? '검색...',
+                              ),
+                            ),
+                            SizedBox(
+                              width: 36,
+                              height: 36,
+                              child: IconButton(
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                icon: Icon(PhosphorIconsRegular.x, size: 20),
+                                onPressed: _toggleSearch,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-        ],
+            Expanded(child: widget.body),
+          ],
+        ),
       ),
-      child: widget.body,
+      floatingActionButton: widget.floatingActionButton,
+      floatingActionButtonLocation: widget.floatingActionButtonLocation,
     );
   }
 }

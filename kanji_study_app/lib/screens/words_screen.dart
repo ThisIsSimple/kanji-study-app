@@ -355,146 +355,95 @@ class _WordsScreenState extends State<WordsScreen> {
         });
       },
       searchHint: '일본어, 한글, 후리가나로 검색...',
+      floatingActionButton: _filteredWords.isNotEmpty
+          ? FloatingActionButton(
+              onPressed: _startFlashcardSession,
+              backgroundColor: theme.colors.primary,
+              child: Icon(
+                PhosphorIconsFill.graduationCap,
+                color: Colors.white,
+                size: 28,
+              ),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Flashcard start button
-                if (_filteredWords.isNotEmpty)
-                  Padding(
-                    padding: AppSpacing.buttonPadding,
-                    child: FCard(
+          : RefreshIndicator(
+              onRefresh: () async {
+                await _wordService.reloadData();
+                _applyFilters();
+              },
+              child: _filteredWords.isEmpty
+                  ? Center(
                       child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: FCard(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.xl),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  PhosphorIconsRegular.graduationCap,
-                                  size: 20,
-                                  color: theme.colors.primary,
+                                  PhosphorIconsRegular.magnifyingGlass,
+                                  size: 48,
+                                  color: theme.colors.mutedForeground,
                                 ),
-                                const SizedBox(width: AppSpacing.xs),
+                                const SizedBox(height: AppSpacing.md),
                                 Text(
-                                  '학습 시작',
-                                  style: theme.typography.sm.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.colors.foreground,
+                                  _showOnlyFavorites
+                                      ? '즐겨찾기한 단어가 없습니다'
+                                      : '검색 결과가 없습니다',
+                                  style: theme.typography.base.copyWith(
+                                    color: theme.colors.mutedForeground,
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: AppSpacing.sm),
-                            FButton(
-                              onPress: _startFlashcardSession,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      PhosphorIconsRegular.cards,
-                                      size: 20,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      '플래시카드 학습 (${_filteredWords.length}개)',
-                                      style: theme.typography.base.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: () async {
-                      await _wordService.reloadData();
-                      _applyFilters();
-                    },
-                    child: _filteredWords.isEmpty
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(AppSpacing.lg),
-                              child: FCard(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(AppSpacing.xl),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        PhosphorIconsRegular.magnifyingGlass,
-                                        size: 48,
-                                        color: theme.colors.mutedForeground,
-                                      ),
-                                      const SizedBox(height: AppSpacing.md),
-                                      Text(
-                                        _showOnlyFavorites
-                                            ? '즐겨찾기한 단어가 없습니다'
-                                            : '검색 결과가 없습니다',
-                                        style: theme.typography.base.copyWith(
-                                          color: theme.colors.mutedForeground,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
+                      itemCount: _filteredWords.length,
+                      key: ValueKey(_filteredWords.length),
+                      itemBuilder: (context, index) {
+                        // Safety check to prevent RangeError
+                        if (index >= _filteredWords.length) {
+                          return const SizedBox.shrink();
+                        }
+                        final word = _filteredWords[index];
+                        return WordListItem(
+                          key: ValueKey(word.id),
+                          word: word,
+                          isFavorite: _wordService.isFavorite(word.id),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => WordDetailScreen(
+                                  word: word,
+                                  wordList: _filteredWords,
+                                  currentIndex: index,
                                 ),
                               ),
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md,
-                              vertical: AppSpacing.sm,
-                            ),
-                            itemCount: _filteredWords.length,
-                            key: ValueKey(_filteredWords.length),
-                            itemBuilder: (context, index) {
-                              // Safety check to prevent RangeError
-                              if (index >= _filteredWords.length) {
-                                return const SizedBox.shrink();
+                            );
+                          },
+                          onFavoriteToggle: () {
+                            setState(() {
+                              _wordService.toggleFavorite(word.id);
+                              if (_showOnlyFavorites) {
+                                _applyFilters();
                               }
-                              final word = _filteredWords[index];
-                              return WordListItem(
-                                key: ValueKey(word.id),
-                                word: word,
-                                isFavorite: _wordService.isFavorite(word.id),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => WordDetailScreen(
-                                        word: word,
-                                        wordList: _filteredWords,
-                                        currentIndex: index,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                onFavoriteToggle: () {
-                                  setState(() {
-                                    _wordService.toggleFavorite(word.id);
-                                    if (_showOnlyFavorites) {
-                                      _applyFilters();
-                                    }
-                                  });
-                                },
-                              );
-                            },
-                          ),
-                  ),
-                ),
-              ],
+                            });
+                          },
+                        );
+                      },
+                    ),
             ),
     );
   }

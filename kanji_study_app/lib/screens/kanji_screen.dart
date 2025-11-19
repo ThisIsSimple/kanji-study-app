@@ -262,134 +262,80 @@ class _KanjiScreenState extends State<KanjiScreen> {
         });
       },
       searchHint: '한자, 의미, 읽기로 검색...',
+      floatingActionButton: _filteredKanji.isNotEmpty
+          ? FloatingActionButton(
+              onPressed: _startFlashcardSession,
+              backgroundColor: theme.colors.primary,
+              child: Icon(
+                PhosphorIconsFill.graduationCap,
+                color: Colors.white,
+                size: 28,
+              ),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Flashcard start button
-                if (_filteredKanji.isNotEmpty)
-                  Padding(
-                    padding: AppSpacing.buttonPadding,
-                    child: FCard(
+          : RefreshIndicator(
+              onRefresh: () => _loadKanji(forceReload: true),
+              child: _filteredKanji.isEmpty
+                  ? Center(
                       child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: FCard(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.xl),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  PhosphorIconsRegular.graduationCap,
-                                  size: 20,
-                                  color: theme.colors.primary,
+                                  PhosphorIconsRegular.magnifyingGlass,
+                                  size: 48,
+                                  color: theme.colors.mutedForeground,
                                 ),
-                                const SizedBox(width: AppSpacing.xs),
+                                const SizedBox(height: AppSpacing.md),
                                 Text(
-                                  '학습 시작',
-                                  style: theme.typography.sm.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.colors.foreground,
+                                  _showOnlyFavorites
+                                      ? '즐겨찾기한 한자가 없습니다'
+                                      : '검색 결과가 없습니다',
+                                  style: theme.typography.base.copyWith(
+                                    color: theme.colors.mutedForeground,
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: AppSpacing.sm),
-                            FButton(
-                              onPress: _startFlashcardSession,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: AppSpacing.xs,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      PhosphorIconsRegular.cards,
-                                      size: 20,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      '플래시카드 학습 (${_filteredKanji.length}개)',
-                                      style: theme.typography.base.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                // Kanji grid
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: () => _loadKanji(forceReload: true),
-                    child: _filteredKanji.isEmpty
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(AppSpacing.lg),
-                              child: FCard(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(AppSpacing.xl),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        PhosphorIconsRegular.magnifyingGlass,
-                                        size: 48,
-                                        color: theme.colors.mutedForeground,
-                                      ),
-                                      const SizedBox(height: AppSpacing.md),
-                                      Text(
-                                        _showOnlyFavorites
-                                            ? '즐겨찾기한 한자가 없습니다'
-                                            : '검색 결과가 없습니다',
-                                        style: theme.typography.base.copyWith(
-                                          color: theme.colors.mutedForeground,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        : GridView.builder(
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 3,
-                                  childAspectRatio: 0.75,
-                                  crossAxisSpacing: AppSpacing.sm,
-                                  mainAxisSpacing: AppSpacing.sm,
-                                ),
-                            itemCount: _filteredKanji.length,
-                            itemBuilder: (context, index) {
-                              final kanji = _filteredKanji[index];
-                              return KanjiGridCard(
-                                kanji: kanji,
-                                onTap: () => _navigateToStudy(kanji),
-                                onFavoriteToggle: () {
-                                  setState(() {
-                                    _kanjiService.toggleFavorite(
-                                      kanji.character,
-                                    );
-                                    if (_showOnlyFavorites) {
-                                      _applyFilters();
-                                    }
-                                  });
-                                },
+                    )
+                  : GridView.builder(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        childAspectRatio: 0.75,
+                        crossAxisSpacing: AppSpacing.sm,
+                        mainAxisSpacing: AppSpacing.sm,
+                      ),
+                      itemCount: _filteredKanji.length,
+                      itemBuilder: (context, index) {
+                        final kanji = _filteredKanji[index];
+                        return KanjiGridCard(
+                          kanji: kanji,
+                          onTap: () => _navigateToStudy(kanji),
+                          onFavoriteToggle: () {
+                            setState(() {
+                              _kanjiService.toggleFavorite(
+                                kanji.character,
                               );
-                            },
-                          ),
-                  ),
-                ),
-              ],
+                              if (_showOnlyFavorites) {
+                                _applyFilters();
+                              }
+                            });
+                          },
+                        );
+                      },
+                    ),
             ),
     );
   }
