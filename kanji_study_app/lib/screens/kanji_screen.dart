@@ -312,11 +312,11 @@ class _KanjiScreenState extends State<KanjiScreen> {
                       padding: const EdgeInsets.all(AppSpacing.md),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        childAspectRatio: 0.75,
-                        crossAxisSpacing: AppSpacing.sm,
-                        mainAxisSpacing: AppSpacing.sm,
-                      ),
+                            crossAxisCount: 4,
+                            childAspectRatio: 0.75,
+                            crossAxisSpacing: AppSpacing.sm,
+                            mainAxisSpacing: AppSpacing.sm,
+                          ),
                       itemCount: _filteredKanji.length,
                       itemBuilder: (context, index) {
                         final kanji = _filteredKanji[index];
@@ -325,9 +325,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                           onTap: () => _navigateToStudy(kanji),
                           onFavoriteToggle: () {
                             setState(() {
-                              _kanjiService.toggleFavorite(
-                                kanji.character,
-                              );
+                              _kanjiService.toggleFavorite(kanji.character);
                               if (_showOnlyFavorites) {
                                 _applyFilters();
                               }
