@@ -10,7 +10,6 @@ import 'settings_screen.dart';
 import 'study_calendar_screen.dart';
 import 'study_calendar_detail_screen.dart';
 import 'social_login_screen.dart';
-import '../widgets/app_scaffold.dart';
 import '../constants/app_spacing.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -200,14 +199,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return AppScaffold(
-      actions: [
-        IconButton(
-          icon: Icon(PhosphorIconsRegular.gear),
-          onPressed: _navigateToSettings,
-        ),
-      ],
-      body: _isLoading
+    return FScaffold(
+      header: FHeader(
+        title: const SizedBox.shrink(),
+        suffixes: [
+          FHeaderAction(
+            icon: Icon(PhosphorIconsRegular.gear, size: 20),
+            onPress: _navigateToSettings,
+          ),
+        ],
+      ),
+      child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: AppSpacing.screenPadding,

@@ -8,7 +8,6 @@ import '../services/word_service.dart';
 import '../services/flashcard_service.dart';
 import '../widgets/word_list_item.dart';
 import '../widgets/flashcard_count_selector.dart';
-import '../widgets/app_scaffold.dart';
 import 'word_detail_screen.dart';
 import 'flashcard_screen.dart';
 import '../constants/app_spacing.dart';
@@ -30,11 +29,15 @@ class _WordsScreenState extends State<WordsScreen> {
   final Set<int> _selectedJlptLevels = {};
   bool _isLoading = true;
   bool _showOnlyFavorites = false;
+  bool _isSearchMode = false;
 
   @override
   void initState() {
     super.initState();
     _loadWords();
+    _searchController.addListener(() {
+      _onSearchChanged(_searchController.text);
+    });
   }
 
   @override
@@ -109,6 +112,17 @@ class _WordsScreenState extends State<WordsScreen> {
     setState(() {
       _showOnlyFavorites = !_showOnlyFavorites;
       _applyFilters();
+    });
+  }
+
+  void _toggleSearchMode() {
+    setState(() {
+      _isSearchMode = !_isSearchMode;
+      if (!_isSearchMode) {
+        _searchController.clear();
+        _searchQuery = '';
+        _applyFilters();
+      }
     });
   }
 
@@ -305,49 +319,7 @@ class _WordsScreenState extends State<WordsScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return AppScaffold(
-      actions: [
-        IconButton(
-          icon: Icon(
-            _showOnlyFavorites
-                ? PhosphorIconsFill.star
-                : PhosphorIconsRegular.star,
-            color: _showOnlyFavorites ? Colors.amber : null,
-            size: 20,
-          ),
-          onPressed: _toggleFavoriteFilter,
-        ),
-        IconButton(
-          icon: Stack(
-            children: [
-              Icon(PhosphorIconsRegular.funnel, size: 20),
-              if (_selectedJlptLevels.isNotEmpty)
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: theme.colors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          onPressed: _showFilterBottomSheet,
-        ),
-      ],
-      searchController: _searchController,
-      onSearchChanged: (value) => _onSearchChanged(value),
-      onSearchClosed: () {
-        setState(() {
-          _searchQuery = '';
-          _applyFilters();
-        });
-      },
-      searchHint: '일본어, 한글, 후리가나로 검색...',
+    return Scaffold(
       floatingActionButton: _filteredWords.isNotEmpty
           ? FloatingActionButton(
               onPressed: _startFlashcardSession,
@@ -360,80 +332,137 @@ class _WordsScreenState extends State<WordsScreen> {
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: () async {
-                await _wordService.reloadData();
-                if (mounted) {
-                  _applyFilters();
-                }
-              },
-              child: _filteredWords.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            PhosphorIconsRegular.magnifyingGlass,
-                            size: 48,
-                            color: theme.colors.mutedForeground,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            _showOnlyFavorites
-                                ? '즐겨찾기한 단어가 없습니다'
-                                : '검색 결과가 없습니다',
-                            style: theme.typography.base.copyWith(
-                              color: theme.colors.mutedForeground,
+      body: FScaffold(
+        header: _isSearchMode
+            ? FHeader(
+                title: Expanded(
+                  child: FTextField(
+                    controller: _searchController,
+                    hint: '일본어, 한글, 후리가나로 검색...',
+                    autofocus: true,
+                  ),
+                ),
+                suffixes: [
+                  FHeaderAction(
+                    icon: Icon(PhosphorIconsRegular.x, size: 20),
+                    onPress: _toggleSearchMode,
+                  ),
+                ],
+              )
+            : FHeader(
+                title: const SizedBox.shrink(),
+                suffixes: [
+                  FHeaderAction(
+                    icon: Icon(
+                      _showOnlyFavorites
+                          ? PhosphorIconsFill.star
+                          : PhosphorIconsRegular.star,
+                      size: 20,
+                    ),
+                    onPress: _toggleFavoriteFilter,
+                  ),
+                  FHeaderAction(
+                    icon: Stack(
+                      children: [
+                        Icon(PhosphorIconsRegular.funnel, size: 20),
+                        if (_selectedJlptLevels.isNotEmpty)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: theme.colors.primary,
+                                shape: BoxShape.circle,
+                              ),
                             ),
                           ),
-                        ],
-                      ),
-                    )
-                  : ListView.separated(
-                      padding: EdgeInsets.all(AppSpacing.md),
-                      itemCount: _filteredWords.length,
-                      key: ValueKey(_filteredWords.length),
-                      separatorBuilder: (context, index) {
-                        return const SizedBox(
-                          height: 12,
-                        ); // 원하는 간격(px) 만큼 높이 지정
-                      },
-                      itemBuilder: (context, index) {
-                        // Safety check to prevent RangeError
-                        if (index >= _filteredWords.length) {
-                          return const SizedBox.shrink();
-                        }
-                        final word = _filteredWords[index];
-                        return WordListItem(
-                          key: ValueKey(word.id),
-                          word: word,
-                          isFavorite: _wordService.isFavorite(word.id),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => WordDetailScreen(
-                                  word: word,
-                                  wordList: _filteredWords,
-                                  currentIndex: index,
-                                ),
-                              ),
-                            );
-                          },
-                          onFavoriteToggle: () {
-                            setState(() {
-                              _wordService.toggleFavorite(word.id);
-                              if (_showOnlyFavorites) {
-                                _applyFilters();
-                              }
-                            });
-                          },
-                        );
-                      },
+                      ],
                     ),
-            ),
+                    onPress: _showFilterBottomSheet,
+                  ),
+                  FHeaderAction(
+                    icon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20),
+                    onPress: _toggleSearchMode,
+                  ),
+                ],
+              ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: () async {
+                  await _wordService.reloadData();
+                  if (mounted) {
+                    _applyFilters();
+                  }
+                },
+                child: _filteredWords.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              PhosphorIconsRegular.magnifyingGlass,
+                              size: 48,
+                              color: theme.colors.mutedForeground,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Text(
+                              _showOnlyFavorites
+                                  ? '즐겨찾기한 단어가 없습니다'
+                                  : '검색 결과가 없습니다',
+                              style: theme.typography.base.copyWith(
+                                color: theme.colors.mutedForeground,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.separated(
+                        padding: EdgeInsets.all(AppSpacing.md),
+                        itemCount: _filteredWords.length,
+                        key: ValueKey(_filteredWords.length),
+                        separatorBuilder: (context, index) {
+                          return const SizedBox(
+                            height: 12,
+                          ); // 원하는 간격(px) 만큼 높이 지정
+                        },
+                        itemBuilder: (context, index) {
+                          // Safety check to prevent RangeError
+                          if (index >= _filteredWords.length) {
+                            return const SizedBox.shrink();
+                          }
+                          final word = _filteredWords[index];
+                          return WordListItem(
+                            key: ValueKey(word.id),
+                            word: word,
+                            isFavorite: _wordService.isFavorite(word.id),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => WordDetailScreen(
+                                    word: word,
+                                    wordList: _filteredWords,
+                                    currentIndex: index,
+                                  ),
+                                ),
+                              );
+                            },
+                            onFavoriteToggle: () {
+                              setState(() {
+                                _wordService.toggleFavorite(word.id);
+                                if (_showOnlyFavorites) {
+                                  _applyFilters();
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+              ),
+      ),
     );
   }
 }

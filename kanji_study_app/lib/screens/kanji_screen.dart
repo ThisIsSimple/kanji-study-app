@@ -10,7 +10,6 @@ import '../services/flashcard_service.dart';
 
 import '../widgets/flashcard_count_selector.dart';
 import '../widgets/kanji_grid_card.dart';
-import '../widgets/app_scaffold.dart';
 import 'study_screen.dart';
 import 'flashcard_screen.dart';
 import '../constants/app_spacing.dart';
@@ -31,6 +30,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
   List<Kanji> _filteredKanji = [];
   String _searchQuery = '';
   bool _isLoading = true;
+  bool _isSearchMode = false;
 
   bool _showOnlyFavorites = false;
 
@@ -110,6 +110,17 @@ class _KanjiScreenState extends State<KanjiScreen> {
     setState(() {
       _showOnlyFavorites = !_showOnlyFavorites;
       _applyFilters();
+    });
+  }
+
+  void _toggleSearchMode() {
+    setState(() {
+      _isSearchMode = !_isSearchMode;
+      if (!_isSearchMode) {
+        _searchController.clear();
+        _searchQuery = '';
+        _applyFilters();
+      }
     });
   }
 
@@ -240,28 +251,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return AppScaffold(
-      actions: [
-        IconButton(
-          icon: Icon(
-            _showOnlyFavorites
-                ? PhosphorIconsFill.star
-                : PhosphorIconsRegular.star,
-            color: _showOnlyFavorites ? Colors.amber : null,
-            size: 20,
-          ),
-          onPressed: _toggleFavoriteFilter,
-        ),
-      ],
-      searchController: _searchController,
-      onSearchChanged: (value) => _onSearchChanged(),
-      onSearchClosed: () {
-        setState(() {
-          _searchQuery = '';
-          _applyFilters();
-        });
-      },
-      searchHint: '한자, 의미, 읽기로 검색...',
+    return Scaffold(
       floatingActionButton: _filteredKanji.isNotEmpty
           ? FloatingActionButton(
               onPressed: _startFlashcardSession,
@@ -274,59 +264,95 @@ class _KanjiScreenState extends State<KanjiScreen> {
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: () => _loadKanji(forceReload: true),
-              child: _filteredKanji.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            PhosphorIconsRegular.magnifyingGlass,
-                            size: 48,
-                            color: theme.colors.mutedForeground,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            _showOnlyFavorites
-                                ? '즐겨찾기한 한자가 없습니다'
-                                : '검색 결과가 없습니다',
-                            style: theme.typography.base.copyWith(
+      body: FScaffold(
+        header: _isSearchMode
+            ? FHeader(
+                title: Expanded(
+                  child: FTextField(
+                    controller: _searchController,
+                    hint: '한자, 의미, 읽기로 검색...',
+                    autofocus: true,
+                  ),
+                ),
+                suffixes: [
+                  FHeaderAction(
+                    icon: Icon(PhosphorIconsRegular.x, size: 20),
+                    onPress: _toggleSearchMode,
+                  ),
+                ],
+              )
+            : FHeader(
+                title: const SizedBox.shrink(),
+                suffixes: [
+                  FHeaderAction(
+                    icon: Icon(
+                      _showOnlyFavorites
+                          ? PhosphorIconsFill.star
+                          : PhosphorIconsRegular.star,
+                      size: 20,
+                    ),
+                    onPress: _toggleFavoriteFilter,
+                  ),
+                  FHeaderAction(
+                    icon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20),
+                    onPress: _toggleSearchMode,
+                  ),
+                ],
+              ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: () => _loadKanji(forceReload: true),
+                child: _filteredKanji.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              PhosphorIconsRegular.magnifyingGlass,
+                              size: 48,
                               color: theme.colors.mutedForeground,
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: AppSpacing.md),
+                            Text(
+                              _showOnlyFavorites
+                                  ? '즐겨찾기한 한자가 없습니다'
+                                  : '검색 결과가 없습니다',
+                              style: theme.typography.base.copyWith(
+                                color: theme.colors.mutedForeground,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 4,
+                              childAspectRatio: 0.75,
+                              crossAxisSpacing: AppSpacing.sm,
+                              mainAxisSpacing: AppSpacing.sm,
+                            ),
+                        itemCount: _filteredKanji.length,
+                        itemBuilder: (context, index) {
+                          final kanji = _filteredKanji[index];
+                          return KanjiGridCard(
+                            kanji: kanji,
+                            onTap: () => _navigateToStudy(kanji),
+                            onFavoriteToggle: () {
+                              setState(() {
+                                _kanjiService.toggleFavorite(kanji.character);
+                                if (_showOnlyFavorites) {
+                                  _applyFilters();
+                                }
+                              });
+                            },
+                          );
+                        },
                       ),
-                    )
-                  : GridView.builder(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            childAspectRatio: 0.75,
-                            crossAxisSpacing: AppSpacing.sm,
-                            mainAxisSpacing: AppSpacing.sm,
-                          ),
-                      itemCount: _filteredKanji.length,
-                      itemBuilder: (context, index) {
-                        final kanji = _filteredKanji[index];
-                        return KanjiGridCard(
-                          kanji: kanji,
-                          onTap: () => _navigateToStudy(kanji),
-                          onFavoriteToggle: () {
-                            setState(() {
-                              _kanjiService.toggleFavorite(kanji.character);
-                              if (_showOnlyFavorites) {
-                                _applyFilters();
-                              }
-                            });
-                          },
-                        );
-                      },
-                    ),
-            ),
+              ),
+      ),
     );
   }
 }
