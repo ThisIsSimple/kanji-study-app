@@ -5,6 +5,7 @@ import '../services/supabase_service.dart';
 import '../models/daily_study_stats.dart';
 import '../constants/app_spacing.dart';
 import '../widgets/daily_summary_card.dart';
+import '../widgets/custom_header.dart';
 import 'study_calendar_detail_screen.dart';
 
 class StudyCalendarScreen extends StatefulWidget {
@@ -87,20 +88,22 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return FScaffold(
-      header: FHeader.nested(
-        title: const Text('학습 캘린더'),
-        prefixes: [
-          FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
-        ],
-      ),
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: AppSpacing.screenPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+    return Scaffold(
+      backgroundColor: theme.colors.background,
+      body: Column(
+        children: [
+          CustomHeader(
+            title: const Text('학습 캘린더'),
+            withBack: true,
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                    padding: AppSpacing.screenPadding,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                   // Calendar Card
                   FCard(
                     child: Padding(
@@ -257,6 +260,9 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
     );
   }
 

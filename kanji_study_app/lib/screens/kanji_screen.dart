@@ -10,6 +10,7 @@ import '../services/flashcard_service.dart';
 
 import '../widgets/flashcard_count_selector.dart';
 import '../widgets/kanji_grid_card.dart';
+import '../widgets/custom_header.dart';
 import 'study_screen.dart';
 import 'flashcard_screen.dart';
 import '../constants/app_spacing.dart';
@@ -252,6 +253,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
     final theme = FTheme.of(context);
 
     return Scaffold(
+      backgroundColor: theme.colors.background,
       floatingActionButton: _filteredKanji.isNotEmpty
           ? FloatingActionButton(
               onPressed: _startFlashcardSession,
@@ -264,42 +266,43 @@ class _KanjiScreenState extends State<KanjiScreen> {
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      body: FScaffold(
-        header: _isSearchMode
-            ? FHeader(
-                title: Expanded(
-                  child: FTextField(
-                    controller: _searchController,
-                    hint: '한자, 의미, 읽기로 검색...',
-                    autofocus: true,
-                  ),
-                ),
-                suffixes: [
-                  FHeaderAction(
-                    icon: Icon(PhosphorIconsRegular.x, size: 20),
-                    onPress: _toggleSearchMode,
-                  ),
-                ],
-              )
-            : FHeader(
-                title: const SizedBox.shrink(),
-                suffixes: [
-                  FHeaderAction(
-                    icon: Icon(
-                      _showOnlyFavorites
-                          ? PhosphorIconsFill.star
-                          : PhosphorIconsRegular.star,
-                      size: 20,
+      body: Column(
+        children: [
+          _isSearchMode
+              ? CustomHeader(
+                  title: Expanded(
+                    child: FTextField(
+                      controller: _searchController,
+                      hint: '한자, 의미, 읽기로 검색...',
+                      autofocus: true,
                     ),
-                    onPress: _toggleFavoriteFilter,
                   ),
-                  FHeaderAction(
-                    icon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20),
-                    onPress: _toggleSearchMode,
-                  ),
-                ],
-              ),
-        child: _isLoading
+                  rightActions: [
+                    HeaderActionButton(
+                      icon: Icon(PhosphorIconsRegular.x, size: 20),
+                      onPressed: _toggleSearchMode,
+                    ),
+                  ],
+                )
+              : CustomHeader(
+                  rightActions: [
+                    HeaderActionButton(
+                      icon: Icon(
+                        _showOnlyFavorites
+                            ? PhosphorIconsFill.star
+                            : PhosphorIconsRegular.star,
+                        size: 20,
+                      ),
+                      onPressed: _toggleFavoriteFilter,
+                    ),
+                    HeaderActionButton(
+                      icon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20),
+                      onPressed: _toggleSearchMode,
+                    ),
+                  ],
+                ),
+          Expanded(
+            child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
                 onRefresh: () => _loadKanji(forceReload: true),
@@ -352,6 +355,8 @@ class _KanjiScreenState extends State<KanjiScreen> {
                         },
                       ),
               ),
+          ),
+        ],
       ),
     );
   }

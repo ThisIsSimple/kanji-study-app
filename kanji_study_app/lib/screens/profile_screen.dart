@@ -11,6 +11,7 @@ import 'study_calendar_screen.dart';
 import 'study_calendar_detail_screen.dart';
 import 'social_login_screen.dart';
 import '../constants/app_spacing.dart';
+import '../widgets/custom_header.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -199,23 +200,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return FScaffold(
-      header: FHeader(
-        title: const SizedBox.shrink(),
-        suffixes: [
-          FHeaderAction(
-            icon: Icon(PhosphorIconsRegular.gear, size: 20),
-            onPress: _navigateToSettings,
+    return Scaffold(
+      backgroundColor: theme.colors.background,
+      body: Column(
+        children: [
+          CustomHeader(
+            rightActions: [
+              HeaderActionButton(
+                icon: Icon(PhosphorIconsRegular.gear, size: 20),
+                onPressed: _navigateToSettings,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: AppSpacing.screenPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                    padding: AppSpacing.screenPadding,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                   // SNS Account Linking Banner for Anonymous Users
                   if (_supabaseService.isAnonymousUser) ...[
                     GestureDetector(
@@ -401,6 +405,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
     );
   }
 

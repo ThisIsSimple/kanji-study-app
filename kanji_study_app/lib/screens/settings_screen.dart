@@ -5,6 +5,7 @@ import '../services/notification_service.dart';
 import '../services/gemini_service.dart';
 import '../services/supabase_service.dart';
 import '../constants/app_spacing.dart';
+import '../widgets/custom_header.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -109,11 +110,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       } catch (e) {
         debugPrint('Logout error: $e');
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('로그아웃 중 오류가 발생했습니다.'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('로그아웃 중 오류가 발생했습니다.')));
       }
     }
   }
@@ -148,328 +147,350 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return FScaffold(
-      header: FHeader.nested(
-        title: const Text('설정'),
-        prefixes: [
-          FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
-        ],
-      ),
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: AppSpacing.screenPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Account Management Card
-                  FCard(
-                    child: Padding(
-                      padding: AppSpacing.cardPadding,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '계정 관리',
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // User Info
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: theme.colors.secondary.withValues(
-                                alpha: 0.1,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
+    return Scaffold(
+      backgroundColor: theme.colors.background,
+      body: Column(
+        children: [
+          CustomHeader(
+            title: const Text('설정'),
+            titleAlign: HeaderTitleAlign.center,
+            withBack: true,
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                    padding: AppSpacing.screenPadding,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Account Management Card
+                        FCard(
+                          child: Padding(
+                            padding: AppSpacing.cardPadding,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(
-                                  _isAnonymous
-                                      ? PhosphorIconsRegular.userCircle
-                                      : PhosphorIconsRegular.userCheck,
-                                  size: 32,
+                                Text(
+                                  '계정 관리',
+                                  style: theme.typography.lg.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                const SizedBox(height: 20),
+
+                                // User Info
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: theme.colors.secondary.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
                                     children: [
-                                      Text(
+                                      Icon(
                                         _isAnonymous
-                                            ? '게스트 사용자'
-                                            : (_userEmail ?? '사용자'),
-                                        style: theme.typography.base.copyWith(
-                                          fontWeight: FontWeight.bold,
+                                            ? PhosphorIconsRegular.userCircle
+                                            : PhosphorIconsRegular.userCheck,
+                                        size: 32,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              _isAnonymous
+                                                  ? '게스트 사용자'
+                                                  : (_userEmail ?? '사용자'),
+                                              style: theme.typography.base
+                                                  .copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                            ),
+                                            if (_isAnonymous) ...[
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                'SNS 계정을 연동하여 데이터를 안전하게 보관하세요',
+                                                style: theme.typography.sm
+                                                    .copyWith(
+                                                      color: theme
+                                                          .colors
+                                                          .mutedForeground,
+                                                    ),
+                                              ),
+                                            ],
+                                          ],
                                         ),
                                       ),
-                                      if (_isAnonymous) ...[
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'SNS 계정을 연동하여 데이터를 안전하게 보관하세요',
-                                          style: theme.typography.sm.copyWith(
-                                            color: theme.colors.mutedForeground,
-                                          ),
-                                        ),
-                                      ],
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Logout Button
+                                FButton(
+                                  onPress: _handleLogout,
+                                  style: FButtonStyle.destructive(),
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        PhosphorIconsRegular.signOut,
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text('로그아웃'),
                                     ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 16),
+                        ),
+                        const SizedBox(height: 16),
 
-                          // Logout Button
-                          FButton(
-                            onPress: _handleLogout,
-                            style: FButtonStyle.destructive(),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                        // Notification Settings Card
+                        FCard(
+                          child: Padding(
+                            padding: AppSpacing.cardPadding,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(PhosphorIconsRegular.signOut, size: 18),
-                                SizedBox(width: 8),
-                                Text('로그아웃'),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Notification Settings Card
-                  FCard(
-                    child: Padding(
-                      padding: AppSpacing.cardPadding,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '알림 설정',
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Notification Toggle
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '학습 알림',
-                                style: theme.typography.base.copyWith(
+                                Text(
+                                  '알림 설정',
+                                  style: theme.typography.lg.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              FSwitch(
-                                value: _notificationsEnabled,
-                                onChange: _toggleNotifications,
-                              ),
-                            ],
-                          ),
+                                const SizedBox(height: 20),
 
-                          if (_notificationsEnabled) ...[
-                            const SizedBox(height: 24),
-
-                            // Time Selection
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: theme.colors.secondary.withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: GestureDetector(
-                                onTap: _selectTime,
-                                child: Row(
+                                // Notification Toggle
+                                Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '알림 시간',
-                                          style: theme.typography.sm.copyWith(
-                                            color: theme.colors.mutedForeground,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          _selectedTime.format(context),
-                                          style: theme.typography.lg.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
+                                    Text(
+                                      '학습 알림',
+                                      style: theme.typography.base.copyWith(),
                                     ),
-                                    Icon(PhosphorIconsRegular.clock),
+                                    FSwitch(
+                                      value: _notificationsEnabled,
+                                      onChange: _toggleNotifications,
+                                    ),
                                   ],
                                 ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
 
-                  // Gemini API Settings Card
-                  FCard(
-                    child: Padding(
-                      padding: AppSpacing.cardPadding,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'AI 설정',
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Gemini API를 사용하여 예문 생성 및 학습 콘텐츠를 만들 수 있습니다.',
-                            style: theme.typography.sm.copyWith(
-                              color: theme.colors.mutedForeground,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
+                                if (_notificationsEnabled) ...[
+                                  const SizedBox(height: 24),
 
-                          // API Key Input with visibility toggle
-                          Row(
-                            children: [
-                              Expanded(
-                                child: FTextField(
-                                  controller: _apiKeyController,
-                                  label: Text('Gemini API Key'),
-                                  hint: 'API 키를 입력하세요',
-                                  obscureText: !_apiKeyVisible,
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              IconButton(
-                                icon: Icon(
-                                  _apiKeyVisible
-                                      ? PhosphorIconsRegular.eyeSlash
-                                      : PhosphorIconsRegular.eye,
-                                  size: 20,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _apiKeyVisible = !_apiKeyVisible;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          FButton(
-                            onPress: () async {
-                              final apiKey = _apiKeyController.text.trim();
-                              if (apiKey.isNotEmpty) {
-                                await _geminiService.setApiKey(apiKey);
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('API 키가 저장되었습니다.'),
+                                  // Time Selection
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: theme.colors.secondary.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: GestureDetector(
+                                      onTap: _selectTime,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                '알림 시간',
+                                                style: theme.typography.sm
+                                                    .copyWith(
+                                                      color: theme
+                                                          .colors
+                                                          .mutedForeground,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                _selectedTime.format(context),
+                                                style: theme.typography.lg
+                                                    .copyWith(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                          Icon(PhosphorIconsRegular.clock),
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                );
-                              }
-                            },
-                            style: FButtonStyle.outline(),
-                            child: const Text('API 키 저장'),
+                                ],
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          GestureDetector(
-                            onTap: () {
-                              // Open AI Studio link
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    '브라우저에서 ai.google.dev를 방문하여 API 키를 생성하세요.',
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Gemini API Settings Card
+                        FCard(
+                          child: Padding(
+                            padding: AppSpacing.cardPadding,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'AI 설정',
+                                  style: theme.typography.lg.copyWith(
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              );
-                            },
-                            child: Text(
-                              'API 키 받기 →',
-                              style: theme.typography.sm.copyWith(
-                                color: theme.colors.primary,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Gemini API를 사용하여 예문 생성 및 학습 콘텐츠를 만들 수 있습니다.',
+                                  style: theme.typography.sm.copyWith(
+                                    color: theme.colors.mutedForeground,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
 
-                  // About Card
-                  FCard(
-                    child: Padding(
-                      padding: AppSpacing.cardPadding,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '앱 정보',
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
+                                // API Key Input with visibility toggle
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: FTextField(
+                                        controller: _apiKeyController,
+                                        label: Text('Gemini API Key'),
+                                        hint: 'API 키를 입력하세요',
+                                        obscureText: !_apiKeyVisible,
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    FButton.icon(
+                                      onPress: () {
+                                        setState(() {
+                                          _apiKeyVisible = !_apiKeyVisible;
+                                        });
+                                      },
+                                      style: FButtonStyle.ghost(),
+                                      child: Icon(
+                                        _apiKeyVisible
+                                            ? PhosphorIconsRegular.eyeSlash
+                                            : PhosphorIconsRegular.eye,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                FButton(
+                                  onPress: () async {
+                                    final apiKey = _apiKeyController.text
+                                        .trim();
+                                    if (apiKey.isNotEmpty) {
+                                      await _geminiService.setApiKey(apiKey);
+                                      if (!context.mounted) return;
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('API 키가 저장되었습니다.'),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  style: FButtonStyle.outline(),
+                                  child: const Text('API 키 저장'),
+                                ),
+                                const SizedBox(height: 8),
+                                GestureDetector(
+                                  onTap: () {
+                                    // Open AI Studio link
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          '브라우저에서 ai.google.dev를 방문하여 API 키를 생성하세요.',
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    'API 키 받기 →',
+                                    style: theme.typography.sm.copyWith(
+                                      color: theme.colors.primary,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '버전',
-                                style: theme.typography.base.copyWith(
+                        ),
+                        const SizedBox(height: 16),
+
+                        // About Card
+                        FCard(
+                          child: Padding(
+                            padding: AppSpacing.cardPadding,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '앱 정보',
+                                  style: theme.typography.lg.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '1.0.0',
-                                style: theme.typography.base.copyWith(
-                                  color: theme.colors.mutedForeground,
+                                const SizedBox(height: 16),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '버전',
+                                      style: theme.typography.base.copyWith(),
+                                    ),
+                                    Text(
+                                      '1.0.0',
+                                      style: theme.typography.base.copyWith(
+                                        color: theme.colors.mutedForeground,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 12),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '개발자',
+                                      style: theme.typography.base.copyWith(),
+                                    ),
+                                    Text(
+                                      'space.cordelia273',
+                                      style: theme.typography.base.copyWith(
+                                        color: theme.colors.mutedForeground,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '개발자',
-                                style: theme.typography.base.copyWith(
-                                ),
-                              ),
-                              Text(
-                                'space.cordelia273',
-                                style: theme.typography.base.copyWith(
-                                  color: theme.colors.mutedForeground,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
+          ),
+        ],
+      ),
     );
   }
 }

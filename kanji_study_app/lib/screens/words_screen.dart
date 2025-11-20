@@ -8,6 +8,7 @@ import '../services/word_service.dart';
 import '../services/flashcard_service.dart';
 import '../widgets/word_list_item.dart';
 import '../widgets/flashcard_count_selector.dart';
+import '../widgets/custom_header.dart';
 import 'word_detail_screen.dart';
 import 'flashcard_screen.dart';
 import '../constants/app_spacing.dart';
@@ -320,6 +321,7 @@ class _WordsScreenState extends State<WordsScreen> {
     final theme = FTheme.of(context);
 
     return Scaffold(
+      backgroundColor: theme.colors.background,
       floatingActionButton: _filteredWords.isNotEmpty
           ? FloatingActionButton(
               onPressed: _startFlashcardSession,
@@ -332,63 +334,64 @@ class _WordsScreenState extends State<WordsScreen> {
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      body: FScaffold(
-        header: _isSearchMode
-            ? FHeader(
-                title: Expanded(
-                  child: FTextField(
-                    controller: _searchController,
-                    hint: '일본어, 한글, 후리가나로 검색...',
-                    autofocus: true,
-                  ),
-                ),
-                suffixes: [
-                  FHeaderAction(
-                    icon: Icon(PhosphorIconsRegular.x, size: 20),
-                    onPress: _toggleSearchMode,
-                  ),
-                ],
-              )
-            : FHeader(
-                title: const SizedBox.shrink(),
-                suffixes: [
-                  FHeaderAction(
-                    icon: Icon(
-                      _showOnlyFavorites
-                          ? PhosphorIconsFill.star
-                          : PhosphorIconsRegular.star,
-                      size: 20,
+      body: Column(
+        children: [
+          _isSearchMode
+              ? CustomHeader(
+                  title: Expanded(
+                    child: FTextField(
+                      controller: _searchController,
+                      hint: '일본어, 한글, 후리가나로 검색...',
+                      autofocus: true,
                     ),
-                    onPress: _toggleFavoriteFilter,
                   ),
-                  FHeaderAction(
-                    icon: Stack(
-                      children: [
-                        Icon(PhosphorIconsRegular.funnel, size: 20),
-                        if (_selectedJlptLevels.isNotEmpty)
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            child: Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color: theme.colors.primary,
-                                shape: BoxShape.circle,
+                  rightActions: [
+                    HeaderActionButton(
+                      icon: Icon(PhosphorIconsRegular.x, size: 20),
+                      onPressed: _toggleSearchMode,
+                    ),
+                  ],
+                )
+              : CustomHeader(
+                  rightActions: [
+                    HeaderActionButton(
+                      icon: Icon(
+                        _showOnlyFavorites
+                            ? PhosphorIconsFill.star
+                            : PhosphorIconsRegular.star,
+                        size: 20,
+                      ),
+                      onPressed: _toggleFavoriteFilter,
+                    ),
+                    HeaderActionButton(
+                      icon: Stack(
+                        children: [
+                          Icon(PhosphorIconsRegular.funnel, size: 20),
+                          if (_selectedJlptLevels.isNotEmpty)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: theme.colors.primary,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
+                      onPressed: _showFilterBottomSheet,
                     ),
-                    onPress: _showFilterBottomSheet,
-                  ),
-                  FHeaderAction(
-                    icon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20),
-                    onPress: _toggleSearchMode,
-                  ),
-                ],
-              ),
-        child: _isLoading
+                    HeaderActionButton(
+                      icon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20),
+                      onPressed: _toggleSearchMode,
+                    ),
+                  ],
+                ),
+          Expanded(
+            child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
                 onRefresh: () async {
@@ -462,6 +465,8 @@ class _WordsScreenState extends State<WordsScreen> {
                         },
                       ),
               ),
+          ),
+        ],
       ),
     );
   }
