@@ -241,7 +241,7 @@ class _QuizListScreenState extends State<QuizListScreen> {
           // Quiz List
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: FCircularProgress())
                 : _filteredQuizSets.isEmpty
                 ? Center(
                     child: Column(

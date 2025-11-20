@@ -410,7 +410,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Loading Overlay
                     if (_isLoading) ...[
                       const SizedBox(height: 16),
-                      const Center(child: CircularProgressIndicator()),
+                      const Center(child: FCircularProgress()),
                     ],
 
                     const Spacer(flex: 2),

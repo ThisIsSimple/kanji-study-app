@@ -407,7 +407,7 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
     if (_isLoading) {
       return FScaffold(
         header: const FHeader(title: Text('퀴즈 로딩 중...')),
-        child: const Center(child: CircularProgressIndicator()),
+        child: const Center(child: FCircularProgress()),
       );
     }
 

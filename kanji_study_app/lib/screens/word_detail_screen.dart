@@ -413,7 +413,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                   child: SizedBox(
                     width: 24,
                     height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: FCircularProgress(),
                   ),
                 )
               : _studyStats == null || _studyStats!.totalRecords == 0
@@ -689,7 +689,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: FCircularProgress(),
                         )
                       : Text('AI 예문 생성', style: TextStyle()),
                 ),
@@ -702,7 +702,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
             const Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 32),
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: FCircularProgress(),
               ),
             ),
           ] else if (_databaseExamples.isNotEmpty ||

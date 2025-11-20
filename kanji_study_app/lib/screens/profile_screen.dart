@@ -214,7 +214,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: FCircularProgress())
                 : SingleChildScrollView(
                     padding: AppSpacing.screenPadding,
                     child: Column(
@@ -326,9 +326,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ? const SizedBox(
                                     height: 20,
                                     width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
+                                    child: FCircularProgress(),
                                   )
                                 : Text(
                                     _username.isEmpty ? '로딩 중...' : _username,

@@ -239,75 +239,115 @@ class _WordsScreenState extends State<WordsScreen> {
   void _showFilterBottomSheet() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             final theme = FTheme.of(context);
             return Container(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'JLPT 레벨 필터',
-                          style: theme.typography.lg.copyWith(
-                            fontWeight: FontWeight.bold,
+              decoration: BoxDecoration(
+                color: theme.colors.background,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Drag handle
+                          Center(
+                            child: Container(
+                              width: 40,
+                              height: 4,
+                              margin: const EdgeInsets.only(bottom: 20),
+                              decoration: BoxDecoration(
+                                color: theme.colors.border,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
                           ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: Text(
-                            '완료',
-                            style: TextStyle(color: theme.colors.primary),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(),
-                  ...List.generate(5, (index) {
-                    final level = 5 - index; // N5 to N1
-                    final isSelected = _selectedJlptLevels.contains(level);
 
-                    return ListTile(
-                      leading: Checkbox(
-                        value: isSelected,
-                        onChanged: (_) {
-                          setModalState(() {
-                            _toggleJlptFilter(level);
-                          });
-                          setState(() {}); // Update main screen
-                        },
-                        activeColor: theme.colors.primary,
+                          // Title
+                          Text(
+                            'JLPT 레벨 필터',
+                            style: theme.typography.lg.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 20),
+
+                          // JLPT Level checkboxes
+                          ...List.generate(5, (index) {
+                            final level = 5 - index; // N5 to N1
+                            final isSelected = _selectedJlptLevels.contains(
+                              level,
+                            );
+
+                            return GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  _toggleJlptFilter(level);
+                                });
+                                setState(() {}); // Update main screen
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 4,
+                                ),
+                                child: Row(
+                                  children: [
+                                    FCheckbox(
+                                      value: isSelected,
+                                      onChange: (_) {
+                                        setModalState(() {
+                                          _toggleJlptFilter(level);
+                                        });
+                                        setState(() {}); // Update main screen
+                                      },
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'JLPT N$level',
+                                      style: theme.typography.base.copyWith(
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+                        ],
                       ),
-                      title: Text(
-                        'JLPT N$level',
-                        style: theme.typography.base.copyWith(
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.normal,
+                    ),
+
+                    // Bottom button
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: FButton(
+                          onPress: () => Navigator.pop(context),
+                          child: const Text('완료'),
                         ),
                       ),
-                      onTap: () {
-                        setModalState(() {
-                          _toggleJlptFilter(level);
-                        });
-                        setState(() {}); // Update main screen
-                      },
-                    );
-                  }),
-                  const SizedBox(height: 20),
-                ],
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -385,86 +425,89 @@ class _WordsScreenState extends State<WordsScreen> {
                       onPressed: _showFilterBottomSheet,
                     ),
                     HeaderActionButton(
-                      icon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20),
+                      icon: Icon(
+                        PhosphorIconsRegular.magnifyingGlass,
+                        size: 20,
+                      ),
                       onPressed: _toggleSearchMode,
                     ),
                   ],
                 ),
           Expanded(
             child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: () async {
-                  await _wordService.reloadData();
-                  if (mounted) {
-                    _applyFilters();
-                  }
-                },
-                child: _filteredWords.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              PhosphorIconsRegular.magnifyingGlass,
-                              size: 48,
-                              color: theme.colors.mutedForeground,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            Text(
-                              _showOnlyFavorites
-                                  ? '즐겨찾기한 단어가 없습니다'
-                                  : '검색 결과가 없습니다',
-                              style: theme.typography.base.copyWith(
-                                color: theme.colors.mutedForeground,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.separated(
-                        padding: EdgeInsets.all(AppSpacing.md),
-                        itemCount: _filteredWords.length,
-                        key: ValueKey(_filteredWords.length),
-                        separatorBuilder: (context, index) {
-                          return const SizedBox(
-                            height: 12,
-                          ); // 원하는 간격(px) 만큼 높이 지정
-                        },
-                        itemBuilder: (context, index) {
-                          // Safety check to prevent RangeError
-                          if (index >= _filteredWords.length) {
-                            return const SizedBox.shrink();
-                          }
-                          final word = _filteredWords[index];
-                          return WordListItem(
-                            key: ValueKey(word.id),
-                            word: word,
-                            isFavorite: _wordService.isFavorite(word.id),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => WordDetailScreen(
-                                    word: word,
-                                    wordList: _filteredWords,
-                                    currentIndex: index,
+                ? const Center(child: FCircularProgress())
+                : RefreshIndicator(
+                    onRefresh: () async {
+                      await _wordService.reloadData();
+                      if (mounted) {
+                        _applyFilters();
+                      }
+                    },
+                    child: _filteredWords.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  PhosphorIconsRegular.magnifyingGlass,
+                                  size: 48,
+                                  color: theme.colors.mutedForeground,
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                Text(
+                                  _showOnlyFavorites
+                                      ? '즐겨찾기한 단어가 없습니다'
+                                      : '검색 결과가 없습니다',
+                                  style: theme.typography.base.copyWith(
+                                    color: theme.colors.mutedForeground,
                                   ),
                                 ),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            padding: EdgeInsets.all(AppSpacing.md),
+                            itemCount: _filteredWords.length,
+                            key: ValueKey(_filteredWords.length),
+                            separatorBuilder: (context, index) {
+                              return const SizedBox(
+                                height: 12,
+                              ); // 원하는 간격(px) 만큼 높이 지정
+                            },
+                            itemBuilder: (context, index) {
+                              // Safety check to prevent RangeError
+                              if (index >= _filteredWords.length) {
+                                return const SizedBox.shrink();
+                              }
+                              final word = _filteredWords[index];
+                              return WordListItem(
+                                key: ValueKey(word.id),
+                                word: word,
+                                isFavorite: _wordService.isFavorite(word.id),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => WordDetailScreen(
+                                        word: word,
+                                        wordList: _filteredWords,
+                                        currentIndex: index,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                onFavoriteToggle: () {
+                                  setState(() {
+                                    _wordService.toggleFavorite(word.id);
+                                    if (_showOnlyFavorites) {
+                                      _applyFilters();
+                                    }
+                                  });
+                                },
                               );
                             },
-                            onFavoriteToggle: () {
-                              setState(() {
-                                _wordService.toggleFavorite(word.id);
-                                if (_showOnlyFavorites) {
-                                  _applyFilters();
-                                }
-                              });
-                            },
-                          );
-                        },
-                      ),
-              ),
+                          ),
+                  ),
           ),
         ],
       ),

@@ -142,7 +142,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
           final dailyStats = _dailyStatsCache[normalizedPageDate];
 
           if (_isLoading && normalizedPageDate == _currentDate) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: FCircularProgress());
           }
 
           if (studyDetails.isEmpty) {

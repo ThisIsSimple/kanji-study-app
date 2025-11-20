@@ -303,7 +303,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                 ),
           Expanded(
             child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: FCircularProgress())
             : RefreshIndicator(
                 onRefresh: () => _loadKanji(forceReload: true),
                 child: _filteredKanji.isEmpty

@@ -98,7 +98,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
           ),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: FCircularProgress())
                 : SingleChildScrollView(
                     padding: AppSpacing.screenPadding,
                     child: Column(

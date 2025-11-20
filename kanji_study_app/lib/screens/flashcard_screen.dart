@@ -247,7 +247,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
     if (currentItem == null) {
       return FScaffold(
         header: FHeader(title: const Text('플래시카드 학습')),
-        child: const Center(child: CircularProgressIndicator()),
+        child: const Center(child: FCircularProgress()),
       );
     }
 
@@ -312,7 +312,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
         ],
       ),
       child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: FCircularProgress())
           : Column(
               children: [
                 // Progress bar

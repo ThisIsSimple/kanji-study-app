@@ -158,7 +158,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: FCircularProgress())
                 : SingleChildScrollView(
                     padding: AppSpacing.screenPadding,
                     child: Column(

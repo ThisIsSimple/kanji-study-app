@@ -442,7 +442,7 @@ class _StudyScreenState extends State<StudyScreen> {
                   child: SizedBox(
                     width: 24,
                     height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: FCircularProgress(),
                   ),
                 )
               : _studyStats == null || _studyStats!.totalRecords == 0
@@ -765,7 +765,7 @@ class _StudyScreenState extends State<StudyScreen> {
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: FCircularProgress(),
                         )
                       : Text('AI 예문 생성', style: TextStyle()),
                 ),
@@ -778,7 +778,7 @@ class _StudyScreenState extends State<StudyScreen> {
             const Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 32),
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: FCircularProgress(),
               ),
             ),
           ] else if (_databaseExamples.isNotEmpty ||
@@ -855,7 +855,7 @@ class _StudyScreenState extends State<StudyScreen> {
             FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
           ],
         ),
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(child: FCircularProgress()),
       );
     }
 

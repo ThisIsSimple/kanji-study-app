@@ -178,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // 메인 컨텐츠
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: FCircularProgress())
                 : _stats == null || todayKanji == null
                 ? Center(
                     child: Column(

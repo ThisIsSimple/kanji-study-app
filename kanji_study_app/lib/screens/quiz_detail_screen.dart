@@ -170,7 +170,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     return FScaffold(
       header: FHeader(title: Text(widget.quizSet.title)),
       child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: FCircularProgress())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
