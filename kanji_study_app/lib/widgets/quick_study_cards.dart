@@ -113,30 +113,27 @@ class _QuickActionCard extends StatelessWidget {
               icon,
               style: const TextStyle(fontSize: 24),
             ),
-            const SizedBox(height: 4),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title,
-                    style: theme.typography.sm.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: theme.typography.sm.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-                  Text(
-                    subtitle,
-                    style: theme.typography.xs.copyWith(
-                      color: theme.colors.mutedForeground,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  subtitle,
+                  style: theme.typography.xs.copyWith(
+                    color: theme.colors.mutedForeground,
                   ),
-                ],
-              ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ],
         ),
