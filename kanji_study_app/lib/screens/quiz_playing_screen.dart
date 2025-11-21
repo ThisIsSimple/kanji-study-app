@@ -421,18 +421,23 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
             IconButton(
               icon: const Icon(Icons.close),
               onPressed: () {
-                showDialog(
+                showFDialog(
                   context: context,
-                  builder: (context) => AlertDialog(
+                  builder: (context, style, animation) => FDialog(
+                    style: style,
+                    animation: animation,
+                    direction: Axis.horizontal,
                     title: const Text('퀴즈 종료'),
-                    content: const Text('정말로 퀴즈를 종료하시겠습니까?\n진행 상황이 저장되지 않습니다.'),
+                    body: const Text('정말로 퀴즈를 종료하시겠습니까?\n진행 상황이 저장되지 않습니다.'),
                     actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
+                      FButton(
+                        style: FButtonStyle.outline(),
+                        onPress: () => Navigator.pop(context),
                         child: const Text('계속하기'),
                       ),
-                      TextButton(
-                        onPressed: () {
+                      FButton(
+                        style: FButtonStyle.destructive(),
+                        onPress: () {
                           Navigator.pop(context); // Close dialog
                           Navigator.pop(context); // Close quiz
                         },

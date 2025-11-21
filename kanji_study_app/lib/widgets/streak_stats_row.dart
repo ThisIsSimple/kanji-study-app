@@ -76,18 +76,21 @@ class StreakStatsRow extends StatelessWidget {
   }
 
   void _showStreakDetail(BuildContext context) {
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context, style, animation) => FDialog(
+        style: style,
+        animation: animation,
+        direction: Axis.vertical,
         title: const Text('🔥 연속 학습 기록'),
-        content: Text(
+        body: Text(
           streak > 0
               ? '$streak일 연속으로 학습하고 있어요!\n매일 꾸준히 학습하면 실력이 쌓여요.'
               : '오늘부터 연속 학습을 시작해보세요!',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
+          FButton(
+            onPress: () => Navigator.pop(context),
             child: const Text('확인'),
           ),
         ],
@@ -96,16 +99,19 @@ class StreakStatsRow extends StatelessWidget {
   }
 
   void _showXPDetail(BuildContext context) {
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context, style, animation) => FDialog(
+        style: style,
+        animation: animation,
+        direction: Axis.vertical,
         title: const Text('⭐ 경험치'),
-        content: Text(
+        body: Text(
           '총 $xp XP를 획득했어요!\n한자 1개 마스터 = 10 XP',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
+          FButton(
+            onPress: () => Navigator.pop(context),
             child: const Text('확인'),
           ),
         ],
@@ -115,18 +121,21 @@ class StreakStatsRow extends StatelessWidget {
 
   void _showGoalDetail(BuildContext context) {
     final remaining = dailyGoal - todayProgress;
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context, style, animation) => FDialog(
+        style: style,
+        animation: animation,
+        direction: Axis.vertical,
         title: const Text('🎯 오늘의 목표'),
-        content: Text(
+        body: Text(
           todayProgress >= dailyGoal
               ? '오늘의 목표를 달성했어요! 🎉'
               : '오늘의 목표: $dailyGoal개\n현재: $todayProgress개\n남은 학습: $remaining개',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
+          FButton(
+            onPress: () => Navigator.pop(context),
             child: const Text('확인'),
           ),
         ],

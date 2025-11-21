@@ -155,46 +155,35 @@ class _WordsScreenState extends State<WordsScreen> {
 
     if (existingSession != null && !existingSession.isCompleted && mounted) {
       // Ask user if they want to resume or start new
-      showDialog(
+      showFDialog(
         context: context,
-        builder: (context) {
-          final theme = FTheme.of(context);
-          return AlertDialog(
-            title: Text(
-              '진행 중인 학습',
-              style: theme.typography.lg.copyWith(fontWeight: FontWeight.bold),
+        builder: (context, style, animation) => FDialog(
+          style: style,
+          animation: animation,
+          direction: Axis.horizontal,
+          title: const Text('진행 중인 학습'),
+          body: const Text('이전에 진행 중이던 플래시카드 학습이 있습니다.\n계속하시겠습니까?'),
+          actions: [
+            FButton(
+              style: FButtonStyle.outline(),
+              onPress: () async {
+                final navigator = Navigator.of(context);
+                await _flashcardService.clearSession('word');
+                if (!mounted) return;
+                navigator.pop();
+                await _showCountSelectorAndStart();
+              },
+              child: const Text('새로 시작'),
             ),
-            content: Text(
-              '이전에 진행 중이던 플래시카드 학습이 있습니다.\n계속하시겠습니까?',
-              style: theme.typography.base.copyWith(),
+            FButton(
+              onPress: () {
+                Navigator.of(context).pop();
+                _navigateToFlashcard(_filteredWords, existingSession);
+              },
+              child: const Text('이어하기'),
             ),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  final navigator = Navigator.of(context);
-                  await _flashcardService.clearSession('word');
-                  if (!mounted) return;
-                  navigator.pop();
-                  await _showCountSelectorAndStart();
-                },
-                child: Text('새로 시작', style: TextStyle()),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _navigateToFlashcard(_filteredWords, existingSession);
-                },
-                child: Text(
-                  '이어하기',
-                  style: TextStyle(
-                    color: theme.colors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+          ],
+        ),
       );
     } else {
       await _showCountSelectorAndStart();

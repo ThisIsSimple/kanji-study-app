@@ -79,22 +79,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _handleLogout() async {
-    final shouldLogout = await showDialog<bool>(
+    final shouldLogout = await showFDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context, style, animation) => FDialog(
+        style: style,
+        animation: animation,
+        direction: Axis.horizontal,
         title: const Text('로그아웃'),
-        content: Text(
+        body: Text(
           _isAnonymous
               ? '게스트 계정에서 로그아웃하면 학습 기록이 삭제될 수 있습니다. 계속하시겠습니까?'
               : '정말 로그아웃 하시겠습니까?',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+          FButton(
+            style: FButtonStyle.outline(),
+            onPress: () => Navigator.of(context).pop(false),
             child: const Text('취소'),
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+          FButton(
+            style: FButtonStyle.destructive(),
+            onPress: () => Navigator.of(context).pop(true),
             child: const Text('로그아웃'),
           ),
         ],

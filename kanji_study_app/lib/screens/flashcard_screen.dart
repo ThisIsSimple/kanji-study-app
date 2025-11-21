@@ -129,12 +129,14 @@ class _FlashcardScreenState extends State<FlashcardScreen>
     final theme = FTheme.of(context);
     final stats = _flashcardService.getSessionStats(_session);
 
-    showDialog(
+    showFDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      builder: (context, style, animation) => FDialog(
+        style: style,
+        animation: animation,
+        direction: Axis.vertical,
         title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               PhosphorIconsFill.checkCircle,
@@ -150,7 +152,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
             ),
           ],
         ),
-        content: Column(
+        body: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -169,21 +171,15 @@ class _FlashcardScreenState extends State<FlashcardScreen>
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () async {
+          FButton(
+            onPress: () async {
               final navigator = Navigator.of(context);
               await _flashcardService.clearSession(_session.itemType);
               if (!mounted) return;
               navigator.pop(); // Close dialog
               navigator.pop(); // Close flashcard screen
             },
-            child: Text(
-              '완료',
-              style: TextStyle(
-                color: theme.colors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            child: const Text('완료'),
           ),
         ],
       ),
@@ -273,36 +269,26 @@ class _FlashcardScreenState extends State<FlashcardScreen>
           IconButton(
             icon: Icon(PhosphorIconsRegular.x),
             onPressed: () {
-              showDialog(
+              showFDialog(
                 context: context,
-                builder: (context) => AlertDialog(
-                  title: Text(
-                    '학습 종료',
-                    style: theme.typography.lg.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  content: Text(
-                    '플래시카드 학습을 종료하시겠습니까?\n진행 상태가 저장됩니다.',
-                    style: theme.typography.base.copyWith(),
-                  ),
+                builder: (context, style, animation) => FDialog(
+                  style: style,
+                  animation: animation,
+                  direction: Axis.horizontal,
+                  title: const Text('학습 종료'),
+                  body: const Text('플래시카드 학습을 종료하시겠습니까?\n진행 상태가 저장됩니다.'),
                   actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text('취소', style: TextStyle()),
+                    FButton(
+                      style: FButtonStyle.outline(),
+                      onPress: () => Navigator.of(context).pop(),
+                      child: const Text('취소'),
                     ),
-                    TextButton(
-                      onPressed: () {
+                    FButton(
+                      onPress: () {
                         Navigator.of(context).pop(); // Close dialog
                         Navigator.of(context).pop(); // Close flashcard screen
                       },
-                      child: Text(
-                        '종료',
-                        style: TextStyle(
-                          color: theme.colors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: const Text('종료'),
                     ),
                   ],
                 ),

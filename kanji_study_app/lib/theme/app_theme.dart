@@ -96,23 +96,22 @@ class AppTheme {
   }
 
   static FThemeData getFTheme() {
-    final baseTheme = FThemes.zinc.light;
-    final baseTypography = baseTheme.typography;
-
-    return baseTheme.copyWith(
+    return FThemeData(
+      colors: FThemes.zinc.light.colors,
       typography: FTypography(
-        base: baseTypography.base.copyWith(fontFamily: 'SUITE'),
-        sm: baseTypography.sm.copyWith(fontFamily: 'SUITE'),
-        xs: baseTypography.xs.copyWith(fontFamily: 'SUITE'),
-        lg: baseTypography.lg.copyWith(fontFamily: 'SUITE'),
-        xl: baseTypography.xl.copyWith(fontFamily: 'SUITE'),
-        xl2: baseTypography.xl2.copyWith(fontFamily: 'SUITE'),
-        xl3: baseTypography.xl3.copyWith(fontFamily: 'SUITE'),
-        xl4: baseTypography.xl4.copyWith(fontFamily: 'SUITE'),
-        xl5: baseTypography.xl5.copyWith(fontFamily: 'SUITE'),
-        xl6: baseTypography.xl6.copyWith(fontFamily: 'SUITE'),
-        xl7: baseTypography.xl7.copyWith(fontFamily: 'SUITE'),
-        xl8: baseTypography.xl8.copyWith(fontFamily: 'SUITE'),
+        defaultFontFamily: 'SUITE',
+        xs: const TextStyle(fontFamily: 'SUITE', fontSize: 12, height: 1.33),
+        sm: const TextStyle(fontFamily: 'SUITE', fontSize: 14, height: 1.43),
+        base: const TextStyle(fontFamily: 'SUITE', fontSize: 16, height: 1.5),
+        lg: const TextStyle(fontFamily: 'SUITE', fontSize: 18, height: 1.56),
+        xl: const TextStyle(fontFamily: 'SUITE', fontSize: 20, height: 1.4),
+        xl2: const TextStyle(fontFamily: 'SUITE', fontSize: 24, height: 1.33),
+        xl3: const TextStyle(fontFamily: 'SUITE', fontSize: 30, height: 1.2),
+        xl4: const TextStyle(fontFamily: 'SUITE', fontSize: 36, height: 1.11),
+        xl5: const TextStyle(fontFamily: 'SUITE', fontSize: 48, height: 1),
+        xl6: const TextStyle(fontFamily: 'SUITE', fontSize: 60, height: 1),
+        xl7: const TextStyle(fontFamily: 'SUITE', fontSize: 72, height: 1),
+        xl8: const TextStyle(fontFamily: 'SUITE', fontSize: 96, height: 1),
       ),
     );
   }
