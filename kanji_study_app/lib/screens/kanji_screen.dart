@@ -7,6 +7,7 @@ import '../models/kanji_model.dart';
 import '../models/kanji_flashcard_adapter.dart';
 import '../services/kanji_service.dart';
 import '../services/flashcard_service.dart';
+import '../services/study_record_service.dart';
 
 import '../widgets/flashcard_count_selector.dart';
 import '../widgets/kanji_grid_card.dart';
@@ -32,6 +33,7 @@ class KanjiScreen extends StatefulWidget {
 class _KanjiScreenState extends State<KanjiScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
   final FlashcardService _flashcardService = FlashcardService.instance;
+  final StudyRecordService _studyRecordService = StudyRecordService.instance;
   final TextEditingController _searchController = TextEditingController();
 
   List<Kanji> _allKanji = [];
@@ -41,6 +43,9 @@ class _KanjiScreenState extends State<KanjiScreen> {
   bool _isSearchMode = false;
 
   bool _showOnlyFavorites = false;
+
+  // Study status filter: null=전체, 'not_studied', 'completed', 'forgot'
+  String? _selectedStudyFilter;
 
   @override
   void initState() {
@@ -103,6 +108,20 @@ class _KanjiScreenState extends State<KanjiScreen> {
           return false;
         }
       }
+
+      // Apply study status filter
+      if (_selectedStudyFilter != null) {
+        final status = _studyRecordService.getStatus('kanji', kanji.id);
+        switch (_selectedStudyFilter) {
+          case 'not_studied':
+            if (status != null) return false;
+          case 'completed':
+            if (status != 'completed' && status != 'mastered') return false;
+          case 'forgot':
+            if (status != 'forgot') return false;
+        }
+      }
+
       return true;
     }).toList();
   }
@@ -134,6 +153,158 @@ class _KanjiScreenState extends State<KanjiScreen> {
         _applyFilters();
       }
     });
+  }
+
+  void _showFilterBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final theme = FTheme.of(context);
+            return Container(
+              decoration: BoxDecoration(
+                color: theme.colors.background,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Drag handle
+                          Center(
+                            child: Container(
+                              width: 40,
+                              height: 4,
+                              margin: const EdgeInsets.only(bottom: 20),
+                              decoration: BoxDecoration(
+                                color: theme.colors.border,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+
+                          // Title
+                          Text(
+                            '필터',
+                            style: theme.typography.lg.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Study Status Filter Section
+                          Text(
+                            '학습 상태',
+                            style: theme.typography.sm.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colors.mutedForeground,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Study status options
+                          ...[
+                            (null, '전체'),
+                            ('not_studied', '미학습'),
+                            ('completed', '학습 완료'),
+                            ('forgot', '까먹은 한자'),
+                          ].map((option) {
+                            final value = option.$1;
+                            final label = option.$2;
+                            final isSelected = _selectedStudyFilter == value;
+
+                            return GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  _selectedStudyFilter = value;
+                                });
+                                setState(() {
+                                  _applyFilters();
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 4,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? theme.colors.primary
+                                              : theme.colors.border,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: isSelected
+                                          ? Center(
+                                              child: Container(
+                                                width: 10,
+                                                height: 10,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: theme.colors.primary,
+                                                ),
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      label,
+                                      style: theme.typography.base.copyWith(
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+
+                    // Bottom button
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: FButton(
+                          onPress: () => Navigator.pop(context),
+                          child: const Text('완료'),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _navigateToStudy(Kanji kanji) {
@@ -246,8 +417,12 @@ class _KanjiScreenState extends State<KanjiScreen> {
             FlashcardScreen(items: flashcardItems, initialSession: session),
       ),
     ).then((_) {
-      // Refresh when coming back
-      setState(() {});
+      // Refresh filters when coming back (study status may have changed)
+      if (mounted) {
+        setState(() {
+          _applyFilters();
+        });
+      }
     });
   }
 
@@ -308,6 +483,27 @@ class _KanjiScreenState extends State<KanjiScreen> {
                         size: 20,
                       ),
                       onPressed: _toggleFavoriteFilter,
+                    ),
+                    HeaderActionButton(
+                      icon: Stack(
+                        children: [
+                          Icon(PhosphorIconsRegular.funnel, size: 20),
+                          if (_selectedStudyFilter != null)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: FTheme.of(context).colors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      onPressed: _showFilterBottomSheet,
                     ),
                     HeaderActionButton(
                       icon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20),
