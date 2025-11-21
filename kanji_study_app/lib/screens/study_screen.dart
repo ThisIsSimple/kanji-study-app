@@ -606,91 +606,77 @@ class _StudyScreenState extends State<StudyScreen> {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '읽기',
-                    style: theme.typography.lg.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // 훈독 (kun readings) - 표시 순서 변경
-                      if (kanji.readings.kun.isNotEmpty) ...[
+                  // 훈독 (kun readings) - 표시 순서 변경
+                  if (kanji.readings.kun.isNotEmpty) ...[
+                    Wrap(
+                      alignment: WrapAlignment.start,
+                      spacing: 12,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
                         Text(
                           '훈독',
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.mutedForeground,
+                            fontWeight: FontWeight.w600,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 12,
-                          runSpacing: 8,
-                          children: kanji.readings.kun.map((reading) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
+                        ...kanji.readings.kun.map((reading) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colors.secondary.withValues(
+                                alpha: 0.2,
                               ),
-                              decoration: BoxDecoration(
-                                color: theme.colors.secondary.withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                reading,
-                                style: theme.typography.base,
-                              ),
-                            );
-                          }).toList(),
-                        ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(reading, style: theme.typography.base),
+                          );
+                        }).toList(),
                       ],
-                      if (kanji.readings.kun.isNotEmpty &&
-                          kanji.readings.on.isNotEmpty)
-                        const SizedBox(height: 16),
-                      // 음독 (on readings)
-                      if (kanji.readings.on.isNotEmpty) ...[
+                    ),
+                  ],
+                  if (kanji.readings.kun.isNotEmpty &&
+                      kanji.readings.on.isNotEmpty)
+                    const SizedBox(height: 16),
+                  // 음독 (on readings)
+                  if (kanji.readings.on.isNotEmpty) ...[
+                    Wrap(
+                      alignment: WrapAlignment.start,
+                      spacing: 12,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
                         Text(
                           '음독',
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.mutedForeground,
+                            fontWeight: FontWeight.w600,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 12,
-                          runSpacing: 8,
-                          children: kanji.readings.on.map((reading) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
+                        ...kanji.readings.on.map((reading) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colors.primary.withValues(
+                                alpha: 0.1,
                               ),
-                              decoration: BoxDecoration(
-                                color: theme.colors.primary.withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                reading,
-                                style: theme.typography.base,
-                              ),
-                            );
-                          }).toList(),
-                        ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(reading, style: theme.typography.base),
+                          );
+                        }).toList(),
                       ],
-                    ],
-                  ),
+                    ),
+                  ],
                 ],
               ),
             ),
