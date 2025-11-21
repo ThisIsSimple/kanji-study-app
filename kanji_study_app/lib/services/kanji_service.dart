@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/kanji_model.dart';
 import '../models/user_progress.dart';
 import 'kanji_repository.dart';
+import 'favorite_service.dart';
 
 class KanjiService {
   static final KanjiService _instance = KanjiService._internal();
@@ -12,19 +13,17 @@ class KanjiService {
   KanjiService._internal();
 
   final KanjiRepository _repository = KanjiRepository.instance;
+  final FavoriteService _favoriteService = FavoriteService.instance;
   final Map<String, UserProgress> _progressMap = {};
-  final Set<String> _favoriteKanji = {};
 
   Future<void> init() async {
     await _repository.loadKanjiData();
     await _loadProgress();
-    await _loadFavorites();
   }
 
   Future<void> reloadData() async {
     await _repository.reloadKanjiData();
     await _loadProgress();
-    await _loadFavorites();
   }
 
   Future<void> _loadProgress() async {
@@ -50,34 +49,25 @@ class KanjiService {
     await prefs.setString('user_progress', json.encode(data));
   }
 
-  Future<void> _loadFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    final favoritesData = prefs.getStringList('favorite_kanji') ?? [];
-    _favoriteKanji.clear();
-    _favoriteKanji.addAll(favoritesData);
-  }
-
-  Future<void> _saveFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('favorite_kanji', _favoriteKanji.toList());
-  }
-
   bool isFavorite(String character) {
-    return _favoriteKanji.contains(character);
+    final kanji = _repository.getKanjiByCharacter(character);
+    if (kanji == null) return false;
+    return _favoriteService.isFavorite('kanji', kanji.id);
   }
 
   Future<void> toggleFavorite(String character) async {
-    if (_favoriteKanji.contains(character)) {
-      _favoriteKanji.remove(character);
-    } else {
-      _favoriteKanji.add(character);
-    }
-    await _saveFavorites();
+    final kanji = _repository.getKanjiByCharacter(character);
+    if (kanji == null) return;
+    await _favoriteService.toggleFavorite(
+      type: 'kanji',
+      targetId: kanji.id,
+    );
   }
 
   List<Kanji> getFavoriteKanji() {
-    return _favoriteKanji
-        .map((char) => _repository.getKanjiByCharacter(char))
+    final favoriteIds = _favoriteService.getFavoriteIds('kanji');
+    return favoriteIds
+        .map((id) => _repository.getKanjiById(id))
         .whereType<Kanji>()
         .toList();
   }

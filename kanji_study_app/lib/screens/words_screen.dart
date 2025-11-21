@@ -483,6 +483,7 @@ class _WordsScreenState extends State<WordsScreen> {
       backgroundColor: theme.colors.background,
       floatingActionButton: _filteredWords.isNotEmpty
           ? FloatingActionButton(
+              heroTag: 'words_flashcard_fab',
               onPressed: _startFlashcardSession,
               backgroundColor: theme.colors.primary,
               child: Icon(

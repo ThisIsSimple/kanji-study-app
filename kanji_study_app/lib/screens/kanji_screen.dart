@@ -434,6 +434,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
       backgroundColor: theme.colors.background,
       floatingActionButton: _filteredKanji.isNotEmpty
           ? FloatingActionButton(
+              heroTag: 'kanji_flashcard_fab',
               onPressed: _startFlashcardSession,
               backgroundColor: theme.colors.primary,
               child: Icon(

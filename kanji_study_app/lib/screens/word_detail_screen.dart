@@ -10,7 +10,7 @@ import '../models/study_record_model.dart';
 import '../services/word_service.dart';
 import '../services/gemini_service.dart';
 import '../services/supabase_service.dart';
-import '../widgets/furigana_text.dart';
+import '../widgets/example_card.dart';
 
 class WordDetailScreen extends StatefulWidget {
   final Word word;
@@ -145,127 +145,127 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       // Use showDialog instead of SnackBar for better visibility
       showDialog(
         context: context,
-          barrierDismissible: true,
-          barrierColor: Colors.transparent,
-          builder: (BuildContext dialogContext) {
-            final navigator = Navigator.of(dialogContext);
-            Future.delayed(const Duration(seconds: 2), () {
-              if (navigator.canPop()) {
-                navigator.pop();
-              }
-            });
+        barrierDismissible: true,
+        barrierColor: Colors.transparent,
+        builder: (BuildContext dialogContext) {
+          final navigator = Navigator.of(dialogContext);
+          Future.delayed(const Duration(seconds: 2), () {
+            if (navigator.canPop()) {
+              navigator.pop();
+            }
+          });
 
-            return Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 100),
-                child: Material(
-                  color: Colors.transparent,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: status == StudyStatus.completed
-                          ? FTheme.of(dialogContext).colors.primary
-                          : FTheme.of(dialogContext).colors.destructive,
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          status == StudyStatus.completed
-                              ? PhosphorIconsRegular.checkCircle
-                              : PhosphorIconsRegular.warningCircle,
+          return Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 100),
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: status == StudyStatus.completed
+                        ? FTheme.of(dialogContext).colors.primary
+                        : FTheme.of(dialogContext).colors.destructive,
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        status == StudyStatus.completed
+                            ? PhosphorIconsRegular.checkCircle
+                            : PhosphorIconsRegular.warningCircle,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        status == StudyStatus.completed
+                            ? '학습 완료를 기록했습니다!'
+                            : '까먹음을 기록했습니다.',
+                        style: const TextStyle(
                           color: Colors.white,
-                          size: 20,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          status == StudyStatus.completed
-                              ? '학습 완료를 기록했습니다!'
-                              : '까먹음을 기록했습니다.',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          );
+        },
       );
     } catch (e) {
       if (!mounted) return;
       showDialog(
         context: context,
-          barrierDismissible: true,
-          barrierColor: Colors.transparent,
-          builder: (BuildContext dialogContext) {
-            final navigator = Navigator.of(dialogContext);
-            Future.delayed(const Duration(seconds: 2), () {
-              if (navigator.canPop()) {
-                navigator.pop();
-              }
-            });
+        barrierDismissible: true,
+        barrierColor: Colors.transparent,
+        builder: (BuildContext dialogContext) {
+          final navigator = Navigator.of(dialogContext);
+          Future.delayed(const Duration(seconds: 2), () {
+            if (navigator.canPop()) {
+              navigator.pop();
+            }
+          });
 
-            return Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 100),
-                child: Material(
-                  color: Colors.transparent,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: FTheme.of(dialogContext).colors.destructive,
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          PhosphorIconsRegular.warning,
+          return Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 100),
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: FTheme.of(dialogContext).colors.destructive,
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        PhosphorIconsRegular.warning,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '기록 저장 실패: $e',
+                        style: const TextStyle(
                           color: Colors.white,
-                          size: 20,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '기록 저장 실패: $e',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          );
+        },
       );
     } finally {
       setState(() {
@@ -565,19 +565,8 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                           ),
                         ),
                       ),
-
-                      const SizedBox(height: 24),
-
                       // Meanings by part of speech - Center aligned
-                      Center(
-                        child: Text(
-                          '의미',
-                          style: theme.typography.lg.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 4), // 8 → 4로 더 줄임
+                      const SizedBox(height: 8),
                       ...word.meanings.map((meaning) {
                         return Padding(
                           padding: const EdgeInsets.only(
@@ -710,85 +699,16 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
             // Display database examples first
             if (_databaseExamples.isNotEmpty) ...[
               ..._databaseExamples.map((example) {
-                final sourceLabel = _getSourceLabel(example.source);
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
-                  child: FCard(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Source label
-                          if (sourceLabel.isNotEmpty) ...[
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: theme.colors.primary.withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                sourceLabel,
-                                style: theme.typography.xs.copyWith(
-                                  color: theme.colors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-                          FuriganaText(
-                            text: example.furigana.contains('[')
-                                ? example.furigana
-                                : example.japanese,
-                            style: GoogleFonts.notoSerifJp(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                              color: theme.colors.foreground,
-                              height: 1.5, // 행간 조절
-                            ),
-                            rubyStyle: theme.typography.sm.copyWith(
-                              color: theme.colors.mutedForeground,
-                              fontSize: 11,
-                            ),
-                            spacing: -1.0, // 한자와 후리가나 사이 간격을 더 좁게
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            example.korean,
-                            style: theme.typography.base.copyWith(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                            ),
-                          ),
-                          // Explanation if exists
-                          if (example.explanation != null &&
-                              example.explanation!.isNotEmpty) ...[
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: theme.colors.mutedForeground.withValues(
-                                  alpha: 0.05,
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                example.explanation!,
-                                style: theme.typography.sm.copyWith(
-                                  color: theme.colors.mutedForeground,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
+                  child: ExampleCard(
+                    japanese: example.japanese,
+                    furigana: example.furigana,
+                    korean: example.korean,
+                    explanation: example.explanation,
+                    sourceLabel: _getSourceLabel(example.source),
+                    japaneseFontSize: 20,
+                    rubyFontSize: 11,
                   ),
                 );
               }),
@@ -798,60 +718,14 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
               ..._generatedExamples!.map((example) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
-                  child: FCard(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // AI Generated label
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colors.secondary.withValues(
-                                alpha: 0.1,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              'AI 생성',
-                              style: theme.typography.xs.copyWith(
-                                color: theme.colors.secondary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          FuriganaText(
-                            text: example.furigana.contains('[')
-                                ? example.furigana
-                                : example.japanese,
-                            style: GoogleFonts.notoSerifJp(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                              color: theme.colors.foreground,
-                              height: 1.5, // 행간 조절
-                            ),
-                            rubyStyle: theme.typography.sm.copyWith(
-                              color: theme.colors.mutedForeground,
-                              fontSize: 11,
-                            ),
-                            spacing: -1.0, // 한자와 후리가나 사이 간격을 더 좁게
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            example.korean,
-                            style: theme.typography.base.copyWith(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: ExampleCard(
+                    japanese: example.japanese,
+                    furigana: example.furigana,
+                    korean: example.korean,
+                    explanation: example.explanation,
+                    sourceLabel: 'AI 생성',
+                    japaneseFontSize: 20,
+                    rubyFontSize: 11,
                   ),
                 );
               }),

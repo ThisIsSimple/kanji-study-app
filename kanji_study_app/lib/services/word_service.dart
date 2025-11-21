@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/word_model.dart';
 import '../repositories/word_repository.dart';
+import 'favorite_service.dart';
 
 class WordService {
   static final WordService _instance = WordService._internal();
@@ -11,8 +12,8 @@ class WordService {
   WordService._internal();
 
   final WordRepository _wordRepository = WordRepository.instance;
+  final FavoriteService _favoriteService = FavoriteService.instance;
   List<Word> _allWords = [];
-  final Set<int> _favoriteWordIds = {};
   bool _isInitialized = false;
 
   // Get all words
@@ -26,7 +27,6 @@ class WordService {
     if (_isInitialized) return;
 
     await _loadWords();
-    await _loadFavorites();
     _isInitialized = true;
   }
 
@@ -35,7 +35,6 @@ class WordService {
     _isInitialized = false;
     _wordRepository.clearCache(); // Clear repository cache first
     await _loadWords();
-    await _loadFavorites();
     _isInitialized = true;
   }
 
@@ -53,42 +52,24 @@ class WordService {
     }
   }
 
-  // Load favorites from SharedPreferences
-  Future<void> _loadFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    final favoritesData = prefs.getStringList('favorite_words') ?? [];
-    _favoriteWordIds.clear();
-    _favoriteWordIds.addAll(favoritesData.map((id) => int.tryParse(id) ?? 0));
-  }
-
-  // Save favorites to SharedPreferences
-  Future<void> _saveFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      'favorite_words',
-      _favoriteWordIds.map((id) => id.toString()).toList(),
-    );
-  }
-
   // Check if word is favorite
   bool isFavorite(int wordId) {
-    return _favoriteWordIds.contains(wordId);
+    return _favoriteService.isFavorite('word', wordId);
   }
 
   // Toggle favorite status
   Future<void> toggleFavorite(int wordId) async {
-    if (_favoriteWordIds.contains(wordId)) {
-      _favoriteWordIds.remove(wordId);
-    } else {
-      _favoriteWordIds.add(wordId);
-    }
-    await _saveFavorites();
+    await _favoriteService.toggleFavorite(
+      type: 'word',
+      targetId: wordId,
+    );
   }
 
   // Get favorite words
   List<Word> getFavoriteWords() {
+    final favoriteIds = _favoriteService.getFavoriteIds('word');
     return _allWords
-        .where((word) => _favoriteWordIds.contains(word.id))
+        .where((word) => favoriteIds.contains(word.id))
         .toList();
   }
 
@@ -129,9 +110,10 @@ class WordService {
 
   // Get statistics
   Map<String, int> getStatistics() {
+    final favoriteIds = _favoriteService.getFavoriteIds('word');
     final stats = <String, int>{
       'total': _allWords.length,
-      'favorites': _favoriteWordIds.length,
+      'favorites': favoriteIds.length,
     };
 
     // Count by JLPT level

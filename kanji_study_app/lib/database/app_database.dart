@@ -60,6 +60,18 @@ class SyncQueueTable extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
+/// 즐겨찾기 테이블 - 로컬 + Supabase 동기화
+class FavoritesTable extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get userId => text()();
+  TextColumn get type => text()(); // 'kanji' or 'word'
+  IntColumn get targetId => integer()();
+  TextColumn get note => text().nullable()();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))(); // 삭제 대기
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 /// String List <-> JSON 변환기
 class StringListConverter extends TypeConverter<List<String>, String> {
   const StringListConverter();
@@ -100,12 +112,22 @@ class JsonStringConverter extends TypeConverter<String, String> {
   String toSql(String value) => value;
 }
 
-@DriftDatabase(tables: [KanjiTable, WordsTable, StudyRecordsTable, SyncQueueTable])
+@DriftDatabase(tables: [KanjiTable, WordsTable, StudyRecordsTable, SyncQueueTable, FavoritesTable])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (Migrator m) => m.createAll(),
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 2) {
+        await m.createTable(favoritesTable);
+      }
+    },
+  );
 
   /// 한자 데이터 조회
   Future<List<KanjiTableData>> getAllKanji() => select(kanjiTable).get();
@@ -180,6 +202,49 @@ class AppDatabase extends _$AppDatabase {
     final kanjiCount = await (selectOnly(kanjiTable)..addColumns([kanjiTable.id.count()])).getSingle();
     return kanjiCount.read(kanjiTable.id.count())! > 0;
   }
+
+  /// 즐겨찾기 조회
+  Future<List<FavoritesTableData>> getFavorites(String userId) =>
+      (select(favoritesTable)
+        ..where((t) => t.userId.equals(userId) & t.isDeleted.equals(false)))
+      .get();
+
+  Future<List<FavoritesTableData>> getFavoritesByType(String userId, String type) =>
+      (select(favoritesTable)
+        ..where((t) => t.userId.equals(userId) & t.type.equals(type) & t.isDeleted.equals(false)))
+      .get();
+
+  Future<FavoritesTableData?> getFavorite(String userId, String type, int targetId) =>
+      (select(favoritesTable)
+        ..where((t) => t.userId.equals(userId) & t.type.equals(type) & t.targetId.equals(targetId)))
+      .getSingleOrNull();
+
+  Future<List<FavoritesTableData>> getUnsyncedFavorites() =>
+      (select(favoritesTable)..where((t) => t.isSynced.equals(false))).get();
+
+  Future<List<FavoritesTableData>> getDeletedFavorites() =>
+      (select(favoritesTable)..where((t) => t.isDeleted.equals(true))).get();
+
+  /// 즐겨찾기 삽입/업데이트
+  Future<int> insertFavorite(FavoritesTableCompanion favorite) =>
+      into(favoritesTable).insert(favorite);
+
+  Future<void> markFavoriteAsSynced(int id) =>
+      (update(favoritesTable)..where((t) => t.id.equals(id)))
+          .write(const FavoritesTableCompanion(isSynced: Value(true)));
+
+  Future<void> markFavoriteAsDeleted(int id) =>
+      (update(favoritesTable)..where((t) => t.id.equals(id)))
+          .write(const FavoritesTableCompanion(isDeleted: Value(true)));
+
+  /// 즐겨찾기 삭제 (실제 삭제)
+  Future<void> deleteFavorite(int id) =>
+      (delete(favoritesTable)..where((t) => t.id.equals(id))).go();
+
+  Future<void> deleteFavoriteByTarget(String userId, String type, int targetId) =>
+      (delete(favoritesTable)
+        ..where((t) => t.userId.equals(userId) & t.type.equals(type) & t.targetId.equals(targetId)))
+      .go();
 }
 
 LazyDatabase _openConnection() {

@@ -9,7 +9,7 @@ import '../models/study_record_model.dart';
 import '../services/gemini_service.dart';
 import '../services/supabase_service.dart';
 import '../services/kanji_service.dart';
-import '../widgets/furigana_text.dart';
+import '../widgets/example_card.dart';
 import '../utils/korean_formatter.dart';
 
 class StudyScreen extends StatefulWidget {
@@ -332,98 +332,6 @@ class _StudyScreenState extends State<StudyScreen> {
     }
   }
 
-  Widget _buildExampleCard(
-    KanjiExample example,
-    FThemeData theme, {
-    required String sourceLabel,
-    required bool isPrimary,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isPrimary
-              ? theme.colors.primary.withValues(alpha: 0.05)
-              : theme.colors.secondary.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isPrimary
-                ? theme.colors.primary.withValues(alpha: 0.2)
-                : theme.colors.border,
-            width: 1,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Source label
-            if (sourceLabel.isNotEmpty) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: theme.colors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  sourceLabel,
-                  style: theme.typography.xs.copyWith(
-                    color: theme.colors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
-            // Japanese text with furigana
-            FuriganaText(
-              text: example.furigana.contains('[')
-                  ? example.furigana
-                  : example.japanese,
-              style: GoogleFonts.notoSerifJp(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: theme.colors.foreground,
-                height: 1.5, // 행간 조절
-              ),
-              rubyStyle: theme.typography.sm.copyWith(
-                color: theme.colors.mutedForeground,
-                fontSize: 10,
-              ),
-              spacing: -1.0, // 한자와 후리가나 사이 간격을 더 좁게
-            ),
-            const SizedBox(height: 8),
-            // Korean translation
-            Text(
-              example.korean,
-              style: theme.typography.base.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            // Explanation if exists
-            if (example.explanation != null &&
-                example.explanation!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: theme.colors.mutedForeground.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  example.explanation!,
-                  style: theme.typography.sm.copyWith(
-                    color: theme.colors.mutedForeground,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildStudyButton(FThemeData theme) {
     return Positioned(
       left: 0,
@@ -722,22 +630,30 @@ class _StudyScreenState extends State<StudyScreen> {
             // Display database examples first
             if (_databaseExamples.isNotEmpty) ...[
               ..._databaseExamples.map(
-                (example) => _buildExampleCard(
-                  example,
-                  theme,
-                  sourceLabel: _getSourceLabel(example.source),
-                  isPrimary: true,
+                (example) => Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: ExampleCard(
+                    japanese: example.japanese,
+                    furigana: example.furigana,
+                    korean: example.korean,
+                    explanation: example.explanation,
+                    sourceLabel: _getSourceLabel(example.source),
+                  ),
                 ),
               ),
             ],
             // Then display AI generated examples
             if (_generatedExamples != null) ...[
               ..._generatedExamples!.map(
-                (example) => _buildExampleCard(
-                  example,
-                  theme,
-                  sourceLabel: 'AI 생성',
-                  isPrimary: false,
+                (example) => Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: ExampleCard(
+                    japanese: example.japanese,
+                    furigana: example.furigana,
+                    korean: example.korean,
+                    explanation: example.explanation,
+                    sourceLabel: 'AI 생성',
+                  ),
                 ),
               ),
             ],
