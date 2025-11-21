@@ -18,6 +18,7 @@ import '../widgets/weekly_heatmap.dart';
 import '../widgets/quick_study_cards.dart';
 import '../widgets/leaderboard_card.dart';
 import '../widgets/today_kanji_card.dart';
+import '../widgets/custom_header.dart';
 import '../constants/app_spacing.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -38,24 +39,11 @@ class _HomeScreenState extends State<HomeScreen> {
   List<DailyStudyStats> _weeklyData = [];
   List<LeaderboardEntry> _leaderboard = [];
   bool _isLoading = true;
-  bool _isOnline = true;
 
   @override
   void initState() {
     super.initState();
     _initializeServices();
-
-    // 연결 상태 변경 감지
-    _connectivityService.onConnectivityChanged.listen((isOnline) {
-      if (mounted) {
-        setState(() {
-          _isOnline = isOnline;
-        });
-      }
-    });
-
-    // 초기 연결 상태
-    _isOnline = _connectivityService.isOnline;
   }
 
   Future<void> _initializeServices() async {
@@ -146,35 +134,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: theme.colors.background,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
+      body: Column(
         children: [
-          // 오프라인 배너
-          if (!_isOnline)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              color: theme.colors.muted,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    PhosphorIconsRegular.wifiSlash,
-                    size: 16,
-                    color: theme.colors.mutedForeground,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '오프라인 모드',
-                    style: theme.typography.sm.copyWith(
-                      color: theme.colors.mutedForeground,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          CustomHeader(
+            title: const Text('こんな漢字'),
+          ),
           // 메인 컨텐츠
           Expanded(
             child: _isLoading
@@ -274,7 +238,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
           ),
         ],
-        ),
       ),
     );
   }
