@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/flashcard_session_model.dart';
 import 'supabase_service.dart';
+import 'study_record_service.dart';
 
 class FlashcardService {
   static final FlashcardService _instance = FlashcardService._internal();
@@ -10,6 +11,7 @@ class FlashcardService {
   FlashcardService._internal();
 
   final SupabaseService _supabaseService = SupabaseService.instance;
+  final StudyRecordService _studyRecordService = StudyRecordService.instance;
 
   // 단어와 한자 세션을 각각 독립적으로 관리
   FlashcardSession? _wordSession;
@@ -205,24 +207,14 @@ class FlashcardService {
         return;
       }
 
-      // Record each flashcard result as a study record
+      // Record each flashcard result using StudyRecordService
+      // This updates local DB + memory cache + Supabase (if online)
       for (final result in session.results) {
-        final Map<String, dynamic> record = {
-          'user_id': userId,
-          'study_type': result.itemType,
-          'study_date': result.timestamp.toIso8601String().split('T')[0],
-          'study_status': result.isCorrect ? 'completed' : 'forgot',
-          'created_at': result.timestamp.toIso8601String(),
-        };
-
-        // Add item-specific ID field
-        if (result.itemType == 'word') {
-          record['word_id'] = result.itemId;
-        } else if (result.itemType == 'kanji') {
-          record['kanji_id'] = result.itemId;
-        }
-
-        await _supabaseService.client.from('study_records').insert(record);
+        await _studyRecordService.addRecord(
+          type: result.itemType,
+          targetId: result.itemId,
+          status: result.isCorrect ? 'completed' : 'forgot',
+        );
       }
 
       debugPrint(

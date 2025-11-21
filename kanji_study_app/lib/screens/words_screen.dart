@@ -4,10 +4,9 @@ import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/word_model.dart';
 import '../models/word_flashcard_adapter.dart';
-import '../models/study_record_model.dart';
 import '../services/word_service.dart';
 import '../services/flashcard_service.dart';
-import '../services/supabase_service.dart';
+import '../services/study_record_service.dart';
 import '../widgets/word_list_item.dart';
 import '../widgets/flashcard_count_selector.dart';
 import '../widgets/custom_header.dart';
@@ -32,7 +31,7 @@ class WordsScreen extends StatefulWidget {
 class _WordsScreenState extends State<WordsScreen> {
   final WordService _wordService = WordService.instance;
   final FlashcardService _flashcardService = FlashcardService.instance;
-  final SupabaseService _supabaseService = SupabaseService.instance;
+  final StudyRecordService _studyRecordService = StudyRecordService.instance;
   final TextEditingController _searchController = TextEditingController();
 
   List<Word> _filteredWords = [];
@@ -44,8 +43,6 @@ class _WordsScreenState extends State<WordsScreen> {
 
   // Study status filter: null=전체, 'not_studied', 'completed', 'forgot'
   String? _selectedStudyFilter;
-  // Cache for word study statuses
-  Map<int, String?> _wordStudyStatusCache = {};
 
   @override
   void initState() {
@@ -85,27 +82,11 @@ class _WordsScreenState extends State<WordsScreen> {
   }
 
   Future<void> _loadStudyStatusCache() async {
-    _wordStudyStatusCache = {};
-
-    // Get all study records for words
-    final records = await _supabaseService.getStudyRecords(type: StudyType.word);
-
-    // Group by targetId and get the latest status for each word
-    final Map<int, StudyRecord> latestRecords = {};
-    for (final record in records) {
-      final existing = latestRecords[record.targetId];
-      if (existing == null ||
-          (record.createdAt != null &&
-              existing.createdAt != null &&
-              record.createdAt!.isAfter(existing.createdAt!))) {
-        latestRecords[record.targetId] = record;
-      }
+    // Initialize StudyRecordService if not already initialized
+    if (!_studyRecordService.isInitialized) {
+      await _studyRecordService.initialize();
     }
-
-    // Convert to status cache
-    for (final entry in latestRecords.entries) {
-      _wordStudyStatusCache[entry.key] = entry.value.status.value;
-    }
+    // StudyRecordService already maintains the cache internally
   }
 
   void _applyFilters() {
@@ -133,7 +114,7 @@ class _WordsScreenState extends State<WordsScreen> {
       // Apply study status filter
       if (_selectedStudyFilter != null) {
         words = words.where((word) {
-          final status = _wordStudyStatusCache[word.id];
+          final status = _studyRecordService.getStatus('word', word.id);
           switch (_selectedStudyFilter) {
             case 'not_studied':
               return status == null;
@@ -281,9 +262,12 @@ class _WordsScreenState extends State<WordsScreen> {
         builder: (context) =>
             FlashcardScreen(items: flashcardItems, initialSession: session),
       ),
-    ).then((_) {
-      // Refresh when coming back
-      setState(() {});
+    ).then((_) async {
+      // Refresh study status cache when coming back
+      await _loadStudyStatusCache();
+      if (mounted) {
+        _applyFilters();
+      }
     });
   }
 
@@ -425,25 +409,22 @@ class _WordsScreenState extends State<WordsScreen> {
                           ),
                           const SizedBox(height: 12),
 
-                          // JLPT Level checkboxes
-                          ...List.generate(5, (index) {
-                            final level = 5 - index; // N5 to N1
-                            final isSelected = _selectedJlptLevels.contains(
-                              level,
-                            );
+                          // JLPT Level checkboxes (horizontal)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: List.generate(5, (index) {
+                              final level = 5 - index; // N5 to N1
+                              final isSelected = _selectedJlptLevels.contains(
+                                level,
+                              );
 
-                            return GestureDetector(
-                              onTap: () {
-                                setModalState(() {
-                                  _toggleJlptFilter(level);
-                                });
-                                setState(() {}); // Update main screen
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 4,
-                                ),
+                              return GestureDetector(
+                                onTap: () {
+                                  setModalState(() {
+                                    _toggleJlptFilter(level);
+                                  });
+                                  setState(() {}); // Update main screen
+                                },
                                 child: Row(
                                   children: [
                                     FCheckbox(
@@ -455,10 +436,10 @@ class _WordsScreenState extends State<WordsScreen> {
                                         setState(() {}); // Update main screen
                                       },
                                     ),
-                                    const SizedBox(width: 12),
+                                    const SizedBox(width: 4),
                                     Text(
                                       'N$level',
-                                      style: theme.typography.base.copyWith(
+                                      style: theme.typography.sm.copyWith(
                                         fontWeight: isSelected
                                             ? FontWeight.w600
                                             : FontWeight.normal,
@@ -466,9 +447,9 @@ class _WordsScreenState extends State<WordsScreen> {
                                     ),
                                   ],
                                 ),
-                              ),
-                            );
-                          }),
+                              );
+                            }),
+                          ),
                         ],
                       ),
                     ),

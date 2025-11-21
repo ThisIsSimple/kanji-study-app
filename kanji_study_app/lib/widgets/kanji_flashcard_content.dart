@@ -206,7 +206,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
               // 음독 섹션
               if (widget.kanji.readings.on.isNotEmpty) ...[
                 Text(
-                  '音読み',
+                  '음독',
                   style: theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colors.mutedForeground,
@@ -234,7 +234,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
               // 훈독 섹션
               if (widget.kanji.readings.kun.isNotEmpty) ...[
                 Text(
-                  '訓読み',
+                  '훈독',
                   style: theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colors.mutedForeground,

@@ -9,6 +9,7 @@ import 'services/gemini_service.dart';
 import 'services/supabase_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/local_database_service.dart';
+import 'services/study_record_service.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
@@ -31,6 +32,9 @@ void main() async {
 
   // Initialize local database service
   await LocalDatabaseService.instance.initialize();
+
+  // Initialize study record service (requires local database and supabase)
+  await StudyRecordService.instance.initialize();
 
   // Initialize notification service
   await NotificationService.instance.init();

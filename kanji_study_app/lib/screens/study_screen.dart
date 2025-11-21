@@ -152,127 +152,127 @@ class _StudyScreenState extends State<StudyScreen> {
       // Use showDialog instead of SnackBar for better visibility
       showDialog(
         context: context,
-          barrierDismissible: true,
-          barrierColor: Colors.transparent,
-          builder: (BuildContext dialogContext) {
-            final navigator = Navigator.of(dialogContext);
-            Future.delayed(const Duration(seconds: 2), () {
-              if (navigator.canPop()) {
-                navigator.pop();
-              }
-            });
+        barrierDismissible: true,
+        barrierColor: Colors.transparent,
+        builder: (BuildContext dialogContext) {
+          final navigator = Navigator.of(dialogContext);
+          Future.delayed(const Duration(seconds: 2), () {
+            if (navigator.canPop()) {
+              navigator.pop();
+            }
+          });
 
-            return Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 100),
-                child: Material(
-                  color: Colors.transparent,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: status == StudyStatus.completed
-                          ? FTheme.of(dialogContext).colors.primary
-                          : FTheme.of(dialogContext).colors.destructive,
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          status == StudyStatus.completed
-                              ? PhosphorIconsRegular.checkCircle
-                              : PhosphorIconsRegular.warningCircle,
+          return Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 100),
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: status == StudyStatus.completed
+                        ? FTheme.of(dialogContext).colors.primary
+                        : FTheme.of(dialogContext).colors.destructive,
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        status == StudyStatus.completed
+                            ? PhosphorIconsRegular.checkCircle
+                            : PhosphorIconsRegular.warningCircle,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        status == StudyStatus.completed
+                            ? '학습 완료를 기록했습니다!'
+                            : '까먹음을 기록했습니다.',
+                        style: const TextStyle(
                           color: Colors.white,
-                          size: 20,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          status == StudyStatus.completed
-                              ? '학습 완료를 기록했습니다!'
-                              : '까먹음을 기록했습니다.',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          );
+        },
       );
     } catch (e) {
       if (!mounted) return;
       showDialog(
         context: context,
-          barrierDismissible: true,
-          barrierColor: Colors.transparent,
-          builder: (BuildContext dialogContext) {
-            final navigator = Navigator.of(dialogContext);
-            Future.delayed(const Duration(seconds: 2), () {
-              if (navigator.canPop()) {
-                navigator.pop();
-              }
-            });
+        barrierDismissible: true,
+        barrierColor: Colors.transparent,
+        builder: (BuildContext dialogContext) {
+          final navigator = Navigator.of(dialogContext);
+          Future.delayed(const Duration(seconds: 2), () {
+            if (navigator.canPop()) {
+              navigator.pop();
+            }
+          });
 
-            return Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 100),
-                child: Material(
-                  color: Colors.transparent,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: FTheme.of(dialogContext).colors.destructive,
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          PhosphorIconsRegular.warning,
+          return Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 100),
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: FTheme.of(dialogContext).colors.destructive,
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        PhosphorIconsRegular.warning,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '기록 저장 실패: $e',
+                        style: const TextStyle(
                           color: Colors.white,
-                          size: 20,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '기록 저장 실패: $e',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          );
+        },
       );
     } finally {
       setState(() {
@@ -547,31 +547,10 @@ class _StudyScreenState extends State<StudyScreen> {
                         const SizedBox(height: 24),
 
                         // Meanings
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.colors.secondary.withValues(
-                              alpha: 0.1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                '의미',
-                                style: theme.typography.sm.copyWith(
-                                  color: theme.colors.mutedForeground,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                kanji.meanings.join(', '),
-                                style: theme.typography.lg.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                        Text(
+                          formatKoreanReadings(
+                            kanji.koreanKunReadings,
+                            kanji.koreanOnReadings,
                           ),
                         ),
                       ],
@@ -625,9 +604,9 @@ class _StudyScreenState extends State<StudyScreen> {
           // Readings Card
           FCard(
             child: Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     '읽기',
@@ -637,62 +616,30 @@ class _StudyScreenState extends State<StudyScreen> {
                   ),
                   const SizedBox(height: 16),
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Korean reading
-                      if (hasKoreanReadings(
-                        kanji.koreanKunReadings,
-                        kanji.koreanOnReadings,
-                      )) ...[
+                      // 훈독 (kun readings) - 표시 순서 변경
+                      if (kanji.readings.kun.isNotEmpty) ...[
                         Text(
-                          '한국어',
+                          '훈독',
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.mutedForeground,
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colors.primary.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            formatKoreanReadings(
-                              kanji.koreanKunReadings,
-                              kanji.koreanOnReadings,
-                            ),
-                            style: theme.typography.base.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: theme.colors.primary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                      // Japanese readings
-                      if (kanji.readings.on.isNotEmpty) ...[
-                        Text(
-                          '일본어 음독 (音読み)',
-                          style: theme.typography.sm.copyWith(
-                            color: theme.colors.mutedForeground,
-                          ),
+                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
                         Wrap(
+                          alignment: WrapAlignment.center,
                           spacing: 12,
                           runSpacing: 8,
-                          children: kanji.readings.on.map((reading) {
+                          children: kanji.readings.kun.map((reading) {
                             return Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
-                                color: theme.colors.primary.withValues(
+                                color: theme.colors.secondary.withValues(
                                   alpha: 0.1,
                                 ),
                                 borderRadius: BorderRadius.circular(20),
@@ -705,28 +652,31 @@ class _StudyScreenState extends State<StudyScreen> {
                           }).toList(),
                         ),
                       ],
-                      if (kanji.readings.on.isNotEmpty &&
-                          kanji.readings.kun.isNotEmpty)
+                      if (kanji.readings.kun.isNotEmpty &&
+                          kanji.readings.on.isNotEmpty)
                         const SizedBox(height: 16),
-                      if (kanji.readings.kun.isNotEmpty) ...[
+                      // 음독 (on readings)
+                      if (kanji.readings.on.isNotEmpty) ...[
                         Text(
-                          '일본어 훈독 (訓読み)',
+                          '음독',
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.mutedForeground,
                           ),
+                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
                         Wrap(
+                          alignment: WrapAlignment.center,
                           spacing: 12,
                           runSpacing: 8,
-                          children: kanji.readings.kun.map((reading) {
+                          children: kanji.readings.on.map((reading) {
                             return Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
-                                color: theme.colors.secondary.withValues(
+                                color: theme.colors.primary.withValues(
                                   alpha: 0.1,
                                 ),
                                 borderRadius: BorderRadius.circular(20),
