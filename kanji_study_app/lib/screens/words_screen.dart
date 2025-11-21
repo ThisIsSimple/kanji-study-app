@@ -627,7 +627,14 @@ class _WordsScreenState extends State<WordsScreen> {
                                         currentIndex: index,
                                       ),
                                     ),
-                                  );
+                                  ).then((_) {
+                                    // Refresh filters when coming back (study status may have changed)
+                                    if (mounted) {
+                                      setState(() {
+                                        _applyFilters();
+                                      });
+                                    }
+                                  });
                                 },
                                 onFavoriteToggle: () {
                                   setState(() {

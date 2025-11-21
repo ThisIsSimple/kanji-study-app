@@ -10,6 +10,7 @@ import '../models/study_record_model.dart';
 import '../services/word_service.dart';
 import '../services/gemini_service.dart';
 import '../services/supabase_service.dart';
+import '../services/study_record_service.dart';
 import '../widgets/example_card.dart';
 
 class WordDetailScreen extends StatefulWidget {
@@ -32,6 +33,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
   final WordService _wordService = WordService.instance;
   final GeminiService _geminiService = GeminiService.instance;
   final SupabaseService _supabaseService = SupabaseService.instance;
+  final StudyRecordService _studyRecordService = StudyRecordService.instance;
 
   late PageController _pageController;
   late int _currentIndex;
@@ -132,10 +134,10 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
     });
 
     try {
-      await _supabaseService.recordStudy(
-        type: StudyType.word,
+      await _studyRecordService.addRecord(
+        type: 'word',
         targetId: _currentWord.id,
-        status: status,
+        status: status == StudyStatus.completed ? 'completed' : 'forgot',
       );
 
       // Reload stats after recording

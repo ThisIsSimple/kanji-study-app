@@ -9,6 +9,7 @@ import '../models/study_record_model.dart';
 import '../services/gemini_service.dart';
 import '../services/supabase_service.dart';
 import '../services/kanji_service.dart';
+import '../services/study_record_service.dart';
 import '../widgets/example_card.dart';
 import '../utils/korean_formatter.dart';
 
@@ -32,6 +33,7 @@ class _StudyScreenState extends State<StudyScreen> {
   final GeminiService _geminiService = GeminiService.instance;
   final SupabaseService _supabaseService = SupabaseService.instance;
   final KanjiService _kanjiService = KanjiService.instance;
+  final StudyRecordService _studyRecordService = StudyRecordService.instance;
 
   PageController? _pageController;
   int _currentIndex = 0;
@@ -139,10 +141,10 @@ class _StudyScreenState extends State<StudyScreen> {
     });
 
     try {
-      await _supabaseService.recordStudy(
-        type: StudyType.kanji,
+      await _studyRecordService.addRecord(
+        type: 'kanji',
         targetId: _currentKanji!.id,
-        status: status,
+        status: status == StudyStatus.completed ? 'completed' : 'forgot',
       );
 
       // Reload stats after recording

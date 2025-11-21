@@ -320,7 +320,11 @@ class _KanjiScreenState extends State<KanjiScreen> {
       ),
     ).then((_) {
       // Refresh the UI when returning from detail screen
-      setState(() {});
+      if (mounted) {
+        setState(() {
+          _applyFilters();
+        });
+      }
     });
   }
 
