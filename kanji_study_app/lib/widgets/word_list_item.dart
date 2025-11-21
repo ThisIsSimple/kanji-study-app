@@ -10,6 +10,7 @@ class WordListItem extends StatelessWidget {
   final bool isFavorite;
   final VoidCallback onTap;
   final VoidCallback onFavoriteToggle;
+  final bool showMeaning;
 
   const WordListItem({
     super.key,
@@ -17,6 +18,7 @@ class WordListItem extends StatelessWidget {
     required this.isFavorite,
     required this.onTap,
     required this.onFavoriteToggle,
+    this.showMeaning = true,
   });
 
   @override
@@ -99,17 +101,18 @@ class WordListItem extends StatelessWidget {
                         const SizedBox(height: 8),
 
                         // Meanings
-                        Text(
-                          word.meaningsText,
-                          style: theme.typography.sm.copyWith(
-                            color: theme.colors.foreground.withValues(
-                              alpha: 0.8,
+                        if (showMeaning)
+                          Text(
+                            word.meaningsText,
+                            style: theme.typography.sm.copyWith(
+                              color: theme.colors.foreground.withValues(
+                                alpha: 0.8,
+                              ),
+                              height: 1.4,
                             ),
-                            height: 1.4,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
                       ],
                     ),
                   ),

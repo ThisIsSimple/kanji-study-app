@@ -16,7 +16,14 @@ import 'flashcard_screen.dart';
 import '../constants/app_spacing.dart';
 
 class KanjiScreen extends StatefulWidget {
-  const KanjiScreen({super.key});
+  final bool showMeanings;
+  final ValueChanged<bool>? onMeaningsToggle;
+
+  const KanjiScreen({
+    super.key,
+    this.showMeanings = true,
+    this.onMeaningsToggle,
+  });
 
   @override
   State<KanjiScreen> createState() => _KanjiScreenState();
@@ -112,6 +119,10 @@ class _KanjiScreenState extends State<KanjiScreen> {
       _showOnlyFavorites = !_showOnlyFavorites;
       _applyFilters();
     });
+  }
+
+  void _toggleMeanings() {
+    widget.onMeaningsToggle?.call(!widget.showMeanings);
   }
 
   void _toggleSearchMode() {
@@ -285,6 +296,17 @@ class _KanjiScreenState extends State<KanjiScreen> {
                   ],
                 )
               : CustomHeader(
+                  leftActions: [
+                    HeaderActionButton(
+                      icon: Icon(
+                        widget.showMeanings
+                            ? PhosphorIconsRegular.eye
+                            : PhosphorIconsRegular.eyeSlash,
+                        size: 20,
+                      ),
+                      onPressed: _toggleMeanings,
+                    ),
+                  ],
                   rightActions: [
                     HeaderActionButton(
                       icon: Icon(
@@ -342,6 +364,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                           final kanji = _filteredKanji[index];
                           return KanjiGridCard(
                             kanji: kanji,
+                            showMeaning: widget.showMeanings,
                             onTap: () => _navigateToStudy(kanji),
                             onFavoriteToggle: () {
                               setState(() {

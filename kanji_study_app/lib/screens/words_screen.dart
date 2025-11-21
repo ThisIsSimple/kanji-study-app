@@ -14,7 +14,14 @@ import 'flashcard_screen.dart';
 import '../constants/app_spacing.dart';
 
 class WordsScreen extends StatefulWidget {
-  const WordsScreen({super.key});
+  final bool showMeanings;
+  final ValueChanged<bool>? onMeaningsToggle;
+
+  const WordsScreen({
+    super.key,
+    this.showMeanings = true,
+    this.onMeaningsToggle,
+  });
 
   @override
   State<WordsScreen> createState() => _WordsScreenState();
@@ -114,6 +121,10 @@ class _WordsScreenState extends State<WordsScreen> {
       _showOnlyFavorites = !_showOnlyFavorites;
       _applyFilters();
     });
+  }
+
+  void _toggleMeanings() {
+    widget.onMeaningsToggle?.call(!widget.showMeanings);
   }
 
   void _toggleSearchMode() {
@@ -393,6 +404,17 @@ class _WordsScreenState extends State<WordsScreen> {
                   ],
                 )
               : CustomHeader(
+                  leftActions: [
+                    HeaderActionButton(
+                      icon: Icon(
+                        widget.showMeanings
+                            ? PhosphorIconsRegular.eye
+                            : PhosphorIconsRegular.eyeSlash,
+                        size: 20,
+                      ),
+                      onPressed: _toggleMeanings,
+                    ),
+                  ],
                   rightActions: [
                     HeaderActionButton(
                       icon: Icon(
@@ -484,6 +506,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                 key: ValueKey(word.id),
                                 word: word,
                                 isFavorite: _wordService.isFavorite(word.id),
+                                showMeaning: widget.showMeanings,
                                 onTap: () {
                                   Navigator.push(
                                     context,

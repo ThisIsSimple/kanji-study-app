@@ -11,12 +11,14 @@ class KanjiGridCard extends StatelessWidget {
   final Kanji kanji;
   final VoidCallback onTap;
   final VoidCallback onFavoriteToggle;
+  final bool showMeaning;
 
   const KanjiGridCard({
     super.key,
     required this.kanji,
     required this.onTap,
     required this.onFavoriteToggle,
+    this.showMeaning = true,
   });
 
   @override
@@ -109,7 +111,7 @@ class KanjiGridCard extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   // Korean readings
-                  if (hasKoreanReadings(
+                  if (showMeaning && hasKoreanReadings(
                     kanji.koreanKunReadings,
                     kanji.koreanOnReadings,
                   ))

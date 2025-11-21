@@ -17,13 +17,9 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const KanjiScreen(),
-    const WordsScreen(),
-    const QuizListScreen(),
-    const ProfileScreen(),
-  ];
+  // Shared state for meaning visibility across tabs
+  bool _kanjiShowMeanings = true;
+  bool _wordsShowMeanings = true;
 
   void _onItemTapped(int index) {
     setState(() {
@@ -31,10 +27,37 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  void _onKanjiMeaningsToggle(bool value) {
+    setState(() {
+      _kanjiShowMeanings = value;
+    });
+  }
+
+  void _onWordsMeaningsToggle(bool value) {
+    setState(() {
+      _wordsShowMeanings = value;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          const HomeScreen(),
+          KanjiScreen(
+            showMeanings: _kanjiShowMeanings,
+            onMeaningsToggle: _onKanjiMeaningsToggle,
+          ),
+          WordsScreen(
+            showMeanings: _wordsShowMeanings,
+            onMeaningsToggle: _onWordsMeaningsToggle,
+          ),
+          const QuizListScreen(),
+          const ProfileScreen(),
+        ],
+      ),
       bottomNavigationBar: FBottomNavigationBar(
         index: _selectedIndex,
         onChange: _onItemTapped,
