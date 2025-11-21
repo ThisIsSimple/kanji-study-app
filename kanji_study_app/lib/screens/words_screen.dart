@@ -398,7 +398,7 @@ class _WordsScreenState extends State<WordsScreen> {
                       icon: Icon(
                         widget.showMeanings
                             ? PhosphorIconsRegular.eye
-                            : PhosphorIconsRegular.eyeSlash,
+                            : PhosphorIconsRegular.eyeClosed,
                         size: 20,
                       ),
                       onPressed: _toggleMeanings,

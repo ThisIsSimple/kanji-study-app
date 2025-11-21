@@ -293,7 +293,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                       icon: Icon(
                         widget.showMeanings
                             ? PhosphorIconsRegular.eye
-                            : PhosphorIconsRegular.eyeSlash,
+                            : PhosphorIconsRegular.eyeClosed,
                         size: 20,
                       ),
                       onPressed: _toggleMeanings,
