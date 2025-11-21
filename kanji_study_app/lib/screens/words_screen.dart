@@ -4,8 +4,10 @@ import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/word_model.dart';
 import '../models/word_flashcard_adapter.dart';
+import '../models/study_record_model.dart';
 import '../services/word_service.dart';
 import '../services/flashcard_service.dart';
+import '../services/supabase_service.dart';
 import '../widgets/word_list_item.dart';
 import '../widgets/flashcard_count_selector.dart';
 import '../widgets/custom_header.dart';
@@ -30,6 +32,7 @@ class WordsScreen extends StatefulWidget {
 class _WordsScreenState extends State<WordsScreen> {
   final WordService _wordService = WordService.instance;
   final FlashcardService _flashcardService = FlashcardService.instance;
+  final SupabaseService _supabaseService = SupabaseService.instance;
   final TextEditingController _searchController = TextEditingController();
 
   List<Word> _filteredWords = [];
@@ -38,6 +41,11 @@ class _WordsScreenState extends State<WordsScreen> {
   bool _isLoading = true;
   bool _showOnlyFavorites = false;
   bool _isSearchMode = false;
+
+  // Study status filter: null=전체, 'not_studied', 'completed', 'forgot'
+  String? _selectedStudyFilter;
+  // Cache for word study statuses
+  Map<int, String?> _wordStudyStatusCache = {};
 
   @override
   void initState() {
@@ -62,6 +70,8 @@ class _WordsScreenState extends State<WordsScreen> {
       if (!_wordService.isInitialized) {
         await _wordService.init();
       }
+      // Load study status cache
+      await _loadStudyStatusCache();
       if (mounted) {
         _applyFilters();
       }
@@ -71,6 +81,30 @@ class _WordsScreenState extends State<WordsScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _loadStudyStatusCache() async {
+    _wordStudyStatusCache = {};
+
+    // Get all study records for words
+    final records = await _supabaseService.getStudyRecords(type: StudyType.word);
+
+    // Group by targetId and get the latest status for each word
+    final Map<int, StudyRecord> latestRecords = {};
+    for (final record in records) {
+      final existing = latestRecords[record.targetId];
+      if (existing == null ||
+          (record.createdAt != null &&
+              existing.createdAt != null &&
+              record.createdAt!.isAfter(existing.createdAt!))) {
+        latestRecords[record.targetId] = record;
+      }
+    }
+
+    // Convert to status cache
+    for (final entry in latestRecords.entries) {
+      _wordStudyStatusCache[entry.key] = entry.value.status.value;
     }
   }
 
@@ -94,6 +128,23 @@ class _WordsScreenState extends State<WordsScreen> {
         words = words
             .where((word) => _selectedJlptLevels.contains(word.jlptLevel))
             .toList();
+      }
+
+      // Apply study status filter
+      if (_selectedStudyFilter != null) {
+        words = words.where((word) {
+          final status = _wordStudyStatusCache[word.id];
+          switch (_selectedStudyFilter) {
+            case 'not_studied':
+              return status == null;
+            case 'completed':
+              return status == 'completed' || status == 'mastered';
+            case 'forgot':
+              return status == 'forgot';
+            default:
+              return true;
+          }
+        }).toList();
       }
 
       _filteredWords = words;
@@ -279,13 +330,100 @@ class _WordsScreenState extends State<WordsScreen> {
 
                           // Title
                           Text(
-                            'JLPT 레벨 필터',
+                            '필터',
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                             textAlign: TextAlign.center,
                           ),
+                          const SizedBox(height: 24),
+
+                          // Study Status Filter Section
+                          Text(
+                            '학습 상태',
+                            style: theme.typography.sm.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colors.mutedForeground,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Study status options
+                          ...[
+                            (null, '전체'),
+                            ('not_studied', '미학습'),
+                            ('completed', '학습 완료'),
+                            ('forgot', '까먹은 단어'),
+                          ].map((option) {
+                            final value = option.$1;
+                            final label = option.$2;
+                            final isSelected = _selectedStudyFilter == value;
+
+                            return GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  _selectedStudyFilter = value;
+                                });
+                                _applyFilters();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 4,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? theme.colors.primary
+                                              : theme.colors.border,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: isSelected
+                                          ? Center(
+                                              child: Container(
+                                                width: 10,
+                                                height: 10,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: theme.colors.primary,
+                                                ),
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      label,
+                                      style: theme.typography.base.copyWith(
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+
                           const SizedBox(height: 20),
+
+                          // JLPT Level Section
+                          Text(
+                            'JLPT 등급',
+                            style: theme.typography.sm.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colors.mutedForeground,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
 
                           // JLPT Level checkboxes
                           ...List.generate(5, (index) {
@@ -303,7 +441,7 @@ class _WordsScreenState extends State<WordsScreen> {
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
+                                  vertical: 10,
                                   horizontal: 4,
                                 ),
                                 child: Row(
@@ -319,7 +457,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
-                                      'JLPT N$level',
+                                      'N$level',
                                       style: theme.typography.base.copyWith(
                                         fontWeight: isSelected
                                             ? FontWeight.w600
@@ -418,7 +556,8 @@ class _WordsScreenState extends State<WordsScreen> {
                       icon: Stack(
                         children: [
                           Icon(PhosphorIconsRegular.funnel, size: 20),
-                          if (_selectedJlptLevels.isNotEmpty)
+                          if (_selectedJlptLevels.isNotEmpty ||
+                              _selectedStudyFilter != null)
                             Positioned(
                               right: 0,
                               top: 0,
