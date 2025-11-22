@@ -13,6 +13,7 @@ import '../services/supabase_service.dart';
 import '../services/study_record_service.dart';
 import '../widgets/example_card.dart';
 import '../widgets/jlpt_badge.dart';
+import '../widgets/app_toast.dart';
 
 class WordDetailScreen extends StatefulWidget {
   final Word word;
@@ -148,114 +149,26 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       await _loadStudyStats();
 
       if (!mounted) return;
-      // Use Forui Toast - use GlobalKey context to access FScaffold
       final scaffoldContext = _scaffoldKey.currentContext;
       if (scaffoldContext == null) return;
       final isCompleted = status == StudyStatus.completed;
-      showRawFToast(
-        context: scaffoldContext,
-        duration: const Duration(seconds: 2),
-        alignment: FToastAlignment.topLeft, // Will be centered via builder
-        builder: (context, entry) {
-          return Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 100),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: isCompleted
-                      ? Colors.black
-                      : FTheme.of(context).colors.destructive,
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isCompleted
-                          ? PhosphorIconsRegular.checkCircle
-                          : PhosphorIconsRegular.warningCircle,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      isCompleted ? '학습 완료를 기록했습니다!' : '까먹음을 기록했습니다.',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+      showAppToast(
+        scaffoldContext,
+        message: isCompleted ? '학습 완료를 기록했습니다!' : '까먹음을 기록했습니다.',
+        type: isCompleted ? AppToastType.info : AppToastType.error,
+        icon: isCompleted
+            ? PhosphorIconsRegular.checkCircle
+            : PhosphorIconsRegular.warningCircle,
       );
     } catch (e) {
       if (!mounted) return;
-      // Use Forui Toast for error - use GlobalKey context to access FScaffold
       final scaffoldContext = _scaffoldKey.currentContext;
       if (scaffoldContext == null) return;
-      showRawFToast(
-        context: scaffoldContext,
-        duration: const Duration(seconds: 2),
-        alignment: FToastAlignment.topLeft, // Will be centered via builder
-        builder: (context, entry) {
-          return Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 100),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: FTheme.of(context).colors.destructive,
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      PhosphorIconsRegular.warning,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '기록 저장 실패: $e',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+      showAppToast(
+        scaffoldContext,
+        message: '기록 저장 실패: $e',
+        type: AppToastType.error,
+        icon: PhosphorIconsRegular.warning,
       );
     } finally {
       setState(() {
