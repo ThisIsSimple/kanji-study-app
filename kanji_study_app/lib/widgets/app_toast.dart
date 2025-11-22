@@ -6,6 +6,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 enum AppToastType {
   /// Info toast - black background with white text (default)
   info,
+
   /// Error toast - red (destructive) background with white text
   error,
 }
@@ -37,15 +38,13 @@ void showAppToast(
     duration: duration,
     alignment: FToastAlignment.topLeft, // Will be centered via builder
     builder: (context, entry) {
+      final topPadding = MediaQuery.of(context).padding.top + 20;
       return Align(
         alignment: Alignment.topCenter,
         child: Padding(
-          padding: const EdgeInsets.only(top: 100),
+          padding: EdgeInsets.only(top: topPadding),
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 12,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             decoration: BoxDecoration(
               color: backgroundColor,
               borderRadius: BorderRadius.circular(25),
@@ -60,11 +59,7 @@ void showAppToast(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  icon ?? defaultIcon,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                Icon(icon ?? defaultIcon, color: Colors.white, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   message,
