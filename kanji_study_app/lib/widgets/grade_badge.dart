@@ -36,7 +36,7 @@ class GradeBadge extends StatelessWidget {
   /// Grade 텍스트 반환
   static String getGradeText(int grade) {
     if (grade <= 6) {
-      return '${grade}학년';
+      return '$grade학년';
     } else {
       return '중학교+';
     }

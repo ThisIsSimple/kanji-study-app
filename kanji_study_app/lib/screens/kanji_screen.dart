@@ -47,11 +47,11 @@ class _KanjiScreenState extends State<KanjiScreen> {
   // Study status filter: null=전체, 'not_studied', 'completed', 'forgot'
   String? _selectedStudyFilter;
 
-  // Grade filter: null=전체, 1-7
-  int? _selectedGradeFilter;
+  // Grade filter: 복수 선택 가능
+  final Set<int> _selectedGradeFilters = {};
 
-  // JLPT filter: null=전체, 1-5
-  int? _selectedJlptFilter;
+  // JLPT filter: 복수 선택 가능
+  final Set<int> _selectedJlptFilters = {};
 
   @override
   void initState() {
@@ -129,12 +129,14 @@ class _KanjiScreenState extends State<KanjiScreen> {
       }
 
       // Apply grade filter
-      if (_selectedGradeFilter != null && kanji.grade != _selectedGradeFilter) {
+      if (_selectedGradeFilters.isNotEmpty &&
+          !_selectedGradeFilters.contains(kanji.grade)) {
         return false;
       }
 
       // Apply JLPT filter
-      if (_selectedJlptFilter != null && kanji.jlpt != _selectedJlptFilter) {
+      if (_selectedJlptFilters.isNotEmpty &&
+          !_selectedJlptFilters.contains(kanji.jlpt)) {
         return false;
       }
 
@@ -181,24 +183,27 @@ class _KanjiScreenState extends State<KanjiScreen> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             final theme = FTheme.of(context);
-            return Container(
-              decoration: BoxDecoration(
-                color: theme.colors.background,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+            final maxHeight = MediaQuery.of(context).size.height * 0.85;
+            return ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxHeight),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: theme.colors.background,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
                 ),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
+                child: SafeArea(
+                  top: false,
+                  child: Column(
+                    children: [
+                      // Fixed header section
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                           // Drag handle
                           Center(
                             child: Container(
@@ -220,9 +225,18 @@ class _KanjiScreenState extends State<KanjiScreen> {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 24),
-
-                          // Study Status Filter Section
+                        ],
+                      ),
+                    ),
+                    // Scrollable content section
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: 24),
+                            // Study Status Filter Section
                           Text(
                             '학습 상태',
                             style: theme.typography.sm.copyWith(
@@ -230,75 +244,82 @@ class _KanjiScreenState extends State<KanjiScreen> {
                               color: theme.colors.mutedForeground,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
 
-                          // Study status options
-                          ...[
-                            (null, '전체'),
-                            ('not_studied', '미학습'),
-                            ('completed', '학습 완료'),
-                            ('forgot', '까먹은 한자'),
-                          ].map((option) {
-                            final value = option.$1;
-                            final label = option.$2;
-                            final isSelected = _selectedStudyFilter == value;
+                          // Study status options - 2 columns
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              (null, '전체'),
+                              ('not_studied', '미학습'),
+                              ('completed', '학습 완료'),
+                              ('forgot', '까먹은 한자'),
+                            ].map((option) {
+                              final value = option.$1;
+                              final label = option.$2;
+                              final isSelected = _selectedStudyFilter == value;
 
-                            return GestureDetector(
-                              onTap: () {
-                                setModalState(() {
-                                  _selectedStudyFilter = value;
-                                });
-                                setState(() {
-                                  _applyFilters();
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 4,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: isSelected
-                                              ? theme.colors.primary
-                                              : theme.colors.border,
-                                          width: 2,
+                              return GestureDetector(
+                                onTap: () {
+                                  setModalState(() {
+                                    _selectedStudyFilter = value;
+                                  });
+                                  setState(() {
+                                    _applyFilters();
+                                  });
+                                },
+                                child: Container(
+                                  width: (MediaQuery.of(context).size.width - 80) / 2,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                    horizontal: 4,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? theme.colors.primary
+                                                : theme.colors.border,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: isSelected
+                                            ? Center(
+                                                child: Container(
+                                                  width: 10,
+                                                  height: 10,
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    color: theme.colors.primary,
+                                                  ),
+                                                ),
+                                              )
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          label,
+                                          style: theme.typography.base.copyWith(
+                                            fontWeight: isSelected
+                                                ? FontWeight.w600
+                                                : FontWeight.normal,
+                                          ),
                                         ),
                                       ),
-                                      child: isSelected
-                                          ? Center(
-                                              child: Container(
-                                                width: 10,
-                                                height: 10,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: theme.colors.primary,
-                                                ),
-                                              ),
-                                            )
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      label,
-                                      style: theme.typography.base.copyWith(
-                                        fontWeight: isSelected
-                                            ? FontWeight.w600
-                                            : FontWeight.normal,
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          }),
-                          const SizedBox(height: 24),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 20),
 
                           // Grade Filter Section
                           Text(
@@ -308,79 +329,87 @@ class _KanjiScreenState extends State<KanjiScreen> {
                               color: theme.colors.mutedForeground,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
 
-                          // Grade options
-                          ...[
-                            (null, '전체'),
-                            (1, '1학년'),
-                            (2, '2학년'),
-                            (3, '3학년'),
-                            (4, '4학년'),
-                            (5, '5학년'),
-                            (6, '6학년'),
-                            (7, '중학교+'),
-                          ].map((option) {
-                            final value = option.$1;
-                            final label = option.$2;
-                            final isSelected = _selectedGradeFilter == value;
+                          // Grade options - 2 columns with checkboxes
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              (1, '1학년'),
+                              (2, '2학년'),
+                              (3, '3학년'),
+                              (4, '4학년'),
+                              (5, '5학년'),
+                              (6, '6학년'),
+                              (7, '중학교+'),
+                            ].map((option) {
+                              final value = option.$1;
+                              final label = option.$2;
+                              final isSelected = _selectedGradeFilters.contains(value);
 
-                            return GestureDetector(
-                              onTap: () {
-                                setModalState(() {
-                                  _selectedGradeFilter = value;
-                                });
-                                setState(() {
-                                  _applyFilters();
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 4,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
+                              return GestureDetector(
+                                onTap: () {
+                                  setModalState(() {
+                                    if (isSelected) {
+                                      _selectedGradeFilters.remove(value);
+                                    } else {
+                                      _selectedGradeFilters.add(value);
+                                    }
+                                  });
+                                  setState(() {
+                                    _applyFilters();
+                                  });
+                                },
+                                child: Container(
+                                  width: (MediaQuery.of(context).size.width - 80) / 2,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                    horizontal: 4,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? theme.colors.primary
+                                                : theme.colors.border,
+                                            width: 2,
+                                          ),
                                           color: isSelected
                                               ? theme.colors.primary
-                                              : theme.colors.border,
-                                          width: 2,
+                                              : Colors.transparent,
+                                        ),
+                                        child: isSelected
+                                            ? Icon(
+                                                Icons.check,
+                                                size: 14,
+                                                color: Colors.white,
+                                              )
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          label,
+                                          style: theme.typography.base.copyWith(
+                                            fontWeight: isSelected
+                                                ? FontWeight.w600
+                                                : FontWeight.normal,
+                                          ),
                                         ),
                                       ),
-                                      child: isSelected
-                                          ? Center(
-                                              child: Container(
-                                                width: 10,
-                                                height: 10,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: theme.colors.primary,
-                                                ),
-                                              ),
-                                            )
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      label,
-                                      style: theme.typography.base.copyWith(
-                                        fontWeight: isSelected
-                                            ? FontWeight.w600
-                                            : FontWeight.normal,
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          }),
-                          const SizedBox(height: 24),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 20),
 
                           // JLPT Filter Section
                           Text(
@@ -390,77 +419,86 @@ class _KanjiScreenState extends State<KanjiScreen> {
                               color: theme.colors.mutedForeground,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
 
-                          // JLPT options
-                          ...[
-                            (null, '전체'),
-                            (5, 'N5'),
-                            (4, 'N4'),
-                            (3, 'N3'),
-                            (2, 'N2'),
-                            (1, 'N1'),
-                          ].map((option) {
-                            final value = option.$1;
-                            final label = option.$2;
-                            final isSelected = _selectedJlptFilter == value;
+                          // JLPT options - 2 columns with checkboxes
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              (5, 'N5'),
+                              (4, 'N4'),
+                              (3, 'N3'),
+                              (2, 'N2'),
+                              (1, 'N1'),
+                            ].map((option) {
+                              final value = option.$1;
+                              final label = option.$2;
+                              final isSelected = _selectedJlptFilters.contains(value);
 
-                            return GestureDetector(
-                              onTap: () {
-                                setModalState(() {
-                                  _selectedJlptFilter = value;
-                                });
-                                setState(() {
-                                  _applyFilters();
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 4,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
+                              return GestureDetector(
+                                onTap: () {
+                                  setModalState(() {
+                                    if (isSelected) {
+                                      _selectedJlptFilters.remove(value);
+                                    } else {
+                                      _selectedJlptFilters.add(value);
+                                    }
+                                  });
+                                  setState(() {
+                                    _applyFilters();
+                                  });
+                                },
+                                child: Container(
+                                  width: (MediaQuery.of(context).size.width - 80) / 2,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                    horizontal: 4,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 20,
+                                        height: 20,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? theme.colors.primary
+                                                : theme.colors.border,
+                                            width: 2,
+                                          ),
                                           color: isSelected
                                               ? theme.colors.primary
-                                              : theme.colors.border,
-                                          width: 2,
+                                              : Colors.transparent,
+                                        ),
+                                        child: isSelected
+                                            ? Icon(
+                                                Icons.check,
+                                                size: 14,
+                                                color: Colors.white,
+                                              )
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          label,
+                                          style: theme.typography.base.copyWith(
+                                            fontWeight: isSelected
+                                                ? FontWeight.w600
+                                                : FontWeight.normal,
+                                          ),
                                         ),
                                       ),
-                                      child: isSelected
-                                          ? Center(
-                                              child: Container(
-                                                width: 10,
-                                                height: 10,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: theme.colors.primary,
-                                                ),
-                                              ),
-                                            )
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      label,
-                                      style: theme.typography.base.copyWith(
-                                        fontWeight: isSelected
-                                            ? FontWeight.w600
-                                            : FontWeight.normal,
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          }),
-                        ],
+                              );
+                            }).toList(),
+                          ),
+                          ],
+                        ),
                       ),
                     ),
 
@@ -478,6 +516,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                   ],
                 ),
               ),
+            ),
             );
           },
         );
@@ -672,8 +711,8 @@ class _KanjiScreenState extends State<KanjiScreen> {
                         children: [
                           Icon(PhosphorIconsRegular.funnel, size: 20),
                           if (_selectedStudyFilter != null ||
-                              _selectedGradeFilter != null ||
-                              _selectedJlptFilter != null)
+                              _selectedGradeFilters.isNotEmpty ||
+                              _selectedJlptFilters.isNotEmpty)
                             Positioned(
                               right: 0,
                               top: 0,

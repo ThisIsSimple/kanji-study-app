@@ -594,7 +594,7 @@ class _StudyScreenState extends State<StudyScreen> {
                             ),
                             child: Text(reading, style: theme.typography.base),
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ],
@@ -630,7 +630,7 @@ class _StudyScreenState extends State<StudyScreen> {
                             ),
                             child: Text(reading, style: theme.typography.base),
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ],
