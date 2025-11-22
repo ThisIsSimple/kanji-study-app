@@ -53,6 +53,9 @@ class _StudyScreenState extends State<StudyScreen> {
   bool _isRecordingStudy = false;
   bool _showStrokeOrder = false;
 
+  // GlobalKey to access FScaffold context for toasts
+  final GlobalKey<State> _scaffoldKey = GlobalKey<State>();
+
   @override
   void initState() {
     super.initState();
@@ -153,65 +156,56 @@ class _StudyScreenState extends State<StudyScreen> {
       await _loadStudyStats();
 
       if (!mounted) return;
-      // Use showDialog instead of SnackBar for better visibility
-      showDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierColor: Colors.transparent,
-        builder: (BuildContext dialogContext) {
-          final navigator = Navigator.of(dialogContext);
-          Future.delayed(const Duration(seconds: 2), () {
-            if (navigator.canPop()) {
-              navigator.pop();
-            }
-          });
-
+      // Use Forui Toast - use GlobalKey context to access FScaffold
+      final scaffoldContext = _scaffoldKey.currentContext;
+      if (scaffoldContext == null) return;
+      final isCompleted = status == StudyStatus.completed;
+      showRawFToast(
+        context: scaffoldContext,
+        duration: const Duration(seconds: 2),
+        alignment: FToastAlignment.topLeft, // Will be centered via builder
+        builder: (context, entry) {
           return Align(
             alignment: Alignment.topCenter,
             child: Padding(
               padding: const EdgeInsets.only(top: 100),
-              child: Material(
-                color: Colors.transparent,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: status == StudyStatus.completed
-                        ? FTheme.of(dialogContext).colors.primary
-                        : FTheme.of(dialogContext).colors.destructive,
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        status == StudyStatus.completed
-                            ? PhosphorIconsRegular.checkCircle
-                            : PhosphorIconsRegular.warningCircle,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: isCompleted
+                      ? Colors.black
+                      : FTheme.of(context).colors.destructive,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isCompleted
+                          ? PhosphorIconsRegular.checkCircle
+                          : PhosphorIconsRegular.warningCircle,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isCompleted ? '학습 완료를 기록했습니다!' : '까먹음을 기록했습니다.',
+                      style: const TextStyle(
                         color: Colors.white,
-                        size: 20,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        status == StudyStatus.completed
-                            ? '학습 완료를 기록했습니다!'
-                            : '까먹음을 기록했습니다.',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -220,58 +214,51 @@ class _StudyScreenState extends State<StudyScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      showDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierColor: Colors.transparent,
-        builder: (BuildContext dialogContext) {
-          final navigator = Navigator.of(dialogContext);
-          Future.delayed(const Duration(seconds: 2), () {
-            if (navigator.canPop()) {
-              navigator.pop();
-            }
-          });
-
+      // Use Forui Toast for error - use GlobalKey context to access FScaffold
+      final scaffoldContext = _scaffoldKey.currentContext;
+      if (scaffoldContext == null) return;
+      showRawFToast(
+        context: scaffoldContext,
+        duration: const Duration(seconds: 2),
+        alignment: FToastAlignment.topLeft, // Will be centered via builder
+        builder: (context, entry) {
           return Align(
             alignment: Alignment.topCenter,
             child: Padding(
               padding: const EdgeInsets.only(top: 100),
-              child: Material(
-                color: Colors.transparent,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: FTheme.of(dialogContext).colors.destructive,
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        PhosphorIconsRegular.warning,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: FTheme.of(context).colors.destructive,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      PhosphorIconsRegular.warning,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '기록 저장 실패: $e',
+                      style: const TextStyle(
                         color: Colors.white,
-                        size: 20,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '기록 저장 실패: $e',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -819,14 +806,17 @@ class _StudyScreenState extends State<StudyScreen> {
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 80),
-              child: _buildKanjiPage(_currentKanji!, theme),
-            ),
-            _buildStudyButton(theme),
-          ],
+        child: Builder(
+          key: _scaffoldKey,
+          builder: (context) => Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 80),
+                child: _buildKanjiPage(_currentKanji!, theme),
+              ),
+              _buildStudyButton(theme),
+            ],
+          ),
         ),
       );
     }
@@ -851,21 +841,24 @@ class _StudyScreenState extends State<StudyScreen> {
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 80),
-            child: PageView.builder(
-              controller: _pageController!,
-              onPageChanged: _onPageChanged,
-              itemCount: _kanjiList!.length,
-              itemBuilder: (context, index) {
-                return _buildKanjiPage(_kanjiList![index], theme);
-              },
+      child: Builder(
+        key: _scaffoldKey,
+        builder: (context) => Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 80),
+              child: PageView.builder(
+                controller: _pageController!,
+                onPageChanged: _onPageChanged,
+                itemCount: _kanjiList!.length,
+                itemBuilder: (context, index) {
+                  return _buildKanjiPage(_kanjiList![index], theme);
+                },
+              ),
             ),
-          ),
-          _buildStudyButton(theme),
-        ],
+            _buildStudyButton(theme),
+          ],
+        ),
       ),
     );
   }
