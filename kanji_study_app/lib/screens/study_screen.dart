@@ -11,6 +11,8 @@ import '../services/supabase_service.dart';
 import '../services/kanji_service.dart';
 import '../services/study_record_service.dart';
 import '../widgets/example_card.dart';
+import '../widgets/jlpt_badge.dart';
+import '../widgets/grade_badge.dart';
 import '../utils/korean_formatter.dart';
 
 class StudyScreen extends StatefulWidget {
@@ -439,6 +441,18 @@ class _StudyScreenState extends State<StudyScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        // JLPT and Grade badges
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            if (kanji.jlpt > 0)
+                              JlptBadge(level: kanji.jlpt, showPrefix: true),
+                            if (kanji.grade > 0) GradeBadge(grade: kanji.grade),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
                         Text(
                           kanji.character,
                           style: _showStrokeOrder
@@ -514,10 +528,43 @@ class _StudyScreenState extends State<StudyScreen> {
           // Readings Card
           FCard(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 부수 (radical)
+                  if (kanji.radical != null && kanji.radical!.isNotEmpty) ...[
+                    Wrap(
+                      alignment: WrapAlignment.start,
+                      spacing: 12,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          '부수',
+                          style: theme.typography.sm.copyWith(
+                            color: theme.colors.mutedForeground,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colors.muted.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            kanji.radical!,
+                            style: theme.typography.base,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   // 훈독 (kun readings) - 표시 순서 변경
                   if (kanji.readings.kun.isNotEmpty) ...[
                     Wrap(
@@ -537,11 +584,11 @@ class _StudyScreenState extends State<StudyScreen> {
                           return Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
-                              vertical: 8,
+                              vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: theme.colors.secondary.withValues(
-                                alpha: 0.2,
+                              color: theme.colors.primary.withValues(
+                                alpha: 0.1,
                               ),
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -573,7 +620,7 @@ class _StudyScreenState extends State<StudyScreen> {
                           return Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
-                              vertical: 8,
+                              vertical: 4,
                             ),
                             decoration: BoxDecoration(
                               color: theme.colors.primary.withValues(
@@ -585,6 +632,41 @@ class _StudyScreenState extends State<StudyScreen> {
                           );
                         }).toList(),
                       ],
+                    ),
+                  ],
+                  // 한자 해설 (commentary)
+                  if (kanji.commentary != null &&
+                      kanji.commentary!.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Wrap(
+                      alignment: WrapAlignment.start,
+                      spacing: 12,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          '한자 해설',
+                          style: theme.typography.sm.copyWith(
+                            color: theme.colors.mutedForeground,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colors.muted.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        kanji.commentary!,
+                        style: theme.typography.sm.copyWith(
+                          color: theme.colors.foreground,
+                        ),
+                      ),
                     ),
                   ],
                 ],

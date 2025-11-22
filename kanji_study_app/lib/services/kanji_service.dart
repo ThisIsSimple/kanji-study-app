@@ -84,9 +84,7 @@ class KanjiService {
     }).toList();
 
     if (unstudiedKanji.isNotEmpty) {
-      // Prioritize by frequency (lower frequency = more common)
-      unstudiedKanji.sort((a, b) => a.frequency.compareTo(b.frequency));
-      // Return one of the top 10 most common unstudied kanji
+      // Return a random unstudied kanji from top candidates
       final topCandidates = unstudiedKanji.take(10).toList();
       return topCandidates[Random().nextInt(topCandidates.length)];
     }
@@ -180,8 +178,7 @@ class KanjiService {
         .toList();
 
     if (unstudied.isNotEmpty) {
-      // Sort by frequency and take top candidates
-      unstudied.sort((a, b) => a.frequency.compareTo(b.frequency));
+      // Return top candidates from unstudied
       return unstudied.take(count).toList();
     }
 

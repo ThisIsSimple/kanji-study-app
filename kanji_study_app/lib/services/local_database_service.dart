@@ -122,8 +122,9 @@ class LocalDatabaseService {
       grade: data.grade,
       jlpt: data.jlpt,
       strokeCount: data.strokeCount,
-      frequency: data.frequency,
       examples: [], // 예문은 별도 로직으로 처리
+      radical: data.radical,
+      commentary: data.commentary,
     );
   }
 
@@ -155,8 +156,9 @@ class LocalDatabaseService {
       grade: json['grade'] as int,
       jlpt: json['jlpt'] as int,
       strokeCount: json['stroke_count'] as int,
-      frequency: json['frequency'] as int,
       examples: const Value([]), // 예문은 별도 테이블로 관리 예정
+      radical: Value(json['radical'] as String?),
+      commentary: Value(json['commentary'] as String?),
     );
   }
 

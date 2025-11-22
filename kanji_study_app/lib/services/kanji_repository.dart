@@ -77,6 +77,13 @@ class KanjiRepository {
   // Force reload data from Supabase
   Future<void> reloadKanjiData() async {
     clearCache();
+
+    // Force download from Supabase
+    if (_connectivityService.isOnline) {
+      debugPrint('Force reloading kanji data from Supabase...');
+      await _localDbService.downloadAndCacheKanjiData();
+    }
+
     await loadKanjiData();
   }
 
@@ -131,15 +138,6 @@ class KanjiRepository {
       ].any((reading) => reading.contains(query));
 
       return japaneseMatch || koreanMatch;
-    }).toList();
-  }
-
-  // Get kanji within frequency range
-  List<Kanji> getKanjiByFrequencyRange(int start, int end) {
-    if (_kanjiList == null) return [];
-
-    return _kanjiList!.where((kanji) {
-      return kanji.frequency >= start && kanji.frequency <= end;
     }).toList();
   }
 

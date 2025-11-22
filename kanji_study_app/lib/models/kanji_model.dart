@@ -10,8 +10,9 @@ class Kanji {
   final int grade;
   final int jlpt;
   final int strokeCount;
-  final int frequency;
   final List<KanjiExample> examples;
+  final String? radical; // 부수
+  final String? commentary; // 한자 해설
 
   const Kanji({
     required this.id,
@@ -23,8 +24,9 @@ class Kanji {
     required this.grade,
     required this.jlpt,
     required this.strokeCount,
-    required this.frequency,
     required this.examples,
+    this.radical,
+    this.commentary,
   });
 
   factory Kanji.fromJson(Map<String, dynamic> json) {
@@ -65,8 +67,9 @@ class Kanji {
       grade: json['grade'] as int,
       jlpt: json['jlpt'] as int,
       strokeCount: json['strokeCount'] as int,
-      frequency: json['frequency'] as int,
       examples: parseExamples(json['examples']),
+      radical: json['radical'] as String?,
+      commentary: json['commentary'] as String?,
     );
   }
 
@@ -81,8 +84,9 @@ class Kanji {
       'grade': grade,
       'jlpt': jlpt,
       'strokeCount': strokeCount,
-      'frequency': frequency,
       'examples': examples.map((e) => e.toJson()).toList(),
+      'radical': radical,
+      'commentary': commentary,
     };
   }
 }

@@ -47,6 +47,12 @@ class _KanjiScreenState extends State<KanjiScreen> {
   // Study status filter: null=전체, 'not_studied', 'completed', 'forgot'
   String? _selectedStudyFilter;
 
+  // Grade filter: null=전체, 1-7
+  int? _selectedGradeFilter;
+
+  // JLPT filter: null=전체, 1-5
+  int? _selectedJlptFilter;
+
   @override
   void initState() {
     super.initState();
@@ -120,6 +126,16 @@ class _KanjiScreenState extends State<KanjiScreen> {
           case 'forgot':
             if (status != 'forgot') return false;
         }
+      }
+
+      // Apply grade filter
+      if (_selectedGradeFilter != null && kanji.grade != _selectedGradeFilter) {
+        return false;
+      }
+
+      // Apply JLPT filter
+      if (_selectedJlptFilter != null && kanji.jlpt != _selectedJlptFilter) {
+        return false;
       }
 
       return true;
@@ -231,6 +247,168 @@ class _KanjiScreenState extends State<KanjiScreen> {
                               onTap: () {
                                 setModalState(() {
                                   _selectedStudyFilter = value;
+                                });
+                                setState(() {
+                                  _applyFilters();
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 4,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? theme.colors.primary
+                                              : theme.colors.border,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: isSelected
+                                          ? Center(
+                                              child: Container(
+                                                width: 10,
+                                                height: 10,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: theme.colors.primary,
+                                                ),
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      label,
+                                      style: theme.typography.base.copyWith(
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 24),
+
+                          // Grade Filter Section
+                          Text(
+                            '학년',
+                            style: theme.typography.sm.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colors.mutedForeground,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Grade options
+                          ...[
+                            (null, '전체'),
+                            (1, '1학년'),
+                            (2, '2학년'),
+                            (3, '3학년'),
+                            (4, '4학년'),
+                            (5, '5학년'),
+                            (6, '6학년'),
+                            (7, '중학교+'),
+                          ].map((option) {
+                            final value = option.$1;
+                            final label = option.$2;
+                            final isSelected = _selectedGradeFilter == value;
+
+                            return GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  _selectedGradeFilter = value;
+                                });
+                                setState(() {
+                                  _applyFilters();
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 4,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? theme.colors.primary
+                                              : theme.colors.border,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: isSelected
+                                          ? Center(
+                                              child: Container(
+                                                width: 10,
+                                                height: 10,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: theme.colors.primary,
+                                                ),
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      label,
+                                      style: theme.typography.base.copyWith(
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 24),
+
+                          // JLPT Filter Section
+                          Text(
+                            'JLPT',
+                            style: theme.typography.sm.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colors.mutedForeground,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // JLPT options
+                          ...[
+                            (null, '전체'),
+                            (5, 'N5'),
+                            (4, 'N4'),
+                            (3, 'N3'),
+                            (2, 'N2'),
+                            (1, 'N1'),
+                          ].map((option) {
+                            final value = option.$1;
+                            final label = option.$2;
+                            final isSelected = _selectedJlptFilter == value;
+
+                            return GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  _selectedJlptFilter = value;
                                 });
                                 setState(() {
                                   _applyFilters();
@@ -493,7 +671,9 @@ class _KanjiScreenState extends State<KanjiScreen> {
                       icon: Stack(
                         children: [
                           Icon(PhosphorIconsRegular.funnel, size: 20),
-                          if (_selectedStudyFilter != null)
+                          if (_selectedStudyFilter != null ||
+                              _selectedGradeFilter != null ||
+                              _selectedJlptFilter != null)
                             Positioned(
                               right: 0,
                               top: 0,

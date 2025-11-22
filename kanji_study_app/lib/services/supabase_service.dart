@@ -708,7 +708,6 @@ class SupabaseService {
           'grade': item['grade'],
           'jlpt': item['jlpt'],
           'strokeCount': item['stroke_count'],
-          'frequency': item['frequency'],
           'examples': [],
         });
       }

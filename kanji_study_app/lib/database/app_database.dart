@@ -23,9 +23,10 @@ class KanjiTable extends Table {
   IntColumn get grade => integer()();
   IntColumn get jlpt => integer()();
   IntColumn get strokeCount => integer()();
-  IntColumn get frequency => integer()();
   TextColumn get examples =>
       text().map(const StringListConverter()).withDefault(const Constant('[]'))();
+  TextColumn get radical => text().nullable()(); // 부수
+  TextColumn get commentary => text().nullable()(); // 한자 해설
 }
 
 /// 단어 테이블 - Supabase words 테이블과 동일한 구조
@@ -117,7 +118,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -125,6 +126,15 @@ class AppDatabase extends _$AppDatabase {
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
         await m.createTable(favoritesTable);
+      }
+      if (from < 3) {
+        // Add radical and commentary columns to kanji_table
+        await m.addColumn(kanjiTable, kanjiTable.radical);
+        await m.addColumn(kanjiTable, kanjiTable.commentary);
+      }
+      if (from < 4) {
+        // Remove frequency column - recreate table without it
+        await customStatement('ALTER TABLE kanji_table DROP COLUMN frequency');
       }
     },
   );

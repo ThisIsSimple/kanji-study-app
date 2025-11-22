@@ -107,17 +107,6 @@ class $KanjiTableTable extends KanjiTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _frequencyMeta = const VerificationMeta(
-    'frequency',
-  );
-  @override
-  late final GeneratedColumn<int> frequency = GeneratedColumn<int>(
-    'frequency',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
   @override
   late final GeneratedColumnWithTypeConverter<List<String>, String> examples =
       GeneratedColumn<String>(
@@ -128,6 +117,28 @@ class $KanjiTableTable extends KanjiTable
         requiredDuringInsert: false,
         defaultValue: const Constant('[]'),
       ).withConverter<List<String>>($KanjiTableTable.$converterexamples);
+  static const VerificationMeta _radicalMeta = const VerificationMeta(
+    'radical',
+  );
+  @override
+  late final GeneratedColumn<String> radical = GeneratedColumn<String>(
+    'radical',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _commentaryMeta = const VerificationMeta(
+    'commentary',
+  );
+  @override
+  late final GeneratedColumn<String> commentary = GeneratedColumn<String>(
+    'commentary',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -140,8 +151,9 @@ class $KanjiTableTable extends KanjiTable
     grade,
     jlpt,
     strokeCount,
-    frequency,
     examples,
+    radical,
+    commentary,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -193,13 +205,17 @@ class $KanjiTableTable extends KanjiTable
     } else if (isInserting) {
       context.missing(_strokeCountMeta);
     }
-    if (data.containsKey('frequency')) {
+    if (data.containsKey('radical')) {
       context.handle(
-        _frequencyMeta,
-        frequency.isAcceptableOrUnknown(data['frequency']!, _frequencyMeta),
+        _radicalMeta,
+        radical.isAcceptableOrUnknown(data['radical']!, _radicalMeta),
       );
-    } else if (isInserting) {
-      context.missing(_frequencyMeta);
+    }
+    if (data.containsKey('commentary')) {
+      context.handle(
+        _commentaryMeta,
+        commentary.isAcceptableOrUnknown(data['commentary']!, _commentaryMeta),
+      );
     }
     return context;
   }
@@ -260,15 +276,19 @@ class $KanjiTableTable extends KanjiTable
         DriftSqlType.int,
         data['${effectivePrefix}stroke_count'],
       )!,
-      frequency: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}frequency'],
-      )!,
       examples: $KanjiTableTable.$converterexamples.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
           data['${effectivePrefix}examples'],
         )!,
+      ),
+      radical: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}radical'],
+      ),
+      commentary: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}commentary'],
       ),
     );
   }
@@ -303,8 +323,9 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
   final int grade;
   final int jlpt;
   final int strokeCount;
-  final int frequency;
   final List<String> examples;
+  final String? radical;
+  final String? commentary;
   const KanjiTableData({
     required this.id,
     required this.character,
@@ -316,8 +337,9 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     required this.grade,
     required this.jlpt,
     required this.strokeCount,
-    required this.frequency,
     required this.examples,
+    this.radical,
+    this.commentary,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -352,11 +374,16 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     map['grade'] = Variable<int>(grade);
     map['jlpt'] = Variable<int>(jlpt);
     map['stroke_count'] = Variable<int>(strokeCount);
-    map['frequency'] = Variable<int>(frequency);
     {
       map['examples'] = Variable<String>(
         $KanjiTableTable.$converterexamples.toSql(examples),
       );
+    }
+    if (!nullToAbsent || radical != null) {
+      map['radical'] = Variable<String>(radical);
+    }
+    if (!nullToAbsent || commentary != null) {
+      map['commentary'] = Variable<String>(commentary);
     }
     return map;
   }
@@ -373,8 +400,13 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
       grade: Value(grade),
       jlpt: Value(jlpt),
       strokeCount: Value(strokeCount),
-      frequency: Value(frequency),
       examples: Value(examples),
+      radical: radical == null && nullToAbsent
+          ? const Value.absent()
+          : Value(radical),
+      commentary: commentary == null && nullToAbsent
+          ? const Value.absent()
+          : Value(commentary),
     );
   }
 
@@ -398,8 +430,9 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
       grade: serializer.fromJson<int>(json['grade']),
       jlpt: serializer.fromJson<int>(json['jlpt']),
       strokeCount: serializer.fromJson<int>(json['strokeCount']),
-      frequency: serializer.fromJson<int>(json['frequency']),
       examples: serializer.fromJson<List<String>>(json['examples']),
+      radical: serializer.fromJson<String?>(json['radical']),
+      commentary: serializer.fromJson<String?>(json['commentary']),
     );
   }
   @override
@@ -416,8 +449,9 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
       'grade': serializer.toJson<int>(grade),
       'jlpt': serializer.toJson<int>(jlpt),
       'strokeCount': serializer.toJson<int>(strokeCount),
-      'frequency': serializer.toJson<int>(frequency),
       'examples': serializer.toJson<List<String>>(examples),
+      'radical': serializer.toJson<String?>(radical),
+      'commentary': serializer.toJson<String?>(commentary),
     };
   }
 
@@ -432,8 +466,9 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     int? grade,
     int? jlpt,
     int? strokeCount,
-    int? frequency,
     List<String>? examples,
+    Value<String?> radical = const Value.absent(),
+    Value<String?> commentary = const Value.absent(),
   }) => KanjiTableData(
     id: id ?? this.id,
     character: character ?? this.character,
@@ -445,8 +480,9 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     grade: grade ?? this.grade,
     jlpt: jlpt ?? this.jlpt,
     strokeCount: strokeCount ?? this.strokeCount,
-    frequency: frequency ?? this.frequency,
     examples: examples ?? this.examples,
+    radical: radical.present ? radical.value : this.radical,
+    commentary: commentary.present ? commentary.value : this.commentary,
   );
   KanjiTableData copyWithCompanion(KanjiTableCompanion data) {
     return KanjiTableData(
@@ -470,8 +506,11 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
       strokeCount: data.strokeCount.present
           ? data.strokeCount.value
           : this.strokeCount,
-      frequency: data.frequency.present ? data.frequency.value : this.frequency,
       examples: data.examples.present ? data.examples.value : this.examples,
+      radical: data.radical.present ? data.radical.value : this.radical,
+      commentary: data.commentary.present
+          ? data.commentary.value
+          : this.commentary,
     );
   }
 
@@ -488,8 +527,9 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
           ..write('grade: $grade, ')
           ..write('jlpt: $jlpt, ')
           ..write('strokeCount: $strokeCount, ')
-          ..write('frequency: $frequency, ')
-          ..write('examples: $examples')
+          ..write('examples: $examples, ')
+          ..write('radical: $radical, ')
+          ..write('commentary: $commentary')
           ..write(')'))
         .toString();
   }
@@ -506,8 +546,9 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     grade,
     jlpt,
     strokeCount,
-    frequency,
     examples,
+    radical,
+    commentary,
   );
   @override
   bool operator ==(Object other) =>
@@ -523,8 +564,9 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
           other.grade == this.grade &&
           other.jlpt == this.jlpt &&
           other.strokeCount == this.strokeCount &&
-          other.frequency == this.frequency &&
-          other.examples == this.examples);
+          other.examples == this.examples &&
+          other.radical == this.radical &&
+          other.commentary == this.commentary);
 }
 
 class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
@@ -538,8 +580,9 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
   final Value<int> grade;
   final Value<int> jlpt;
   final Value<int> strokeCount;
-  final Value<int> frequency;
   final Value<List<String>> examples;
+  final Value<String?> radical;
+  final Value<String?> commentary;
   const KanjiTableCompanion({
     this.id = const Value.absent(),
     this.character = const Value.absent(),
@@ -551,8 +594,9 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     this.grade = const Value.absent(),
     this.jlpt = const Value.absent(),
     this.strokeCount = const Value.absent(),
-    this.frequency = const Value.absent(),
     this.examples = const Value.absent(),
+    this.radical = const Value.absent(),
+    this.commentary = const Value.absent(),
   });
   KanjiTableCompanion.insert({
     this.id = const Value.absent(),
@@ -565,8 +609,9 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     required int grade,
     required int jlpt,
     required int strokeCount,
-    required int frequency,
     this.examples = const Value.absent(),
+    this.radical = const Value.absent(),
+    this.commentary = const Value.absent(),
   }) : character = Value(character),
        meanings = Value(meanings),
        readingsOn = Value(readingsOn),
@@ -575,8 +620,7 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
        koreanKunReadings = Value(koreanKunReadings),
        grade = Value(grade),
        jlpt = Value(jlpt),
-       strokeCount = Value(strokeCount),
-       frequency = Value(frequency);
+       strokeCount = Value(strokeCount);
   static Insertable<KanjiTableData> custom({
     Expression<int>? id,
     Expression<String>? character,
@@ -588,8 +632,9 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     Expression<int>? grade,
     Expression<int>? jlpt,
     Expression<int>? strokeCount,
-    Expression<int>? frequency,
     Expression<String>? examples,
+    Expression<String>? radical,
+    Expression<String>? commentary,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -602,8 +647,9 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
       if (grade != null) 'grade': grade,
       if (jlpt != null) 'jlpt': jlpt,
       if (strokeCount != null) 'stroke_count': strokeCount,
-      if (frequency != null) 'frequency': frequency,
       if (examples != null) 'examples': examples,
+      if (radical != null) 'radical': radical,
+      if (commentary != null) 'commentary': commentary,
     });
   }
 
@@ -618,8 +664,9 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     Value<int>? grade,
     Value<int>? jlpt,
     Value<int>? strokeCount,
-    Value<int>? frequency,
     Value<List<String>>? examples,
+    Value<String?>? radical,
+    Value<String?>? commentary,
   }) {
     return KanjiTableCompanion(
       id: id ?? this.id,
@@ -632,8 +679,9 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
       grade: grade ?? this.grade,
       jlpt: jlpt ?? this.jlpt,
       strokeCount: strokeCount ?? this.strokeCount,
-      frequency: frequency ?? this.frequency,
       examples: examples ?? this.examples,
+      radical: radical ?? this.radical,
+      commentary: commentary ?? this.commentary,
     );
   }
 
@@ -684,13 +732,16 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     if (strokeCount.present) {
       map['stroke_count'] = Variable<int>(strokeCount.value);
     }
-    if (frequency.present) {
-      map['frequency'] = Variable<int>(frequency.value);
-    }
     if (examples.present) {
       map['examples'] = Variable<String>(
         $KanjiTableTable.$converterexamples.toSql(examples.value),
       );
+    }
+    if (radical.present) {
+      map['radical'] = Variable<String>(radical.value);
+    }
+    if (commentary.present) {
+      map['commentary'] = Variable<String>(commentary.value);
     }
     return map;
   }
@@ -708,8 +759,9 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
           ..write('grade: $grade, ')
           ..write('jlpt: $jlpt, ')
           ..write('strokeCount: $strokeCount, ')
-          ..write('frequency: $frequency, ')
-          ..write('examples: $examples')
+          ..write('examples: $examples, ')
+          ..write('radical: $radical, ')
+          ..write('commentary: $commentary')
           ..write(')'))
         .toString();
   }
@@ -2496,8 +2548,9 @@ typedef $$KanjiTableTableCreateCompanionBuilder =
       required int grade,
       required int jlpt,
       required int strokeCount,
-      required int frequency,
       Value<List<String>> examples,
+      Value<String?> radical,
+      Value<String?> commentary,
     });
 typedef $$KanjiTableTableUpdateCompanionBuilder =
     KanjiTableCompanion Function({
@@ -2511,8 +2564,9 @@ typedef $$KanjiTableTableUpdateCompanionBuilder =
       Value<int> grade,
       Value<int> jlpt,
       Value<int> strokeCount,
-      Value<int> frequency,
       Value<List<String>> examples,
+      Value<String?> radical,
+      Value<String?> commentary,
     });
 
 class $$KanjiTableTableFilterComposer
@@ -2579,15 +2633,20 @@ class $$KanjiTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get frequency => $composableBuilder(
-    column: $table.frequency,
-    builder: (column) => ColumnFilters(column),
-  );
-
   ColumnWithTypeConverterFilters<List<String>, List<String>, String>
   get examples => $composableBuilder(
     column: $table.examples,
     builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get radical => $composableBuilder(
+    column: $table.radical,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get commentary => $composableBuilder(
+    column: $table.commentary,
+    builder: (column) => ColumnFilters(column),
   );
 }
 
@@ -2650,13 +2709,18 @@ class $$KanjiTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get frequency => $composableBuilder(
-    column: $table.frequency,
+  ColumnOrderings<String> get examples => $composableBuilder(
+    column: $table.examples,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get examples => $composableBuilder(
-    column: $table.examples,
+  ColumnOrderings<String> get radical => $composableBuilder(
+    column: $table.radical,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get commentary => $composableBuilder(
+    column: $table.commentary,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -2714,11 +2778,16 @@ class $$KanjiTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<int> get frequency =>
-      $composableBuilder(column: $table.frequency, builder: (column) => column);
-
   GeneratedColumnWithTypeConverter<List<String>, String> get examples =>
       $composableBuilder(column: $table.examples, builder: (column) => column);
+
+  GeneratedColumn<String> get radical =>
+      $composableBuilder(column: $table.radical, builder: (column) => column);
+
+  GeneratedColumn<String> get commentary => $composableBuilder(
+    column: $table.commentary,
+    builder: (column) => column,
+  );
 }
 
 class $$KanjiTableTableTableManager
@@ -2762,8 +2831,9 @@ class $$KanjiTableTableTableManager
                 Value<int> grade = const Value.absent(),
                 Value<int> jlpt = const Value.absent(),
                 Value<int> strokeCount = const Value.absent(),
-                Value<int> frequency = const Value.absent(),
                 Value<List<String>> examples = const Value.absent(),
+                Value<String?> radical = const Value.absent(),
+                Value<String?> commentary = const Value.absent(),
               }) => KanjiTableCompanion(
                 id: id,
                 character: character,
@@ -2775,8 +2845,9 @@ class $$KanjiTableTableTableManager
                 grade: grade,
                 jlpt: jlpt,
                 strokeCount: strokeCount,
-                frequency: frequency,
                 examples: examples,
+                radical: radical,
+                commentary: commentary,
               ),
           createCompanionCallback:
               ({
@@ -2790,8 +2861,9 @@ class $$KanjiTableTableTableManager
                 required int grade,
                 required int jlpt,
                 required int strokeCount,
-                required int frequency,
                 Value<List<String>> examples = const Value.absent(),
+                Value<String?> radical = const Value.absent(),
+                Value<String?> commentary = const Value.absent(),
               }) => KanjiTableCompanion.insert(
                 id: id,
                 character: character,
@@ -2803,8 +2875,9 @@ class $$KanjiTableTableTableManager
                 grade: grade,
                 jlpt: jlpt,
                 strokeCount: strokeCount,
-                frequency: frequency,
                 examples: examples,
+                radical: radical,
+                commentary: commentary,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
