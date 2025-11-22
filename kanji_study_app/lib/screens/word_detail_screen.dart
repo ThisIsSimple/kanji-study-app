@@ -12,6 +12,7 @@ import '../services/gemini_service.dart';
 import '../services/supabase_service.dart';
 import '../services/study_record_service.dart';
 import '../widgets/example_card.dart';
+import '../widgets/jlpt_badge.dart';
 
 class WordDetailScreen extends StatefulWidget {
   final Word word;
@@ -496,7 +497,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
             child: Stack(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(8.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -539,56 +540,24 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
 
                       const SizedBox(height: 24),
 
-                      // JLPT Level - Center aligned
-                      Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getJlptColor(
-                              word.jlptLevel,
-                            ).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: _getJlptColor(
-                                word.jlptLevel,
-                              ).withValues(alpha: 0.5),
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            'JLPT N${word.jlptLevel}',
-                            style: theme.typography.sm.copyWith(
-                              color: _getJlptColor(word.jlptLevel),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
                       // Meanings by part of speech - Center aligned
-                      const SizedBox(height: 8),
                       ...word.meanings.map((meaning) {
                         return Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: 2,
-                          ), // 6 → 2로 더 줄임
+                          padding: const EdgeInsets.only(bottom: 8),
                           child: Center(
-                            child: Column(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                // Part of speech badge
-                                if (meaning.partOfSpeech.isNotEmpty)
+                                // Part of speech badge - 얇은 알약 형태
+                                if (meaning.partOfSpeech.isNotEmpty) ...[
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
+                                      horizontal: 10,
+                                      vertical: 3,
                                     ),
-                                    margin: const EdgeInsets.only(
-                                      bottom: 2,
-                                    ), // 4 → 2로 더 줄임
                                     decoration: BoxDecoration(
-                                      color: theme.colors.secondary.withValues(
+                                      color: theme.colors.primary.withValues(
                                         alpha: 0.1,
                                       ),
                                       borderRadius: BorderRadius.circular(12),
@@ -596,25 +565,38 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                                     child: Text(
                                       meaning.partOfSpeech,
                                       style: theme.typography.sm.copyWith(
-                                        color: theme.colors.secondary,
+                                        color: theme.colors.primary,
                                         fontWeight: FontWeight.w500,
-                                        fontSize: 11,
+                                        fontSize: 10,
                                       ),
                                     ),
                                   ),
+                                  const SizedBox(width: 8),
+                                ],
                                 // Meaning text
-                                Text(
-                                  meaning.meaning,
-                                  style: theme.typography.base.copyWith(
-                                    height: 1.2, // 1.3 → 1.2로 더 줄임
+                                Flexible(
+                                  child: Text(
+                                    meaning.meaning,
+                                    style: theme.typography.base.copyWith(
+                                      height: 1.2,
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  textAlign: TextAlign.center,
                                 ),
                               ],
                             ),
                           ),
                         );
                       }),
+                      const SizedBox(height: 16),
+
+                      // JLPT Level - Center aligned
+                      Center(
+                        child: JlptBadge(
+                          level: word.jlptLevel,
+                          showPrefix: true,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -838,22 +820,5 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
         ],
       ),
     );
-  }
-
-  Color _getJlptColor(int level) {
-    switch (level) {
-      case 1:
-        return Colors.red[700]!;
-      case 2:
-        return Colors.orange[700]!;
-      case 3:
-        return Colors.yellow[700]!;
-      case 4:
-        return Colors.green[600]!;
-      case 5:
-        return Colors.blue[600]!;
-      default:
-        return Colors.grey[600]!;
-    }
   }
 }
