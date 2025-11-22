@@ -435,24 +435,12 @@ class _StudyScreenState extends State<StudyScreen> {
             child: Stack(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.all(8.0),
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // JLPT and Grade badges
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          alignment: WrapAlignment.center,
-                          children: [
-                            if (kanji.jlpt > 0)
-                              JlptBadge(level: kanji.jlpt, showPrefix: true),
-                            if (kanji.grade > 0) GradeBadge(grade: kanji.grade),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
                         Text(
                           kanji.character,
                           style: _showStrokeOrder
@@ -476,6 +464,19 @@ class _StudyScreenState extends State<StudyScreen> {
                             kanji.koreanKunReadings,
                             kanji.koreanOnReadings,
                           ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // JLPT and Grade badges - 가로 정렬
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            if (kanji.grade > 0) GradeBadge(grade: kanji.grade),
+                            if (kanji.jlpt > 0)
+                              JlptBadge(level: kanji.jlpt, showPrefix: true),
+                          ],
                         ),
                       ],
                     ),

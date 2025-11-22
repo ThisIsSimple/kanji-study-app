@@ -48,13 +48,13 @@ class GradeBadge extends StatelessWidget {
     final color = getGradeColor(grade);
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 2,
+      padding: EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 4,
       ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: color.withValues(alpha: 0.5),
           width: 1,
@@ -65,7 +65,7 @@ class GradeBadge extends StatelessWidget {
         style: theme.typography.sm.copyWith(
           color: color,
           fontWeight: FontWeight.w600,
-          fontSize: fontSize ?? 11,
+          fontSize: fontSize ?? 12.0,
         ),
       ),
     );
