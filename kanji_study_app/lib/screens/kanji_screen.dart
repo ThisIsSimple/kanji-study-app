@@ -204,319 +204,353 @@ class _KanjiScreenState extends State<KanjiScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                          // Drag handle
-                          Center(
-                            child: Container(
-                              width: 40,
-                              height: 4,
-                              margin: const EdgeInsets.only(bottom: 20),
-                              decoration: BoxDecoration(
-                                color: theme.colors.border,
-                                borderRadius: BorderRadius.circular(2),
+                            // Drag handle
+                            Center(
+                              child: Container(
+                                width: 40,
+                                height: 4,
+                                margin: const EdgeInsets.only(bottom: 20),
+                                decoration: BoxDecoration(
+                                  color: theme.colors.border,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
                               ),
                             ),
-                          ),
 
-                          // Title
-                          Text(
-                            '필터',
-                            style: theme.typography.lg.copyWith(
-                              fontWeight: FontWeight.bold,
+                            // Title
+                            Text(
+                              '필터',
+                              style: theme.typography.lg.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Scrollable content section
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const SizedBox(height: 24),
-                            // Study Status Filter Section
-                          Text(
-                            '학습 상태',
-                            style: theme.typography.sm.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: theme.colors.mutedForeground,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-
-                          // Study status options - 2 columns
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 4,
-                            children: [
-                              (null, '전체'),
-                              ('not_studied', '미학습'),
-                              ('completed', '학습 완료'),
-                              ('forgot', '까먹은 한자'),
-                            ].map((option) {
-                              final value = option.$1;
-                              final label = option.$2;
-                              final isSelected = _selectedStudyFilter == value;
-
-                              return GestureDetector(
-                                onTap: () {
-                                  setModalState(() {
-                                    _selectedStudyFilter = value;
-                                  });
-                                  setState(() {
-                                    _applyFilters();
-                                  });
-                                },
-                                child: Container(
-                                  width: (MediaQuery.of(context).size.width - 80) / 2,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                    horizontal: 4,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 20,
-                                        height: 20,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: isSelected
-                                                ? theme.colors.primary
-                                                : theme.colors.border,
-                                            width: 2,
-                                          ),
-                                        ),
-                                        child: isSelected
-                                            ? Center(
-                                                child: Container(
-                                                  width: 10,
-                                                  height: 10,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    color: theme.colors.primary,
-                                                  ),
-                                                ),
-                                              )
-                                            : null,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          label,
-                                          style: theme.typography.base.copyWith(
-                                            fontWeight: isSelected
-                                                ? FontWeight.w600
-                                                : FontWeight.normal,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Grade Filter Section
-                          Text(
-                            '학년',
-                            style: theme.typography.sm.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: theme.colors.mutedForeground,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-
-                          // Grade options - 2 columns with checkboxes
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 4,
-                            children: [
-                              (1, '1학년'),
-                              (2, '2학년'),
-                              (3, '3학년'),
-                              (4, '4학년'),
-                              (5, '5학년'),
-                              (6, '6학년'),
-                              (7, '중학교+'),
-                            ].map((option) {
-                              final value = option.$1;
-                              final label = option.$2;
-                              final isSelected = _selectedGradeFilters.contains(value);
-
-                              return GestureDetector(
-                                onTap: () {
-                                  setModalState(() {
-                                    if (isSelected) {
-                                      _selectedGradeFilters.remove(value);
-                                    } else {
-                                      _selectedGradeFilters.add(value);
-                                    }
-                                  });
-                                  setState(() {
-                                    _applyFilters();
-                                  });
-                                },
-                                child: Container(
-                                  width: (MediaQuery.of(context).size.width - 80) / 2,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                    horizontal: 4,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 20,
-                                        height: 20,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(
-                                            color: isSelected
-                                                ? theme.colors.primary
-                                                : theme.colors.border,
-                                            width: 2,
-                                          ),
-                                          color: isSelected
-                                              ? theme.colors.primary
-                                              : Colors.transparent,
-                                        ),
-                                        child: isSelected
-                                            ? Icon(
-                                                Icons.check,
-                                                size: 14,
-                                                color: Colors.white,
-                                              )
-                                            : null,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          label,
-                                          style: theme.typography.base.copyWith(
-                                            fontWeight: isSelected
-                                                ? FontWeight.w600
-                                                : FontWeight.normal,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // JLPT Filter Section
-                          Text(
-                            'JLPT',
-                            style: theme.typography.sm.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: theme.colors.mutedForeground,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-
-                          // JLPT options - 2 columns with checkboxes
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 4,
-                            children: [
-                              (5, 'N5'),
-                              (4, 'N4'),
-                              (3, 'N3'),
-                              (2, 'N2'),
-                              (1, 'N1'),
-                            ].map((option) {
-                              final value = option.$1;
-                              final label = option.$2;
-                              final isSelected = _selectedJlptFilters.contains(value);
-
-                              return GestureDetector(
-                                onTap: () {
-                                  setModalState(() {
-                                    if (isSelected) {
-                                      _selectedJlptFilters.remove(value);
-                                    } else {
-                                      _selectedJlptFilters.add(value);
-                                    }
-                                  });
-                                  setState(() {
-                                    _applyFilters();
-                                  });
-                                },
-                                child: Container(
-                                  width: (MediaQuery.of(context).size.width - 80) / 2,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                    horizontal: 4,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 20,
-                                        height: 20,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(
-                                            color: isSelected
-                                                ? theme.colors.primary
-                                                : theme.colors.border,
-                                            width: 2,
-                                          ),
-                                          color: isSelected
-                                              ? theme.colors.primary
-                                              : Colors.transparent,
-                                        ),
-                                        child: isSelected
-                                            ? Icon(
-                                                Icons.check,
-                                                size: 14,
-                                                color: Colors.white,
-                                              )
-                                            : null,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          label,
-                                          style: theme.typography.base.copyWith(
-                                            fontWeight: isSelected
-                                                ? FontWeight.w600
-                                                : FontWeight.normal,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
                           ],
                         ),
                       ),
-                    ),
+                      // Scrollable content section
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 24),
+                              // Study Status Filter Section
+                              Text(
+                                '학습 상태',
+                                style: theme.typography.sm.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colors.mutedForeground,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
 
-                    // Bottom button
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: FButton(
-                          onPress: () => Navigator.pop(context),
-                          child: const Text('완료'),
+                              // Study status options - 2 columns
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                children:
+                                    [
+                                      (null, '전체'),
+                                      ('not_studied', '미학습'),
+                                      ('completed', '학습 완료'),
+                                      ('forgot', '까먹은 한자'),
+                                    ].map((option) {
+                                      final value = option.$1;
+                                      final label = option.$2;
+                                      final isSelected =
+                                          _selectedStudyFilter == value;
+
+                                      return GestureDetector(
+                                        onTap: () {
+                                          setModalState(() {
+                                            _selectedStudyFilter = value;
+                                          });
+                                          setState(() {
+                                            _applyFilters();
+                                          });
+                                        },
+                                        child: Container(
+                                          width:
+                                              (MediaQuery.of(
+                                                    context,
+                                                  ).size.width -
+                                                  80) /
+                                              2,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                            horizontal: 4,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                width: 20,
+                                                height: 20,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  border: Border.all(
+                                                    color: isSelected
+                                                        ? theme.colors.primary
+                                                        : theme.colors.border,
+                                                    width: 2,
+                                                  ),
+                                                ),
+                                                child: isSelected
+                                                    ? Center(
+                                                        child: Container(
+                                                          width: 10,
+                                                          height: 10,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                                shape: BoxShape
+                                                                    .circle,
+                                                                color: theme
+                                                                    .colors
+                                                                    .primary,
+                                                              ),
+                                                        ),
+                                                      )
+                                                    : null,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Text(
+                                                  label,
+                                                  style: theme.typography.base
+                                                      .copyWith(
+                                                        fontWeight: isSelected
+                                                            ? FontWeight.w600
+                                                            : FontWeight.normal,
+                                                      ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
+                              const SizedBox(height: 20),
+
+                              // Grade Filter Section
+                              Text(
+                                '학년',
+                                style: theme.typography.sm.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colors.mutedForeground,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+
+                              // Grade options - 2 columns with checkboxes
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                children:
+                                    [
+                                      (1, '1학년'),
+                                      (2, '2학년'),
+                                      (3, '3학년'),
+                                      (4, '4학년'),
+                                      (5, '5학년'),
+                                      (6, '6학년'),
+                                      (7, '중학교+'),
+                                    ].map((option) {
+                                      final value = option.$1;
+                                      final label = option.$2;
+                                      final isSelected = _selectedGradeFilters
+                                          .contains(value);
+
+                                      return GestureDetector(
+                                        onTap: () {
+                                          setModalState(() {
+                                            if (isSelected) {
+                                              _selectedGradeFilters.remove(
+                                                value,
+                                              );
+                                            } else {
+                                              _selectedGradeFilters.add(value);
+                                            }
+                                          });
+                                          setState(() {
+                                            _applyFilters();
+                                          });
+                                        },
+                                        child: Container(
+                                          width:
+                                              (MediaQuery.of(
+                                                    context,
+                                                  ).size.width -
+                                                  80) /
+                                              2,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                            horizontal: 4,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                width: 20,
+                                                height: 20,
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                  border: Border.all(
+                                                    color: isSelected
+                                                        ? theme.colors.primary
+                                                        : theme.colors.border,
+                                                    width: 2,
+                                                  ),
+                                                  color: isSelected
+                                                      ? theme.colors.primary
+                                                      : Colors.transparent,
+                                                ),
+                                                child: isSelected
+                                                    ? Icon(
+                                                        Icons.check,
+                                                        size: 14,
+                                                        color: Colors.white,
+                                                      )
+                                                    : null,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Text(
+                                                  label,
+                                                  style: theme.typography.base
+                                                      .copyWith(
+                                                        fontWeight: isSelected
+                                                            ? FontWeight.w600
+                                                            : FontWeight.normal,
+                                                      ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
+                              const SizedBox(height: 20),
+
+                              // JLPT Filter Section
+                              Text(
+                                'JLPT',
+                                style: theme.typography.sm.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colors.mutedForeground,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+
+                              // JLPT options - 2 columns with checkboxes
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                children:
+                                    [
+                                      (5, 'N5'),
+                                      (4, 'N4'),
+                                      (3, 'N3'),
+                                      (2, 'N2'),
+                                      (1, 'N1'),
+                                    ].map((option) {
+                                      final value = option.$1;
+                                      final label = option.$2;
+                                      final isSelected = _selectedJlptFilters
+                                          .contains(value);
+
+                                      return GestureDetector(
+                                        onTap: () {
+                                          setModalState(() {
+                                            if (isSelected) {
+                                              _selectedJlptFilters.remove(
+                                                value,
+                                              );
+                                            } else {
+                                              _selectedJlptFilters.add(value);
+                                            }
+                                          });
+                                          setState(() {
+                                            _applyFilters();
+                                          });
+                                        },
+                                        child: Container(
+                                          width:
+                                              (MediaQuery.of(
+                                                    context,
+                                                  ).size.width -
+                                                  80) /
+                                              2,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                            horizontal: 4,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                width: 20,
+                                                height: 20,
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                  border: Border.all(
+                                                    color: isSelected
+                                                        ? theme.colors.primary
+                                                        : theme.colors.border,
+                                                    width: 2,
+                                                  ),
+                                                  color: isSelected
+                                                      ? theme.colors.primary
+                                                      : Colors.transparent,
+                                                ),
+                                                child: isSelected
+                                                    ? Icon(
+                                                        Icons.check,
+                                                        size: 14,
+                                                        color: Colors.white,
+                                                      )
+                                                    : null,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Text(
+                                                  label,
+                                                  style: theme.typography.base
+                                                      .copyWith(
+                                                        fontWeight: isSelected
+                                                            ? FontWeight.w600
+                                                            : FontWeight.normal,
+                                                      ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+
+                      // Bottom button
+                      Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FButton(
+                            onPress: () => Navigator.pop(context),
+                            child: const Text('완료'),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
             );
           },
         );
@@ -565,7 +599,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
       showFDialog(
         context: context,
         builder: (context, style, animation) => FDialog(
-          style: style,
+          style: style.call,
           animation: animation,
           direction: Axis.horizontal,
           title: const Text('진행 중인 학습'),
@@ -730,66 +764,71 @@ class _KanjiScreenState extends State<KanjiScreen> {
                       onPressed: _showFilterBottomSheet,
                     ),
                     HeaderActionButton(
-                      icon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20),
+                      icon: Icon(
+                        PhosphorIconsRegular.magnifyingGlass,
+                        size: 20,
+                      ),
                       onPressed: _toggleSearchMode,
                     ),
                   ],
                 ),
           Expanded(
             child: _isLoading
-            ? const Center(child: FCircularProgress())
-            : RefreshIndicator(
-                onRefresh: () => _loadKanji(forceReload: true),
-                child: _filteredKanji.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              PhosphorIconsRegular.magnifyingGlass,
-                              size: 48,
-                              color: theme.colors.mutedForeground,
+                ? const Center(child: FCircularProgress())
+                : RefreshIndicator(
+                    onRefresh: () => _loadKanji(forceReload: true),
+                    child: _filteredKanji.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  PhosphorIconsRegular.magnifyingGlass,
+                                  size: 48,
+                                  color: theme.colors.mutedForeground,
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                Text(
+                                  _showOnlyFavorites
+                                      ? '즐겨찾기한 한자가 없습니다'
+                                      : '검색 결과가 없습니다',
+                                  style: theme.typography.base.copyWith(
+                                    color: theme.colors.mutedForeground,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: AppSpacing.md),
-                            Text(
-                              _showOnlyFavorites
-                                  ? '즐겨찾기한 한자가 없습니다'
-                                  : '검색 결과가 없습니다',
-                              style: theme.typography.base.copyWith(
-                                color: theme.colors.mutedForeground,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : GridView.builder(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
-                              childAspectRatio: 0.75,
-                              crossAxisSpacing: AppSpacing.sm,
-                              mainAxisSpacing: AppSpacing.sm,
-                            ),
-                        itemCount: _filteredKanji.length,
-                        itemBuilder: (context, index) {
-                          final kanji = _filteredKanji[index];
-                          return KanjiGridCard(
-                            kanji: kanji,
-                            showMeaning: widget.showMeanings,
-                            onTap: () => _navigateToStudy(kanji),
-                            onFavoriteToggle: () {
-                              setState(() {
-                                _kanjiService.toggleFavorite(kanji.character);
-                                if (_showOnlyFavorites) {
-                                  _applyFilters();
-                                }
-                              });
+                          )
+                        : GridView.builder(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 4,
+                                  childAspectRatio: 0.75,
+                                  crossAxisSpacing: AppSpacing.sm,
+                                  mainAxisSpacing: AppSpacing.sm,
+                                ),
+                            itemCount: _filteredKanji.length,
+                            itemBuilder: (context, index) {
+                              final kanji = _filteredKanji[index];
+                              return KanjiGridCard(
+                                kanji: kanji,
+                                showMeaning: widget.showMeanings,
+                                onTap: () => _navigateToStudy(kanji),
+                                onFavoriteToggle: () {
+                                  setState(() {
+                                    _kanjiService.toggleFavorite(
+                                      kanji.character,
+                                    );
+                                    if (_showOnlyFavorites) {
+                                      _applyFilters();
+                                    }
+                                  });
+                                },
+                              );
                             },
-                          );
-                        },
-                      ),
-              ),
+                          ),
+                  ),
           ),
         ],
       ),

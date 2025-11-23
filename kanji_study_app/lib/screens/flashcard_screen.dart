@@ -132,7 +132,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
     showFDialog(
       context: context,
       builder: (context, style, animation) => FDialog(
-        style: style,
+        style: style.call,
         animation: animation,
         direction: Axis.vertical,
         title: Row(
@@ -146,9 +146,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
             const SizedBox(width: 12),
             Text(
               '학습 완료!',
-              style: theme.typography.xl.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -232,10 +230,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
       return FScaffold(
         header: FHeader(title: const Text('플래시카드 학습')),
         child: Center(
-          child: Text(
-            '모든 카드를 학습했습니다!',
-            style: theme.typography.lg.copyWith(),
-          ),
+          child: Text('모든 카드를 학습했습니다!', style: theme.typography.lg.copyWith()),
         ),
       );
     }
@@ -253,9 +248,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
           children: [
             Text(
               '${_session.currentIndex + 1}',
-              style: theme.typography.lg.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: theme.typography.lg.copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
               ' / ${_session.itemIds.length}',
@@ -272,7 +265,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
               showFDialog(
                 context: context,
                 builder: (context, style, animation) => FDialog(
-                  style: style,
+                  style: style.call,
                   animation: animation,
                   direction: Axis.horizontal,
                   title: const Text('학습 종료'),
@@ -314,7 +307,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 16),
                         // Flashcard
                         Expanded(
                           child: GestureDetector(
@@ -346,89 +339,91 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                             ),
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        // Tap to flip hint
-                        if (!_isFlipped)
-                          Text(
-                            '카드를 탭하여 뒤집기',
-                            style: theme.typography.sm.copyWith(
-                              color: theme.colors.mutedForeground,
-                            ),
-                          ),
-                        const SizedBox(height: 20),
-                        // Answer buttons
-                        if (_isFlipped)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () => _recordAnswer(false),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: theme.colors.border,
-                                        width: 1,
+                        const SizedBox(height: 16),
+                        // Hint text or Answer buttons - fixed height area
+                        SizedBox(
+                          height: 48,
+                          child: _isFlipped
+                              ? Row(
+                                  children: [
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () => _recordAnswer(false),
+                                        child: Container(
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: theme.colors.background,
+                                            border: Border.all(
+                                              color: theme.colors.border,
+                                              width: 1,
+                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                PhosphorIconsRegular.x,
+                                                size: 20,
+                                                color: Colors.red,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                '모르겠어요',
+                                                style: theme.typography.sm
+                                                    .copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.red,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                      borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          PhosphorIconsRegular.x,
-                                          size: 20,
-                                          color: Colors.red,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          '모르겠어요',
-                                          style: theme.typography.base.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.red,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: SizedBox(
+                                        height: 48,
+                                        child: FButton(
+                                          onPress: () => _recordAnswer(true),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                PhosphorIconsRegular.check,
+                                                size: 20,
+                                                color: Colors.white,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                '알았어요',
+                                                style: theme.typography.sm
+                                                    .copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                      ],
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Center(
+                                  child: Text(
+                                    '카드를 탭하여 뒤집기',
+                                    style: theme.typography.sm.copyWith(
+                                      color: theme.colors.mutedForeground,
                                     ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: FButton(
-                                  onPress: () => _recordAnswer(true),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 4,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          PhosphorIconsRegular.check,
-                                          size: 20,
-                                          color: Colors.white,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          '알았어요',
-                                          style: theme.typography.base.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        const SizedBox(height: 20),
+                        ),
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
@@ -462,10 +457,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
         border: Border.all(color: theme.colors.border, width: 2),
       ),
       child: Center(
-        child: Text(
-          '카드를 불러올 수 없습니다',
-          style: theme.typography.base.copyWith(),
-        ),
+        child: Text('카드를 불러올 수 없습니다', style: theme.typography.base.copyWith()),
       ),
     );
   }
@@ -494,10 +486,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
         border: Border.all(color: theme.colors.border, width: 2),
       ),
       child: Center(
-        child: Text(
-          '카드를 불러올 수 없습니다',
-          style: theme.typography.base.copyWith(),
-        ),
+        child: Text('카드를 불러올 수 없습니다', style: theme.typography.base.copyWith()),
       ),
     );
   }

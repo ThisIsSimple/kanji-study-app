@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
+import '../utils/korean_formatter.dart';
+import 'jlpt_badge.dart';
+import 'grade_badge.dart';
 
 /// 한자 플래시카드 컨텐츠 위젯
 /// 앞면: 한자 + JLPT 배지 + 획순 버튼
@@ -120,10 +124,10 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                         color: theme.colors.foreground,
                         height: 1.3,
                       )
-                    : theme.typography.xl4.copyWith(
+                    : GoogleFonts.notoSerifJp(
                         fontSize: 64,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Noto Serif Japanese',
+                        color: theme.colors.foreground,
                         height: 1.3,
                       ),
               ),
@@ -160,7 +164,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
       children: [
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.only(top: 24, left: 24, right: 24),
           decoration: BoxDecoration(
             color: theme.colors.background,
             borderRadius: BorderRadius.circular(20),
@@ -173,129 +177,199 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
               ),
             ],
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 32), // 획순 버튼 공간
-              // 한자 중앙 표시
-              Center(
-                child: Text(
-                  widget.kanji.character,
-                  textAlign: TextAlign.center,
-                  style: _showStrokeOrder
-                      ? TextStyle(
-                          fontFamily: 'KanjiStrokeOrders',
-                          fontSize: 90,
-                          fontWeight: FontWeight.normal,
-                          color: theme.colors.foreground,
-                          height: 1.3,
-                        )
-                      : theme.typography.xl2.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Noto Serif Japanese',
-                          height: 1.3,
-                        ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-              Divider(color: theme.colors.border),
-              const SizedBox(height: 16),
-
-              // 음독 섹션
-              if (widget.kanji.readings.on.isNotEmpty) ...[
-                Text(
-                  '음독',
-                  style: theme.typography.sm.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colors.mutedForeground,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colors.muted,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 32), // 획순 버튼 공간
+                // 한자 중앙 표시
+                Center(
                   child: Text(
-                    widget.kanji.readings.on.join('、 '),
-                    style: theme.typography.base.copyWith(
-                      fontFamily: 'Noto Serif Japanese',
-                      fontWeight: FontWeight.w500,
-                    ),
+                    widget.kanji.character,
+                    textAlign: TextAlign.center,
+                    style: _showStrokeOrder
+                        ? TextStyle(
+                            fontFamily: 'KanjiStrokeOrders',
+                            fontSize: 90,
+                            fontWeight: FontWeight.normal,
+                            color: theme.colors.foreground,
+                          )
+                        : GoogleFonts.notoSerifJp(
+                            fontSize: 72,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colors.foreground,
+                          ),
                   ),
                 ),
                 const SizedBox(height: 16),
-              ],
 
-              // 훈독 섹션
-              if (widget.kanji.readings.kun.isNotEmpty) ...[
-                Text(
-                  '훈독',
-                  style: theme.typography.sm.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colors.mutedForeground,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colors.muted,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                // 의미 (한국어 읽기)
+                Center(
                   child: Text(
-                    widget.kanji.readings.kun.join('、 '),
-                    style: theme.typography.base.copyWith(
-                      fontFamily: 'Noto Serif Japanese',
-                      fontWeight: FontWeight.w500,
+                    formatKoreanReadings(
+                      widget.kanji.koreanKunReadings,
+                      widget.kanji.koreanOnReadings,
                     ),
+                    textAlign: TextAlign.center,
+                    style: theme.typography.base,
                   ),
                 ),
                 const SizedBox(height: 16),
-              ],
 
-              Divider(color: theme.colors.border),
-              const SizedBox(height: 16),
-
-              // 의미 섹션
-              Text(
-                '의미',
-                style: theme.typography.sm.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colors.mutedForeground,
+                // JLPT and Grade badges
+                Center(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      if (widget.kanji.grade > 0)
+                        GradeBadge(grade: widget.kanji.grade),
+                      if (widget.kanji.jlpt > 0)
+                        JlptBadge(level: widget.kanji.jlpt, showPrefix: true),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              ...widget.kanji.meanings.map((meaning) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 24),
+
+                // 부수 섹션
+                if (widget.kanji.radical != null &&
+                    widget.kanji.radical!.isNotEmpty) ...[
+                  Wrap(
+                    alignment: WrapAlignment.start,
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
-                        '•  ',
-                        style: theme.typography.base.copyWith(
-                          fontWeight: FontWeight.w500,
+                        '부수',
+                        style: theme.typography.sm.copyWith(
+                          color: theme.colors.mutedForeground,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      Expanded(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Text(
-                          meaning,
-                          style: theme.typography.base.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
+                          widget.kanji.radical!,
+                          style: theme.typography.sm,
                         ),
                       ),
                     ],
                   ),
-                );
-              }),
-            ],
+                  const SizedBox(height: 12),
+                ],
+
+                // 훈독 섹션
+                if (widget.kanji.readings.kun.isNotEmpty) ...[
+                  Wrap(
+                    alignment: WrapAlignment.start,
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        '훈독',
+                        style: theme.typography.sm.copyWith(
+                          color: theme.colors.mutedForeground,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      ...widget.kanji.readings.kun.map((reading) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            reading,
+                            style: theme.typography.sm,
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
+                // 음독 섹션
+                if (widget.kanji.readings.on.isNotEmpty) ...[
+                  Wrap(
+                    alignment: WrapAlignment.start,
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        '음독',
+                        style: theme.typography.sm.copyWith(
+                          color: theme.colors.mutedForeground,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      ...widget.kanji.readings.on.map((reading) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            reading,
+                            style: theme.typography.sm,
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
+                // 한자 해설 섹션
+                if (widget.kanji.commentary != null &&
+                    widget.kanji.commentary!.isNotEmpty) ...[
+                  Text(
+                    '한자 해설',
+                    style: theme.typography.sm.copyWith(
+                      color: theme.colors.mutedForeground,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      widget.kanji.commentary!,
+                      style: theme.typography.sm.copyWith(
+                        color: theme.colors.foreground,
+                      ),
+                      textAlign: TextAlign.start,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
         _buildStrokeOrderToggle(theme),

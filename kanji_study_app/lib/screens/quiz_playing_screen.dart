@@ -424,7 +424,7 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
                 showFDialog(
                   context: context,
                   builder: (context, style, animation) => FDialog(
-                    style: style,
+                    style: style.call,
                     animation: animation,
                     direction: Axis.horizontal,
                     title: const Text('퀴즈 종료'),

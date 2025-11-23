@@ -561,7 +561,7 @@ class _StudyScreenState extends State<StudyScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: theme.colors.muted.withValues(alpha: 0.5),
+                        color: theme.colors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

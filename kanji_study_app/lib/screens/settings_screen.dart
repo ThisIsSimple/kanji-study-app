@@ -82,7 +82,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final shouldLogout = await showFDialog<bool>(
       context: context,
       builder: (context, style, animation) => FDialog(
-        style: style,
+        style: style.call,
         animation: animation,
         direction: Axis.horizontal,
         title: const Text('로그아웃'),

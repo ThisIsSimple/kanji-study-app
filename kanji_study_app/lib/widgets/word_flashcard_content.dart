@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/word_model.dart';
+import 'jlpt_badge.dart';
 
 /// 단어 플래시카드 컨텐츠 위젯
 /// 앞면: 단어(한자) + JLPT 배지 + 획순 버튼
@@ -124,10 +126,10 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
                         color: theme.colors.foreground,
                         height: 1.3,
                       )
-                    : theme.typography.xl4.copyWith(
+                    : GoogleFonts.notoSerifJp(
                         fontSize: 64,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Noto Serif Japanese',
+                        color: theme.colors.foreground,
                         height: 1.3,
                       ),
               ),
@@ -160,18 +162,11 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
   }
 
   Widget _buildBack(FThemeData theme) {
-    final displayWord = widget.word.word
-        .replaceAll(RegExp(r'[·•・∙/,;、]'), '\n')
-        .trim();
-    final displayReading = widget.word.reading
-        .replaceAll(RegExp(r'[·•・∙/,;、]'), '\n')
-        .trim();
-
     return Stack(
       children: [
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.only(top: 24, left: 24, right: 24),
           decoration: BoxDecoration(
             color: theme.colors.background,
             borderRadius: BorderRadius.circular(20),
@@ -184,81 +179,102 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
               ),
             ],
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 32), // 획순 버튼 공간
-              Center(
-                child: Column(
-                  children: [
-                    Text(
-                      displayWord,
-                      textAlign: TextAlign.center,
-                      style: _showStrokeOrder
-                          ? TextStyle(
-                              fontFamily: 'KanjiStrokeOrders',
-                              fontSize: 90,
-                              fontWeight: FontWeight.normal,
-                              color: theme.colors.foreground,
-                              height: 1.3,
-                            )
-                          : theme.typography.xl2.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Noto Serif Japanese',
-                              height: 1.3,
-                            ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 32), // 획순 버튼 공간
+                // Reading (furigana)
+                if (widget.word.reading.isNotEmpty &&
+                    widget.word.reading != widget.word.word)
+                  Text(
+                    widget.word.reading,
+                    style: theme.typography.base.copyWith(
+                      color: theme.colors.mutedForeground,
+                      fontSize: 18,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      displayReading,
-                      textAlign: TextAlign.center,
-                      style: theme.typography.lg.copyWith(
-                        color: theme.colors.mutedForeground,
-                        fontFamily: 'Noto Serif Japanese',
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              Divider(color: theme.colors.border),
-              const SizedBox(height: 24),
-              ...widget.word.meanings.map((meaning) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colors.muted,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          meaning.partOfSpeech,
-                          style: theme.typography.xs.copyWith(
-                            color: theme.colors.mutedForeground,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        meaning.meaning,
-                        style: theme.typography.lg.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
                   ),
-                );
-              }),
-            ],
+
+                // Main word
+                Text(
+                  widget.word.word,
+                  textAlign: TextAlign.center,
+                  style: _showStrokeOrder
+                      ? TextStyle(
+                          fontFamily: 'KanjiStrokeOrders',
+                          fontSize: 90,
+                          fontWeight: FontWeight.normal,
+                          color: theme.colors.foreground,
+                          height: 1.2,
+                        )
+                      : GoogleFonts.notoSerifJp(
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colors.foreground,
+                          height: 1.2,
+                        ),
+                ),
+                const SizedBox(height: 24),
+
+                // Meanings by part of speech - Center aligned
+                ...widget.word.meanings.map((meaning) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Part of speech badge
+                          if (meaning.partOfSpeech.isNotEmpty) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colors.primary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                meaning.partOfSpeech,
+                                style: theme.typography.sm.copyWith(
+                                  color: theme.colors.primary,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          // Meaning text
+                          Flexible(
+                            child: Text(
+                              meaning.meaning,
+                              style: theme.typography.base.copyWith(
+                                height: 1.2,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 16),
+
+                // JLPT Level
+                JlptBadge(
+                  level: widget.word.jlptLevel,
+                  showPrefix: true,
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
         _buildStrokeOrderToggle(theme),

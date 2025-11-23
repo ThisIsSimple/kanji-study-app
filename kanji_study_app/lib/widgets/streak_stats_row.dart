@@ -79,7 +79,7 @@ class StreakStatsRow extends StatelessWidget {
     showFDialog(
       context: context,
       builder: (context, style, animation) => FDialog(
-        style: style,
+        style: style.call,
         animation: animation,
         direction: Axis.vertical,
         title: const Text('🔥 연속 학습 기록'),
@@ -102,13 +102,11 @@ class StreakStatsRow extends StatelessWidget {
     showFDialog(
       context: context,
       builder: (context, style, animation) => FDialog(
-        style: style,
+        style: style.call,
         animation: animation,
         direction: Axis.vertical,
         title: const Text('⭐ 경험치'),
-        body: Text(
-          '총 $xp XP를 획득했어요!\n한자 1개 마스터 = 10 XP',
-        ),
+        body: Text('총 $xp XP를 획득했어요!\n한자 1개 마스터 = 10 XP'),
         actions: [
           FButton(
             onPress: () => Navigator.pop(context),
@@ -124,7 +122,7 @@ class StreakStatsRow extends StatelessWidget {
     showFDialog(
       context: context,
       builder: (context, style, animation) => FDialog(
-        style: style,
+        style: style.call,
         animation: animation,
         direction: Axis.vertical,
         title: const Text('🎯 오늘의 목표'),
@@ -170,24 +168,16 @@ class _StatCard extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: gradient.scale(0.1), // Very subtle gradient
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colors.border,
-            width: 1,
-          ),
+          border: Border.all(color: theme.colors.border, width: 1),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              icon,
-              style: const TextStyle(fontSize: 20),
-            ),
+            Text(icon, style: const TextStyle(fontSize: 20)),
             const SizedBox(height: 4),
             Text(
               value,
-              style: theme.typography.sm.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: theme.typography.sm.copyWith(fontWeight: FontWeight.bold),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
