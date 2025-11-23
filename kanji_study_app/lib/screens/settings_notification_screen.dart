@@ -229,7 +229,7 @@ class _SettingsNotificationScreenState
 class _TimePickerSheet extends StatefulWidget {
   final FThemeData theme;
   final TimeOfDay initialTime;
-  final Function(TimeOfDay) onTimeSelected;
+  final Future<void> Function(TimeOfDay) onTimeSelected;
 
   const _TimePickerSheet({
     required this.theme,
@@ -316,13 +316,15 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: FButton(
-                      onPress: () {
+                      onPress: () async {
                         final selectedTime = TimeOfDay(
                           hour: _controller.value.hour,
                           minute: _controller.value.minute,
                         );
-                        widget.onTimeSelected(selectedTime);
-                        Navigator.of(context).pop();
+                        await widget.onTimeSelected(selectedTime);
+                        if (context.mounted) {
+                          Navigator.of(context).pop();
+                        }
                       },
                       child: const Text('확인'),
                     ),
