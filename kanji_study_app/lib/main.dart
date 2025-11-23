@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz_data;
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_links/app_links.dart';
@@ -20,6 +22,10 @@ void main() async {
 
   // Initialize timezone
   tz.initializeTimeZones();
+
+  // Set local timezone
+  final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+  tz_data.setLocalLocation(tz_data.getLocation(timezoneInfo.identifier));
 
   // Initialize date formatting for Korean and Japanese locales
   await initializeDateFormatting('ko_KR', null);

@@ -205,6 +205,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: Column(
         children: [
           CustomHeader(
+            title: Text('프로필'),
+            titleAlign: HeaderTitleAlign.center,
             rightActions: [
               HeaderActionButton(
                 icon: Icon(PhosphorIconsRegular.gear, size: 20),
@@ -220,189 +222,197 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                  // SNS Account Linking Banner for Anonymous Users
-                  if (_supabaseService.isAnonymousUser) ...[
-                    GestureDetector(
-                      onTap: _navigateToSocialLogin,
-                      child: Container(
-                        padding: AppSpacing.cardPadding,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.colors.primary.withValues(alpha: 0.1),
-                              theme.colors.primary.withValues(alpha: 0.05),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: theme.colors.primary.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
+                        // SNS Account Linking Banner for Anonymous Users
+                        if (_supabaseService.isAnonymousUser) ...[
+                          GestureDetector(
+                            onTap: _navigateToSocialLogin,
+                            child: Container(
+                              padding: AppSpacing.cardPadding,
                               decoration: BoxDecoration(
-                                color: theme.colors.primary.withValues(
-                                  alpha: 0.1,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    theme.colors.primary.withValues(alpha: 0.1),
+                                    theme.colors.primary.withValues(
+                                      alpha: 0.05,
+                                    ),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
-                                shape: BoxShape.circle,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: theme.colors.primary.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                ),
                               ),
-                              child: Icon(
-                                PhosphorIconsFill.shieldCheck,
-                                color: theme.colors.primary,
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              child: Row(
                                 children: [
-                                  Text(
-                                    'SNS 계정 연동해서 데이터 안전하게 보관하기',
-                                    style: theme.typography.sm.copyWith(
-                                      fontWeight: FontWeight.w600,
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: theme.colors.primary.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      PhosphorIconsFill.shieldCheck,
+                                      color: theme.colors.primary,
+                                      size: 24,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '다른 기기에서도 학습 기록을 이어가세요',
-                                    style: theme.typography.xs.copyWith(
-                                      color: theme.colors.mutedForeground,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'SNS 계정 연동해서 데이터 안전하게 보관하기',
+                                          style: theme.typography.sm.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '다른 기기에서도 학습 기록을 이어가세요',
+                                          style: theme.typography.xs.copyWith(
+                                            color: theme.colors.mutedForeground,
+                                          ),
+                                        ),
+                                      ],
                                     ),
+                                  ),
+                                  Icon(
+                                    PhosphorIconsRegular.caretRight,
+                                    color: theme.colors.mutedForeground,
+                                    size: 20,
                                   ),
                                 ],
                               ),
                             ),
-                            Icon(
-                              PhosphorIconsRegular.caretRight,
-                              color: theme.colors.mutedForeground,
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: AppSpacing.base),
-                  ],
+                          ),
+                          SizedBox(height: AppSpacing.base),
+                        ],
 
-                  // User Info Card
-                  FCard(
-                    child: Padding(
-                      padding: AppSpacing.cardPadding,
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: theme.colors.secondary.withValues(
-                                  alpha: 0.1,
-                                ),
-                                shape: BoxShape.circle,
-                                image: _avatarUrl != null
-                                    ? DecorationImage(
-                                        image: NetworkImage(_avatarUrl!),
-                                        fit: BoxFit.cover,
-                                      )
-                                    : null,
-                              ),
-                              child: _avatarUrl == null
-                                  ? Icon(
-                                      PhosphorIconsFill.user,
-                                      size: 40,
-                                      color: theme.colors.primary,
-                                    )
-                                  : null,
-                            ),
-                            const SizedBox(height: 16),
-                            _isLoadingProfile
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: FCircularProgress(),
-                                  )
-                                : Text(
-                                    _username.isEmpty ? '로딩 중...' : _username,
-                                    style: theme.typography.lg.copyWith(
-                                      fontWeight: FontWeight.bold,
+                        // User Info Card
+                        FCard(
+                          child: Padding(
+                            padding: AppSpacing.cardPadding,
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      color: theme.colors.secondary.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      shape: BoxShape.circle,
+                                      image: _avatarUrl != null
+                                          ? DecorationImage(
+                                              image: NetworkImage(_avatarUrl!),
+                                              fit: BoxFit.cover,
+                                            )
+                                          : null,
+                                    ),
+                                    child: _avatarUrl == null
+                                        ? Icon(
+                                            PhosphorIconsFill.user,
+                                            size: 40,
+                                            color: theme.colors.primary,
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _isLoadingProfile
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: FCircularProgress(),
+                                        )
+                                      : Text(
+                                          _username.isEmpty
+                                              ? '로딩 중...'
+                                              : _username,
+                                          style: theme.typography.lg.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _userEmail.isEmpty ? '익명 사용자' : _userEmail,
+                                    style: theme.typography.sm.copyWith(
+                                      color: theme.colors.mutedForeground,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _userEmail.isEmpty ? '익명 사용자' : _userEmail,
-                              style: theme.typography.sm.copyWith(
-                                color: theme.colors.mutedForeground,
+                                ],
                               ),
-                              textAlign: TextAlign.center,
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: AppSpacing.base),
+                        SizedBox(height: AppSpacing.base),
 
-                  // Weekly Calendar Card
-                  FCard(
-                    child: Padding(
-                      padding: AppSpacing.cardPadding,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '이번 주 학습',
-                                style: theme.typography.lg.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              FButton(
-                                onPress: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const StudyCalendarScreen(),
-                                    ),
-                                  );
-                                },
-                                style: FButtonStyle.outline(),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
+                        // Weekly Calendar Card
+                        FCard(
+                          child: Padding(
+                            padding: AppSpacing.cardPadding,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Icon(
-                                      PhosphorIconsRegular.calendar,
-                                      size: 16,
+                                    Text(
+                                      '이번 주 학습',
+                                      style: theme.typography.lg.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                    const SizedBox(width: 6),
-                                    const Text(
-                                      '전체 보기',
-                                      style: TextStyle(),
+                                    FButton(
+                                      onPress: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const StudyCalendarScreen(),
+                                          ),
+                                        );
+                                      },
+                                      style: FButtonStyle.outline(),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            PhosphorIconsRegular.calendar,
+                                            size: 16,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          const Text(
+                                            '전체 보기',
+                                            style: TextStyle(),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 20),
+                                _buildWeeklyCalendar(theme),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 20),
-                          _buildWeeklyCalendar(theme),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
           ),
         ],
       ),
