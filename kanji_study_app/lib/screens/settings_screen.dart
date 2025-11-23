@@ -26,35 +26,42 @@ class SettingsScreen extends StatelessWidget {
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: AppSpacing.screenPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              padding: AppSpacing.screenPadding / 2,
+              child: FItemGroup(
                 children: [
-                  // Settings Menu Items
-                  _SettingsMenuItem(
-                    icon: PhosphorIconsRegular.userCircle,
-                    title: '계정 관리',
-                    subtitle: '로그인 정보 및 계정 설정',
-                    onTap: () => _navigateTo(context, const SettingsAccountScreen()),
+                  FItem(
+                    prefix: Icon(PhosphorIconsRegular.userCircle),
+                    title: const Text('계정 관리'),
+                    details: const Text('로그인 정보 및 계정 설정'),
+                    suffix: Icon(PhosphorIconsRegular.caretRight),
+                    onPress: () =>
+                        _navigateTo(context, const SettingsAccountScreen()),
                   ),
-                  _SettingsMenuItem(
-                    icon: PhosphorIconsRegular.bell,
-                    title: '알림',
-                    subtitle: '학습 알림 및 시간 설정',
-                    onTap: () => _navigateTo(context, const SettingsNotificationScreen()),
+                  FItem(
+                    prefix: Icon(PhosphorIconsRegular.bell),
+                    title: const Text('알림'),
+                    details: const Text('학습 알림 및 시간 설정'),
+                    suffix: Icon(PhosphorIconsRegular.caretRight),
+                    onPress: () => _navigateTo(
+                      context,
+                      const SettingsNotificationScreen(),
+                    ),
                   ),
-                  _SettingsMenuItem(
-                    icon: PhosphorIconsRegular.sparkle,
-                    title: 'AI 설정',
-                    subtitle: 'Gemini API 키 관리',
-                    onTap: () => _navigateTo(context, const SettingsAiScreen()),
+                  FItem(
+                    prefix: Icon(PhosphorIconsRegular.sparkle),
+                    title: const Text('AI 설정'),
+                    details: const Text('Gemini API 키 관리'),
+                    suffix: Icon(PhosphorIconsRegular.caretRight),
+                    onPress: () =>
+                        _navigateTo(context, const SettingsAiScreen()),
                   ),
-                  _SettingsMenuItem(
-                    icon: PhosphorIconsRegular.info,
-                    title: '앱 정보',
-                    subtitle: '버전 및 개발자 정보',
-                    onTap: () => _navigateTo(context, const SettingsInfoScreen()),
-                    showDivider: false,
+                  FItem(
+                    prefix: Icon(PhosphorIconsRegular.info),
+                    title: const Text('앱 정보'),
+                    details: const Text('버전 및 개발자 정보'),
+                    suffix: Icon(PhosphorIconsRegular.caretRight),
+                    onPress: () =>
+                        _navigateTo(context, const SettingsInfoScreen()),
                   ),
                 ],
               ),
@@ -66,89 +73,6 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _navigateTo(BuildContext context, Widget screen) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => screen),
-    );
-  }
-}
-
-class _SettingsMenuItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-  final bool showDivider;
-
-  const _SettingsMenuItem({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    this.showDivider = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
-
-    return Column(
-      children: [
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: theme.colors.secondary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 22,
-                    color: theme.colors.foreground,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.typography.base.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: theme.typography.sm.copyWith(
-                          color: theme.colors.mutedForeground,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  PhosphorIconsRegular.caretRight,
-                  size: 20,
-                  color: theme.colors.mutedForeground,
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (showDivider)
-          Divider(
-            height: 1,
-            color: theme.colors.secondary.withValues(alpha: 0.2),
-          ),
-      ],
-    );
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) => screen));
   }
 }
