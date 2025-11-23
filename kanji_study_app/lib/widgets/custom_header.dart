@@ -77,19 +77,23 @@ class CustomHeader extends StatelessWidget {
       if (title is Expanded) {
         styledTitle = title;
       } else {
-        // Calculate conditional padding based on actions
-        final hasLeftActions = withBack || leftActions.isNotEmpty;
-        final hasRightActions = rightActions.isNotEmpty;
-        final titlePadding = EdgeInsets.only(
-          left: hasLeftActions ? 0 : 8,
-          right: hasRightActions ? 0 : 8,
-        );
+        // Calculate conditional padding based on actions (skip for center alignment)
+        EdgeInsets titlePadding = EdgeInsets.zero;
+        if (titleAlign != HeaderTitleAlign.center) {
+          final hasLeftActions = withBack || leftActions.isNotEmpty;
+          final hasRightActions = rightActions.isNotEmpty;
+          titlePadding = EdgeInsets.only(
+            left: hasLeftActions ? 0 : 8,
+            right: hasRightActions ? 0 : 8,
+          );
+        }
 
         styledTitle = Padding(
           padding: titlePadding,
           child: DefaultTextStyle(
             style: theme.typography.lg.copyWith(
               fontWeight: FontWeight.w600,
+              color: theme.colors.foreground,
             ),
             child: title!,
           ),
