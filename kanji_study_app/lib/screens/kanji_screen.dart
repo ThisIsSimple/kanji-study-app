@@ -12,7 +12,7 @@ import '../services/study_record_service.dart';
 import '../widgets/flashcard_count_selector.dart';
 import '../widgets/kanji_grid_card.dart';
 import '../widgets/custom_header.dart';
-import 'study_screen.dart';
+import 'kanji_detail_screen.dart';
 import 'flashcard_screen.dart';
 import '../constants/app_spacing.dart';
 
@@ -563,7 +563,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => StudyScreen(
+        builder: (context) => KanjiDetailScreen(
           kanji: kanji,
           kanjiList: _filteredKanji,
           currentIndex: index >= 0 ? index : 0,

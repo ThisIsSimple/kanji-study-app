@@ -11,7 +11,7 @@ import '../services/notification_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/analytics_service.dart';
 import '../services/social_service.dart';
-import 'study_screen.dart';
+import 'kanji_detail_screen.dart';
 import '../widgets/streak_stats_row.dart';
 import '../widgets/enhanced_progress_card.dart';
 import '../widgets/weekly_heatmap.dart';
@@ -120,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => StudyScreen(kanji: todayKanji!)),
+      MaterialPageRoute(builder: (context) => KanjiDetailScreen(kanji: todayKanji!)),
     );
 
     if (result == true) {

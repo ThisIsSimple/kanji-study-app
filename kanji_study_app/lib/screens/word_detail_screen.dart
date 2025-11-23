@@ -3,7 +3,6 @@ import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
-import 'package:intl/intl.dart';
 import '../models/word_model.dart';
 import '../models/word_example_model.dart';
 import '../models/study_record_model.dart';
@@ -14,6 +13,7 @@ import '../services/study_record_service.dart';
 import '../widgets/example_card.dart';
 import '../widgets/jlpt_badge.dart';
 import '../widgets/app_toast.dart';
+import '../widgets/study_button_bar.dart';
 
 class WordDetailScreen extends StatefulWidget {
   final Word word;
@@ -296,94 +296,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       default:
         return '';
     }
-  }
-
-  Widget _buildStudyButton(FThemeData theme) {
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colors.background,
-          border: Border(top: BorderSide(color: theme.colors.border, width: 1)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: _isLoadingStats
-              ? const Center(
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: FCircularProgress(),
-                  ),
-                )
-              : _studyStats == null || _studyStats!.totalRecords == 0
-              ? FButton(
-                  onPress: _isRecordingStudy
-                      ? null
-                      : () => _recordStudy(StudyStatus.completed),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(PhosphorIconsRegular.checkCircle, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        _isRecordingStudy ? '기록 중...' : '학습 완료',
-                        style: TextStyle(),
-                      ),
-                    ],
-                  ),
-                )
-              : Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _studyStats!.lastStudied != null
-                                ? '${DateFormat('yyyy년 MM월 dd일').format(_studyStats!.lastStudied!)} 학습'
-                                : '학습 기록',
-                            style: theme.typography.sm.copyWith(
-                              color: theme.colors.mutedForeground,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _studyStats!.summaryText,
-                            style: theme.typography.base.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    FButton(
-                      onPress: _isRecordingStudy
-                          ? null
-                          : () => _recordStudy(StudyStatus.forgot),
-                      style: FButtonStyle.outline(),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(PhosphorIconsRegular.warningCircle, size: 18),
-                          const SizedBox(width: 6),
-                          Text(
-                            _isRecordingStudy ? '기록 중...' : '까먹음',
-                            style: TextStyle(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-        ),
-      ),
-    );
   }
 
   Widget _buildWordPage(Word word, FThemeData theme) {
@@ -679,7 +591,17 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                 padding: const EdgeInsets.only(bottom: 80),
                 child: _buildWordPage(_currentWord, theme),
               ),
-              _buildStudyButton(theme),
+              StudyButtonBar(
+                isLoading: _isLoadingStats,
+                isRecording: _isRecordingStudy,
+                studyStats: _studyStats,
+                onStudyComplete: () => _recordStudy(StudyStatus.completed),
+                onForgot: () => _recordStudy(StudyStatus.forgot),
+                onShowTimeline: () => StudyButtonBar.showTimelineSheet(
+                  context: context,
+                  studyStats: _studyStats,
+                ),
+              ),
             ],
           ),
         ),
@@ -721,7 +643,17 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                 },
               ),
             ),
-            _buildStudyButton(theme),
+            StudyButtonBar(
+              isLoading: _isLoadingStats,
+              isRecording: _isRecordingStudy,
+              studyStats: _studyStats,
+              onStudyComplete: () => _recordStudy(StudyStatus.completed),
+              onForgot: () => _recordStudy(StudyStatus.forgot),
+              onShowTimeline: () => StudyButtonBar.showTimelineSheet(
+                context: context,
+                studyStats: _studyStats,
+              ),
+            ),
           ],
         ),
       ),

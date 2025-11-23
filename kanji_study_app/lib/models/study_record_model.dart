@@ -204,8 +204,6 @@ class StudyStats {
 
   String get summaryText {
     if (totalRecords == 0) return '학습 기록 없음';
-
-    final successPercent = (successRate * 100).toStringAsFixed(0);
-    return '총 $totalRecords회 학습 (성공률 $successPercent%)';
+    return '총 $totalRecords회 학습';
   }
 }
