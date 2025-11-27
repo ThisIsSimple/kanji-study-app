@@ -4,7 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'home_screen.dart';
 import 'kanji_screen.dart';
 import 'words_screen.dart';
-import 'quiz_list_screen.dart';
+import 'quiz_dashboard_screen.dart';
 import 'profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -54,7 +54,7 @@ class _MainScreenState extends State<MainScreen> {
             showMeanings: _wordsShowMeanings,
             onMeaningsToggle: _onWordsMeaningsToggle,
           ),
-          const QuizListScreen(),
+          const QuizDashboardScreen(),
           const ProfileScreen(),
         ],
       ),

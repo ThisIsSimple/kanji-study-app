@@ -6,3 +6,5 @@ export 'quiz_set.dart';
 export 'quiz_question.dart';
 export 'quiz_attempt.dart';
 export 'quiz_answer.dart';
+export 'ai_quiz.dart';
+export 'ai_quiz_attempt.dart';
