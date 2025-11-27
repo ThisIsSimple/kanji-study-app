@@ -220,8 +220,105 @@ class FlashcardService {
       debugPrint(
         'Recorded ${session.results.length} ${session.itemType} flashcard results to study_records',
       );
+
+      // Also save to flashcard_sessions table for detailed history
+      await _saveFlashcardSessionToServer(session);
     } catch (e) {
       debugPrint('Error recording study session: $e');
+    }
+  }
+
+  /// Save flashcard session and results to Supabase (flashcard_sessions, flashcard_results tables)
+  Future<void> _saveFlashcardSessionToServer(FlashcardSession session) async {
+    try {
+      final userId = _supabaseService.currentUser?.id;
+      if (userId == null) {
+        debugPrint('No user logged in, skipping flashcard session save');
+        return;
+      }
+
+      final client = _supabaseService.client;
+
+      // 1. Insert flashcard session
+      final sessionData = await client.from('flashcard_sessions').insert({
+        'user_id': userId,
+        'item_type': session.itemType,
+        'total_count': session.itemIds.length,
+        'correct_count': session.correctCount,
+        'incorrect_count': session.incorrectCount,
+        'started_at': session.startTime.toIso8601String(),
+        'completed_at': session.endTime?.toIso8601String(),
+      }).select('id').single();
+
+      final sessionId = sessionData['id'] as int;
+
+      // 2. Insert individual results
+      if (session.results.isNotEmpty) {
+        final resultsData = session.results.map((result) => {
+          'session_id': sessionId,
+          'target_id': result.itemId,
+          'is_correct': result.isCorrect,
+          'answered_at': result.timestamp.toIso8601String(),
+        }).toList();
+
+        await client.from('flashcard_results').insert(resultsData);
+      }
+
+      debugPrint(
+        'Saved flashcard session (id: $sessionId) with ${session.results.length} results to server',
+      );
+    } catch (e) {
+      debugPrint('Error saving flashcard session to server: $e');
+      // Don't rethrow - we don't want to fail the main flow if server save fails
+    }
+  }
+
+  /// Fetch user's flashcard session history from server
+  Future<List<Map<String, dynamic>>> getFlashcardHistory({
+    String? itemType,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final userId = _supabaseService.currentUser?.id;
+      if (userId == null) {
+        return [];
+      }
+
+      final query = _supabaseService.client
+          .from('flashcard_sessions')
+          .select()
+          .eq('user_id', userId);
+
+      // Apply item_type filter if specified
+      final filteredQuery = itemType != null
+          ? query.eq('item_type', itemType)
+          : query;
+
+      final data = await filteredQuery
+          .order('started_at', ascending: false)
+          .range(offset, offset + limit - 1);
+
+      return List<Map<String, dynamic>>.from(data);
+    } catch (e) {
+      debugPrint('Error fetching flashcard history: $e');
+      return [];
+    }
+  }
+
+  /// Fetch detailed results for a specific session
+  Future<List<Map<String, dynamic>>> getSessionResults(int sessionId) async {
+    try {
+      final data = await _supabaseService.client
+          .from('flashcard_results')
+          .select()
+          .eq('session_id', sessionId)
+          .order('answered_at');
+
+      return List<Map<String, dynamic>>.from(data);
+    } catch (e) {
+      debugPrint('Error fetching session results: $e');
+      return [];
     }
   }
 
