@@ -162,123 +162,133 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
   }
 
   Widget _buildBack(FThemeData theme) {
-    return Stack(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.only(top: 24, left: 24, right: 24),
-          decoration: BoxDecoration(
-            color: theme.colors.background,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: theme.colors.border, width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 32), // 획순 버튼 공간
-                // Reading (furigana)
-                if (widget.word.reading.isNotEmpty &&
-                    widget.word.reading != widget.word.word)
-                  Text(
-                    widget.word.reading,
-                    style: theme.typography.base.copyWith(
-                      color: theme.colors.mutedForeground,
-                      fontSize: 18,
-                    ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Stack(
+          children: [
+            Container(
+              width: double.infinity,
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              padding: const EdgeInsets.only(top: 24, left: 24, right: 24),
+              decoration: BoxDecoration(
+                color: theme.colors.background,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: theme.colors.border, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-
-                // Main word
-                Text(
-                  widget.word.word,
-                  textAlign: TextAlign.center,
-                  style: _showStrokeOrder
-                      ? TextStyle(
-                          fontFamily: 'KanjiStrokeOrders',
-                          fontSize: 90,
-                          fontWeight: FontWeight.normal,
-                          color: theme.colors.foreground,
-                          height: 1.2,
-                        )
-                      : GoogleFonts.notoSerifJp(
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colors.foreground,
-                          height: 1.2,
+                ],
+              ),
+              child: SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight - 48,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 32), // 획순 버튼 공간
+                      // Reading (furigana)
+                      if (widget.word.reading.isNotEmpty &&
+                          widget.word.reading != widget.word.word)
+                        Text(
+                          widget.word.reading,
+                          style: theme.typography.base.copyWith(
+                            color: theme.colors.mutedForeground,
+                            fontSize: 18,
+                          ),
                         ),
-                ),
-                const SizedBox(height: 24),
 
-                // Meanings by part of speech - Center aligned
-                ...widget.word.meanings.map((meaning) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Part of speech badge
-                          if (meaning.partOfSpeech.isNotEmpty) ...[
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: theme.colors.primary.withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                meaning.partOfSpeech,
-                                style: theme.typography.sm.copyWith(
-                                  color: theme.colors.primary,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                          // Meaning text
-                          Flexible(
-                            child: Text(
-                              meaning.meaning,
-                              style: theme.typography.base.copyWith(
+                      // Main word
+                      Text(
+                        widget.word.word,
+                        textAlign: TextAlign.center,
+                        style: _showStrokeOrder
+                            ? TextStyle(
+                                fontFamily: 'KanjiStrokeOrders',
+                                fontSize: 90,
+                                fontWeight: FontWeight.normal,
+                                color: theme.colors.foreground,
+                                height: 1.2,
+                              )
+                            : GoogleFonts.notoSerifJp(
+                                fontSize: 48,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colors.foreground,
                                 height: 1.2,
                               ),
-                              textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Meanings by part of speech - Center aligned
+                      ...widget.word.meanings.map((meaning) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Center(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Part of speech badge
+                                if (meaning.partOfSpeech.isNotEmpty) ...[
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: theme.colors.primary.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      meaning.partOfSpeech,
+                                      style: theme.typography.sm.copyWith(
+                                        color: theme.colors.primary,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                // Meaning text
+                                Flexible(
+                                  child: Text(
+                                    meaning.meaning,
+                                    style: theme.typography.base.copyWith(
+                                      height: 1.2,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-                const SizedBox(height: 16),
+                        );
+                      }),
+                      const SizedBox(height: 16),
 
-                // JLPT Level
-                JlptBadge(
-                  level: widget.word.jlptLevel,
-                  showPrefix: true,
+                      // JLPT Level
+                      JlptBadge(
+                        level: widget.word.jlptLevel,
+                        showPrefix: true,
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 24),
-              ],
+              ),
             ),
-          ),
-        ),
-        _buildStrokeOrderToggle(theme),
-      ],
+            _buildStrokeOrderToggle(theme),
+          ],
+        );
+      },
     );
   }
 }
