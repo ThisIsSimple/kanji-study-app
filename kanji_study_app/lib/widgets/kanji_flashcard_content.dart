@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
+import '../services/favorite_service.dart';
 import '../utils/korean_formatter.dart';
 import 'jlpt_badge.dart';
 import 'grade_badge.dart';
@@ -84,6 +85,30 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
     );
   }
 
+  Widget _buildFavoriteToggle(FThemeData theme) {
+    final isFavorite =
+        FavoriteService.instance.isFavorite('kanji', widget.kanji.id);
+
+    return Positioned(
+      top: 16,
+      right: 16,
+      child: GestureDetector(
+        onTap: () async {
+          await FavoriteService.instance.toggleFavorite(
+            type: 'kanji',
+            targetId: widget.kanji.id,
+          );
+          setState(() {});
+        },
+        child: Icon(
+          isFavorite ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+          size: 28,
+          color: isFavorite ? Colors.amber : theme.colors.mutedForeground,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
@@ -155,6 +180,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
           ),
         ),
         _buildStrokeOrderToggle(theme),
+        _buildFavoriteToggle(theme),
       ],
     );
   }
@@ -373,6 +399,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
           ),
         ),
         _buildStrokeOrderToggle(theme),
+        _buildFavoriteToggle(theme),
       ],
     );
   }

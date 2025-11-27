@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/word_model.dart';
+import '../services/favorite_service.dart';
 import 'jlpt_badge.dart';
 
 /// 단어 플래시카드 컨텐츠 위젯
@@ -77,6 +78,30 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFavoriteToggle(FThemeData theme) {
+    final isFavorite =
+        FavoriteService.instance.isFavorite('word', widget.word.id);
+
+    return Positioned(
+      top: 16,
+      right: 16,
+      child: GestureDetector(
+        onTap: () async {
+          await FavoriteService.instance.toggleFavorite(
+            type: 'word',
+            targetId: widget.word.id,
+          );
+          setState(() {});
+        },
+        child: Icon(
+          isFavorite ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+          size: 28,
+          color: isFavorite ? Colors.amber : theme.colors.mutedForeground,
         ),
       ),
     );
@@ -157,6 +182,7 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
           ),
         ),
         _buildStrokeOrderToggle(theme),
+        _buildFavoriteToggle(theme),
       ],
     );
   }
@@ -275,10 +301,7 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
                       const SizedBox(height: 16),
 
                       // JLPT Level
-                      JlptBadge(
-                        level: widget.word.jlptLevel,
-                        showPrefix: true,
-                      ),
+                      JlptBadge(level: widget.word.jlptLevel, showPrefix: true),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -286,6 +309,7 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
               ),
             ),
             _buildStrokeOrderToggle(theme),
+            _buildFavoriteToggle(theme),
           ],
         );
       },
