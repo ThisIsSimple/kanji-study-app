@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/ai_quiz.dart';
 import '../models/ai_quiz_attempt.dart';
 import '../services/ai_quiz_service.dart';
+import '../widgets/custom_header.dart';
 import 'ai_quiz_result_screen.dart';
 
 class AiQuizScreen extends StatefulWidget {
@@ -36,7 +37,7 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
     try {
       // 문제 목록 설정
       _questions = widget.quiz.questions ?? [];
-      
+
       if (_questions.isEmpty) {
         // 문제가 없으면 로드
         final fullQuiz = await _aiQuizService.getQuizWithQuestions(widget.quiz.id);
@@ -59,7 +60,7 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
 
   void _selectAnswer(String answer) {
     if (_questions.isEmpty) return;
-    
+
     setState(() {
       _answers[_questions[_currentIndex].id] = answer;
     });
@@ -89,11 +90,11 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
           title: const Text('제출 확인'),
           body: Text('아직 $unanswered개 문제에 응답하지 않았습니다.\n그래도 제출하시겠습니까?'),
           actions: [
-          FButton(
-            style: FButtonStyle.outline(),
-            onPress: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
+            FButton(
+              style: FButtonStyle.outline(),
+              onPress: () => Navigator.pop(context, false),
+              child: const Text('취소'),
+            ),
             FButton(
               onPress: () => Navigator.pop(context, true),
               child: const Text('제출'),
@@ -153,43 +154,71 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
     final theme = FTheme.of(context);
 
     if (_isLoading) {
-      return FScaffold(
-        header: FHeader(title: Text(widget.quiz.title)),
-        child: const Center(child: FCircularProgress()),
+      return Scaffold(
+        backgroundColor: theme.colors.background,
+        body: Column(
+          children: [
+            const CustomHeader(
+              title: Text('퀴즈'),
+              withBack: true,
+            ),
+            const Expanded(
+              child: Center(child: FCircularProgress()),
+            ),
+          ],
+        ),
       );
     }
 
     if (_questions.isEmpty) {
-      return FScaffold(
-        header: FHeader(title: Text(widget.quiz.title)),
-        child: const Center(child: Text('문제가 없습니다.')),
+      return Scaffold(
+        backgroundColor: theme.colors.background,
+        body: Column(
+          children: [
+            const CustomHeader(
+              title: Text('퀴즈'),
+              withBack: true,
+            ),
+            const Expanded(
+              child: Center(child: Text('문제가 없습니다.')),
+            ),
+          ],
+        ),
       );
     }
 
     final currentQuestion = _questions[_currentIndex];
     final selectedAnswer = _answers[currentQuestion.id];
 
-    return FScaffold(
-      header: FHeader(
-        title: Row(
-          children: [
-            Expanded(child: Text(widget.quiz.title)),
-            Text(
-              '${_currentIndex + 1}/${_questions.length}',
-              style: theme.typography.base.copyWith(
-                fontWeight: FontWeight.w600,
+    return Scaffold(
+      backgroundColor: theme.colors.background,
+      body: Column(
+        children: [
+          // 헤더 - 중앙에 (1/10) 표시
+          CustomHeader(
+            title: Text(
+              '(${_currentIndex + 1}/${_questions.length})',
+              style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600),
+            ),
+            titleAlign: HeaderTitleAlign.center,
+            withBack: true,
+          ),
+
+          // 진행 바
+          Container(
+            height: 4,
+            width: double.infinity,
+            color: theme.colors.secondary,
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: (_currentIndex + 1) / _questions.length,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: theme.colors.primary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ],
-        ),
-      ),
-      child: Column(
-        children: [
-          // 진행 바
-          LinearProgressIndicator(
-            value: (_currentIndex + 1) / _questions.length,
-            backgroundColor: theme.colors.secondary,
-            valueColor: AlwaysStoppedAnimation(theme.colors.primary),
           ),
 
           // 문제 내용
@@ -211,14 +240,11 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
 
                   // 문제
                   FCard(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Center(
-                        child: Text(
-                          currentQuestion.question,
-                          style: _getQuestionStyle(theme),
-                          textAlign: TextAlign.center,
-                        ),
+                    child: Center(
+                      child: Text(
+                        currentQuestion.question,
+                        style: _getQuestionStyle(theme),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
@@ -373,7 +399,7 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
 
   TextStyle _getQuestionStyle(FThemeData theme) {
     final question = _questions[_currentIndex].question;
-    
+
     // 일본어 문자가 포함된 경우 일본어 폰트 사용
     if (_containsJapanese(question)) {
       return GoogleFonts.notoSerifJp(
@@ -381,7 +407,7 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
         fontWeight: FontWeight.bold,
       );
     }
-    
+
     return theme.typography.xl2.copyWith(fontWeight: FontWeight.bold);
   }
 
@@ -396,4 +422,3 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
     return RegExp(r'[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]').hasMatch(text);
   }
 }
-

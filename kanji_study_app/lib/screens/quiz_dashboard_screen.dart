@@ -220,7 +220,7 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: 1.3,
+      childAspectRatio: 1.0,
       children: [
         _buildQuizTypeCard(
           theme,
@@ -259,41 +259,38 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
     return GestureDetector(
       onTap: () => _startQuiz(type),
       child: FCard(
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, size: 28, color: color),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(height: 12),
-              Text(
-                type.displayName,
-                style: theme.typography.base.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Icon(icon, size: 24, color: color),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              type.displayName,
+              style: theme.typography.base.copyWith(
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(height: 4),
-              Text(
-                type == AiQuizType.jpToKr
-                    ? '뜻 맞추기'
-                    : type == AiQuizType.krToJp
-                        ? '단어 맞추기'
-                        : type == AiQuizType.kanjiReading
-                            ? '후리가나'
-                            : '문장 완성',
-                style: theme.typography.xs.copyWith(
-                  color: theme.colors.mutedForeground,
-                ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              type == AiQuizType.jpToKr
+                  ? '뜻 맞추기'
+                  : type == AiQuizType.krToJp
+                      ? '단어 맞추기'
+                      : type == AiQuizType.kanjiReading
+                          ? '후리가나'
+                          : '문장 완성',
+              style: theme.typography.xs.copyWith(
+                color: theme.colors.mutedForeground,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -447,19 +444,16 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
     return GestureDetector(
       onTap: onTap,
       child: FCard(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 20, color: color),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
-              ),
-            ],
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
+            ),
+          ],
         ),
       ),
     );
