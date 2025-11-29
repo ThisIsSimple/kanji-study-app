@@ -10,10 +10,10 @@ import '../services/supabase_service.dart';
 import '../services/kanji_service.dart';
 import '../services/study_record_service.dart';
 import '../widgets/example_card.dart';
-import '../widgets/jlpt_badge.dart';
-import '../widgets/grade_badge.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/study_button_bar.dart';
+import '../widgets/jlpt_badge.dart';
+import '../widgets/grade_badge.dart';
 import '../utils/korean_formatter.dart';
 
 class KanjiDetailScreen extends StatefulWidget {
