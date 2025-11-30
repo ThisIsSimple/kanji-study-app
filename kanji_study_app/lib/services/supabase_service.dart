@@ -266,8 +266,8 @@ class SupabaseService {
               'explanation': example.explanation,
               'source': example.source ?? 'gemini',
               'created_at':
-                  example.createdAt?.toIso8601String() ??
-                  DateTime.now().toIso8601String(),
+                  example.createdAt?.toUtc().toIso8601String() ??
+                  DateTime.now().toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -448,7 +448,7 @@ class SupabaseService {
       await _client.from(SupabaseConfig.usersTable).upsert({
         'id': currentUser!.id,
         ...updates,
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
     } catch (e) {
       debugPrint('Error updating user profile: $e');
@@ -597,7 +597,7 @@ class SupabaseService {
 
     try {
       final data = {
-        'completed_at': DateTime.now().toIso8601String(),
+        'completed_at': DateTime.now().toUtc().toIso8601String(),
         'score': score,
         'total_points': totalPoints,
         'time_taken_seconds': timeTakenSeconds,
@@ -946,8 +946,8 @@ class SupabaseService {
       // Group records by local date
       final Map<String, List<StudyRecord>> groupedRecords = {};
       for (final record in records) {
-        // Use local time for grouping
-        final localDate = record.createdAt!;
+        // Convert UTC to local time for grouping
+        final localDate = record.createdAt!.toLocal();
         final dateKey =
             '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
         if (!groupedRecords.containsKey(dateKey)) {
@@ -1132,7 +1132,7 @@ class SupabaseService {
               'character': kanjiResponse['character'],
               'meanings': (kanjiResponse['meanings'] as List).join(', '),
               'status': record.status.value,
-              'studiedAt': record.createdAt!.toIso8601String(),
+              'studiedAt': record.createdAt!.toLocal().toIso8601String(),
             };
           }
         } else if (record.type == StudyType.word) {
@@ -1149,7 +1149,7 @@ class SupabaseService {
               'word': wordResponse['word'],
               'reading': wordResponse['reading'],
               'status': record.status.value,
-              'studiedAt': record.createdAt!.toIso8601String(),
+              'studiedAt': record.createdAt!.toLocal().toIso8601String(),
             };
           }
         }
