@@ -137,8 +137,8 @@ class WordDisplayWidget extends StatelessWidget {
     required double effectiveSize,
     required Map<String, Kanji?> kanjiMap,
   }) {
-    // 후리가나 스타일 (본문의 45% 크기)
-    final rubySize = effectiveSize * 0.45;
+    // 후리가나 스타일 (본문의 35% 크기로 축소)
+    final rubySize = effectiveSize * 0.35;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -149,12 +149,12 @@ class WordDisplayWidget extends StatelessWidget {
           reading!,
           style: GoogleFonts.notoSansJp(
             fontSize: rubySize,
-            color: effectiveColor.withValues(alpha: 0.7),
+            color: effectiveColor.withValues(alpha: 0.6),
             fontWeight: FontWeight.normal,
           ),
           textAlign: textAlign,
         ),
-        SizedBox(height: effectiveSize * 0.05),
+        SizedBox(height: effectiveSize * 0.02), // 간격 축소
         // 본문
         _buildRichText(
           context: context,
@@ -192,7 +192,24 @@ class WordDisplayWidget extends StatelessWidget {
     required double effectiveSize,
     required Map<String, Kanji?> kanjiMap,
   }) {
-    final spans = <InlineSpan>[];
+    final spans = <TextSpan>[];
+
+    // 기본 텍스트 스타일
+    TextStyle baseStyle;
+    if (showStrokeOrder) {
+      baseStyle = TextStyle(
+        fontFamily: 'KanjiStrokeOrders',
+        fontSize: effectiveSize,
+        fontWeight: FontWeight.normal,
+        color: effectiveColor,
+      );
+    } else {
+      baseStyle = GoogleFonts.notoSerifJp(
+        fontSize: effectiveSize,
+        fontWeight: FontWeight.bold,
+        color: effectiveColor,
+      );
+    }
 
     for (int i = 0; i < word.length; i++) {
       final char = word[i];
@@ -200,37 +217,18 @@ class WordDisplayWidget extends StatelessWidget {
       final kanji = kanjiMap[char];
       final hasKanjiData = kanji != null;
 
-      // 기본 텍스트 스타일
-      TextStyle baseStyle;
-      if (showStrokeOrder) {
-        baseStyle = TextStyle(
-          fontFamily: 'KanjiStrokeOrders',
-          fontSize: effectiveSize,
-          fontWeight: FontWeight.normal,
-          color: effectiveColor,
-        );
-      } else {
-        baseStyle = GoogleFonts.notoSerifJp(
-          fontSize: effectiveSize,
-          fontWeight: FontWeight.bold,
-          color: effectiveColor,
-        );
-      }
-
       // 한자 힌트가 활성화되고, 한자이며, 캐시에 데이터가 있는 경우
       if (showKanjiHint && isKanjiChar && hasKanjiData) {
-        // 점선 밑줄 스타일 추가
-        final underlinedStyle = baseStyle.copyWith(
-          decoration: TextDecoration.underline,
-          decorationStyle: TextDecorationStyle.dotted,
-          decorationColor: theme.colors.mutedForeground.withValues(alpha: 0.5),
-          decorationThickness: 1.5,
-        );
-
         spans.add(
           TextSpan(
             text: char,
-            style: underlinedStyle,
+            style: baseStyle.copyWith(
+              decoration: TextDecoration.underline,
+              decorationStyle: TextDecorationStyle.dotted,
+              decorationColor:
+                  theme.colors.mutedForeground.withValues(alpha: 0.6),
+              decorationThickness: 2,
+            ),
             recognizer: TapGestureRecognizer()
               ..onTap = () {
                 KanjiInfoCard.showKanjiInfoSheet(

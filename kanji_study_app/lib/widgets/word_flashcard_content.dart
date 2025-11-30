@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/word_model.dart';
 import '../services/favorite_service.dart';
 import 'jlpt_badge.dart';
+import 'word_display_widget.dart';
 
 /// 단어 플래시카드 컨텐츠 위젯
 /// 앞면: 단어(한자) + JLPT 배지 + 획순 버튼
@@ -115,10 +115,6 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
   }
 
   Widget _buildFront(FThemeData theme) {
-    final displayWord = widget.word.word
-        .replaceAll(RegExp(r'[·•・∙/,;、]'), '\n')
-        .trim();
-
     return Stack(
       children: [
         Container(
@@ -140,23 +136,11 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 40), // 획순 버튼 공간
-              Text(
-                displayWord,
-                textAlign: TextAlign.center,
-                style: _showStrokeOrder
-                    ? TextStyle(
-                        fontFamily: 'KanjiStrokeOrders',
-                        fontSize: 90,
-                        fontWeight: FontWeight.normal,
-                        color: theme.colors.foreground,
-                        height: 1.3,
-                      )
-                    : GoogleFonts.notoSerifJp(
-                        fontSize: 64,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colors.foreground,
-                        height: 1.3,
-                      ),
+              WordDisplayWidget(
+                word: widget.word.word,
+                size: 64,
+                showStrokeOrder: _showStrokeOrder,
+                showKanjiHint: true,
               ),
               const SizedBox(height: 32),
               Container(
@@ -218,35 +202,17 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 32), // 획순 버튼 공간
-                      // Reading (furigana)
-                      if (widget.word.reading.isNotEmpty &&
-                          widget.word.reading != widget.word.word)
-                        Text(
-                          widget.word.reading,
-                          style: theme.typography.base.copyWith(
-                            color: theme.colors.mutedForeground,
-                            fontSize: 18,
-                          ),
-                        ),
-
-                      // Main word
-                      Text(
-                        widget.word.word,
-                        textAlign: TextAlign.center,
-                        style: _showStrokeOrder
-                            ? TextStyle(
-                                fontFamily: 'KanjiStrokeOrders',
-                                fontSize: 90,
-                                fontWeight: FontWeight.normal,
-                                color: theme.colors.foreground,
-                                height: 1.2,
-                              )
-                            : GoogleFonts.notoSerifJp(
-                                fontSize: 48,
-                                fontWeight: FontWeight.bold,
-                                color: theme.colors.foreground,
-                                height: 1.2,
-                              ),
+                      // Word with furigana using WordDisplayWidget
+                      WordDisplayWidget(
+                        word: widget.word.word,
+                        reading: widget.word.reading != widget.word.word
+                            ? widget.word.reading
+                            : null,
+                        size: 48,
+                        showStrokeOrder: _showStrokeOrder,
+                        showFurigana: widget.word.reading.isNotEmpty &&
+                            widget.word.reading != widget.word.word,
+                        showKanjiHint: true,
                       ),
                       const SizedBox(height: 24),
 

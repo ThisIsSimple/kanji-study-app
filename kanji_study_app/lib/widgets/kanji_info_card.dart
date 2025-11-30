@@ -188,9 +188,7 @@ class _KanjiInfoCardState extends State<KanjiInfoCard> {
                   _buildInfoRow(
                     theme: theme,
                     label: '부수',
-                    children: [
-                      _buildPill(theme: theme, text: kanji.radical!),
-                    ],
+                    children: [_buildPill(theme: theme, text: kanji.radical!)],
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -225,11 +223,7 @@ class _KanjiInfoCardState extends State<KanjiInfoCard> {
                 if (kanji.commentary != null &&
                     kanji.commentary!.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  _buildInfoRow(
-                    theme: theme,
-                    label: '한자 해설',
-                    children: [],
-                  ),
+                  _buildInfoRow(theme: theme, label: '한자 해설', children: []),
                   const SizedBox(height: 8),
                   Container(
                     width: double.infinity,
@@ -277,15 +271,9 @@ class _KanjiInfoCardState extends State<KanjiInfoCard> {
     );
   }
 
-  Widget _buildPill({
-    required FThemeData theme,
-    required String text,
-  }) {
+  Widget _buildPill({required FThemeData theme, required String text}) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 4,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: theme.colors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),

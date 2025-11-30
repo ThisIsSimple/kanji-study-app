@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import '../models/word_model.dart';
 import '../models/word_example_model.dart';
@@ -14,6 +13,7 @@ import '../widgets/example_card.dart';
 import '../widgets/jlpt_badge.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/study_button_bar.dart';
+import '../widgets/word_display_widget.dart';
 
 class WordDetailScreen extends StatefulWidget {
   final Word word;
@@ -313,40 +313,15 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Centered word section
+                      // Centered word section with WordDisplayWidget
                       Center(
-                        child: Column(
-                          children: [
-                            // Reading (furigana)
-                            if (word.reading.isNotEmpty &&
-                                word.reading != word.word)
-                              Text(
-                                word.reading,
-                                style: theme.typography.base.copyWith(
-                                  color: theme.colors.mutedForeground,
-                                  fontSize: 18,
-                                ),
-                              ),
-
-                            // Main word
-                            Text(
-                              word.word,
-                              style: _showStrokeOrder
-                                  ? TextStyle(
-                                      fontFamily: 'KanjiStrokeOrders',
-                                      fontSize: 90, // 100pt 이상 권장
-                                      fontWeight: FontWeight.normal,
-                                      color: theme.colors.foreground,
-                                      height: 1.2,
-                                    )
-                                  : GoogleFonts.notoSerifJp(
-                                      fontSize: 48,
-                                      fontWeight: FontWeight.bold,
-                                      color: theme.colors.foreground,
-                                      height: 1.2,
-                                    ),
-                            ),
-                          ],
+                        child: WordDisplayWidget(
+                          word: word.word,
+                          reading: word.reading != word.word ? word.reading : null,
+                          size: 48,
+                          showStrokeOrder: _showStrokeOrder,
+                          showFurigana: word.reading.isNotEmpty && word.reading != word.word,
+                          showKanjiHint: true,
                         ),
                       ),
 
