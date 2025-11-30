@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:forui/forui.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz_data;
@@ -113,6 +114,17 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
       title: '콘나칸지',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.getLightTheme(),
+      locale: const Locale('ja', 'JP'),
+      supportedLocales: const [
+        Locale('ja', 'JP'),
+        Locale('ko', 'KR'),
+      ],
+      localizationsDelegates: [
+        ...FLocalizations.localizationsDelegates,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       builder: (context, child) => FTheme(
         data: AppTheme.getFTheme(),
         child: StreamBuilder<AuthState>(

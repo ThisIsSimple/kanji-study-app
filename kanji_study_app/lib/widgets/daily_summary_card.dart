@@ -12,11 +12,15 @@ import 'success_rate_indicator.dart';
 class DailySummaryCard extends StatelessWidget {
   final DateTime date;
   final DailyStudyStats? stats;
+  final bool showDetailButton;
+  final VoidCallback? onDetailPressed;
 
   const DailySummaryCard({
     super.key,
     required this.date,
     this.stats,
+    this.showDetailButton = false,
+    this.onDetailPressed,
   });
 
   @override
@@ -107,22 +111,26 @@ class DailySummaryCard extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        if (DateUtils.isSameDay(date, DateTime.now()))
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: theme.colors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '오늘',
-              style: theme.typography.xs.copyWith(
-                color: theme.colors.primary,
-                fontWeight: FontWeight.w600,
-              ),
+        if (showDetailButton)
+          GestureDetector(
+            onTap: onDetailPressed,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '자세히 보기',
+                  style: theme.typography.sm.copyWith(
+                    color: theme.colors.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Icon(
+                  PhosphorIconsRegular.caretRight,
+                  size: 16,
+                  color: theme.colors.primary,
+                ),
+              ],
             ),
           ),
       ],

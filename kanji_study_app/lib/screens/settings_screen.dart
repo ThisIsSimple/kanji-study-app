@@ -14,6 +14,7 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final typography = theme.typography;
 
     return Scaffold(
       backgroundColor: theme.colors.background,
@@ -30,36 +31,60 @@ class SettingsScreen extends StatelessWidget {
               child: FItemGroup(
                 children: [
                   FItem(
-                    prefix: Icon(PhosphorIconsRegular.userCircle),
-                    title: const Text('계정 관리'),
-                    details: const Text('로그인 정보 및 계정 설정'),
-                    suffix: Icon(PhosphorIconsRegular.caretRight),
+                    prefix: Icon(PhosphorIconsRegular.userCircle, size: 26),
+                    title: Text(
+                      '계정 관리',
+                      style: typography.base.copyWith(fontWeight: FontWeight.w500),
+                    ),
+                    details: Text(
+                      '로그인 정보 및 계정 설정',
+                      style: typography.sm,
+                    ),
+                    suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () =>
                         _navigateTo(context, const SettingsAccountScreen()),
                   ),
                   FItem(
-                    prefix: Icon(PhosphorIconsRegular.bell),
-                    title: const Text('알림'),
-                    details: const Text('학습 알림 및 시간 설정'),
-                    suffix: Icon(PhosphorIconsRegular.caretRight),
+                    prefix: Icon(PhosphorIconsRegular.bell, size: 26),
+                    title: Text(
+                      '알림',
+                      style: typography.base.copyWith(fontWeight: FontWeight.w500),
+                    ),
+                    details: Text(
+                      '학습 알림 및 시간 설정',
+                      style: typography.sm,
+                    ),
+                    suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () => _navigateTo(
                       context,
                       const SettingsNotificationScreen(),
                     ),
                   ),
                   FItem(
-                    prefix: Icon(PhosphorIconsRegular.sparkle),
-                    title: const Text('AI 설정'),
-                    details: const Text('Gemini API 키 관리'),
-                    suffix: Icon(PhosphorIconsRegular.caretRight),
+                    prefix: Icon(PhosphorIconsRegular.sparkle, size: 26),
+                    title: Text(
+                      'AI 설정',
+                      style: typography.base.copyWith(fontWeight: FontWeight.w500),
+                    ),
+                    details: Text(
+                      'Gemini API 키 관리',
+                      style: typography.sm,
+                    ),
+                    suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () =>
                         _navigateTo(context, const SettingsAiScreen()),
                   ),
                   FItem(
-                    prefix: Icon(PhosphorIconsRegular.info),
-                    title: const Text('앱 정보'),
-                    details: const Text('버전 및 개발자 정보'),
-                    suffix: Icon(PhosphorIconsRegular.caretRight),
+                    prefix: Icon(PhosphorIconsRegular.info, size: 26),
+                    title: Text(
+                      '앱 정보',
+                      style: typography.base.copyWith(fontWeight: FontWeight.w500),
+                    ),
+                    details: Text(
+                      '버전 및 개발자 정보',
+                      style: typography.sm,
+                    ),
+                    suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () =>
                         _navigateTo(context, const SettingsInfoScreen()),
                   ),

@@ -22,13 +22,16 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
   final SupabaseService _supabaseService = SupabaseService.instance;
 
   late PageController _pageController;
+  late FCalendarController<DateTime?> _lineCalendarController;
   late DateTime _currentDate;
   final int _totalDays = 365 * 3; // 3 years of days
   late int _initialPage;
+  bool _isSyncingFromLineCalendar = false;
+  bool _isSyncingFromPageView = false;
 
   final Map<DateTime, List<Map<String, dynamic>>> _studyDetailsCache = {};
   final Map<DateTime, DailyStudyStats?> _dailyStatsCache = {};
-  bool _isLoading = true;
+  final Set<DateTime> _loadingDates = {};
 
   @override
   void initState() {
@@ -40,12 +43,16 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
     );
     _initialPage = _totalDays ~/ 2;
     _pageController = PageController(initialPage: _initialPage);
+    _lineCalendarController = FCalendarController.date(
+      initialSelection: _currentDate,
+    );
     _loadStudyDetailsForDate(_currentDate);
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _lineCalendarController.dispose();
     super.dispose();
   }
 
@@ -59,21 +66,36 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
     return normalizedInitialDate.add(Duration(days: daysDifference));
   }
 
+  int _getPageIndexFromDate(DateTime date) {
+    final normalizedInitialDate = DateTime(
+      widget.date.year,
+      widget.date.month,
+      widget.date.day,
+    );
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+    final daysDifference = normalizedDate.difference(normalizedInitialDate).inDays;
+    return _initialPage + daysDifference;
+  }
+
   Future<void> _loadStudyDetailsForDate(DateTime date) async {
     final normalizedDate = DateTime(date.year, date.month, date.day);
 
-    // Check cache first
+    // Update header title immediately
+    if (!mounted) return;
+    setState(() {
+      _currentDate = normalizedDate;
+    });
+
+    // Check cache first - no loading needed
     if (_studyDetailsCache.containsKey(normalizedDate) &&
         _dailyStatsCache.containsKey(normalizedDate)) {
-      setState(() {
-        _currentDate = normalizedDate;
-        _isLoading = false;
-      });
       return;
     }
 
+    // Start loading for this specific date
+    if (!mounted) return;
     setState(() {
-      _isLoading = true;
+      _loadingDates.add(normalizedDate);
     });
 
     try {
@@ -90,28 +112,53 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
         ),
       );
 
+      if (!mounted) return;
       setState(() {
         _studyDetailsCache[normalizedDate] = details;
         _dailyStatsCache[normalizedDate] = stats.isNotEmpty
             ? stats.first
             : null;
-        _currentDate = normalizedDate;
-        _isLoading = false;
+        _loadingDates.remove(normalizedDate);
       });
     } catch (e) {
       debugPrint('Error loading study details: $e');
+      if (!mounted) return;
       setState(() {
         _studyDetailsCache[normalizedDate] = [];
         _dailyStatsCache[normalizedDate] = null;
-        _currentDate = normalizedDate;
-        _isLoading = false;
+        _loadingDates.remove(normalizedDate);
       });
     }
   }
 
   void _onPageChanged(int pageIndex) {
+    if (_isSyncingFromLineCalendar) return;
+
     final newDate = _getDateFromPageIndex(pageIndex);
     _loadStudyDetailsForDate(newDate);
+
+    // Sync FLineCalendar selection
+    _isSyncingFromPageView = true;
+    _lineCalendarController.value = newDate;
+    _isSyncingFromPageView = false;
+  }
+
+  void _onLineCalendarChanged(DateTime? date) {
+    if (date == null || _isSyncingFromPageView) return;
+
+    _isSyncingFromLineCalendar = true;
+    final pageIndex = _getPageIndexFromDate(date);
+
+    // Load data for the selected date immediately
+    _loadStudyDetailsForDate(date);
+
+    _pageController.animateToPage(
+      pageIndex,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    ).then((_) {
+      _isSyncingFromLineCalendar = false;
+    });
   }
 
   @override
@@ -127,85 +174,103 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
           FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
         ],
       ),
-      child: PageView.builder(
-        controller: _pageController,
-        onPageChanged: _onPageChanged,
-        itemCount: _totalDays,
-        itemBuilder: (context, index) {
-          final pageDate = _getDateFromPageIndex(index);
-          final normalizedPageDate = DateTime(
-            pageDate.year,
-            pageDate.month,
-            pageDate.day,
-          );
-          final studyDetails = _studyDetailsCache[normalizedPageDate] ?? [];
-          final dailyStats = _dailyStatsCache[normalizedPageDate];
-
-          if (_isLoading && normalizedPageDate == _currentDate) {
-            return const Center(child: FCircularProgress());
-          }
-
-          if (studyDetails.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    PhosphorIconsRegular.calendarBlank,
-                    size: 64,
-                    color: theme.colors.mutedForeground,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '이 날짜에 학습 기록이 없습니다',
-                    style: theme.typography.base.copyWith(
-                      color: theme.colors.mutedForeground,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return SingleChildScrollView(
-            padding: AppSpacing.screenPadding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Summary Card
-                if (dailyStats != null) ...[
-                  FCard(
-                    child: Padding(
-                      padding: AppSpacing.cardPadding,
-                      child: DailySummaryCard(
-                        date: normalizedPageDate,
-                        stats: dailyStats,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                // Study Items Header
-                Text(
-                  '학습 항목',
-                  style: theme.typography.lg.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Study Items List
-                ...studyDetails.map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: _buildStudyItemCard(item, theme),
-                  ),
-                ),
-              ],
+      child: Column(
+        children: [
+          // FLineCalendar at the top
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: FLineCalendar(
+              controller: _lineCalendarController,
+              start: DateTime(2024, 1, 1),
+              end: DateTime.now().add(const Duration(days: 365)),
+              today: DateTime.now(),
+              initialScroll: _currentDate,
+              onChange: _onLineCalendarChanged,
             ),
-          );
-        },
+          ),
+
+          // PageView for swipe navigation
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: _onPageChanged,
+              itemCount: _totalDays,
+              itemBuilder: (context, index) {
+                final pageDate = _getDateFromPageIndex(index);
+                final normalizedPageDate = DateTime(
+                  pageDate.year,
+                  pageDate.month,
+                  pageDate.day,
+                );
+                final studyDetails = _studyDetailsCache[normalizedPageDate] ?? [];
+                final dailyStats = _dailyStatsCache[normalizedPageDate];
+
+                if (_loadingDates.contains(normalizedPageDate)) {
+                  return const Center(child: FCircularProgress());
+                }
+
+                if (studyDetails.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          PhosphorIconsRegular.calendarBlank,
+                          size: 64,
+                          color: theme.colors.mutedForeground,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '이 날짜에 학습 기록이 없습니다',
+                          style: theme.typography.base.copyWith(
+                            color: theme.colors.mutedForeground,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return SingleChildScrollView(
+                  padding: AppSpacing.screenPadding,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Summary Card
+                      if (dailyStats != null) ...[
+                        FCard(
+                          child: DailySummaryCard(
+                            date: normalizedPageDate,
+                            stats: dailyStats,
+                            showDetailButton: false,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Study Items Header
+                      Text(
+                        '학습 항목',
+                        style: theme.typography.lg.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Study Items List
+                      ...studyDetails.map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: _buildStudyItemCard(item, theme),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -261,9 +326,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
     }
 
     return FCard(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
+      child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Type Icon
@@ -374,7 +437,6 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 }
