@@ -31,10 +31,8 @@ class KanjiInfoCard extends StatefulWidget {
     showFSheet(
       context: context,
       side: FLayout.btt,
+      mainAxisMaxRatio: 0.85,
       builder: (context) => Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-        ),
         decoration: BoxDecoration(
           color: theme.colors.background,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -55,7 +53,12 @@ class KanjiInfoCard extends StatefulWidget {
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  0,
+                  16,
+                  16 + MediaQuery.of(context).padding.bottom,
+                ),
                 child: KanjiInfoCard(kanji: kanji),
               ),
             ),
