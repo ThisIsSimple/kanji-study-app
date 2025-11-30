@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -184,7 +183,7 @@ class WordDisplayWidget extends StatelessWidget {
     );
   }
 
-  /// RichText로 글자별 스타일링
+  /// Row로 글자별 스타일링 (정렬 문제 해결)
   Widget _buildRichText({
     required BuildContext context,
     required FThemeData theme,
@@ -192,8 +191,6 @@ class WordDisplayWidget extends StatelessWidget {
     required double effectiveSize,
     required Map<String, Kanji?> kanjiMap,
   }) {
-    final spans = <TextSpan>[];
-
     // 기본 텍스트 스타일
     TextStyle baseStyle;
     if (showStrokeOrder) {
@@ -211,6 +208,8 @@ class WordDisplayWidget extends StatelessWidget {
       );
     }
 
+    final children = <Widget>[];
+
     for (int i = 0; i < word.length; i++) {
       final char = word[i];
       final isKanjiChar = isKanji(char);
@@ -219,40 +218,44 @@ class WordDisplayWidget extends StatelessWidget {
 
       // 한자 힌트가 활성화되고, 한자이며, 캐시에 데이터가 있는 경우
       if (showKanjiHint && isKanjiChar && hasKanjiData) {
-        spans.add(
-          TextSpan(
+        children.add(
+          _RoundedDottedUnderlineText(
             text: char,
-            style: baseStyle.copyWith(
-              decoration: TextDecoration.underline,
-              decorationStyle: TextDecorationStyle.dotted,
-              decorationColor:
-                  theme.colors.mutedForeground.withValues(alpha: 0.6),
-              decorationThickness: 2,
-            ),
-            recognizer: TapGestureRecognizer()
-              ..onTap = () {
-                KanjiInfoCard.showKanjiInfoSheet(
-                  context: context,
-                  kanji: kanji,
-                );
-              },
+            style: baseStyle,
+            dotColor: theme.colors.mutedForeground.withValues(alpha: 0.6),
+            onTap: () {
+              KanjiInfoCard.showKanjiInfoSheet(
+                context: context,
+                kanji: kanji,
+              );
+            },
           ),
         );
       } else {
         // 일반 텍스트
-        spans.add(
-          TextSpan(
-            text: char,
-            style: baseStyle,
-          ),
-        );
+        children.add(Text(char, style: baseStyle));
       }
     }
 
-    return RichText(
-      text: TextSpan(children: spans),
-      textAlign: textAlign,
+    return Wrap(
+      alignment: _textAlignToWrapAlignment(textAlign),
+      crossAxisAlignment: WrapCrossAlignment.end,
+      children: children,
     );
+  }
+
+  WrapAlignment _textAlignToWrapAlignment(TextAlign align) {
+    switch (align) {
+      case TextAlign.left:
+      case TextAlign.start:
+        return WrapAlignment.start;
+      case TextAlign.right:
+      case TextAlign.end:
+        return WrapAlignment.end;
+      case TextAlign.center:
+      case TextAlign.justify:
+        return WrapAlignment.center;
+    }
   }
 
   CrossAxisAlignment _textAlignToCrossAxisAlignment(TextAlign align) {
@@ -267,5 +270,95 @@ class WordDisplayWidget extends StatelessWidget {
       case TextAlign.justify:
         return CrossAxisAlignment.center;
     }
+  }
+}
+
+/// 둥근 점선 밑줄이 있는 텍스트 위젯
+class _RoundedDottedUnderlineText extends StatelessWidget {
+  final String text;
+  final TextStyle style;
+  final Color dotColor;
+  final VoidCallback onTap;
+
+  const _RoundedDottedUnderlineText({
+    required this.text,
+    required this.style,
+    required this.dotColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fontSize = style.fontSize ?? 24;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Text(text, style: style),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: fontSize * 0.05, // 텍스트 바닥에서 약간 위
+            child: CustomPaint(
+              size: Size.zero,
+              painter: _RoundedDotsPainter(
+                color: dotColor,
+                fontSize: fontSize,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 둥근 점선을 그리는 CustomPainter
+class _RoundedDotsPainter extends CustomPainter {
+  final Color color;
+  final double fontSize;
+
+  _RoundedDotsPainter({
+    required this.color,
+    required this.fontSize,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    // 점 크기와 간격을 폰트 크기에 비례하게 설정
+    final dotRadius = fontSize * 0.03; // 점 반지름
+    final dotSpacing = fontSize * 0.12; // 점 간격
+
+    // 텍스트 너비 추정 (한자는 대략 폰트 크기와 비슷)
+    final charWidth = fontSize;
+
+    // 점선 영역을 80%로 제한 (좌우 10%씩 여백)
+    final startX = charWidth * 0.1;
+    final endX = charWidth * 0.9;
+    final lineWidth = endX - startX;
+
+    // 점 개수 계산
+    final dotCount = (lineWidth / (dotRadius * 2 + dotSpacing)).floor();
+    if (dotCount <= 0) return;
+
+    final actualSpacing = dotCount > 1
+        ? (lineWidth - dotCount * dotRadius * 2) / (dotCount - 1)
+        : 0.0;
+
+    for (int i = 0; i < dotCount; i++) {
+      final x = startX + dotRadius + i * (dotRadius * 2 + actualSpacing);
+      canvas.drawCircle(Offset(x, 0), dotRadius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _RoundedDotsPainter oldDelegate) {
+    return oldDelegate.color != color || oldDelegate.fontSize != fontSize;
   }
 }
