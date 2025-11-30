@@ -84,7 +84,7 @@ class StudyRecordService extends ChangeNotifier {
     }
 
     try {
-      final now = DateTime.now();
+      final now = DateTime.now().toUtc();
       final isOnline = _connectivityService.isOnline;
 
       // 1. 로컬 DB에 저장
@@ -103,14 +103,13 @@ class StudyRecordService extends ChangeNotifier {
       final key = '${type}_$targetId';
       _statusCache[key] = status;
 
-      // 3. 온라인이면 Supabase에도 저장
+      // 3. 온라인이면 Supabase에도 저장 (created_at은 DB default now() 사용)
       if (isOnline) {
         await _supabaseService.client.from('study_records').insert({
           'user_id': userId,
           'type': type,
           'target_id': targetId,
           'status': status,
-          'created_at': now.toIso8601String(),
         });
       }
 

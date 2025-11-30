@@ -30,10 +30,13 @@ class DailySummaryCard extends StatelessWidget {
     // Empty state
     if (stats == null || stats!.totalStudied == 0) {
       return Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(theme),
-          const SizedBox(height: AppSpacing.md),
+          if (showDetailButton) ...[
+            _buildHeader(theme),
+            const SizedBox(height: AppSpacing.md),
+          ],
           Text(
             '학습 기록이 없습니다',
             style: theme.typography.base.copyWith(
@@ -46,10 +49,13 @@ class DailySummaryCard extends StatelessWidget {
 
     // Summary with stats
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader(theme),
-        const SizedBox(height: AppSpacing.base),
+        if (showDetailButton) ...[
+          _buildHeader(theme),
+          const SizedBox(height: AppSpacing.base),
+        ],
         Row(
           children: [
             Expanded(

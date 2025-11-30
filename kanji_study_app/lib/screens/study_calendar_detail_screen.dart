@@ -236,14 +236,12 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Summary Card
+                      // Summary Stats
                       if (dailyStats != null) ...[
-                        FCard(
-                          child: DailySummaryCard(
-                            date: normalizedPageDate,
-                            stats: dailyStats,
-                            showDetailButton: false,
-                          ),
+                        DailySummaryCard(
+                          date: normalizedPageDate,
+                          stats: dailyStats,
+                          showDetailButton: false,
                         ),
                         const SizedBox(height: 16),
                       ],
