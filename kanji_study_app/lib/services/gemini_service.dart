@@ -39,8 +39,14 @@ class GeminiService {
     await prefs.setString(_apiKeyPref, apiKey);
     _apiKey = apiKey;
 
-    _model = GenerativeModel(model: _modelName, apiKey: apiKey);
-    _isInitialized = true;
+    // 빈 키 체크 (init()과 동일하게)
+    if (apiKey.isNotEmpty) {
+      _model = GenerativeModel(model: _modelName, apiKey: apiKey);
+      _isInitialized = true;
+    } else {
+      _model = null;
+      _isInitialized = false;
+    }
   }
 
   bool get isInitialized => _isInitialized && _apiKey != null && _model != null;

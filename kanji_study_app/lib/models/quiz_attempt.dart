@@ -24,36 +24,16 @@ class QuizAttempt {
       id: json['id'] as int,
       userId: json['user_id'] as String,
       quizSetId: json['quiz_set_id'] as int,
-      // Supabase에서 반환하는 시간은 UTC이므로 일관되게 UTC로 파싱
-      startedAt: _parseUtcDateTime(json['started_at'] as String),
+      // DateTime.parse()는 시간대 정보(Z, +00:00 등)가 있으면 UTC로 파싱
+      // 시간대 없으면 로컬로 파싱하여 내부 UTC timestamp로 변환
+      // completed_at은 UTC로 저장되므로 올바르게 처리됨
+      startedAt: DateTime.parse(json['started_at'] as String),
       completedAt: json['completed_at'] != null
-          ? _parseUtcDateTime(json['completed_at'] as String)
+          ? DateTime.parse(json['completed_at'] as String)
           : null,
       score: json['score'] as int?,
       totalPoints: json['total_points'] as int?,
       timeTakenSeconds: json['time_taken_seconds'] as int?,
-    );
-  }
-
-  /// UTC DateTime 파싱 헬퍼
-  /// Supabase에서 반환하는 시간 문자열을 일관되게 UTC로 파싱
-  static DateTime _parseUtcDateTime(String dateString) {
-    final parsed = DateTime.parse(dateString);
-    // 이미 UTC이거나 시간대 정보가 포함된 경우 그대로 반환
-    if (parsed.isUtc) {
-      return parsed;
-    }
-    // 시간대 정보 없이 파싱된 경우 (로컬로 해석됨)
-    // Supabase는 UTC를 반환하므로 UTC로 재해석
-    return DateTime.utc(
-      parsed.year,
-      parsed.month,
-      parsed.day,
-      parsed.hour,
-      parsed.minute,
-      parsed.second,
-      parsed.millisecond,
-      parsed.microsecond,
     );
   }
 
