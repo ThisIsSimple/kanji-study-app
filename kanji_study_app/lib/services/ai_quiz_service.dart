@@ -430,6 +430,36 @@ $questionCount개의 문제를 생성해주세요.
     return defaultValue;
   }
 
+  /// 옵션 리스트가 4개가 되도록 더미 옵션 추가
+  List<String> _ensureFourOptions(
+    List<String> options,
+    String correctAnswer,
+    List<String> dummyOptions,
+  ) {
+    final result = options.toSet().toList(); // 중복 제거
+    var dummyIndex = 0;
+
+    while (result.length < 4 && dummyIndex < dummyOptions.length) {
+      final dummy = dummyOptions[dummyIndex];
+      if (!result.contains(dummy) && dummy != correctAnswer) {
+        result.add(dummy);
+      }
+      dummyIndex++;
+    }
+
+    // 그래도 4개 미만이면 번호 붙여서 추가
+    var fallbackIndex = 1;
+    while (result.length < 4) {
+      final fallback = '선택지 $fallbackIndex';
+      if (!result.contains(fallback)) {
+        result.add(fallback);
+      }
+      fallbackIndex++;
+    }
+
+    return result;
+  }
+
   /// 폴백: Gemini 실패 시 간단한 문제 자동 생성
   List<Map<String, dynamic>> _generateFallbackQuestions(
     AiQuizType quizType,
@@ -438,6 +468,11 @@ $questionCount개의 문제를 생성해주세요.
   ) {
     final questions = <Map<String, dynamic>>[];
     final itemsToUse = sourceItems.take(questionCount).toList();
+
+    // 퀴즈 타입별 더미 옵션 정의
+    const koreanDummyOptions = ['다른 뜻', '알 수 없음', '해당 없음', '기타'];
+    const japaneseDummyOptions = ['わからない', 'ない', 'なし', 'その他'];
+    const readingDummyOptions = ['カ', 'キ', 'ク', 'ケ', 'コ', 'サ', 'シ', 'ス'];
 
     for (var i = 0; i < itemsToUse.length; i++) {
       final item = itemsToUse[i];
@@ -451,10 +486,15 @@ $questionCount개의 문제를 생성해주세요.
       switch (quizType) {
         case AiQuizType.jpToKr:
           final correctAnswer = _extractMeaningFromList(item['meanings']);
-          final options = [
+          final rawOptions = [
             correctAnswer,
             ...otherItems.map((o) => _extractMeaningFromList(o['meanings'])),
-          ]..shuffle();
+          ];
+          final options = _ensureFourOptions(
+            rawOptions,
+            correctAnswer,
+            koreanDummyOptions,
+          )..shuffle();
 
           question = {
             'question': item['word'] ?? '',
@@ -467,11 +507,16 @@ $questionCount개의 문제를 생성해주세요.
 
         case AiQuizType.krToJp:
           final koreanMeaning = _extractMeaningFromList(item['meanings']);
-          final correctAnswer = item['word'] ?? '';
-          final options = [
+          final correctAnswer = item['word'] as String? ?? '';
+          final rawOptions = <String>[
             correctAnswer,
-            ...otherItems.map((o) => o['word'] ?? ''),
-          ]..shuffle();
+            ...otherItems.map((o) => o['word'] as String? ?? ''),
+          ];
+          final options = _ensureFourOptions(
+            rawOptions,
+            correctAnswer,
+            japaneseDummyOptions,
+          )..shuffle();
 
           question = {
             'question': koreanMeaning,
@@ -486,14 +531,19 @@ $questionCount개의 문제를 생성해주세요.
           final onReadings =
               (item['on_readings'] as List?)?.cast<String>() ?? [];
           final correctAnswer = onReadings.isNotEmpty ? onReadings.first : 'なし';
-          final options = [
+          final rawOptions = [
             correctAnswer,
             ...otherItems.map((o) {
               final readings =
                   (o['on_readings'] as List?)?.cast<String>() ?? [];
               return readings.isNotEmpty ? readings.first : 'なし';
             }),
-          ]..shuffle();
+          ];
+          final options = _ensureFourOptions(
+            rawOptions,
+            correctAnswer,
+            readingDummyOptions,
+          )..shuffle();
 
           question = {
             'question': item['character'] ?? '',
@@ -505,16 +555,21 @@ $questionCount개의 문제를 생성해주세요.
           break;
 
         case AiQuizType.fillBlank:
-          final word = item['word'] ?? '';
+          final word = item['word'] as String? ?? '';
           final koreanMeaning = _extractMeaningFromList(
             item['meanings'],
             defaultValue: '뜻',
           );
           final correctAnswer = word;
-          final options = [
+          final rawOptions = <String>[
             correctAnswer,
-            ...otherItems.map((o) => o['word'] ?? ''),
-          ]..shuffle();
+            ...otherItems.map((o) => o['word'] as String? ?? ''),
+          ];
+          final options = _ensureFourOptions(
+            rawOptions,
+            correctAnswer,
+            japaneseDummyOptions,
+          )..shuffle();
 
           question = {
             'question': '「$koreanMeaning」を日本語で言うと？ ___',
