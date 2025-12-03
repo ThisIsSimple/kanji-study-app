@@ -657,13 +657,13 @@ $questionCount개의 문제를 생성해주세요.
     final correctCount = answers.where((a) => a['is_correct'] == true).length;
     final score = correctCount; // 1문제당 1점
 
-    // 응시 기록 업데이트
+    // 응시 기록 업데이트 (UTC로 저장하여 started_at과 일관성 유지)
     await _supabaseService.client
         .from('ai_quiz_attempts')
         .update({
           'score': score,
           'correct_count': correctCount,
-          'completed_at': DateTime.now().toIso8601String(),
+          'completed_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('id', attemptId);
 

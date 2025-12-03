@@ -35,7 +35,7 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
   @override
   void initState() {
     super.initState();
-    _startTime = DateTime.now();
+    _startTime = DateTime.now().toUtc();
     _loadQuizData();
   }
 
@@ -316,7 +316,7 @@ class _QuizPlayingScreenState extends State<QuizPlayingScreen> {
 
   Future<void> _completeQuiz() async {
     try {
-      final endTime = DateTime.now();
+      final endTime = DateTime.now().toUtc();
       final timeTaken = endTime.difference(_startTime!).inSeconds;
 
       // Calculate score
