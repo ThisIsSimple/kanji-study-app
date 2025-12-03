@@ -411,6 +411,25 @@ $questionCount개의 문제를 생성해주세요.
     }
   }
 
+  /// 헬퍼 함수: meanings 배열에서 첫 번째 의미 추출
+  /// meanings는 [{"part_of_speech": "...", "meaning": "..."}, ...] 형태의 List
+  String _extractMeaningFromList(
+    dynamic meanings, {
+    String defaultValue = '뜻 없음',
+  }) {
+    if (meanings == null) return defaultValue;
+    if (meanings is List && meanings.isNotEmpty) {
+      final first = meanings.first;
+      if (first is Map<String, dynamic>) {
+        final meaning = first['meaning'] as String?;
+        if (meaning != null && meaning.isNotEmpty) {
+          return meaning;
+        }
+      }
+    }
+    return defaultValue;
+  }
+
   /// 폴백: Gemini 실패 시 간단한 문제 자동 생성
   List<Map<String, dynamic>> _generateFallbackQuestions(
     AiQuizType quizType,
@@ -431,15 +450,10 @@ $questionCount개의 문제를 생성해주세요.
 
       switch (quizType) {
         case AiQuizType.jpToKr:
-          final meanings = item['meanings'] as Map<String, dynamic>? ?? {};
-          final correctAnswer =
-              (meanings['korean'] as List?)?.firstOrNull ?? '뜻 없음';
+          final correctAnswer = _extractMeaningFromList(item['meanings']);
           final options = [
             correctAnswer,
-            ...otherItems.map((o) {
-              final m = o['meanings'] as Map<String, dynamic>? ?? {};
-              return (m['korean'] as List?)?.firstOrNull ?? '뜻 없음';
-            }),
+            ...otherItems.map((o) => _extractMeaningFromList(o['meanings'])),
           ]..shuffle();
 
           question = {
@@ -452,9 +466,7 @@ $questionCount개의 문제를 생성해주세요.
           break;
 
         case AiQuizType.krToJp:
-          final meanings = item['meanings'] as Map<String, dynamic>? ?? {};
-          final koreanMeaning =
-              (meanings['korean'] as List?)?.firstOrNull ?? '뜻 없음';
+          final koreanMeaning = _extractMeaningFromList(item['meanings']);
           final correctAnswer = item['word'] ?? '';
           final options = [
             correctAnswer,
@@ -494,9 +506,10 @@ $questionCount개의 문제를 생성해주세요.
 
         case AiQuizType.fillBlank:
           final word = item['word'] ?? '';
-          final meanings = item['meanings'] as Map<String, dynamic>? ?? {};
-          final koreanMeaning =
-              (meanings['korean'] as List?)?.firstOrNull ?? '뜻';
+          final koreanMeaning = _extractMeaningFromList(
+            item['meanings'],
+            defaultValue: '뜻',
+          );
           final correctAnswer = word;
           final options = [
             correctAnswer,
