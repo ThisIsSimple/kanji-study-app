@@ -1,10 +1,71 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/ai_quiz.dart';
 import '../models/ai_quiz_attempt.dart';
 import 'supabase_service.dart';
 import 'gemini_service.dart';
+
+/// 퀴즈 문제 검증기
+class _QuizQuestionValidator {
+  /// JSON 응답에서 퀴즈 문제를 검증하고 유효한 경우 반환
+  /// 유효하지 않으면 null 반환
+  static Map<String, dynamic>? validate(Map<String, dynamic> json) {
+    try {
+      // 필수 필드 존재 여부 검증
+      if (!json.containsKey('question') || json['question'] is! String) {
+        debugPrint('검증 실패: question 필드가 없거나 유효하지 않음');
+        return null;
+      }
+      if (!json.containsKey('options') || json['options'] is! List) {
+        debugPrint('검증 실패: options 필드가 없거나 유효하지 않음');
+        return null;
+      }
+      if (!json.containsKey('correct_answer') ||
+          json['correct_answer'] is! String) {
+        debugPrint('검증 실패: correct_answer 필드가 없거나 유효하지 않음');
+        return null;
+      }
+      if (!json.containsKey('explanation') || json['explanation'] is! String) {
+        debugPrint('검증 실패: explanation 필드가 없거나 유효하지 않음');
+        return null;
+      }
+
+      final question = json['question'] as String;
+      final options = List<String>.from(json['options']);
+      final correctAnswer = json['correct_answer'] as String;
+      final explanation = json['explanation'] as String;
+
+      // 빈 문자열 검증
+      if (question.trim().isEmpty) {
+        debugPrint('검증 실패: question이 비어있음');
+        return null;
+      }
+
+      // 옵션 개수 검증 (4개)
+      if (options.length != 4) {
+        debugPrint('검증 실패: options 개수가 4개가 아님 (${options.length}개)');
+        return null;
+      }
+
+      // 정답이 옵션에 포함되어 있는지 검증
+      if (!options.contains(correctAnswer)) {
+        debugPrint('검증 실패: correct_answer가 options에 포함되어 있지 않음');
+        return null;
+      }
+
+      return {
+        'question': question,
+        'options': options,
+        'correct_answer': correctAnswer,
+        'explanation': explanation,
+      };
+    } catch (e) {
+      debugPrint('검증 중 오류 발생: $e');
+      return null;
+    }
+  }
+}
 
 /// AI 퀴즈 생성 및 관리 서비스
 class AiQuizService {
@@ -16,8 +77,13 @@ class AiQuizService {
   final SupabaseService _supabaseService = SupabaseService.instance;
   final GeminiService _geminiService = GeminiService.instance;
 
+  static const String _modelName = 'gemini-2.0-flash';
+
   /// Gemini API 사용 가능 여부
   bool get isGeminiAvailable => _geminiService.isInitialized;
+
+  /// API 키 가져오기
+  String? get _apiKey => _geminiService.apiKey;
 
   // ============= 퀴즈 생성 =============
 
@@ -37,8 +103,12 @@ class AiQuizService {
     }
 
     // 1. 퀴즈에 사용할 단어/한자 가져오기
-    final sourceItems = await _getSourceItems(quizType, jlptLevel, questionCount);
-    
+    final sourceItems = await _getSourceItems(
+      quizType,
+      jlptLevel,
+      questionCount,
+    );
+
     if (sourceItems.isEmpty) {
       throw Exception('퀴즈를 생성할 데이터가 없습니다.');
     }
@@ -52,7 +122,7 @@ class AiQuizService {
 
     // 3. 퀴즈를 DB에 저장
     final title = AiQuiz.generateTitle(quizType, jlptLevel);
-    
+
     final quizData = await _supabaseService.client
         .from('ai_quizzes')
         .insert({
@@ -108,7 +178,10 @@ class AiQuizService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _getWords(int? jlptLevel, int count) async {
+  Future<List<Map<String, dynamic>>> _getWords(
+    int? jlptLevel,
+    int count,
+  ) async {
     var query = _supabaseService.client
         .from('words')
         .select('id, word, reading, meanings, jlpt_level');
@@ -118,14 +191,17 @@ class AiQuizService {
     }
 
     final data = await query.limit(count);
-    
+
     // 셔플해서 반환
     final list = List<Map<String, dynamic>>.from(data);
     list.shuffle();
     return list;
   }
 
-  Future<List<Map<String, dynamic>>> _getKanji(int? jlptLevel, int count) async {
+  Future<List<Map<String, dynamic>>> _getKanji(
+    int? jlptLevel,
+    int count,
+  ) async {
     var query = _supabaseService.client
         .from('kanji')
         .select('id, character, meanings, on_readings, kun_readings, jlpt');
@@ -135,28 +211,72 @@ class AiQuizService {
     }
 
     final data = await query.limit(count);
-    
+
     final list = List<Map<String, dynamic>>.from(data);
     list.shuffle();
     return list;
   }
 
-  /// Gemini로 문제 생성
+  /// Gemini로 문제 생성 (구조화된 출력 + 검증)
   Future<List<Map<String, dynamic>>> _generateQuestionsWithGemini({
     required AiQuizType quizType,
     required List<Map<String, dynamic>> sourceItems,
     required int questionCount,
   }) async {
+    if (_apiKey == null) {
+      throw Exception('Gemini API 키가 설정되지 않았습니다.');
+    }
+
     final prompt = _buildQuizPrompt(quizType, sourceItems, questionCount);
-    
+
     try {
-      final response = await Gemini.instance.prompt(parts: [Part.text(prompt)]);
-      
-      if (response?.output == null) {
+      // 구조화된 출력을 위한 스키마 정의
+      final schema = Schema.array(
+        items: Schema.object(
+          properties: {
+            'question': Schema.string(description: '문제 내용', nullable: false),
+            'options': Schema.array(
+              items: Schema.string(description: '선택지'),
+              description: '4개의 선택지 배열',
+              nullable: false,
+            ),
+            'correct_answer': Schema.string(
+              description: '정답 (options 중 하나)',
+              nullable: false,
+            ),
+            'explanation': Schema.string(
+              description: '정답 해설 (한국어)',
+              nullable: false,
+            ),
+          },
+          requiredProperties: [
+            'question',
+            'options',
+            'correct_answer',
+            'explanation',
+          ],
+        ),
+        description: '퀴즈 문제 배열',
+      );
+
+      // GenerativeModel 생성 (구조화된 출력 설정)
+      final model = GenerativeModel(
+        model: _modelName,
+        apiKey: _apiKey!,
+        generationConfig: GenerationConfig(
+          responseMimeType: 'application/json',
+          responseSchema: schema,
+        ),
+      );
+
+      final content = [Content.text(prompt)];
+      final response = await model.generateContent(content);
+
+      if (response.text == null) {
         throw Exception('Gemini 응답을 받지 못했습니다.');
       }
 
-      return _parseQuizResponse(response!.output!, sourceItems);
+      return _parseAndValidateQuizResponse(response.text!, sourceItems);
     } catch (e) {
       debugPrint('Gemini 퀴즈 생성 오류: $e');
       // 폴백: 간단한 문제 자동 생성
@@ -170,10 +290,10 @@ class AiQuizService {
     int questionCount,
   ) {
     final itemsJson = json.encode(sourceItems.take(questionCount + 5).toList());
-    
+
     String typeDescription;
     String exampleFormat;
-    
+
     switch (quizType) {
       case AiQuizType.jpToKr:
         typeDescription = '일본어 단어를 보고 한국어 뜻을 맞추는 4지선다 퀴즈';
@@ -224,40 +344,71 @@ class AiQuizService {
 $itemsJson
 
 요구사항:
-1. 각 문제는 4개의 선택지를 가집니다
+1. 각 문제는 정확히 4개의 선택지를 가집니다
 2. 오답 선택지는 비슷하지만 다른 의미/읽기를 가진 것으로 구성
-3. 설명(explanation)은 한국어로 간단히 작성
+3. correct_answer는 반드시 options 배열에 포함된 값이어야 합니다
+4. 설명(explanation)은 한국어로 간단히 작성
 
-출력 형식 (JSON 배열):
-[$exampleFormat]
+예시:
+$exampleFormat
 
-$questionCount개의 문제를 JSON 배열로만 반환해주세요. 다른 텍스트 없이 JSON만 출력하세요.
+$questionCount개의 문제를 생성해주세요.
 ''';
   }
 
-  List<Map<String, dynamic>> _parseQuizResponse(
+  /// 퀴즈 응답 파싱 및 검증
+  List<Map<String, dynamic>> _parseAndValidateQuizResponse(
     String response,
     List<Map<String, dynamic>> sourceItems,
   ) {
     try {
-      // JSON 배열 추출
-      final jsonMatch = RegExp(r'\[[\s\S]*\]').firstMatch(response);
-      if (jsonMatch != null) {
-        final jsonString = jsonMatch.group(0)!;
-        final parsed = List<Map<String, dynamic>>.from(json.decode(jsonString));
-        
-        // source_id 매핑 (가능한 경우)
-        for (var i = 0; i < parsed.length && i < sourceItems.length; i++) {
-          parsed[i]['source_id'] = sourceItems[i]['id'];
+      // JSON 배열 추출 (구조화된 출력이므로 바로 파싱 가능)
+      List<dynamic> rawParsed;
+
+      // 구조화된 출력인 경우 JSON 배열로 바로 파싱
+      if (response.trim().startsWith('[')) {
+        rawParsed = json.decode(response) as List<dynamic>;
+      } else {
+        // 혹시 다른 텍스트가 포함된 경우 JSON 배열 추출
+        final jsonMatch = RegExp(r'\[[\s\S]*\]').firstMatch(response);
+        if (jsonMatch == null) {
+          debugPrint('JSON 배열을 찾을 수 없습니다.');
+          return [];
         }
-        
-        return parsed;
+        rawParsed = json.decode(jsonMatch.group(0)!) as List<dynamic>;
       }
+
+      // 검증된 문제들만 필터링
+      final validQuestions = <Map<String, dynamic>>[];
+
+      for (var i = 0; i < rawParsed.length; i++) {
+        final rawQuestion = rawParsed[i] as Map<String, dynamic>;
+
+        // 검증 수행
+        final validated = _QuizQuestionValidator.validate(rawQuestion);
+
+        if (validated != null) {
+          // source_id 매핑
+          if (i < sourceItems.length) {
+            validated['source_id'] = sourceItems[i]['id'];
+          }
+          validQuestions.add(validated);
+        } else {
+          debugPrint('문제 ${i + 1} 검증 실패, 스킵');
+        }
+      }
+
+      if (validQuestions.isEmpty) {
+        debugPrint('유효한 문제가 없습니다.');
+        return [];
+      }
+
+      debugPrint('검증 완료: ${validQuestions.length}/${rawParsed.length}개 문제 유효');
+      return validQuestions;
     } catch (e) {
       debugPrint('퀴즈 응답 파싱 오류: $e');
+      return [];
     }
-    
-    return [];
   }
 
   /// 폴백: Gemini 실패 시 간단한 문제 자동 생성
@@ -271,14 +422,18 @@ $questionCount개의 문제를 JSON 배열로만 반환해주세요. 다른 텍�
 
     for (var i = 0; i < itemsToUse.length; i++) {
       final item = itemsToUse[i];
-      final otherItems = sourceItems.where((s) => s['id'] != item['id']).take(3).toList();
+      final otherItems = sourceItems
+          .where((s) => s['id'] != item['id'])
+          .take(3)
+          .toList();
 
       Map<String, dynamic> question;
 
       switch (quizType) {
         case AiQuizType.jpToKr:
           final meanings = item['meanings'] as Map<String, dynamic>? ?? {};
-          final correctAnswer = (meanings['korean'] as List?)?.firstOrNull ?? '뜻 없음';
+          final correctAnswer =
+              (meanings['korean'] as List?)?.firstOrNull ?? '뜻 없음';
           final options = [
             correctAnswer,
             ...otherItems.map((o) {
@@ -286,7 +441,7 @@ $questionCount개의 문제를 JSON 배열로만 반환해주세요. 다른 텍�
               return (m['korean'] as List?)?.firstOrNull ?? '뜻 없음';
             }),
           ]..shuffle();
-          
+
           question = {
             'question': item['word'] ?? '',
             'options': options,
@@ -298,13 +453,14 @@ $questionCount개의 문제를 JSON 배열로만 반환해주세요. 다른 텍�
 
         case AiQuizType.krToJp:
           final meanings = item['meanings'] as Map<String, dynamic>? ?? {};
-          final koreanMeaning = (meanings['korean'] as List?)?.firstOrNull ?? '뜻 없음';
+          final koreanMeaning =
+              (meanings['korean'] as List?)?.firstOrNull ?? '뜻 없음';
           final correctAnswer = item['word'] ?? '';
           final options = [
             correctAnswer,
             ...otherItems.map((o) => o['word'] ?? ''),
           ]..shuffle();
-          
+
           question = {
             'question': koreanMeaning,
             'options': options,
@@ -315,16 +471,18 @@ $questionCount개의 문제를 JSON 배열로만 반환해주세요. 다른 텍�
           break;
 
         case AiQuizType.kanjiReading:
-          final onReadings = (item['on_readings'] as List?)?.cast<String>() ?? [];
+          final onReadings =
+              (item['on_readings'] as List?)?.cast<String>() ?? [];
           final correctAnswer = onReadings.isNotEmpty ? onReadings.first : 'なし';
           final options = [
             correctAnswer,
             ...otherItems.map((o) {
-              final readings = (o['on_readings'] as List?)?.cast<String>() ?? [];
+              final readings =
+                  (o['on_readings'] as List?)?.cast<String>() ?? [];
               return readings.isNotEmpty ? readings.first : 'なし';
             }),
           ]..shuffle();
-          
+
           question = {
             'question': item['character'] ?? '',
             'options': options,
@@ -337,13 +495,14 @@ $questionCount개의 문제를 JSON 배열로만 반환해주세요. 다른 텍�
         case AiQuizType.fillBlank:
           final word = item['word'] ?? '';
           final meanings = item['meanings'] as Map<String, dynamic>? ?? {};
-          final koreanMeaning = (meanings['korean'] as List?)?.firstOrNull ?? '뜻';
+          final koreanMeaning =
+              (meanings['korean'] as List?)?.firstOrNull ?? '뜻';
           final correctAnswer = word;
           final options = [
             correctAnswer,
             ...otherItems.map((o) => o['word'] ?? ''),
           ]..shuffle();
-          
+
           question = {
             'question': '「$koreanMeaning」を日本語で言うと？ ___',
             'options': options,
@@ -400,10 +559,7 @@ $questionCount개의 문제를 JSON 배열로만 반환해주세요. 다른 텍�
 
   /// 퀴즈 삭제
   Future<void> deleteQuiz(int quizId) async {
-    await _supabaseService.client
-        .from('ai_quizzes')
-        .delete()
-        .eq('id', quizId);
+    await _supabaseService.client.from('ai_quizzes').delete().eq('id', quizId);
   }
 
   // ============= 퀴즈 응시 =============
@@ -417,10 +573,7 @@ $questionCount개의 문제를 JSON 배열로만 반환해주세요. 다른 텍�
 
     final data = await _supabaseService.client
         .from('ai_quiz_attempts')
-        .insert({
-          'quiz_id': quizId,
-          'user_id': userId,
-        })
+        .insert({'quiz_id': quizId, 'user_id': userId})
         .select()
         .single();
 
@@ -447,12 +600,16 @@ $questionCount개의 문제를 JSON 배열로만 반환해주세요. 다른 텍�
         .eq('id', attemptId);
 
     // 답변 일괄 저장
-    final answersToInsert = answers.map((a) => {
-      'attempt_id': attemptId,
-      'question_id': a['question_id'],
-      'user_answer': a['user_answer'],
-      'is_correct': a['is_correct'],
-    }).toList();
+    final answersToInsert = answers
+        .map(
+          (a) => {
+            'attempt_id': attemptId,
+            'question_id': a['question_id'],
+            'user_answer': a['user_answer'],
+            'is_correct': a['is_correct'],
+          },
+        )
+        .toList();
 
     await _supabaseService.client
         .from('ai_quiz_answers')
@@ -474,9 +631,7 @@ $questionCount개의 문제를 JSON 배열로만 반환해주세요. 다른 텍�
   }
 
   /// 최근 응시 기록 조회
-  Future<List<AiQuizAttempt>> getRecentAttempts({
-    int limit = 10,
-  }) async {
+  Future<List<AiQuizAttempt>> getRecentAttempts({int limit = 10}) async {
     final userId = _supabaseService.currentUser?.id;
     if (userId == null) return [];
 
@@ -506,4 +661,3 @@ $questionCount개의 문제를 JSON 배열로만 반환해주세요. 다른 텍�
     return (data as List).map((a) => AiQuizAttempt.fromJson(a)).toList();
   }
 }
-

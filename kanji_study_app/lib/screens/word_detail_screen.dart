@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:flutter_gemini/flutter_gemini.dart';
 import '../models/word_model.dart';
 import '../models/word_example_model.dart';
 import '../models/study_record_model.dart';
@@ -192,39 +191,10 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
     });
 
     try {
-      // Create prompt for Gemini
-      final prompt =
-          '''
-다음 일본어 단어에 대한 예문을 3개 만들어주세요. 각 예문은 일상생활에서 자연스럽게 사용할 수 있는 문장이어야 합니다.
+      // GeminiService를 통해 예문 생성
+      final examples = await _geminiService.generateWordExamples(_currentWord);
 
-단어: ${widget.word.word}
-읽기: ${widget.word.reading}
-의미: ${widget.word.meaningsText}
-
-다음 형식으로 응답해주세요:
-[예문1]
-일본어: (일본어 문장)
-히라가나: (히라가나로 표기)
-한국어: (한국어 번역)
-
-[예문2]
-일본어: (일본어 문장)
-히라가나: (히라가나로 표기)
-한국어: (한국어 번역)
-
-[예문3]
-일본어: (일본어 문장)
-히라가나: (히라가나로 표기)
-한국어: (한국어 번역)
-''';
-
-      // Use flutter_gemini directly
-      final gemini = Gemini.instance;
-      final response = await gemini.prompt(parts: [Part.text(prompt)]);
-
-      if (response?.output != null) {
-        // Parse the response to extract examples
-        final examples = _parseExamples(response!.output!);
+      if (examples.isNotEmpty) {
         setState(() {
           _generatedExamples = examples;
         });
@@ -244,45 +214,6 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
         _isGeneratingExamples = false;
       });
     }
-  }
-
-  List<WordExample> _parseExamples(String response) {
-    final examples = <WordExample>[];
-    final lines = response.split('\n');
-
-    String? japanese;
-    String? furigana;
-    String? korean;
-
-    for (final line in lines) {
-      if (line.startsWith('일본어:')) {
-        japanese = line.substring(5).trim();
-      } else if (line.startsWith('히라가나:') || line.startsWith('후리가나:')) {
-        furigana = line.substring(line.indexOf(':') + 1).trim();
-      } else if (line.startsWith('한국어:')) {
-        korean = line.substring(5).trim();
-
-        // If we have all three components, create an example
-        if (japanese != null && furigana != null) {
-          examples.add(
-            WordExample(
-              japanese: japanese,
-              furigana: furigana,
-              korean: korean,
-              source: 'AI Generated',
-              createdAt: DateTime.now(),
-            ),
-          );
-
-          // Reset for next example
-          japanese = null;
-          furigana = null;
-          korean = null;
-        }
-      }
-    }
-
-    return examples;
   }
 
   String _getSourceLabel(String? source) {

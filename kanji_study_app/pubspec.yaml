@@ -41,7 +41,7 @@ dependencies:
   timezone: ^0.10.1
   shared_preferences: ^2.5.3
   google_fonts: ^6.3.0
-  flutter_gemini: ^3.0.0
+  google_generative_ai: ^0.4.7
   supabase_flutter: ^2.9.1
   phosphor_flutter: ^2.1.0
   crypto: ^3.0.6

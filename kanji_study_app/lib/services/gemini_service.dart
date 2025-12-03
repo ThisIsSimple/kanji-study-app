@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/kanji_model.dart';
 import '../models/kanji_example.dart';
+import '../models/word_model.dart';
+import '../models/word_example_model.dart';
 import '../models/user_progress.dart';
 
 class GeminiService {
@@ -14,8 +16,11 @@ class GeminiService {
 
   static const String _apiKeyPref = 'gemini_api_key';
   static const String _examplesCachePref = 'gemini_examples_cache';
+  static const String _modelName = 'gemini-2.0-flash';
+
   String? _apiKey;
   bool _isInitialized = false;
+  GenerativeModel? _model;
 
   Future<void> init() async {
     if (_isInitialized) return;
@@ -24,7 +29,7 @@ class GeminiService {
     _apiKey = prefs.getString(_apiKeyPref);
 
     if (_apiKey != null && _apiKey!.isNotEmpty) {
-      Gemini.init(apiKey: _apiKey!);
+      _model = GenerativeModel(model: _modelName, apiKey: _apiKey!);
       _isInitialized = true;
     }
   }
@@ -34,15 +39,33 @@ class GeminiService {
     await prefs.setString(_apiKeyPref, apiKey);
     _apiKey = apiKey;
 
-    Gemini.init(apiKey: apiKey);
+    _model = GenerativeModel(model: _modelName, apiKey: apiKey);
     _isInitialized = true;
   }
 
-  bool get isInitialized => _isInitialized && _apiKey != null;
+  bool get isInitialized => _isInitialized && _apiKey != null && _model != null;
 
   String? get apiKey => _apiKey;
 
-  // 예문 생성 함수
+  /// 내부 헬퍼: 텍스트 생성 요청
+  Future<String?> _generateContent(String prompt) async {
+    if (!isInitialized || _model == null) {
+      throw Exception('Gemini API가 초기화되지 않았습니다. API 키를 설정해주세요.');
+    }
+
+    try {
+      final content = [Content.text(prompt)];
+      final response = await _model!.generateContent(content);
+      return response.text;
+    } catch (e) {
+      debugPrint('Gemini API 오류: $e');
+      rethrow;
+    }
+  }
+
+  // ============= 한자 예문 생성 =============
+
+  /// 한자 예문 생성 함수
   Future<List<KanjiExample>> generateExamples(Kanji kanji) async {
     if (!isInitialized) {
       throw Exception('Gemini API가 초기화되지 않았습니다. API 키를 설정해주세요.');
@@ -55,15 +78,14 @@ class GeminiService {
     }
 
     try {
-      final prompt = _buildExamplePrompt(kanji);
+      final prompt = _buildKanjiExamplePrompt(kanji);
+      final response = await _generateContent(prompt);
 
-      final response = await Gemini.instance.prompt(parts: [Part.text(prompt)]);
-
-      if (response?.output == null) {
+      if (response == null) {
         throw Exception('응답을 받지 못했습니다.');
       }
 
-      final examples = _parseExampleResponse(response!.output!);
+      final examples = _parseKanjiExampleResponse(response);
 
       // 캐시에 저장
       await _cacheExamples(kanji.character, examples);
@@ -75,7 +97,97 @@ class GeminiService {
     }
   }
 
-  // 퀴즈 문제 생성 함수
+  // ============= 단어 예문 생성 (word_detail_screen용) =============
+
+  /// 단어 예문 생성 함수
+  Future<List<WordExample>> generateWordExamples(Word word) async {
+    if (!isInitialized) {
+      throw Exception('Gemini API가 초기화되지 않았습니다. API 키를 설정해주세요.');
+    }
+
+    try {
+      final prompt = _buildWordExamplePrompt(word);
+      final response = await _generateContent(prompt);
+
+      if (response == null) {
+        throw Exception('응답을 받지 못했습니다.');
+      }
+
+      return _parseWordExampleResponse(response);
+    } catch (e) {
+      debugPrint('Gemini API 오류 (단어 예문): $e');
+      rethrow;
+    }
+  }
+
+  String _buildWordExamplePrompt(Word word) {
+    return '''
+다음 일본어 단어에 대한 예문을 3개 만들어주세요. 각 예문은 일상생활에서 자연스럽게 사용할 수 있는 문장이어야 합니다.
+
+단어: ${word.word}
+읽기: ${word.reading}
+의미: ${word.meaningsText}
+
+다음 형식으로 응답해주세요:
+[예문1]
+일본어: (일본어 문장)
+히라가나: (히라가나로 표기)
+한국어: (한국어 번역)
+
+[예문2]
+일본어: (일본어 문장)
+히라가나: (히라가나로 표기)
+한국어: (한국어 번역)
+
+[예문3]
+일본어: (일본어 문장)
+히라가나: (히라가나로 표기)
+한국어: (한국어 번역)
+''';
+  }
+
+  List<WordExample> _parseWordExampleResponse(String response) {
+    final examples = <WordExample>[];
+    final lines = response.split('\n');
+
+    String? japanese;
+    String? furigana;
+    String? korean;
+
+    for (final line in lines) {
+      if (line.startsWith('일본어:')) {
+        japanese = line.substring('일본어:'.length).trim();
+      } else if (line.startsWith('히라가나:') || line.startsWith('후리가나:')) {
+        furigana = line.substring(line.indexOf(':') + 1).trim();
+      } else if (line.startsWith('한국어:')) {
+        korean = line.substring('한국어:'.length).trim();
+
+        // 세 가지 구성요소가 모두 있으면 예문 생성
+        if (japanese != null && furigana != null) {
+          examples.add(
+            WordExample(
+              japanese: japanese,
+              furigana: furigana,
+              korean: korean,
+              source: 'gemini',
+              createdAt: DateTime.now(),
+            ),
+          );
+
+          // 다음 예문을 위해 초기화
+          japanese = null;
+          furigana = null;
+          korean = null;
+        }
+      }
+    }
+
+    return examples;
+  }
+
+  // ============= 퀴즈 문제 생성 =============
+
+  /// 퀴즈 문제 생성 함수
   Future<List<Map<String, dynamic>>> generateQuizQuestions(
     List<Kanji> kanjiList,
   ) async {
@@ -85,21 +197,22 @@ class GeminiService {
 
     try {
       final prompt = _buildQuizPrompt(kanjiList);
+      final response = await _generateContent(prompt);
 
-      final response = await Gemini.instance.prompt(parts: [Part.text(prompt)]);
-
-      if (response?.output == null) {
+      if (response == null) {
         throw Exception('응답을 받지 못했습니다.');
       }
 
-      return _parseQuizResponse(response!.output!);
+      return _parseQuizResponse(response);
     } catch (e) {
       debugPrint('Gemini API 오류: $e');
       rethrow;
     }
   }
 
-  // 학습 팁 생성 함수
+  // ============= 학습 팁 생성 =============
+
+  /// 학습 팁 생성 함수
   Future<String> generateStudyTips(Kanji kanji) async {
     if (!isInitialized) {
       throw Exception('Gemini API가 초기화되지 않았습니다.');
@@ -118,16 +231,17 @@ class GeminiService {
 간단하고 기억하기 쉬운 2-3가지 팁을 제공해주세요.
 ''';
 
-      final response = await Gemini.instance.prompt(parts: [Part.text(prompt)]);
-
-      return response?.output ?? '학습 팁을 생성하지 못했습니다.';
+      final response = await _generateContent(prompt);
+      return response ?? '학습 팁을 생성하지 못했습니다.';
     } catch (e) {
       debugPrint('Gemini API 오류: $e');
       rethrow;
     }
   }
 
-  // 학습 진도 분석 함수
+  // ============= 학습 진도 분석 =============
+
+  /// 학습 진도 분석 함수
   Future<String> analyzeProgress(
     List<UserProgress> progressList,
     List<Kanji> allKanji,
@@ -138,19 +252,17 @@ class GeminiService {
 
     try {
       final prompt = _buildProgressAnalysisPrompt(progressList, allKanji);
-
-      final response = await Gemini.instance.prompt(parts: [Part.text(prompt)]);
-
-      return response?.output ?? '분석을 생성하지 못했습니다.';
+      final response = await _generateContent(prompt);
+      return response ?? '분석을 생성하지 못했습니다.';
     } catch (e) {
       debugPrint('Gemini API 오류: $e');
       rethrow;
     }
   }
 
-  // Private helper methods
+  // ============= Private helper methods =============
 
-  String _buildExamplePrompt(Kanji kanji) {
+  String _buildKanjiExamplePrompt(Kanji kanji) {
     return '''
 한자: ${kanji.character}
 의미: ${kanji.meanings.join(', ')}
@@ -180,7 +292,7 @@ JLPT N${kanji.jlpt} 수준에 맞는 난이도로 작성해주세요.
 ''';
   }
 
-  List<KanjiExample> _parseExampleResponse(String response) {
+  List<KanjiExample> _parseKanjiExampleResponse(String response) {
     final examples = <KanjiExample>[];
 
     try {
@@ -287,7 +399,8 @@ JLPT N${kanji.jlpt} 수준에 맞는 난이도로 작성해주세요.
 ''';
   }
 
-  // 캐시 관련 메서드
+  // ============= 캐시 관련 메서드 =============
+
   Future<List<KanjiExample>> _getCachedExamples(String character) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -330,7 +443,7 @@ JLPT N${kanji.jlpt} 수준에 맞는 난이도로 작성해주세요.
     }
   }
 
-  // 캐시 초기화
+  /// 캐시 초기화
   Future<void> clearCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_examplesCachePref);
