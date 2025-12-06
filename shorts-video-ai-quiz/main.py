@@ -103,7 +103,7 @@ async def generate_video(request: GenerateRequest):
         
         # 디버그 모드일 때 저장
         storage_manager = get_storage_manager()
-        saved_path = storage_manager.save_video(video_bytes, question.id)
+        saved_path = storage_manager.save_video(video_bytes, question)
         if saved_path:
             logger.info(f"💾 디버그 저장: {saved_path}")
         
@@ -155,7 +155,7 @@ async def generate_video_json(request: GenerateRequest):
         
         # 저장
         storage_manager = get_storage_manager()
-        saved_path = storage_manager.save_video(video_bytes, question.id)
+        saved_path = storage_manager.save_video(video_bytes, question)
         
         # 임시 파일 삭제
         if temp_path and os.path.exists(temp_path):

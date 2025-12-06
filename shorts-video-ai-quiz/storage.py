@@ -7,6 +7,10 @@ import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 from datetime import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from models import QuizQuestion
 
 # GCS 사용 여부에 따라 조건부 import
 try:
@@ -134,13 +138,13 @@ class StorageManager:
         """저장소 인스턴스 반환"""
         return self._storage
     
-    def save_video(self, video_bytes: bytes, question_id: int) -> str | None:
+    def save_video(self, video_bytes: bytes, question: "QuizQuestion") -> str | None:
         """
         영상 저장 (디버그 모드일 때만)
         
         Args:
             video_bytes: 영상 바이트 데이터
-            question_id: 문제 ID
+            question: QuizQuestion 객체
         
         Returns:
             str | None: 저장된 파일 경로/URL (디버그 모드 아니면 None)
@@ -150,7 +154,14 @@ class StorageManager:
         
         # 타임스탬프 포함 파일명
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"quiz_{question_id}_{timestamp}.mp4"
+        
+        # 문제 텍스트 구성: 다음 단어의 뜻은? 「勉強」
+        question_prompt = question.get_question_prompt()
+        question_text = question.question
+        problem_text = f"{question_prompt} 「{question_text}」"
+        
+        # 파일명 생성: quiz_{quizId}_다음 단어의 뜻은? 「勉強」_20251206_180030.mp4
+        filename = f"quiz_{question.id}_{problem_text}_{timestamp}.mp4"
         
         saved_path = self._storage.save(video_bytes, filename)
         return saved_path
@@ -191,7 +202,7 @@ if __name__ == "__main__":
     manager = StorageManager()
     print(f"📁 저장소 정보: {manager.get_storage_info()}")
     
-    # 테스트 데이터 저장
-    test_data = b"test video data"
-    saved_path = manager.save_video(test_data, question_id=123)
-    print(f"✅ 저장됨: {saved_path}")
+    # 테스트 데이터 저장 (테스트용으로는 question 객체가 필요하므로 주석 처리)
+    # test_data = b"test video data"
+    # saved_path = manager.save_video(test_data, question=...)
+    # print(f"✅ 저장됨: {saved_path}")
