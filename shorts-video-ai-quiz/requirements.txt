@@ -22,3 +22,6 @@ requests>=2.31.0
 
 # SVG to PNG conversion (for emoji images)
 cairosvg>=2.7.0
+
+# Audio processing (for tick sound generation)
+scipy>=1.11.0

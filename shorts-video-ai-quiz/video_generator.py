@@ -10,6 +10,8 @@ from moviepy.editor import (
     ImageClip,
     concatenate_videoclips,
     CompositeVideoClip,
+    AudioFileClip,
+    CompositeAudioClip,
 )
 import numpy as np
 from PIL import Image
@@ -22,6 +24,10 @@ from frame_renderer import (
     WIDTH,
     HEIGHT,
 )
+
+# Assets 경로
+ASSETS_DIR = Path(__file__).parent / "assets"
+SOUNDS_DIR = ASSETS_DIR / "sounds"
 
 
 # 영상 설정
@@ -48,18 +54,48 @@ def create_intro_clip(question: QuizQuestion) -> ImageClip:
 def create_question_clip(question: QuizQuestion) -> CompositeVideoClip:
     """
     문제 클립 생성 (10초)
-    매 초마다 카운트다운이 바뀌는 프레임 생성
+    매 초마다 카운트다운이 바뀌는 프레임 생성 + 효과음 추가
     """
     clips = []
+    
+    # 효과음 로드
+    tick_sound_path = SOUNDS_DIR / "tick.wav"
+    tick_audio = None
+    if tick_sound_path.exists():
+        try:
+            tick_audio = AudioFileClip(str(tick_sound_path))
+            # 효과음 길이 조절 (0.15초 정도로 짧게)
+            if tick_audio.duration > 0.2:
+                tick_audio = tick_audio.subclip(0, 0.2)
+        except Exception as e:
+            print(f"⚠️  효과음 로드 실패: {e}")
+            tick_audio = None
     
     for countdown in range(10, 0, -1):
         frame = render_question_frame(question, countdown)
         frame_array = pil_to_numpy(frame)
         clip = ImageClip(frame_array).set_duration(1)
+        
+        # 효과음 추가 (각 초마다)
+        if tick_audio:
+            try:
+                # 각 클립마다 오디오를 새로 로드 (MoviePy 버그 회피)
+                clip_audio = AudioFileClip(str(tick_sound_path))
+                if clip_audio.duration > 0.2:
+                    clip_audio = clip_audio.subclip(0, 0.2)
+                clip = clip.set_audio(clip_audio)
+            except Exception as e:
+                print(f"⚠️  효과음 추가 실패: {e}")
+        
         clips.append(clip)
     
     # 클립들을 순차적으로 연결
     final_clip = concatenate_videoclips(clips, method="compose")
+    
+    # 효과음 정리
+    if tick_audio:
+        tick_audio.close()
+    
     return final_clip
 
 
@@ -106,11 +142,14 @@ def generate_quiz_video(
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     
     # 영상 렌더링
+    # 오디오가 있는 경우 audio=True, 없으면 audio=False
+    has_audio = final_clip.audio is not None
     final_clip.write_videofile(
         output_path,
         fps=FPS,
         codec="libx264",
-        audio=False,  # 오디오 없음
+        audio=has_audio,  # 오디오가 있으면 포함
+        audio_codec="aac" if has_audio else None,
         preset="medium",  # 인코딩 속도 vs 품질
         threads=4,
         logger=None,  # 로그 비활성화
