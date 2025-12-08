@@ -24,6 +24,14 @@ ACCENT_COLOR = "#0f3460"  # 미드 블루
 CORRECT_COLOR = "#4ade80"  # 초록
 WRONG_COLOR = "#f87171"  # 빨강
 
+# Safe Zone 규격 (유동적 적용 - 상하단 우선, 좌우는 유동적)
+SAFE_ZONE_TOP = 250
+SAFE_ZONE_BOTTOM = 420
+SAFE_ZONE_LEFT = 40  # 좌우 여백 완화
+SAFE_ZONE_RIGHT = 120  # 우측 중앙-하단만 피하면 됨
+SAFE_ZONE_WIDTH = WIDTH - SAFE_ZONE_LEFT - SAFE_ZONE_RIGHT  # 920px
+SAFE_ZONE_HEIGHT = HEIGHT - SAFE_ZONE_TOP - SAFE_ZONE_BOTTOM  # 1250px
+
 # 폰트 경로
 ASSETS_DIR = Path(__file__).parent / "assets"
 FONTS_DIR = ASSETS_DIR / "fonts"
@@ -304,7 +312,7 @@ def draw_centered_text(
     img: Image.Image | None = None,
 ):
     """
-    중앙 정렬 텍스트 그리기 (이모지 지원)
+    중앙 정렬 텍스트 그리기 (이모지 지원, 유동적 Safe Zone 적용)
     
     Args:
         draw: ImageDraw 객체
@@ -312,7 +320,7 @@ def draw_centered_text(
         y: Y 좌표
         font: 폰트
         fill: 텍스트 색상
-        width: 전체 너비
+        width: 전체 너비 (기본값: 전체 화면 너비, 필요시 SAFE_ZONE_WIDTH 사용 가능)
         img: 배경 이미지 (이모지 삽입용)
     """
     # 이모지와 텍스트 분리
@@ -330,7 +338,11 @@ def draw_centered_text(
             total_width += part_width
     
     # 시작 X 좌표 (중앙 정렬)
-    x = (width - total_width) // 2
+    # width가 WIDTH인 경우 전체 화면 기준, SAFE_ZONE_WIDTH인 경우 Safe Zone 기준
+    if width == WIDTH:
+        x = (width - total_width) // 2
+    else:
+        x = SAFE_ZONE_LEFT + (width - total_width) // 2
     
     # 각 부분 그리기
     for part_text, is_emoji in parts:
@@ -372,19 +384,19 @@ def render_intro_frame(question: QuizQuestion) -> Image.Image:
     subtitle_font = get_font(48)
     level_font = get_font(56, bold=True)
     
-    # 🇯🇵 일본어 퀴즈 (이모지 이미지로 표시)
-    draw_centered_text(draw, "🇯🇵 일본어 퀴즈", 600, title_font, img=img)
+    # 🇯🇵 일본어 퀴즈 (이모지 이미지로 표시) - Safe Zone 내부
+    draw_centered_text(draw, "🇯🇵 일본어 퀴즈", SAFE_ZONE_TOP + 100, title_font, img=img)
     
     # 퀴즈 유형 프롬프트
     prompt = question.get_question_prompt()
-    draw_centered_text(draw, f"「{prompt}」", 750, subtitle_font, fill="#cccccc", img=img)
+    draw_centered_text(draw, f"「{prompt}」", SAFE_ZONE_TOP + 250, subtitle_font, fill="#cccccc", img=img)
     
-    # 퀴즈 유형 뱃지
+    # 퀴즈 유형 뱃지 - Safe Zone 기준 중앙 정렬
     quiz_type_display = question.get_quiz_type_display()
     badge_width = 200
     badge_height = 60
-    badge_x = (WIDTH - badge_width) // 2
-    badge_y = 880
+    badge_x = SAFE_ZONE_LEFT + (SAFE_ZONE_WIDTH - badge_width) // 2
+    badge_y = SAFE_ZONE_TOP + 380
     draw_rounded_rectangle(
         draw,
         (badge_x, badge_y, badge_x + badge_width, badge_y + badge_height),
@@ -393,13 +405,13 @@ def render_intro_frame(question: QuizQuestion) -> Image.Image:
     )
     draw_centered_text(draw, quiz_type_display, badge_y + 8, get_font(36, bold=True), img=img)
     
-    # JLPT 레벨 (있는 경우)
+    # JLPT 레벨 (있는 경우) - Safe Zone 내부
     if question.jlpt_level:
         level_text = f"JLPT N{question.jlpt_level}"
-        draw_centered_text(draw, level_text, 1000, level_font, fill=CORRECT_COLOR, img=img)
+        draw_centered_text(draw, level_text, SAFE_ZONE_TOP + 500, level_font, fill=CORRECT_COLOR, img=img)
     
-    # 하단 안내
-    draw_centered_text(draw, "10초 안에 정답을 맞춰보세요!", 1200, get_font(36), fill="#888888", img=img)
+    # 하단 안내 - 하단에서 420px 위
+    draw_centered_text(draw, "10초 안에 정답을 맞춰보세요!", HEIGHT - SAFE_ZONE_BOTTOM - 50, get_font(36), fill="#888888", img=img)
     
     return img
 
@@ -419,43 +431,13 @@ def render_question_frame(question: QuizQuestion, countdown: int) -> Image.Image
     option_font = get_font(52, bold=True)  # 크기 키우고 bold
     level_font = get_font(48, bold=True)  # 크기 키우고 bold
     
-    # 상단 바
-    draw.rectangle([0, 0, WIDTH, 120], fill=SECONDARY_COLOR)
-    
-    # 카운트다운 타이머 (왼쪽 상단) - 이모지 처리
-    timer_color = WRONG_COLOR if countdown <= 3 else TEXT_COLOR
-    timer_text = f"⏱️ {countdown}"
-    # 이모지가 포함된 텍스트는 draw_centered_text 대신 수동 처리
-    timer_parts = split_text_and_emojis(timer_text)
-    timer_x = 40
-    for part_text, is_emoji in timer_parts:
-        if is_emoji:
-            emoji_size = int(timer_font.size * 1.2)
-            emoji_img = load_emoji_image(part_text, emoji_size)
-            if emoji_img:
-                # RGBA 모드인 경우 alpha 채널을 마스크로 사용
-                if emoji_img.mode == "RGBA":
-                    img.paste(emoji_img, (timer_x, 25), emoji_img.split()[3])  # alpha 채널을 마스크로
-                else:
-                    img.paste(emoji_img, (timer_x, 25))
-                timer_x += emoji_size
-            else:
-                draw.text((timer_x, 25), part_text, font=timer_font, fill=timer_color)
-                part_width, _ = get_text_size(draw, part_text, timer_font)
-                timer_x += part_width
-        else:
-            draw.text((timer_x, 25), part_text, font=timer_font, fill=timer_color)
-            part_width, _ = get_text_size(draw, part_text, timer_font)
-            timer_x += part_width
-    
-    # JLPT 레벨 (오른쪽 상단)
+    # JLPT 레벨 (상단 중앙) - 상단 바 제거로 인해 상단 중앙 배치
     if question.jlpt_level:
         level_text = f"N{question.jlpt_level}"
-        level_width, _ = get_text_size(draw, level_text, level_font)
-        draw.text((WIDTH - level_width - 40, 45), level_text, font=level_font, fill=CORRECT_COLOR)
+        draw_centered_text(draw, level_text, SAFE_ZONE_TOP - 50, level_font, fill=CORRECT_COLOR, img=img)
     
-    # 문제 영역
-    question_y = 250
+    # 문제 영역 - Safe Zone 내부
+    question_y = SAFE_ZONE_TOP + 50  # 상단에서 300px 아래
     prompt = question.get_question_prompt()
     draw_centered_text(draw, prompt, question_y, get_font(40), fill="#aaaaaa", img=img)  # 조금 키우기
     
@@ -469,21 +451,22 @@ def render_question_frame(question: QuizQuestion, countdown: int) -> Image.Image
     
     draw_centered_text(draw, f"「 {question_text} 」", question_y + 100, question_font, img=img)
     
-    # 선택지 영역
-    options_start_y = 550
+    # 선택지 영역 - Safe Zone 기준
+    options_start_y = SAFE_ZONE_TOP + 350  # Safe Zone 내부
     option_height = 140
     option_margin = 30
-    option_padding = 40
+    option_padding = SAFE_ZONE_LEFT  # 좌측 여백 40px
+    option_width = SAFE_ZONE_WIDTH  # Safe Zone 너비 920px
     
     option_labels = ["①", "②", "③", "④"]
     
     for i, option in enumerate(question.options):
         y = options_start_y + i * (option_height + option_margin)
         
-        # 선택지 배경
+        # 선택지 배경 - Safe Zone 기준
         draw_rounded_rectangle(
             draw,
-            (option_padding, y, WIDTH - option_padding, y + option_height),
+            (option_padding, y, option_padding + option_width, y + option_height),
             radius=20,
             fill=ACCENT_COLOR,
         )
@@ -500,15 +483,49 @@ def render_question_frame(question: QuizQuestion, countdown: int) -> Image.Image
         
         draw.text((option_padding + 100, y + 45), option_text, font=option_font_size, fill=TEXT_COLOR)
     
-    # 하단 힌트 (조금 키우고 더 옅은 회색)
-    draw_centered_text(draw, "정답을 생각해보세요...", 1350, get_font(36), fill="#999999", img=img)
+    # 카운트다운 타이머 (하단 중앙) - 기존 "정답을 생각해보세요..." 위치로 이동
+    timer_color = WRONG_COLOR if countdown <= 3 else TEXT_COLOR
+    timer_text = f"⏱️ {countdown}"
+    # 이모지가 포함된 텍스트는 draw_centered_text 대신 수동 처리
+    timer_parts = split_text_and_emojis(timer_text)
+    timer_y = HEIGHT - SAFE_ZONE_BOTTOM - 50
+    # 전체 너비 계산
+    total_timer_width = 0
+    emoji_size = int(timer_font.size * 1.2)
+    for part_text, is_emoji in timer_parts:
+        if is_emoji:
+            total_timer_width += emoji_size
+        else:
+            part_width, _ = get_text_size(draw, part_text, timer_font)
+            total_timer_width += part_width
+    
+    timer_x = (WIDTH - total_timer_width) // 2
+    for part_text, is_emoji in timer_parts:
+        if is_emoji:
+            emoji_img = load_emoji_image(part_text, emoji_size)
+            if emoji_img:
+                # RGBA 모드인 경우 alpha 채널을 마스크로 사용
+                if emoji_img.mode == "RGBA":
+                    img.paste(emoji_img, (timer_x, timer_y + (timer_font.size - emoji_size) // 2), emoji_img.split()[3])
+                else:
+                    img.paste(emoji_img, (timer_x, timer_y + (timer_font.size - emoji_size) // 2))
+                timer_x += emoji_size
+            else:
+                draw.text((timer_x, timer_y), part_text, font=timer_font, fill=timer_color)
+                part_width, _ = get_text_size(draw, part_text, timer_font)
+                timer_x += part_width
+        else:
+            draw.text((timer_x, timer_y), part_text, font=timer_font, fill=timer_color)
+            part_width, _ = get_text_size(draw, part_text, timer_font)
+            timer_x += part_width
     
     return img
 
 
 def render_answer_frame(question: QuizQuestion) -> Image.Image:
     """
-    정답 프레임 렌더링 (13-23초)
+    정답 프레임 렌더링 (13-18초, 5초)
+    - 문제 표시
     - 정답 표시
     - 해설
     """
@@ -516,19 +533,8 @@ def render_answer_frame(question: QuizQuestion) -> Image.Image:
     draw = ImageDraw.Draw(img)
     
     # 폰트
-    title_font = get_font(56, bold=True)
     answer_font = get_font(72, bold=True)
     explain_font = get_font(42)  # 해설 글자 크기 키우기
-    option_font = get_font(40)
-    
-    # 상단 바
-    draw.rectangle([0, 0, WIDTH, 120], fill=CORRECT_COLOR)
-    draw_centered_text(draw, "✅ 정답 공개!", 30, title_font, fill="#000000", width=WIDTH, img=img)
-    
-    # 문제 다시 표시
-    question_y = 200
-    draw_centered_text(draw, question.get_question_prompt(), question_y, get_font(32), fill="#aaaaaa", img=img)
-    draw_centered_text(draw, f"「 {question.question} 」", question_y + 60, get_font(48, bold=True), img=img)
     
     # 정답 찾기
     correct_index = -1
@@ -539,43 +545,23 @@ def render_answer_frame(question: QuizQuestion) -> Image.Image:
     
     option_labels = ["①", "②", "③", "④"]
     
-    # 선택지 표시 (정답 강조)
-    options_start_y = 420
-    option_height = 100
-    option_margin = 20
-    option_padding = 40
+    # 문제 표시 - Safe Zone 내부 (상단 여백 250px 적용)
+    question_y = SAFE_ZONE_TOP + 50  # y=300
+    draw_centered_text(draw, question.get_question_prompt(), question_y, get_font(32), fill="#aaaaaa", img=img)
+    draw_centered_text(draw, f"「 {question.question} 」", question_y + 100, get_font(48, bold=True), img=img)  # y=400
     
-    for i, option in enumerate(question.options):
-        y = options_start_y + i * (option_height + option_margin)
-        is_correct = (i == correct_index)
-        
-        bg_color = CORRECT_COLOR if is_correct else SECONDARY_COLOR
-        text_color = "#000000" if is_correct else "#888888"
-        
-        draw_rounded_rectangle(
-            draw,
-            (option_padding, y, WIDTH - option_padding, y + option_height),
-            radius=15,
-            fill=bg_color,
-        )
-        
-        label = option_labels[i]
-        draw.text((option_padding + 25, y + 25), label, font=option_font, fill=text_color)
-        
-        opt_font = get_font(32) if len(option) > 20 else option_font
-        draw.text((option_padding + 90, y + 28), option, font=opt_font, fill=text_color)
+    # 정답 표시 - 문제 바로 아래에 배치
+    answer_y = question_y + 200  # y=500 (문제 아래 100px 간격)
+    draw_centered_text(draw, f"정답 {option_labels[correct_index]} {question.correct_answer}", answer_y, answer_font, fill=CORRECT_COLOR, img=img)
     
-    # 정답 강조 텍스트
-    answer_y = 920
-    draw_centered_text(draw, "정답", answer_y, get_font(40), fill=CORRECT_COLOR, img=img)
-    draw_centered_text(draw, f"{option_labels[correct_index]} {question.correct_answer}", answer_y + 60, answer_font, fill=TEXT_COLOR, img=img)
-    
-    # 해설 영역
-    explain_y = 1100
-    draw.rectangle([40, explain_y, WIDTH - 40, explain_y + 250], fill=SECONDARY_COLOR)
+    # 해설 영역 - 정답과 해설 사이 간격 증가 (더 아래로 이동)
+    explain_y = answer_y + 200  # y=700 (정답 아래 200px 간격)
+    explain_left = SAFE_ZONE_LEFT
+    explain_right = WIDTH - SAFE_ZONE_RIGHT
+    draw.rectangle([explain_left, explain_y, explain_right, explain_y + 250], fill=SECONDARY_COLOR)
     draw_rounded_rectangle(
         draw,
-        (40, explain_y, WIDTH - 40, explain_y + 250),
+        (explain_left, explain_y, explain_right, explain_y + 250),
         radius=20,
         fill=SECONDARY_COLOR,
     )
@@ -596,10 +582,29 @@ def render_answer_frame(question: QuizQuestion) -> Image.Image:
     for i, line in enumerate(lines[:4]):  # 최대 4줄
         draw_centered_text(draw, line, explain_y + 80 + i * 45, explain_font, fill="#cccccc", img=img)
     
-    # 하단 CTA (글자 키우고 더 옅은 회색)
-    draw_centered_text(draw, "팔로우하고 더 많은 퀴즈를 풀어보세요! 👆", 1380, get_font(36), fill="#999999", img=img)
-    # 인스타 계정
-    draw_centered_text(draw, "@jlpt.everyday", 1430, get_font(36, bold=True), fill="#999999", img=img)
+    return img
+
+
+def render_account_frame() -> Image.Image:
+    """
+    계정 정보 프레임 렌더링 (18-23초, 5초)
+    - 팔로우 유도 메시지
+    - 인스타그램 계정 정보
+    """
+    img = create_gradient_background(WIDTH, HEIGHT)
+    draw = ImageDraw.Draw(img)
+    
+    # 폰트
+    main_font = get_font(56, bold=True)
+    account_font = get_font(64, bold=True)
+    
+    # 메인 메시지 - 중앙에 배치
+    main_y = HEIGHT // 2 - 80  # 화면 중앙에서 약간 위
+    draw_centered_text(draw, "팔로우하고 더 많은 퀴즈를 풀어보세요!", main_y, main_font, fill=TEXT_COLOR, img=img)
+    
+    # 인스타그램 계정 - 메인 메시지 아래에 강조
+    account_y = HEIGHT // 2 + 40  # 화면 중앙에서 약간 아래
+    draw_centered_text(draw, "@jlpt.everyday", account_y, account_font, fill=PRIMARY_COLOR, img=img)
     
     return img
 

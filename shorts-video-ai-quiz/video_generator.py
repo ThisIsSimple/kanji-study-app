@@ -1,5 +1,5 @@
 """
-Video Generator - MoviePy를 사용하여 20초 쇼츠 영상 생성
+Video Generator - MoviePy를 사용하여 23초 쇼츠 영상 생성
 """
 
 import os
@@ -22,6 +22,7 @@ from frame_renderer import (
     render_intro_frame,
     render_question_frame,
     render_answer_frame,
+    render_account_frame,
     WIDTH,
     HEIGHT,
 )
@@ -38,8 +39,9 @@ BACKGROUND_MUSIC_FILES = ["ukulele.mp3"]
 FPS = 30
 INTRO_DURATION = 3  # 0-3초: 인트로
 QUESTION_DURATION = 10  # 3-13초: 문제 (10초 카운트다운)
-ANSWER_DURATION = 7  # 13-20초: 정답
-TOTAL_DURATION = INTRO_DURATION + QUESTION_DURATION + ANSWER_DURATION  # 20초
+ANSWER_DURATION = 5  # 13-18초: 정답
+ACCOUNT_DURATION = 5  # 18-23초: 계정 정보
+TOTAL_DURATION = INTRO_DURATION + QUESTION_DURATION + ANSWER_DURATION + ACCOUNT_DURATION  # 23초
 
 
 def pil_to_numpy(pil_image: Image.Image) -> np.ndarray:
@@ -104,10 +106,18 @@ def create_question_clip(question: QuizQuestion) -> CompositeVideoClip:
 
 
 def create_answer_clip(question: QuizQuestion) -> ImageClip:
-    """정답 클립 생성 (7초)"""
+    """정답 클립 생성 (5초)"""
     frame = render_answer_frame(question)
     frame_array = pil_to_numpy(frame)
     clip = ImageClip(frame_array).set_duration(ANSWER_DURATION)
+    return clip
+
+
+def create_account_clip() -> ImageClip:
+    """계정 정보 클립 생성 (5초)"""
+    frame = render_account_frame()
+    frame_array = pil_to_numpy(frame)
+    clip = ImageClip(frame_array).set_duration(ACCOUNT_DURATION)
     return clip
 
 
@@ -129,10 +139,11 @@ def generate_quiz_video(
     intro_clip = create_intro_clip(question)
     question_clip = create_question_clip(question)
     answer_clip = create_answer_clip(question)
+    account_clip = create_account_clip()
 
     # 클립 연결
     final_clip = concatenate_videoclips(
-        [intro_clip, question_clip, answer_clip],
+        [intro_clip, question_clip, answer_clip, account_clip],
         method="compose",
     )
 
@@ -200,6 +211,7 @@ def generate_quiz_video(
     intro_clip.close()
     question_clip.close()
     answer_clip.close()
+    account_clip.close()
 
     # 배경음악 정리
     if bg_music:
