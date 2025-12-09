@@ -3,7 +3,7 @@ import * as path from 'path';
 import { QuizQuestion } from '../src/types/quiz';
 import { generateTempFilePath, ensureTempDirectory, cleanupFile } from './utils/fileManager';
 
-const BUNDLE_PATH = path.join(process.cwd(), 'out');
+const BUNDLE_PATH = path.join(process.cwd(), 'build');
 const COMPOSITION_ID = 'QuizVideo';
 const FPS = 30;
 const WIDTH = 1080;

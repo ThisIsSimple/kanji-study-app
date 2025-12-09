@@ -67,6 +67,15 @@ export async function cleanupFile(filePath: string): Promise<void> {
 export async function cleanupOldFiles(maxAgeMs: number = 60 * 60 * 1000): Promise<void> {
   try {
     const tempDir = getTempDirectory();
+    
+    // 디렉토리 존재 여부 확인
+    try {
+      await fs.promises.access(tempDir);
+    } catch {
+      // 디렉토리가 없으면 정리할 파일이 없으므로 조용히 반환
+      return;
+    }
+    
     const files = await fs.promises.readdir(tempDir);
     const now = Date.now();
     let cleanedCount = 0;
