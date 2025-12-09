@@ -39,6 +39,18 @@ export function generateTempFilePath(): string {
 }
 
 /**
+ * 고유한 임시 썸네일 파일 경로를 생성합니다.
+ * 형식: quiz-thumbnail-{timestamp}-{randomId}.png
+ */
+export function generateTempThumbnailPath(): string {
+  const timestamp = Date.now();
+  const randomId = crypto.randomBytes(8).toString('hex');
+  const filename = `quiz-thumbnail-${timestamp}-${randomId}.png`;
+  const tempDir = getTempDirectory();
+  return path.join(tempDir, filename);
+}
+
+/**
  * 파일을 정리합니다 (삭제).
  * 삭제 실패 시에도 에러를 throw하지 않고 로그만 기록합니다.
  */
