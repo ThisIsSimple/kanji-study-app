@@ -33,7 +33,7 @@ export const AccountFrame: React.FC = () => {
       {/* 어두운 오버레이 */}
       <AbsoluteFill
         style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: 'rgba(0, 0, 0, 0.1)',
         }}
       />
       {/* 콘텐츠 영역 */}

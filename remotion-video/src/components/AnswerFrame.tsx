@@ -56,7 +56,7 @@ export const AnswerFrame: React.FC<AnswerFrameProps> = ({ question }) => {
       {/* 어두운 오버레이 */}
       <AbsoluteFill
         style={{
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          backgroundColor: "rgba(0, 0, 0, 0.1)",
         }}
       />
       <AbsoluteFill
@@ -65,15 +65,15 @@ export const AnswerFrame: React.FC<AnswerFrameProps> = ({ question }) => {
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          paddingLeft: SAFE_ZONE_LEFT,
-          paddingRight: SAFE_ZONE_RIGHT,
+          paddingLeft: SAFE_ZONE_LEFT / 2,
+          paddingRight: SAFE_ZONE_RIGHT / 2,
         }}
       >
         {/* 문제 표시 */}
         <div style={{ marginBottom: 60, textAlign: "center" }}>
           <div
             style={{
-              fontSize: 40,
+              fontSize: 50,
               color: COLORS.GRAY_LIGHT,
               textAlign: "center",
               marginBottom: 50,
@@ -83,7 +83,7 @@ export const AnswerFrame: React.FC<AnswerFrameProps> = ({ question }) => {
           </div>
           <div
             style={{
-              fontSize: 64,
+              fontSize: 150,
               fontWeight: "bold",
               color: COLORS.TEXT,
               textAlign: "center",
@@ -96,29 +96,29 @@ export const AnswerFrame: React.FC<AnswerFrameProps> = ({ question }) => {
         {/* 정답 표시 */}
         <div
           style={{
-            fontSize: 72,
+            fontSize: 100,
             fontWeight: "bold",
             color: COLORS.CORRECT,
             textAlign: "center",
-            marginBottom: 100, // 정답과 해설 사이 간격 감소
+            marginBottom: 80, // 정답과 해설 사이 간격 감소
           }}
         >
-          정답 {correctLabel} {question.correct_answer}
+          정답 : {correctLabel} {question.correct_answer}
         </div>
 
         {/* 해설 영역 */}
         <div
           style={{
             backgroundColor: "rgba(0, 0, 0, 0.5)",
-            borderRadius: 20,
-            padding: 40,
-            maxWidth: 800,
+            borderRadius: 40,
+            padding: 50,
+            maxWidth: 1000,
             width: "100%",
           }}
         >
           <div
             style={{
-              fontSize: 42,
+              fontSize: 60,
               fontWeight: "bold",
               color: COLORS.PRIMARY,
               textAlign: "center",
@@ -131,10 +131,14 @@ export const AnswerFrame: React.FC<AnswerFrameProps> = ({ question }) => {
             <div
               key={index}
               style={{
-                fontSize: 42,
-                color: "#cccccc",
+                fontSize: 60,
+                color: COLORS.TEXT,
                 textAlign: "center",
                 marginBottom: index < explanationLines.length - 1 ? 20 : 0,
+                whiteSpace: "pre-line",
+                wordBreak: "keep-all",
+                overflowWrap: "break-word",
+                lineHeight: 1.8,
               }}
             >
               {line}

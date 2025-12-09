@@ -1,7 +1,7 @@
 // 색상 상수
 export const COLORS = {
   BACKGROUND: '#0f172a', // 모던 다크 블루 (슬레이트 900)
-  PRIMARY: '#e94560', // 레드 핑크
+  PRIMARY: '#c11236', // 더 진한 레드 핑크
   SECONDARY: '#334155', // 다크 블루 (슬레이트 700) - 해설 영역 배경
   TEXT: '#ffffff',
   ACCENT: '#1e293b', // 모던 다크 블루 (슬레이트 800)

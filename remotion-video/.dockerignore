@@ -1,0 +1,54 @@
+# Node modules
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+dist
+out
+build
+.turbo
+
+# Development files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Test files
+test
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Documentation
+README.md
+*.md
+
+# Temporary files
+tmp
+*.tmp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Remotion Studio
+.remotion
+
+# TypeScript cache
+*.tsbuildinfo
+

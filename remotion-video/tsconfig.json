@@ -15,6 +15,7 @@
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src"]
+  "include": ["src", "server"],
+  "exclude": ["node_modules", "dist", "out"]
 }
 
