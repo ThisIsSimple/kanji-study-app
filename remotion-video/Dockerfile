@@ -30,6 +30,9 @@ COPY . .
 # Remotion 번들 빌드
 RUN npm run build
 
+# Chrome Headless Shell 미리 다운로드 (빌드 시 포함하여 첫 요청 지연 방지)
+RUN npx remotion browser ensure
+
 # 서버 빌드 (TypeScript 컴파일)
 RUN npx tsc --project tsconfig.server.json
 

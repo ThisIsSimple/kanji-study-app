@@ -5,6 +5,6 @@ export const ANSWER_DURATION = 5; // 13-18초: 정답
 export const ACCOUNT_DURATION = 5; // 18-23초: 계정 정보
 export const TOTAL_DURATION = INTRO_DURATION + QUESTION_DURATION + ANSWER_DURATION + ACCOUNT_DURATION; // 23초
 
-// FPS
-export const FPS = 30;
+// FPS (1초에 한 번씩 업데이트되는 영상이므로 낮춤)
+export const FPS = 10;
 
