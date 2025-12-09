@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "remotion studio",
     "build": "remotion bundle",
-    "render": "remotion render"
+    "render": "remotion render --timeout=60000"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +15,7 @@
     "@remotion/bundler": "^4.0.382",
     "@remotion/cli": "^4.0.382",
     "@remotion/player": "^4.0.382",
+    "@remotion/preload": "^4.0.382",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "remotion": "^4.0.382"

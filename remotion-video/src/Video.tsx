@@ -1,11 +1,18 @@
 import React from 'react';
 import {AbsoluteFill, Audio, Sequence, useVideoConfig, staticFile} from 'remotion';
+import {preloadImage} from '@remotion/preload';
 import {QuizQuestion} from './types/quiz';
 import {IntroFrame} from './components/IntroFrame';
 import {QuestionFrame} from './components/QuestionFrame';
 import {AnswerFrame} from './components/AnswerFrame';
 import {AccountFrame} from './components/AccountFrame';
 import {INTRO_DURATION, QUESTION_DURATION, ANSWER_DURATION, ACCOUNT_DURATION, TOTAL_DURATION, FPS} from './constants/timing';
+
+// 이미지 미리 로드 (모듈 로드 시 즉시)
+const christmasLogoImage = staticFile('images/christmas-logo.png');
+const christmasBackgroundImage = staticFile('images/christmas-background.jpg');
+preloadImage(christmasLogoImage);
+preloadImage(christmasBackgroundImage);
 
 interface VideoProps {
   question: QuizQuestion;
@@ -31,6 +38,17 @@ export const Video: React.FC<VideoProps> = ({question}) => {
         <AnswerFrame question={question} />
       </Sequence>
 
+      {/* 정답 화면 시작 시 correct 사운드 재생 */}
+      <Sequence
+        from={(INTRO_DURATION + QUESTION_DURATION) * fps}
+        durationInFrames={Math.floor(2 * fps)}
+      >
+        <Audio
+          src={staticFile('sounds/correct.mp3')}
+          volume={1.0}
+        />
+      </Sequence>
+
       {/* 계정 정보 (18-23초) */}
       <Sequence
         from={(INTRO_DURATION + QUESTION_DURATION + ANSWER_DURATION) * fps}
@@ -47,16 +65,18 @@ export const Video: React.FC<VideoProps> = ({question}) => {
         endAt={TOTAL_DURATION * fps}
       />
 
-      {/* 카운트다운 효과음 (문제 화면에서만) */}
-      {Array.from({length: QUESTION_DURATION}, (_, i) => (
-        <Audio
-          key={i}
-          src={staticFile('sounds/tick.wav')}
-          volume={0.5}
-          startFrom={(INTRO_DURATION + i) * fps}
-          endAt={(INTRO_DURATION + i) * fps + Math.floor(0.2 * fps)}
-        />
-      ))}
+      {/* 카운트다운 beep 사운드 (문제 화면에서만) - 각 초마다 재생 */}
+      {Array.from({length: QUESTION_DURATION}, (_, i) => {
+        const startFrame = (INTRO_DURATION + i) * fps;
+        return (
+          <Sequence key={`tick-seq-${i}`} from={startFrame} durationInFrames={Math.floor(0.3 * fps)}>
+            <Audio
+              src={staticFile('sounds/tick.wav')}
+              volume={1.0}
+            />
+          </Sequence>
+        );
+      })}
     </AbsoluteFill>
   );
 };

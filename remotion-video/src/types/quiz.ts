@@ -13,8 +13,8 @@ export interface QuizQuestion {
 
 export const getQuizTypeDisplay = (type: QuizType): string => {
   const displayNames: Record<QuizType, string> = {
-    jp_to_kr: '일→한',
-    kr_to_jp: '한→일',
+    jp_to_kr: '단어의 뜻',
+    kr_to_jp: '뜻의 단어',
     kanji_reading: '한자읽기',
     fill_blank: '빈칸채우기',
   };
@@ -23,8 +23,8 @@ export const getQuizTypeDisplay = (type: QuizType): string => {
 
 export const getQuestionPrompt = (type: QuizType): string => {
   const prompts: Record<QuizType, string> = {
-    jp_to_kr: '다음 단어의 뜻은?',
-    kr_to_jp: '다음 뜻의 일본어는?',
+    jp_to_kr: '다음 단어의 뜻을 고르시요.',
+    kr_to_jp: '다음을 뜻하는 단어를 고르시오.',
     kanji_reading: '다음 한자의 읽기는?',
     fill_blank: '빈칸에 들어갈 단어는?',
   };

@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, interpolate, useCurrentFrame, staticFile, Img} from 'remotion';
 import {QuizQuestion} from '../types/quiz';
 import {getQuizTypeDisplay, getQuestionPrompt} from '../types/quiz';
 import {COLORS} from '../constants/colors';
@@ -13,23 +13,39 @@ interface IntroFrameProps {
 export const IntroFrame: React.FC<IntroFrameProps> = ({question}) => {
   const frame = useCurrentFrame();
   const opacity = interpolate(frame, [0, 30], [0, 1], {extrapolateRight: 'clamp'});
+  const backgroundImage = staticFile('images/christmas-background.jpg');
 
   return (
     <AbsoluteFill
       style={{
-        background: `linear-gradient(to bottom, ${COLORS.BACKGROUND}, ${COLORS.ACCENT})`,
+        background: `linear-gradient(to bottom, ${COLORS.BACKGROUND}, ${COLORS.ACCENT})`, // Fallback
         fontFamily: FONT_FAMILY,
         opacity,
       }}
     >
+      {/* 배경 이미지 */}
+      <Img
+        src={backgroundImage}
+        delayRenderTimeoutInMilliseconds={60000}
+        style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+        }}
+      />
+      {/* 어두운 오버레이 */}
+      <AbsoluteFill
+        style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        }}
+      />
       <AbsoluteFill
         style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          paddingTop: SAFE_ZONE_TOP,
-          paddingBottom: HEIGHT - SAFE_ZONE_TOP - 420,
         }}
       >
         {/* 타이틀 */}
@@ -48,14 +64,31 @@ export const IntroFrame: React.FC<IntroFrameProps> = ({question}) => {
         {/* 퀴즈 유형 프롬프트 */}
         <div
           style={{
-            fontSize: 48,
+            fontSize: 150,
             color: '#cccccc',
-            marginBottom: 50,
+            fontWeight: 'bold',
             textAlign: 'center',
+            marginTop: 32,
+            marginBottom: 80,
           }}
         >
-          「{getQuestionPrompt(question.quiz_type)}」
+          {question.question}
         </div>
+
+        {/* JLPT 레벨 */}
+        {question.jlpt_level && (
+          <div
+            style={{
+              fontSize: 72,
+              fontWeight: 'bold',
+              color: COLORS.CORRECT,
+              marginBottom: 32,
+              textAlign: 'center',
+            }}
+          >
+            JLPT N{question.jlpt_level}
+          </div>
+        )}
 
         {/* 퀴즈 유형 뱃지 */}
         <div
@@ -79,33 +112,6 @@ export const IntroFrame: React.FC<IntroFrameProps> = ({question}) => {
           >
             {getQuizTypeDisplay(question.quiz_type)}
           </div>
-        </div>
-
-        {/* JLPT 레벨 */}
-        {question.jlpt_level && (
-          <div
-            style={{
-              fontSize: 56,
-              fontWeight: 'bold',
-              color: COLORS.CORRECT,
-              marginBottom: 50,
-              textAlign: 'center',
-            }}
-          >
-            JLPT N{question.jlpt_level}
-          </div>
-        )}
-
-        {/* 하단 안내 */}
-        <div
-          style={{
-            fontSize: 36,
-            color: COLORS.GRAY_MEDIUM,
-            marginTop: 100,
-            textAlign: 'center',
-          }}
-        >
-          10초 안에 정답을 맞춰보세요!
         </div>
       </AbsoluteFill>
     </AbsoluteFill>

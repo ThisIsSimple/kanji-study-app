@@ -1,20 +1,27 @@
-import React from 'react';
-import {AbsoluteFill} from 'remotion';
-import {QuizQuestion} from '../types/quiz';
-import {getQuestionPrompt} from '../types/quiz';
-import {COLORS} from '../constants/colors';
-import {SAFE_ZONE_TOP, SAFE_ZONE_LEFT, SAFE_ZONE_RIGHT} from '../constants/layout';
-import {FONT_FAMILY} from '../utils/fonts';
+import React from "react";
+import { AbsoluteFill, staticFile, Img } from "remotion";
+import { QuizQuestion } from "../types/quiz";
+import { getQuestionPrompt } from "../types/quiz";
+import { COLORS } from "../constants/colors";
+import {
+  SAFE_ZONE_TOP,
+  SAFE_ZONE_LEFT,
+  SAFE_ZONE_RIGHT,
+} from "../constants/layout";
+import { FONT_FAMILY } from "../utils/fonts";
 
 interface AnswerFrameProps {
   question: QuizQuestion;
 }
 
-const optionLabels = ['①', '②', '③', '④'];
+const optionLabels = ["①", "②", "③", "④"];
 
-export const AnswerFrame: React.FC<AnswerFrameProps> = ({question}) => {
-  const correctIndex = question.options.findIndex((opt) => opt === question.correct_answer);
+export const AnswerFrame: React.FC<AnswerFrameProps> = ({ question }) => {
+  const correctIndex = question.options.findIndex(
+    (opt) => opt === question.correct_answer
+  );
   const correctLabel = optionLabels[correctIndex];
+  const backgroundImage = staticFile("images/christmas-background.jpg");
 
   // 해설 텍스트 줄바꿈 처리
   const maxCharsPerLine = 25;
@@ -31,26 +38,44 @@ export const AnswerFrame: React.FC<AnswerFrameProps> = ({question}) => {
   return (
     <AbsoluteFill
       style={{
-        background: `linear-gradient(to bottom, ${COLORS.BACKGROUND}, ${COLORS.ACCENT})`,
+        background: `linear-gradient(to bottom, ${COLORS.BACKGROUND}, ${COLORS.ACCENT})`, // Fallback
         fontFamily: FONT_FAMILY,
       }}
     >
+      {/* 배경 이미지 */}
+      <Img
+        src={backgroundImage}
+        delayRenderTimeoutInMilliseconds={60000}
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+        }}
+      />
+      {/* 어두운 오버레이 */}
       <AbsoluteFill
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          paddingTop: SAFE_ZONE_TOP + 50,
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+        }}
+      />
+      <AbsoluteFill
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
           paddingLeft: SAFE_ZONE_LEFT,
           paddingRight: SAFE_ZONE_RIGHT,
         }}
       >
         {/* 문제 표시 */}
-        <div style={{marginBottom: 100}}>
+        <div style={{ marginBottom: 60, textAlign: "center" }}>
           <div
             style={{
-              fontSize: 32,
+              fontSize: 40,
               color: COLORS.GRAY_LIGHT,
-              textAlign: 'center',
+              textAlign: "center",
               marginBottom: 50,
             }}
           >
@@ -58,10 +83,10 @@ export const AnswerFrame: React.FC<AnswerFrameProps> = ({question}) => {
           </div>
           <div
             style={{
-              fontSize: 48,
-              fontWeight: 'bold',
+              fontSize: 64,
+              fontWeight: "bold",
               color: COLORS.TEXT,
-              textAlign: 'center',
+              textAlign: "center",
             }}
           >
             「 {question.question} 」
@@ -72,10 +97,10 @@ export const AnswerFrame: React.FC<AnswerFrameProps> = ({question}) => {
         <div
           style={{
             fontSize: 72,
-            fontWeight: 'bold',
+            fontWeight: "bold",
             color: COLORS.CORRECT,
-            textAlign: 'center',
-            marginBottom: 200, // 정답과 해설 사이 간격 증가
+            textAlign: "center",
+            marginBottom: 100, // 정답과 해설 사이 간격 감소
           }}
         >
           정답 {correctLabel} {question.correct_answer}
@@ -84,19 +109,19 @@ export const AnswerFrame: React.FC<AnswerFrameProps> = ({question}) => {
         {/* 해설 영역 */}
         <div
           style={{
-            backgroundColor: COLORS.SECONDARY,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
             borderRadius: 20,
             padding: 40,
-            marginTop: 'auto',
-            marginBottom: 100,
+            maxWidth: 800,
+            width: "100%",
           }}
         >
           <div
             style={{
-              fontSize: 36,
-              fontWeight: 'bold',
+              fontSize: 42,
+              fontWeight: "bold",
               color: COLORS.PRIMARY,
-              textAlign: 'center',
+              textAlign: "center",
               marginBottom: 30,
             }}
           >
@@ -107,8 +132,8 @@ export const AnswerFrame: React.FC<AnswerFrameProps> = ({question}) => {
               key={index}
               style={{
                 fontSize: 42,
-                color: '#cccccc',
-                textAlign: 'center',
+                color: "#cccccc",
+                textAlign: "center",
                 marginBottom: index < explanationLines.length - 1 ? 20 : 0,
               }}
             >
@@ -120,4 +145,3 @@ export const AnswerFrame: React.FC<AnswerFrameProps> = ({question}) => {
     </AbsoluteFill>
   );
 };
-
