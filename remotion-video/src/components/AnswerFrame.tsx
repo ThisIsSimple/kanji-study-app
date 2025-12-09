@@ -23,17 +23,8 @@ export const AnswerFrame: React.FC<AnswerFrameProps> = ({ question }) => {
   const correctLabel = optionLabels[correctIndex];
   const backgroundImage = staticFile("images/christmas-background.jpg");
 
-  // 해설 텍스트 줄바꿈 처리
-  const maxCharsPerLine = 25;
-  const explanationLines: string[] = [];
-  let remaining = question.explanation;
-  while (remaining.length > maxCharsPerLine) {
-    explanationLines.push(remaining.substring(0, maxCharsPerLine));
-    remaining = remaining.substring(maxCharsPerLine);
-  }
-  if (remaining) {
-    explanationLines.push(remaining);
-  }
+  // 해설 텍스트 줄바꿈 처리 (\n으로 분리)
+  const explanationLines = question.explanation.split('\n').filter(line => line.trim() !== '');
 
   return (
     <AbsoluteFill

@@ -5,7 +5,7 @@ import { renderQuizVideoWithTimeout } from './renderer';
 import { cleanupFile, cleanupOldFiles } from './utils/fileManager';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // JSON 파싱 미들웨어
 app.use(express.json({ limit: '10mb' }));
