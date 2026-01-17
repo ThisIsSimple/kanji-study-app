@@ -49,13 +49,15 @@ export const Video: React.FC<VideoProps> = ({question}) => {
         />
       </Sequence>
 
-      {/* 계정 정보 (18-23초) */}
-      <Sequence
-        from={(INTRO_DURATION + QUESTION_DURATION + ANSWER_DURATION) * fps}
-        durationInFrames={ACCOUNT_DURATION * fps}
-      >
-        <AccountFrame />
-      </Sequence>
+      {/* 계정 정보 (비활성화 가능) */}
+      {ACCOUNT_DURATION > 0 && (
+        <Sequence
+          from={(INTRO_DURATION + QUESTION_DURATION + ANSWER_DURATION) * fps}
+          durationInFrames={ACCOUNT_DURATION * fps}
+        >
+          <AccountFrame />
+        </Sequence>
+      )}
 
       {/* 배경음악 */}
       <Audio

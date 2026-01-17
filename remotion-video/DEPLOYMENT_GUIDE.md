@@ -26,7 +26,7 @@ gcloud --version
 gcloud auth login
 
 # 프로젝트 설정
-gcloud config set project YOUR_PROJECT_ID
+gcloud config set project kanji-study-app-469316
 
 # Cloud Run 및 Cloud Build API 활성화
 gcloud services enable run.googleapis.com
@@ -61,6 +61,11 @@ gcloud run deploy remotion-video-api \
   --max-instances 10 \
   --min-instances 0 \
   --allow-unauthenticated
+```
+
+```bash
+gcloud builds submit --tag gcr.io/kanji-study-app-469316/remotion-video-api
+gcloud run deploy remotion-video-api --image gcr.io/kanji-study-app-469316/remotion-video-api --region asia-northeast3
 ```
 
 ### 첫 배포 시 확인 사항
