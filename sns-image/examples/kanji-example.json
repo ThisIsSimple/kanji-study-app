@@ -1,0 +1,46 @@
+{
+  "type": "kanji",
+  "data": {
+    "cover": {
+      "word": "勉強",
+      "yomigana": "べんきょう",
+      "meaning": "공부"
+    },
+    "intro": {
+      "kanji": [
+        { "kanji": "勉", "korean": "힘쓸 면" },
+        { "kanji": "強", "korean": "강할 강" }
+      ],
+      "meaning": "힘써서 강해지다 → 공부하다"
+    },
+    "main": [
+      {
+        "equation": "勉(힘쓰다) + 強(강하다) = 勉強(공부)",
+        "explanation": "힘을 써서 강해진다는 의미로, 노력해서 배우는 것을 뜻합니다."
+      },
+      {
+        "equation": "勉 = 免(벗어나다) + 力(힘)",
+        "explanation": "무지에서 벗어나기 위해 힘쓴다는 뜻입니다."
+      }
+    ],
+    "additional": [
+      {
+        "kanji": "勉",
+        "examples": [
+          { "word": "勉強", "equation": "공부", "level": "N5" },
+          { "word": "勤勉", "equation": "근면", "level": "N2" },
+          { "word": "勉学", "equation": "면학", "level": "N1" }
+        ]
+      },
+      {
+        "kanji": "強",
+        "examples": [
+          { "word": "強い", "equation": "강하다", "level": "N5" },
+          { "word": "強調", "equation": "강조", "level": "N3" },
+          { "word": "強制", "equation": "강제", "level": "N2" }
+        ]
+      }
+    ],
+    "outro": {}
+  }
+}
