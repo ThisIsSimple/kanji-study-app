@@ -17,7 +17,7 @@ const clientSecret = jwt.sign(
     algorithm: 'ES256',
     header: {
       alg: 'ES256',
-      kid: 'ABC123DEFG'  // Key ID
+      kid: 'M6Y94Q96D5'  // Key ID
     }
   }
 );
