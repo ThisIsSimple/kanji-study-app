@@ -3,12 +3,14 @@ import sharp from "sharp";
 import { mkdir, writeFile } from "fs/promises";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { readFileSync } from "fs";
 import type { ReactNode } from "react";
 import { loadFonts } from "./fonts";
 import { IMAGE_WIDTH, IMAGE_HEIGHT } from "../types";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = join(__dirname, "../../output");
+const BACKGROUND_IMAGE_PATH = join(__dirname, "../../images/kawaii.png");
 
 /**
  * JSX 요소를 PNG 이미지로 렌더링
@@ -37,7 +39,23 @@ export async function renderToImage(
   await mkdir(fullOutputDir, { recursive: true });
 
   // SVG를 PNG로 변환
-  const pngBuffer = await sharp(Buffer.from(svg)).png({ quality: 90 }).toBuffer();
+  const contentPng = await sharp(Buffer.from(svg))
+    .resize(IMAGE_WIDTH, IMAGE_HEIGHT)
+    .png({ quality: 90 })
+    .toBuffer();
+
+  // 배경 이미지 로드 및 합성
+  const backgroundImage = readFileSync(BACKGROUND_IMAGE_PATH);
+  const pngBuffer = await sharp(backgroundImage)
+    .resize(IMAGE_WIDTH, IMAGE_HEIGHT)
+    .composite([
+      {
+        input: contentPng,
+        blend: "over",
+      },
+    ])
+    .png({ quality: 90 })
+    .toBuffer();
 
   // 파일 저장
   const outputPath = join(fullOutputDir, filename);
