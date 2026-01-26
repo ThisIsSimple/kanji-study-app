@@ -8,31 +8,21 @@ export function LyricsIntro({ data }: LyricsIntroProps) {
   return (
     <div
       style={mergeStyles(containerStyle, {
-        background: "linear-gradient(180deg, #2d1b4e 0%, #462066 100%)",
-        padding: "50px",
+        padding: "200px",
       })}
     >
       {/* 헤더 */}
       <div
         style={mergeStyles(tw("flex items-center gap-4 mb-8"), {
-          borderBottom: "2px solid rgba(255,107,157,0.3)",
           paddingBottom: "20px",
         })}
       >
         <div
           style={{
             display: "flex",
-            fontSize: "32px",
-          }}
-        >
-          📝
-        </div>
-        <div
-          style={{
-            display: "flex",
-            fontSize: "32px",
-            color: "#ffffff",
-            fontWeight: "700",
+            fontSize: "48px",
+            color: "#000000",
+            fontWeight: "800",
           }}
         >
           가사 & 해석
@@ -41,7 +31,7 @@ export function LyricsIntro({ data }: LyricsIntroProps) {
 
       {/* 가사 + 해석 */}
       <div
-        style={mergeStyles(tw("flex flex-col gap-4"), {
+        style={mergeStyles(tw("flex flex-col gap-6"), {
           flex: 1,
           overflow: "hidden",
         })}
@@ -49,20 +39,15 @@ export function LyricsIntro({ data }: LyricsIntroProps) {
         {lyricsLines.map((line, index) => (
           <div
             key={index}
-            style={mergeStyles(tw("flex flex-col"), {
-              backgroundColor: "rgba(255,255,255,0.05)",
-              borderRadius: "16px",
-              padding: "20px 28px",
-              borderLeft: "4px solid rgba(255,107,157,0.5)",
-            })}
+            style={mergeStyles(tw("flex flex-col"), {})}
           >
             {/* 일본어 가사 */}
             <div
               style={{
                 display: "flex",
-                fontSize: "30px",
-                color: "#ffffff",
-                fontWeight: "600",
+                fontSize: "44px",
+                color: "#000000",
+                fontWeight: "700",
                 marginBottom: "10px",
                 lineHeight: "1.4",
               }}
@@ -74,9 +59,9 @@ export function LyricsIntro({ data }: LyricsIntroProps) {
               <div
                 style={{
                   display: "flex",
-                  fontSize: "24px",
-                  color: "#00d4ff",
-                  fontWeight: "500",
+                  fontSize: "36px",
+                  color: "#000000",
+                  fontWeight: "600",
                   lineHeight: "1.4",
                 }}
               >
@@ -85,17 +70,6 @@ export function LyricsIntro({ data }: LyricsIntroProps) {
             )}
           </div>
         ))}
-      </div>
-
-      {/* 하단 안내 */}
-      <div
-        style={mergeStyles(tw("flex items-center justify-center gap-2 mt-6"), {
-          color: "rgba(255,255,255,0.4)",
-          fontSize: "20px",
-        })}
-      >
-        <div style={{ display: "flex" }}>다음 페이지에서 문법을 자세히 알아봐요</div>
-        <div style={{ display: "flex" }}>→</div>
       </div>
     </div>
   );
