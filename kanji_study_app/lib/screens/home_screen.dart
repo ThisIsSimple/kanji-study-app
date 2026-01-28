@@ -5,18 +5,15 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
 import '../models/user_stats_model.dart';
 import '../models/daily_study_stats.dart';
-import '../models/leaderboard_model.dart';
 import '../services/kanji_service.dart';
 import '../services/notification_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/analytics_service.dart';
-import '../services/social_service.dart';
 import 'kanji_detail_screen.dart';
 import '../widgets/streak_stats_row.dart';
 import '../widgets/enhanced_progress_card.dart';
 import '../widgets/weekly_heatmap.dart';
 import '../widgets/quick_study_cards.dart';
-import '../widgets/leaderboard_card.dart';
 import '../widgets/today_kanji_card.dart';
 import '../widgets/custom_header.dart';
 import '../constants/app_spacing.dart';
@@ -32,12 +29,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
   final ConnectivityService _connectivityService = ConnectivityService.instance;
   final AnalyticsService _analyticsService = AnalyticsService.instance;
-  final SocialService _socialService = SocialService.instance;
 
   Kanji? todayKanji;
   UserStats? _stats;
   List<DailyStudyStats> _weeklyData = [];
-  List<LeaderboardEntry> _leaderboard = [];
   bool _isLoading = true;
 
   @override
@@ -92,7 +87,6 @@ class _HomeScreenState extends State<HomeScreen> {
       final results = await Future.wait([
         _analyticsService.getUserStats(),
         _analyticsService.getWeeklyStats(),
-        _socialService.getLeaderboardWithUser(topCount: 5),
       ]);
 
       if (!mounted) return;
@@ -101,7 +95,6 @@ class _HomeScreenState extends State<HomeScreen> {
         todayKanji = kanji;
         _stats = results[0] as UserStats;
         _weeklyData = results[1] as List<DailyStudyStats>;
-        _leaderboard = results[2] as List<LeaderboardEntry>;
         _isLoading = false;
       });
     } catch (e) {
@@ -207,19 +200,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           // Today's Kanji Card
                           TodayKanjiCard(kanji: todayKanji!),
                           const SizedBox(height: 24),
-
-                          // Leaderboard Card
-                          if (_leaderboard.isNotEmpty)
-                            LeaderboardCard(
-                              entries: _leaderboard,
-                              currentUserId:
-                                  null, // TODO: Get from SupabaseService
-                              onViewAll: () {
-                                // TODO: Navigate to full leaderboard
-                              },
-                            ),
-                          if (_leaderboard.isNotEmpty)
-                            const SizedBox(height: 32),
 
                           // Study Button
                           FButton(

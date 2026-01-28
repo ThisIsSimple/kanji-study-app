@@ -187,14 +187,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             shape: BoxShape.circle,
                           ),
                           child: Center(
-                            child: Text(
-                              '漢',
-                              style: TextStyle(
-                                fontSize: 48,
-                                fontWeight: FontWeight.bold,
-                                color: theme.colors.primary,
-                                fontFamily: 'Noto Serif JP',
-                              ),
+                            child: Icon(
+                              PhosphorIconsFill.bookOpen,
+                              size: 48,
+                              color: theme.colors.primary,
                             ),
                           ),
                         ),
