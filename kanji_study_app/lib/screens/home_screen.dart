@@ -10,8 +10,6 @@ import '../services/notification_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/analytics_service.dart';
 import 'kanji_detail_screen.dart';
-import '../widgets/streak_stats_row.dart';
-import '../widgets/enhanced_progress_card.dart';
 import '../widgets/weekly_heatmap.dart';
 import '../widgets/quick_study_cards.dart';
 import '../widgets/today_kanji_card.dart';
@@ -158,24 +156,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Streak/XP/Goal Row
-                          StreakStatsRow(
-                            streak: _stats!.streak,
-                            xp: _stats!.totalXP,
-                            todayProgress: _stats!.todayProgress,
-                            dailyGoal: _stats!.dailyGoal,
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Enhanced Progress Card
-                          EnhancedProgressCard(
-                            studiedCount: _stats!.totalStudied,
-                            masteredCount: _stats!.totalMastered,
-                            weeklyCount: _stats!.weeklyCount,
-                            weeklyAverage: _stats!.weeklyAverage,
-                            nextMilestone: _stats!.nextMilestone,
-                            remainingToMilestone: _stats!.remainingToMilestone,
-                          ),
+                          // Today's Kanji Card (최상단)
+                          TodayKanjiCard(kanji: todayKanji!),
                           const SizedBox(height: 24),
 
                           // Weekly Heatmap
@@ -195,10 +177,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               // TODO: Navigate to favorites
                             },
                           ),
-                          const SizedBox(height: 24),
-
-                          // Today's Kanji Card
-                          TodayKanjiCard(kanji: todayKanji!),
                           const SizedBox(height: 24),
 
                           // Study Button

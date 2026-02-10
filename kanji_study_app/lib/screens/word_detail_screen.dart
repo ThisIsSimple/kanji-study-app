@@ -151,6 +151,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       final scaffoldContext = _scaffoldKey.currentContext;
       if (scaffoldContext == null) return;
       final isCompleted = status == StudyStatus.completed;
+      // ignore: use_build_context_synchronously
       showAppToast(
         scaffoldContext,
         message: isCompleted ? '학습 완료를 기록했습니다!' : '까먹음을 기록했습니다.',
@@ -163,6 +164,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       if (!mounted) return;
       final scaffoldContext = _scaffoldKey.currentContext;
       if (scaffoldContext == null) return;
+      // ignore: use_build_context_synchronously
       showAppToast(
         scaffoldContext,
         message: '기록 저장 실패: $e',

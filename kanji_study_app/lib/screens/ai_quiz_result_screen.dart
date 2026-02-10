@@ -411,7 +411,7 @@ class _AiQuizResultScreenState extends State<AiQuizResultScreen> {
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
-    return '${minutes}분 ${seconds}초';
+    return '$minutes분 $seconds초';
   }
 
   bool _containsJapanese(String text) {
