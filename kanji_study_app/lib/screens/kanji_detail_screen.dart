@@ -4,17 +4,20 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
 import '../models/kanji_example.dart';
+import '../models/word_model.dart';
 import '../models/study_record_model.dart';
 import '../services/gemini_service.dart';
 import '../services/supabase_service.dart';
 import '../services/kanji_service.dart';
 import '../services/study_record_service.dart';
+import '../services/local_database_service.dart';
 import '../widgets/example_card.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/study_button_bar.dart';
 import '../widgets/jlpt_badge.dart';
 import '../widgets/grade_badge.dart';
 import '../utils/korean_formatter.dart';
+import 'word_detail_screen.dart';
 
 class KanjiDetailScreen extends StatefulWidget {
   final Kanji kanji;
@@ -37,6 +40,8 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
   final SupabaseService _supabaseService = SupabaseService.instance;
   final KanjiService _kanjiService = KanjiService.instance;
   final StudyRecordService _studyRecordService = StudyRecordService.instance;
+  final LocalDatabaseService _localDatabaseService =
+      LocalDatabaseService.instance;
 
   PageController? _pageController;
   int _currentIndex = 0;
@@ -53,6 +58,10 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
   bool _isLoadingStats = true;
   bool _isRecordingStudy = false;
   bool _showStrokeOrder = false;
+  List<Word> _allWords = [];
+  List<Word> _relatedWords = [];
+  bool _isLoadingRelatedWords = true;
+  String? _relatedWordsError;
 
   // GlobalKey to access FScaffold context for toasts
   final GlobalKey<State> _scaffoldKey = GlobalKey<State>();
@@ -67,6 +76,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
     _isFavorite = _kanjiService.isFavorite(_currentKanji!.character);
     _loadDatabaseExamples();
     _loadStudyStats();
+    _loadRelatedWords();
   }
 
   @override
@@ -86,9 +96,57 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
         _studyStats = null;
         _isLoadingStats = true;
         _showStrokeOrder = false;
+        _relatedWords = [];
+        _isLoadingRelatedWords = true;
+        _relatedWordsError = null;
       });
       _loadDatabaseExamples();
       _loadStudyStats();
+      _loadRelatedWords();
+    }
+  }
+
+  Future<void> _loadRelatedWords() async {
+    final targetCharacter = _currentKanji?.character;
+    if (targetCharacter == null) return;
+
+    setState(() {
+      _isLoadingRelatedWords = true;
+      _relatedWordsError = null;
+    });
+
+    try {
+      if (_allWords.isEmpty) {
+        _allWords = await _localDatabaseService.getAllWords();
+      }
+
+      final relatedWords =
+          _allWords
+              .where((word) => word.word.contains(targetCharacter))
+              .toList()
+            ..sort((a, b) {
+              final jlptComparison = a.jlptLevel.compareTo(b.jlptLevel);
+              if (jlptComparison != 0) return jlptComparison;
+              final lengthComparison = a.word.length.compareTo(b.word.length);
+              if (lengthComparison != 0) return lengthComparison;
+              return a.word.compareTo(b.word);
+            });
+
+      if (!mounted || _currentKanji?.character != targetCharacter) return;
+
+      setState(() {
+        _relatedWords = relatedWords;
+        _isLoadingRelatedWords = false;
+      });
+    } catch (e) {
+      if (!mounted || _currentKanji?.character != targetCharacter) return;
+
+      setState(() {
+        _relatedWords = [];
+        _isLoadingRelatedWords = false;
+        _relatedWordsError = '연관 단어를 불러오지 못했습니다.';
+      });
+      debugPrint('Error loading related words: $e');
     }
   }
 
@@ -194,6 +252,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
       _isFavorite = !_isFavorite;
     });
   }
+
   Future<void> _generateExamples() async {
     if (_isGeneratingExamples) return;
 
@@ -235,6 +294,155 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
       default:
         return '';
     }
+  }
+
+  void _openRelatedWordDetail(int index) {
+    if (index < 0 || index >= _relatedWords.length) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WordDetailScreen(
+          word: _relatedWords[index],
+          wordList: _relatedWords,
+          currentIndex: index,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRelatedWordsSection(Kanji kanji, FThemeData theme) {
+    if (_isLoadingRelatedWords) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: Center(child: FCircularProgress()),
+      );
+    }
+
+    if (_relatedWordsError != null) {
+      return FCard(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            _relatedWordsError!,
+            style: theme.typography.base.copyWith(
+              color: theme.colors.mutedForeground,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_relatedWords.isEmpty) {
+      return FCard(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            '로컬에 저장된 단어 중 "${kanji.character}"가 포함된 단어가 없습니다.',
+            style: theme.typography.base.copyWith(
+              color: theme.colors.mutedForeground,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '연관 단어',
+              style: theme.typography.lg.copyWith(fontWeight: FontWeight.bold),
+            ),
+            Text(
+              '${_relatedWords.length}개',
+              style: theme.typography.sm.copyWith(
+                color: theme.colors.mutedForeground,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _relatedWords.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            final word = _relatedWords[index];
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _openRelatedWordDetail(index),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: theme.colors.border),
+                    color: theme.colors.secondary.withValues(alpha: 0.04),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              word.word,
+                              style: GoogleFonts.notoSerifJp(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                color: theme.colors.foreground,
+                              ),
+                            ),
+                            if (word.reading.isNotEmpty &&
+                                word.reading != word.word) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                word.reading,
+                                style: theme.typography.sm.copyWith(
+                                  color: theme.colors.mutedForeground,
+                                ),
+                              ),
+                            ],
+                            if (word.meaningsText.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                word.meaningsText,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.typography.sm.copyWith(
+                                  color: theme.colors.mutedForeground,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      JlptBadge(level: word.jlptLevel, showPrefix: true),
+                      const SizedBox(width: 4),
+                      Icon(
+                        PhosphorIconsRegular.caretRight,
+                        size: 18,
+                        color: theme.colors.mutedForeground,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
   }
 
   Widget _buildKanjiPage(Kanji kanji, FThemeData theme) {
@@ -367,9 +575,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: theme.colors.primary.withValues(
-                              alpha: 0.1,
-                            ),
+                            color: theme.colors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -489,6 +695,9 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 24),
+
+          _buildRelatedWordsSection(kanji, theme),
           const SizedBox(height: 24),
 
           // Examples Section Header
