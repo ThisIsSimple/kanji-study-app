@@ -6,7 +6,7 @@ import '../models/kanji_model.dart';
 import '../models/kanji_example.dart';
 import '../models/word_model.dart';
 import '../models/word_example_model.dart';
-import '../models/user_progress.dart';
+
 
 class GeminiService {
   static final GeminiService _instance = GeminiService._internal();
@@ -216,56 +216,6 @@ class GeminiService {
     }
   }
 
-  // ============= 학습 팁 생성 =============
-
-  /// 학습 팁 생성 함수
-  Future<String> generateStudyTips(Kanji kanji) async {
-    if (!isInitialized) {
-      throw Exception('Gemini API가 초기화되지 않았습니다.');
-    }
-
-    try {
-      final prompt =
-          '''
-한자: ${kanji.character}
-의미: ${kanji.meanings.join(', ')}
-음독: ${kanji.readings.on.join(', ')}
-훈독: ${kanji.readings.kun.join(', ')}
-
-이 한자를 효과적으로 암기할 수 있는 방법이나 연상법을 한국어로 제안해주세요.
-한자의 모양이나 의미와 연관된 이야기나 이미지를 활용하면 좋습니다.
-간단하고 기억하기 쉬운 2-3가지 팁을 제공해주세요.
-''';
-
-      final response = await _generateContent(prompt);
-      return response ?? '학습 팁을 생성하지 못했습니다.';
-    } catch (e) {
-      debugPrint('Gemini API 오류: $e');
-      rethrow;
-    }
-  }
-
-  // ============= 학습 진도 분석 =============
-
-  /// 학습 진도 분석 함수
-  Future<String> analyzeProgress(
-    List<UserProgress> progressList,
-    List<Kanji> allKanji,
-  ) async {
-    if (!isInitialized) {
-      throw Exception('Gemini API가 초기화되지 않았습니다.');
-    }
-
-    try {
-      final prompt = _buildProgressAnalysisPrompt(progressList, allKanji);
-      final response = await _generateContent(prompt);
-      return response ?? '분석을 생성하지 못했습니다.';
-    } catch (e) {
-      debugPrint('Gemini API 오류: $e');
-      rethrow;
-    }
-  }
-
   // ============= Private helper methods =============
 
   String _buildKanjiExamplePrompt(Kanji kanji) {
@@ -383,26 +333,6 @@ JLPT N${kanji.jlpt} 수준에 맞는 난이도로 작성해주세요.
     }
 
     return [];
-  }
-
-  String _buildProgressAnalysisPrompt(
-    List<UserProgress> progressList,
-    List<Kanji> allKanji,
-  ) {
-    final studiedCount = progressList.length;
-    final masteredCount = progressList.where((p) => p.mastered).length;
-    final totalCount = allKanji.length;
-
-    return '''
-학습 진도 분석:
-- 전체 한자: $totalCount개
-- 학습한 한자: $studiedCount개
-- 마스터한 한자: $masteredCount개
-
-학습한 한자들의 JLPT 레벨 분포와 학년 분포를 고려하여,
-현재 학습 진도에 대한 분석과 앞으로의 학습 방향을 제안해주세요.
-한국어로 간단명료하게 3-4문장으로 작성해주세요.
-''';
   }
 
   // ============= 캐시 관련 메서드 =============

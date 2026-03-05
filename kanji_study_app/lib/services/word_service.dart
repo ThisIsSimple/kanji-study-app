@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/word_model.dart';
 import '../repositories/word_repository.dart';
 import 'favorite_service.dart';
@@ -126,35 +124,4 @@ class WordService {
     return stats;
   }
 
-  // Get recently viewed words (for future implementation)
-  Future<List<int>> getRecentlyViewedIds() async {
-    final prefs = await SharedPreferences.getInstance();
-    final recentData = prefs.getString('recently_viewed_words');
-
-    if (recentData != null) {
-      final List<dynamic> decoded = json.decode(recentData);
-      return decoded.map((id) => id as int).toList();
-    }
-
-    return [];
-  }
-
-  // Add to recently viewed (for future implementation)
-  Future<void> addToRecentlyViewed(int wordId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final recent = await getRecentlyViewedIds();
-
-    // Remove if already exists
-    recent.remove(wordId);
-
-    // Add to beginning
-    recent.insert(0, wordId);
-
-    // Keep only last 50
-    if (recent.length > 50) {
-      recent.removeRange(50, recent.length);
-    }
-
-    await prefs.setString('recently_viewed_words', json.encode(recent));
-  }
 }

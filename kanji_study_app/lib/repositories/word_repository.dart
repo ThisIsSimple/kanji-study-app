@@ -108,14 +108,4 @@ class WordRepository {
     }).toList();
   }
 
-  // Get random words
-  List<Word> getRandomWords({int count = 1}) {
-    List<Word> candidates = _wordList ?? [];
-
-    if (candidates.isEmpty) return [];
-
-    // Shuffle and take first 'count' items
-    candidates.shuffle();
-    return candidates.take(count).toList();
-  }
 }

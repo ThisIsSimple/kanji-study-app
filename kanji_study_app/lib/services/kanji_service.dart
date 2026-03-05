@@ -137,14 +137,6 @@ class KanjiService {
     return _progressMap.values.where((progress) => progress.mastered).length;
   }
 
-  double getOverallProgress() {
-    final allKanji = _repository.getAllKanji();
-    if (allKanji.isEmpty) return 0.0;
-    return _progressMap.length / allKanji.length;
-  }
-
-  // New methods for enhanced functionality
-
   List<Kanji> searchKanji(String query) {
     if (query.isEmpty) return [];
 
@@ -169,41 +161,4 @@ class KanjiService {
 
   // Grade and JLPT methods removed - data is empty in current dataset
 
-  List<Kanji> getKanjiForDailyStudy({int count = 5}) {
-    List<Kanji> candidates = _repository.getAllKanji();
-
-    // Prioritize unstudied kanji
-    final unstudied = candidates
-        .where((k) => !_progressMap.containsKey(k.character))
-        .toList();
-
-    if (unstudied.isNotEmpty) {
-      // Return top candidates from unstudied
-      return unstudied.take(count).toList();
-    }
-
-    // If all are studied, return least recently studied
-    candidates.sort((a, b) {
-      final progressA = _progressMap[a.character];
-      final progressB = _progressMap[b.character];
-
-      if (progressA == null && progressB == null) return 0;
-      if (progressA == null) return -1;
-      if (progressB == null) return 1;
-
-      return progressA.lastStudied.compareTo(progressB.lastStudied);
-    });
-
-    return candidates.take(count).toList();
-  }
-
-  Map<String, int> getStudyStatistics() {
-    final allKanji = _repository.getAllKanji();
-
-    return {
-      'total': allKanji.length,
-      'studied': _progressMap.length,
-      'mastered': getMasteredCount(),
-    };
-  }
 }

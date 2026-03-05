@@ -203,97 +203,6 @@ class AnalyticsService {
     await prefs.setString(_cacheKeyWeeklyStatsTime, DateTime.now().toIso8601String());
   }
 
-  /// Get today's progress (number of items studied today)
-  Future<int> getTodayProgress() async {
-    final userId = _supabase.currentUser?.id;
-    if (userId == null) return 0;
-
-    try {
-      final today = DateTime.now();
-      final startOfDay = DateTime(today.year, today.month, today.day);
-
-      final response = await _supabase.client
-          .from(SupabaseConfig.studyRecordsTable)
-          .select('id')
-          .eq('user_id', userId)
-          .eq('type', 'kanji')
-          .gte('created_at', startOfDay.toIso8601String());
-
-      return (response as List).length;
-    } catch (e) {
-      debugPrint('Error getting today progress: $e');
-      return 0;
-    }
-  }
-
-  /// Get user's daily goal
-  Future<int> getDailyGoal() async {
-    final userId = _supabase.currentUser?.id;
-    if (userId == null) return 10; // Default goal
-
-    try {
-      final response = await _supabase.client
-          .from(SupabaseConfig.dailyGoalsTable)
-          .select('daily_target')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      if (response != null) {
-        return response['daily_target'] as int? ?? 10;
-      }
-      return 10;
-    } catch (e) {
-      debugPrint('Error getting daily goal: $e');
-      return 10;
-    }
-  }
-
-  /// Set user's daily goal
-  Future<void> setDailyGoal(int goal) async {
-    final userId = _supabase.currentUser?.id;
-    if (userId == null) return;
-
-    try {
-      await _supabase.client
-          .from(SupabaseConfig.dailyGoalsTable)
-          .upsert({
-            'user_id': userId,
-            'daily_target': goal,
-          });
-    } catch (e) {
-      debugPrint('Error setting daily goal: $e');
-      rethrow;
-    }
-  }
-
-  /// Get review queue size (items in reviewing status)
-  Future<int> getReviewQueueSize() async {
-    final userId = _supabase.currentUser?.id;
-    if (userId == null) return 0;
-
-    try {
-      // Get unique kanji that need review
-      final response = await _supabase.client
-          .from(SupabaseConfig.studyRecordsTable)
-          .select('target_id')
-          .eq('user_id', userId)
-          .eq('type', 'kanji')
-          .eq('status', 'reviewing')
-          .order('created_at', ascending: false);
-
-      // Count unique target IDs
-      final uniqueTargets = <int>{};
-      for (final record in response) {
-        uniqueTargets.add(record['target_id'] as int);
-      }
-
-      return uniqueTargets.length;
-    } catch (e) {
-      debugPrint('Error getting review queue size: $e');
-      return 0;
-    }
-  }
-
   /// Calculate next milestone and remaining count
   Map<String, int> getNextMilestone(int currentCount) {
     const milestones = [10, 50, 100, 150, 200, 500, 1000, 1500, 2000, 2136];
@@ -315,17 +224,11 @@ class AnalyticsService {
       // Fetch all data in parallel
       final results = await Future.wait([
         calculateStreak(),
-        getTodayProgress(),
-        getDailyGoal(),
         getWeeklyStats(),
-        getReviewQueueSize(),
       ]);
 
       final streak = results[0] as int;
-      final todayProgress = results[1] as int;
-      final dailyGoal = results[2] as int;
-      final weeklyStats = results[3] as List<DailyStudyStats>;
-      final reviewQueueSize = results[4] as int;
+      final weeklyStats = results[1] as List<DailyStudyStats>;
 
       // Calculate weekly count and average
       final weeklyCount = weeklyStats.fold<int>(
@@ -343,12 +246,12 @@ class AnalyticsService {
 
       return UserStats(
         streak: streak,
-        totalXP: totalMastered * 10, // 1 kanji = 10 XP (for future implementation)
-        todayProgress: todayProgress,
-        dailyGoal: dailyGoal,
+        totalXP: totalMastered * 10,
+        todayProgress: 0,
+        dailyGoal: 10,
         weeklyCount: weeklyCount,
         weeklyAverage: weeklyAverage,
-        reviewQueueSize: reviewQueueSize,
+        reviewQueueSize: 0,
         nextMilestone: milestoneInfo['milestone']!,
         remainingToMilestone: milestoneInfo['remaining']!,
         totalStudied: totalStudied,

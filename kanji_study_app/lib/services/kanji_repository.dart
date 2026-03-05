@@ -141,14 +141,4 @@ class KanjiRepository {
     }).toList();
   }
 
-  // Get random kanji
-  List<Kanji> getRandomKanji({int count = 1}) {
-    List<Kanji> candidates = _kanjiList ?? [];
-
-    if (candidates.isEmpty) return [];
-
-    // Shuffle and take first 'count' items
-    candidates.shuffle();
-    return candidates.take(count).toList();
-  }
 }
