@@ -1,0 +1,22 @@
+name: PR Title Check
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  validate-pr-title:
+    if: github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          REGEX='^\[TSK-[0-9]+\][[:space:]].+$'
+          echo "PR title: $PR_TITLE"
+          if [[ ! "$PR_TITLE" =~ $REGEX ]]; then
+            echo "Invalid PR title."
+            echo "Expected format: [TSK-18] 작업 내용"
+            exit 1
+          fi
