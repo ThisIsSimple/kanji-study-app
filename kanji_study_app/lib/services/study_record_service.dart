@@ -24,6 +24,7 @@ class StudyRecordService extends ChangeNotifier {
   StreamSubscription<bool>? _connectivitySubscription;
 
   bool _isInitialized = false;
+  bool _isSyncing = false;
   bool get isInitialized => _isInitialized;
 
   /// 서비스 초기화 - 로컬 DB에서 캐시 로드
@@ -143,9 +144,12 @@ class StudyRecordService extends ChangeNotifier {
   /// Supabase와 동기화
   Future<void> syncWithSupabase() async {
     if (!_connectivityService.isOnline) return;
+    if (_isSyncing) return;
 
     final userId = _supabaseService.currentUser?.id;
     if (userId == null) return;
+
+    _isSyncing = true;
 
     try {
       debugPrint('StudyRecordService: Starting sync with Supabase...');
@@ -191,6 +195,8 @@ class StudyRecordService extends ChangeNotifier {
       debugPrint('StudyRecordService: Sync completed, ${_statusCache.length} records in cache');
     } catch (e) {
       debugPrint('Error syncing with Supabase: $e');
+    } finally {
+      _isSyncing = false;
     }
   }
 

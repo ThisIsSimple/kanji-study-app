@@ -197,16 +197,6 @@ class AppDatabase extends _$AppDatabase {
       (update(studyRecordsTable)..where((t) => t.id.equals(id)))
           .write(const StudyRecordsTableCompanion(isSynced: Value(true)));
 
-  /// 동기화 큐 관리
-  Future<List<SyncQueueTableData>> getSyncQueue() =>
-      select(syncQueueTable).get();
-
-  Future<int> addToSyncQueue(SyncQueueTableCompanion item) =>
-      into(syncQueueTable).insert(item);
-
-  Future<void> removeFromSyncQueue(int id) =>
-      (delete(syncQueueTable)..where((t) => t.id.equals(id))).go();
-
   /// 데이터베이스 초기화 여부 확인
   Future<bool> isInitialized() async {
     final kanjiCount = await (selectOnly(kanjiTable)..addColumns([kanjiTable.id.count()])).getSingle();
