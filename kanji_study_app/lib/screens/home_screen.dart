@@ -10,9 +10,9 @@ import '../services/notification_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/analytics_service.dart';
 import 'kanji_detail_screen.dart';
-import '../widgets/weekly_heatmap.dart';
-import '../widgets/quick_study_cards.dart';
-import '../widgets/today_kanji_card.dart';
+import '../widgets/monthly_word_heatmap.dart';
+import '../widgets/today_learning_goal_card.dart';
+import '../widgets/news_placeholder_card.dart';
 import '../widgets/custom_header.dart';
 import '../constants/app_spacing.dart';
 
@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Kanji? todayKanji;
   UserStats? _stats;
-  List<DailyStudyStats> _weeklyData = [];
+  List<DailyStudyStats> _monthlyData = [];
   bool _isLoading = true;
 
   @override
@@ -84,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Load all data in parallel
       final results = await Future.wait([
         _analyticsService.getUserStats(),
-        _analyticsService.getWeeklyStats(),
+        _analyticsService.getMonthlyStats(),
       ]);
 
       if (!mounted) return;
@@ -92,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         todayKanji = kanji;
         _stats = results[0] as UserStats;
-        _weeklyData = results[1] as List<DailyStudyStats>;
+        _monthlyData = results[1] as List<DailyStudyStats>;
         _isLoading = false;
       });
     } catch (e) {
@@ -111,7 +111,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => KanjiDetailScreen(kanji: todayKanji!)),
+      MaterialPageRoute(
+        builder: (context) => KanjiDetailScreen(kanji: todayKanji!),
+      ),
     );
 
     if (result == true) {
@@ -127,9 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: theme.colors.background,
       body: Column(
         children: [
-          CustomHeader(
-            title: const Text('こんな漢字'),
-          ),
+          CustomHeader(title: const Text('こんな漢字')),
           // 메인 컨텐츠
           Expanded(
             child: _isLoading
@@ -156,40 +156,27 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Today's Kanji Card (최상단)
-                          TodayKanjiCard(kanji: todayKanji!),
+                          // 1) Heatmap
+                          MonthlyWordHeatmap(data: _monthlyData),
                           const SizedBox(height: 24),
 
-                          // Weekly Heatmap
-                          if (_weeklyData.isNotEmpty)
-                            WeeklyHeatmap(data: _weeklyData),
-                          if (_weeklyData.isNotEmpty)
-                            const SizedBox(height: 24),
-
-                          // Quick Study Cards
-                          QuickStudyCards(
-                            reviewQueueSize: _stats!.reviewQueueSize,
-                            onTodayTap: _navigateToStudy,
+                          // 2) Today's learning goal
+                          TodayLearningGoalCard(
+                            stats: _stats!,
+                            todayKanji: todayKanji!,
+                            onStartStudy: _navigateToStudy,
                             onReviewTap: () {
-                              // TODO: Navigate to review screen
-                            },
-                            onFavoritesTap: () {
-                              // TODO: Navigate to favorites
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('복습 기능은 곧 추가될 예정입니다.'),
+                                ),
+                              );
                             },
                           ),
                           const SizedBox(height: 24),
 
-                          // Study Button
-                          FButton(
-                            onPress: _navigateToStudy,
-                            child: Text(
-                              '📖 오늘의 한자 학습',
-                              style: theme.typography.base.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                          // 3) News / updates placeholder
+                          const NewsPlaceholderCard(),
                         ],
                       ),
                     ),

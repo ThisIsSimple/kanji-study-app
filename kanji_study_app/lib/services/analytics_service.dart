@@ -27,6 +27,9 @@ class AnalyticsService {
   static const String _cacheKeyStreakTime = 'analytics_streak_time';
   static const String _cacheKeyWeeklyStats = 'analytics_weekly_stats';
   static const String _cacheKeyWeeklyStatsTime = 'analytics_weekly_stats_time';
+  static const String _cacheKeyMonthlyStats = 'analytics_monthly_stats';
+  static const String _cacheKeyMonthlyStatsTime =
+      'analytics_monthly_stats_time';
 
   /// Calculate consecutive study days (streak)
   Future<int> calculateStreak() async {
@@ -98,19 +101,43 @@ class AnalyticsService {
   Future<void> _cacheStreak(int streak) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_cacheKeyStreak, streak);
-    await prefs.setString(_cacheKeyStreakTime, DateTime.now().toIso8601String());
+    await prefs.setString(
+      _cacheKeyStreakTime,
+      DateTime.now().toIso8601String(),
+    );
   }
 
   /// Get weekly statistics (last 7 days)
   Future<List<DailyStudyStats>> getWeeklyStats() async {
+    return _getStudyStatsForDays(
+      days: 7,
+      cacheKey: _cacheKeyWeeklyStats,
+      cacheTimeKey: _cacheKeyWeeklyStatsTime,
+    );
+  }
+
+  /// Get monthly statistics (last 28 days)
+  Future<List<DailyStudyStats>> getMonthlyStats() async {
+    return _getStudyStatsForDays(
+      days: 28,
+      cacheKey: _cacheKeyMonthlyStats,
+      cacheTimeKey: _cacheKeyMonthlyStatsTime,
+    );
+  }
+
+  Future<List<DailyStudyStats>> _getStudyStatsForDays({
+    required int days,
+    required String cacheKey,
+    required String cacheTimeKey,
+  }) async {
     final userId = _supabase.currentUser?.id;
     if (userId == null) return [];
 
     try {
       // Check cache
       final prefs = await SharedPreferences.getInstance();
-      final cachedTime = prefs.getString(_cacheKeyWeeklyStatsTime);
-      final cachedStats = prefs.getString(_cacheKeyWeeklyStats);
+      final cachedTime = prefs.getString(cacheTimeKey);
+      final cachedStats = prefs.getString(cacheKey);
 
       if (cachedTime != null && cachedStats != null) {
         final cacheAge = DateTime.now().difference(DateTime.parse(cachedTime));
@@ -121,8 +148,8 @@ class AnalyticsService {
       }
 
       final now = DateTime.now();
-      final sevenDaysAgo = now.subtract(const Duration(days: 6));
-      final startDate = DateTime(sevenDaysAgo.year, sevenDaysAgo.month, sevenDaysAgo.day);
+      final start = now.subtract(Duration(days: days - 1));
+      final startDate = DateTime(start.year, start.month, start.day);
 
       final records = await _supabase.client
           .from(SupabaseConfig.studyRecordsTable)
@@ -136,17 +163,19 @@ class AnalyticsService {
       for (final record in records) {
         final studyRecord = StudyRecord.fromJson(record);
         final date = studyRecord.createdAt!;
-        final dateKey = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+        final dateKey =
+            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
         recordsByDate.putIfAbsent(dateKey, () => []);
         recordsByDate[dateKey]!.add(studyRecord);
       }
 
-      // Create DailyStudyStats for last 7 days
-      final List<DailyStudyStats> weeklyStats = [];
-      for (int i = 0; i < 7; i++) {
+      // Create DailyStudyStats for the requested period
+      final List<DailyStudyStats> dailyStats = [];
+      for (int i = 0; i < days; i++) {
         final date = startDate.add(Duration(days: i));
-        final dateKey = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+        final dateKey =
+            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
         final dayRecords = recordsByDate[dateKey] ?? [];
 
         int kanjiStudied = 0;
@@ -162,45 +191,58 @@ class AnalyticsService {
             wordsStudied++;
           }
 
-          if (record.status == StudyStatus.completed || record.status == StudyStatus.mastered) {
+          if (record.status == StudyStatus.completed ||
+              record.status == StudyStatus.mastered) {
             totalCompleted++;
           } else if (record.status == StudyStatus.forgot) {
             totalForgot++;
           }
 
-          studyItems.add(StudyItem(
-            id: record.targetId,
-            type: record.type.value,
-            name: '', // Will be filled by UI if needed
-            status: record.status.value,
-            studiedAt: record.createdAt!,
-          ));
+          studyItems.add(
+            StudyItem(
+              id: record.targetId,
+              type: record.type.value,
+              name: '', // Will be filled by UI if needed
+              status: record.status.value,
+              studiedAt: record.createdAt!,
+            ),
+          );
         }
 
-        weeklyStats.add(DailyStudyStats(
-          date: date,
-          kanjiStudied: kanjiStudied,
-          wordsStudied: wordsStudied,
-          totalCompleted: totalCompleted,
-          totalForgot: totalForgot,
-          studyItems: studyItems,
-        ));
+        dailyStats.add(
+          DailyStudyStats(
+            date: date,
+            kanjiStudied: kanjiStudied,
+            wordsStudied: wordsStudied,
+            totalCompleted: totalCompleted,
+            totalForgot: totalForgot,
+            studyItems: studyItems,
+          ),
+        );
       }
 
       // Cache the results
-      await _cacheWeeklyStats(weeklyStats);
-      return weeklyStats;
+      await _cacheStudyStats(
+        stats: dailyStats,
+        cacheKey: cacheKey,
+        cacheTimeKey: cacheTimeKey,
+      );
+      return dailyStats;
     } catch (e) {
-      debugPrint('Error getting weekly stats: $e');
+      debugPrint('Error getting daily stats: $e');
       return [];
     }
   }
 
-  Future<void> _cacheWeeklyStats(List<DailyStudyStats> stats) async {
+  Future<void> _cacheStudyStats({
+    required List<DailyStudyStats> stats,
+    required String cacheKey,
+    required String cacheTimeKey,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final encoded = json.encode(stats.map((s) => s.toJson()).toList());
-    await prefs.setString(_cacheKeyWeeklyStats, encoded);
-    await prefs.setString(_cacheKeyWeeklyStatsTime, DateTime.now().toIso8601String());
+    await prefs.setString(cacheKey, encoded);
+    await prefs.setString(cacheTimeKey, DateTime.now().toIso8601String());
   }
 
   /// Calculate next milestone and remaining count
@@ -212,28 +254,23 @@ class AnalyticsService {
       orElse: () => 2136,
     );
 
-    return {
-      'milestone': next,
-      'remaining': next - currentCount,
-    };
+    return {'milestone': next, 'remaining': next - currentCount};
   }
 
   /// Get comprehensive user statistics
   Future<UserStats> getUserStats() async {
     try {
       // Fetch all data in parallel
-      final results = await Future.wait([
-        calculateStreak(),
-        getWeeklyStats(),
-      ]);
+      final results = await Future.wait([calculateStreak(), getWeeklyStats()]);
 
       final streak = results[0] as int;
       final weeklyStats = results[1] as List<DailyStudyStats>;
+      final todayProgress = _calculateTodayProgress(weeklyStats);
 
       // Calculate weekly count and average
       final weeklyCount = weeklyStats.fold<int>(
         0,
-        (sum, stat) => sum + stat.kanjiStudied,
+        (sum, stat) => sum + stat.totalStudied,
       );
       final weeklyAverage = weeklyCount / 7.0;
 
@@ -247,7 +284,7 @@ class AnalyticsService {
       return UserStats(
         streak: streak,
         totalXP: totalMastered * 10,
-        todayProgress: 0,
+        todayProgress: todayProgress,
         dailyGoal: 10,
         weeklyCount: weeklyCount,
         weeklyAverage: weeklyAverage,
@@ -270,5 +307,23 @@ class AnalyticsService {
     await prefs.remove(_cacheKeyStreakTime);
     await prefs.remove(_cacheKeyWeeklyStats);
     await prefs.remove(_cacheKeyWeeklyStatsTime);
+    await prefs.remove(_cacheKeyMonthlyStats);
+    await prefs.remove(_cacheKeyMonthlyStatsTime);
+  }
+
+  int _calculateTodayProgress(List<DailyStudyStats> stats) {
+    final today = DateTime.now();
+    for (final stat in stats) {
+      if (_isSameDate(stat.date, today)) {
+        return stat.totalStudied;
+      }
+    }
+    return 0;
+  }
+
+  bool _isSameDate(DateTime left, DateTime right) {
+    return left.year == right.year &&
+        left.month == right.month &&
+        left.day == right.day;
   }
 }
