@@ -36,39 +36,45 @@ void showAppToast(
   showRawFToast(
     context: context,
     duration: duration,
-    alignment: FToastAlignment.topLeft, // Will be centered via builder
+    alignment: FToastAlignment.topCenter,
     builder: (context, entry) {
       final topPadding = MediaQuery.of(context).padding.top + 20;
-      return Align(
-        alignment: Alignment.topCenter,
-        child: Padding(
-          padding: EdgeInsets.only(top: topPadding),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(25),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon ?? defaultIcon, color: Colors.white, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  message,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
+      return Padding(
+        padding: EdgeInsets.only(top: topPadding),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: entry.dismiss,
+            borderRadius: BorderRadius.circular(25),
+            child: Ink(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
                   ),
-                ),
-              ],
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon ?? defaultIcon, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      message,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
