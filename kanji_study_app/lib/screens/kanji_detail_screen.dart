@@ -66,6 +66,8 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
   // GlobalKey to access FScaffold context for toasts
   final GlobalKey<State> _scaffoldKey = GlobalKey<State>();
 
+  BuildContext get _toastContext => _scaffoldKey.currentContext ?? context;
+
   @override
   void initState() {
     super.initState();
@@ -218,7 +220,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
       if (!mounted) return;
       final isCompleted = status == StudyStatus.completed;
       showAppToast(
-        context,
+        _toastContext,
         message: isCompleted ? '학습 완료를 기록했습니다!' : '까먹음을 기록했습니다.',
         type: isCompleted ? AppToastType.info : AppToastType.error,
         icon: isCompleted
@@ -228,7 +230,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       showAppToast(
-        context,
+        _toastContext,
         message: '기록 저장 실패: $e',
         type: AppToastType.error,
         icon: PhosphorIconsRegular.warning,
@@ -250,7 +252,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
       if (!mounted) return;
       setState(() => _isFavorite = !nextValue);
       showAppToast(
-        context,
+        _toastContext,
         message: '즐겨찾기 저장 실패: $e',
         type: AppToastType.error,
       );
