@@ -1,4 +1,4 @@
-package space.cordelia273.kanji_study_app
+package space.cordelia273.konnakanji
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -86,8 +86,10 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
   }
 
   Widget _buildFavoriteToggle(FThemeData theme) {
-    final isFavorite =
-        FavoriteService.instance.isFavorite('kanji', widget.kanji.id);
+    final isFavorite = FavoriteService.instance.isFavorite(
+      'kanji',
+      widget.kanji.id,
+    );
 
     return Positioned(
       top: 16,
@@ -319,10 +321,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                             color: theme.colors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Text(
-                            reading,
-                            style: theme.typography.sm,
-                          ),
+                          child: Text(reading, style: theme.typography.sm),
                         );
                       }),
                     ],
@@ -355,10 +354,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                             color: theme.colors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Text(
-                            reading,
-                            style: theme.typography.sm,
-                          ),
+                          child: Text(reading, style: theme.typography.sm),
                         );
                       }),
                     ],

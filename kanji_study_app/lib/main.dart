@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:forui/forui.dart';
@@ -5,7 +6,6 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz_data;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_links/app_links.dart';
 import 'services/notification_service.dart';
 import 'services/gemini_service.dart';
@@ -17,6 +17,7 @@ import 'services/favorite_service.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
+import 'widgets/app_session_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,11 +66,24 @@ class KanjiStudyApp extends StatefulWidget {
 
 class _KanjiStudyAppState extends State<KanjiStudyApp> {
   final _appLinks = AppLinks();
+  StreamSubscription<bool>? _sessionSubscription;
 
   @override
   void initState() {
     super.initState();
     _initDeepLinks();
+    _sessionSubscription = SupabaseService.instance
+        .sessionPresenceChanges()
+        .listen((hasSession) {
+          if (hasSession) {
+            unawaited(_initializeUserScopedServices());
+          }
+        });
+  }
+
+  Future<void> _initializeUserScopedServices() async {
+    await StudyRecordService.instance.initialize();
+    await FavoriteService.instance.initialize();
   }
 
   /// Initialize deep link handling for OAuth callbacks
@@ -86,12 +100,15 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
     }
 
     // Listen for deep links while app is running
-    _appLinks.uriLinkStream.listen((uri) {
-      debugPrint('Deep link received: $uri');
-      _handleDeepLink(uri);
-    }, onError: (err) {
-      debugPrint('Deep link error: $err');
-    });
+    _appLinks.uriLinkStream.listen(
+      (uri) {
+        debugPrint('Deep link received: $uri');
+        _handleDeepLink(uri);
+      },
+      onError: (err) {
+        debugPrint('Deep link error: $err');
+      },
+    );
   }
 
   /// Handle incoming deep links (OAuth callbacks)
@@ -99,7 +116,8 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
     debugPrint('Handling deep link: $uri');
 
     // Check if this is a Supabase OAuth callback
-    if (uri.scheme == 'space.cordelia273.konnakanji' && uri.host == 'login-callback') {
+    if (uri.scheme == 'space.cordelia273.konnakanji' &&
+        uri.host == 'login-callback') {
       debugPrint('Supabase OAuth callback detected');
 
       // Supabase SDK will automatically handle the OAuth callback
@@ -109,16 +127,19 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
   }
 
   @override
+  void dispose() {
+    _sessionSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: '콘나칸지',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.getLightTheme(),
       locale: const Locale('ja', 'JP'),
-      supportedLocales: const [
-        Locale('ja', 'JP'),
-        Locale('ko', 'KR'),
-      ],
+      supportedLocales: const [Locale('ja', 'JP'), Locale('ko', 'KR')],
       localizationsDelegates: [
         ...FLocalizations.localizationsDelegates,
         GlobalMaterialLocalizations.delegate,
@@ -127,16 +148,12 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
       ],
       builder: (context, child) => FTheme(
         data: AppTheme.getFTheme(),
-        child: StreamBuilder<AuthState>(
-          stream: SupabaseService.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            // Check session and return appropriate screen
-            if (snapshot.hasData && snapshot.data!.session != null) {
-              return child!;
-            }
-            // No session, always show login screen regardless of navigation stack
-            return const LoginScreen();
-          },
+        child: AppSessionGate(
+          isInitialized: SupabaseService.instance.isInitialized,
+          hasSession: SupabaseService.instance.hasActiveSession,
+          sessionStream: SupabaseService.instance.sessionPresenceChanges(),
+          authenticatedChild: child!,
+          unauthenticatedChild: const LoginScreen(),
         ),
       ),
       home: const MainScreen(),

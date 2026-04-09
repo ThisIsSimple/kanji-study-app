@@ -108,7 +108,9 @@ class _SettingsNotificationScreenState
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: theme.colors.secondary.withValues(alpha: 0.1),
+                            color: theme.colors.secondary.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -123,7 +125,8 @@ class _SettingsNotificationScreenState
                                   ),
                                   const SizedBox(width: 12),
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         '학습 알림',
@@ -159,11 +162,14 @@ class _SettingsNotificationScreenState
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: theme.colors.secondary.withValues(alpha: 0.1),
+                                color: theme.colors.secondary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
@@ -174,19 +180,22 @@ class _SettingsNotificationScreenState
                                       ),
                                       const SizedBox(width: 12),
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             '알림 시간',
-                                            style: theme.typography.base.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                            style: theme.typography.base
+                                                .copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
                                             _selectedTime.format(context),
                                             style: theme.typography.sm.copyWith(
-                                              color: theme.colors.mutedForeground,
+                                              color:
+                                                  theme.colors.mutedForeground,
                                             ),
                                           ),
                                         ],
@@ -296,9 +305,7 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
               // Time Picker
               SizedBox(
                 height: 200,
-                child: FTimePicker(
-                  controller: _controller,
-                ),
+                child: FTimePicker(controller: _controller),
               ),
 
               const SizedBox(height: 24),

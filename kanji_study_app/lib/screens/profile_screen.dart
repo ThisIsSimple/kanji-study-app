@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
+import '../services/analytics_service.dart';
 import '../utils/nickname_generator.dart';
 import '../models/daily_study_stats.dart';
 import 'settings_screen.dart';
@@ -22,6 +24,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final SupabaseService _supabaseService = SupabaseService.instance;
+  final AnalyticsService _analyticsService = AnalyticsService.instance;
 
   bool _isLoading = true;
   bool _isLoadingProfile = true;
@@ -29,6 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _userEmail = '';
   String? _avatarUrl;
   List<DailyStudyStats> _weeklyStats = [];
+  StreamSubscription<AuthState>? _authSubscription;
 
   @override
   void initState() {
@@ -37,7 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUserProfile();
 
     // Listen to auth state changes
-    _supabaseService.authStateChanges().listen((authState) {
+    _authSubscription = _supabaseService.authStateChanges().listen((authState) {
       if (authState.event == AuthChangeEvent.signedOut) {
         // Clear user data when signed out
         if (mounted) {
@@ -56,13 +60,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
+
   Future<void> _loadWeeklyStats() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final stats = await _supabaseService.getWeeklyStudyStats();
+      final stats = await _analyticsService.getWeeklyStats();
       setState(() {
         _weeklyStats = stats;
         _isLoading = false;

@@ -1,10 +1,10 @@
-import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import '../database/app_database.dart';
 import 'local_database_service.dart';
 import 'supabase_service.dart';
 import 'connectivity_service.dart';
+import 'connectivity_sync_helper.dart';
 
 /// 즐겨찾기 전역 상태 관리 서비스 (싱글톤)
 /// 오프라인 지원 + Supabase 동기화
@@ -18,14 +18,16 @@ class FavoriteService extends ChangeNotifier {
   final LocalDatabaseService _localDb = LocalDatabaseService.instance;
   final SupabaseService _supabaseService = SupabaseService.instance;
   final ConnectivityService _connectivityService = ConnectivityService.instance;
+  late final ConnectivitySyncHelper _syncHelper = ConnectivitySyncHelper(
+    label: 'FavoriteService',
+    onReconnect: syncWithSupabase,
+    connectivityService: _connectivityService,
+  );
 
   // 메모리 캐시: "type_targetId" -> isFavorite
   final Map<String, bool> _favoriteCache = {};
 
-  StreamSubscription<bool>? _connectivitySubscription;
-
   bool _isInitialized = false;
-  bool _isSyncing = false;
   bool get isInitialized => _isInitialized;
 
   /// 서비스 초기화 - 로컬 DB에서 캐시 로드
@@ -49,19 +51,12 @@ class FavoriteService extends ChangeNotifier {
       }
 
       _isInitialized = true;
-      debugPrint('FavoriteService initialized with ${_favoriteCache.length} favorites');
+      debugPrint(
+        'FavoriteService initialized with ${_favoriteCache.length} favorites',
+      );
 
-      // 온라인이면 동기화 시도
-      if (_connectivityService.isOnline) {
-        await syncWithSupabase();
-      }
-
-      // 연결 상태 변화 리스닝
-      _connectivitySubscription = _connectivityService.onConnectivityChanged.listen((isOnline) {
-        if (isOnline) {
-          syncWithSupabase();
-        }
-      });
+      _syncHelper.listen();
+      await syncWithSupabase();
     } catch (e) {
       debugPrint('Error initializing FavoriteService: $e');
     }
@@ -122,7 +117,8 @@ class FavoriteService extends ChangeNotifier {
   ) async {
     try {
       final now = DateTime.now();
-      final isOnline = _connectivityService.isOnline;
+      final isOnline =
+          _connectivityService.isOnline && _supabaseService.isInitialized;
 
       // 1. 캐시 즉시 업데이트 (지연 없이 사용)
       _favoriteCache[key] = true;
@@ -170,7 +166,11 @@ class FavoriteService extends ChangeNotifier {
         _deleteFromServerAsync(userId, type, targetId);
       } else {
         // 오프라인: 삭제 대기 상태로 표시 (온라인 시 동기화)
-        final existing = await _localDb.database.getFavorite(userId, type, targetId);
+        final existing = await _localDb.database.getFavorite(
+          userId,
+          type,
+          targetId,
+        );
         if (existing != null) {
           await _localDb.database.markFavoriteAsDeleted(existing.id);
         }
@@ -192,20 +192,26 @@ class FavoriteService extends ChangeNotifier {
     String? note,
     DateTime createdAt,
   ) {
-    _supabaseService.client.from('favorites').upsert({
-      'user_id': userId,
-      'type': type,
-      'target_id': targetId,
-      'note': note,
-      'created_at': createdAt.toIso8601String(),
-    }).then((_) {
-      debugPrint('FavoriteService: Server save completed for $type $targetId');
-      // 동기화 상태 업데이트
-      _markAsSyncedAsync(userId, type, targetId);
-    }).catchError((e) {
-      debugPrint('Error saving to server: $e');
-      // 실패해도 로컬에는 저장되어 있으므로 다음 동기화 시 재시도
-    });
+    _supabaseService.client
+        .from('favorites')
+        .upsert({
+          'user_id': userId,
+          'type': type,
+          'target_id': targetId,
+          'note': note,
+          'created_at': createdAt.toIso8601String(),
+        })
+        .then((_) {
+          debugPrint(
+            'FavoriteService: Server save completed for $type $targetId',
+          );
+          // 동기화 상태 업데이트
+          _markAsSyncedAsync(userId, type, targetId);
+        })
+        .catchError((e) {
+          debugPrint('Error saving to server: $e');
+          // 실패해도 로컬에는 저장되어 있으므로 다음 동기화 시 재시도
+        });
   }
 
   /// 서버에서 비동기로 삭제 (응답 기다리지 않음)
@@ -217,93 +223,91 @@ class FavoriteService extends ChangeNotifier {
         .eq('type', type)
         .eq('target_id', targetId)
         .then((_) {
-      debugPrint('FavoriteService: Server delete completed for $type $targetId');
-    }).catchError((e) {
-      debugPrint('Error deleting from server: $e');
-    });
+          debugPrint(
+            'FavoriteService: Server delete completed for $type $targetId',
+          );
+        })
+        .catchError((e) {
+          debugPrint('Error deleting from server: $e');
+        });
   }
 
   /// 동기화 상태 업데이트 (비동기)
   void _markAsSyncedAsync(String userId, String type, int targetId) {
-    _localDb.database.getFavorite(userId, type, targetId).then((favorite) {
-      if (favorite != null) {
-        _localDb.database.markFavoriteAsSynced(favorite.id);
-      }
-    }).catchError((e) {
-      debugPrint('Error marking as synced: $e');
-    });
+    _localDb.database
+        .getFavorite(userId, type, targetId)
+        .then((favorite) {
+          if (favorite != null) {
+            _localDb.database.markFavoriteAsSynced(favorite.id);
+          }
+        })
+        .catchError((e) {
+          debugPrint('Error marking as synced: $e');
+        });
   }
 
   /// Supabase와 동기화
   Future<void> syncWithSupabase() async {
-    if (!_connectivityService.isOnline) return;
-    if (_isSyncing) return;
-
     final userId = _supabaseService.currentUser?.id;
     if (userId == null) return;
-
-    _isSyncing = true;
+    if (!_supabaseService.isInitialized) return;
 
     try {
-      debugPrint('FavoriteService: Starting sync with Supabase...');
+      await _syncHelper.runGuarded(() async {
+        debugPrint('FavoriteService: Starting sync with Supabase...');
 
-      // 1. 삭제 대기 중인 항목을 서버에서 삭제
-      final deletedFavorites = await _localDb.database.getDeletedFavorites();
-      for (final favorite in deletedFavorites) {
-        try {
-          await _supabaseService.client
-              .from('favorites')
-              .delete()
-              .eq('user_id', favorite.userId)
-              .eq('type', favorite.type)
-              .eq('target_id', favorite.targetId);
-          // 로컬에서 완전 삭제
-          await _localDb.database.deleteFavorite(favorite.id);
-        } catch (e) {
-          debugPrint('Error syncing delete for ${favorite.id}: $e');
+        final deletedFavorites = await _localDb.database.getDeletedFavorites();
+        for (final favorite in deletedFavorites) {
+          try {
+            await _supabaseService.client
+                .from('favorites')
+                .delete()
+                .eq('user_id', favorite.userId)
+                .eq('type', favorite.type)
+                .eq('target_id', favorite.targetId);
+            await _localDb.database.deleteFavorite(favorite.id);
+          } catch (e) {
+            debugPrint('Error syncing delete for ${favorite.id}: $e');
+          }
         }
-      }
 
-      // 2. 미동기화 즐겨찾기를 서버에 업로드
-      final unsyncedFavorites = await _localDb.database.getUnsyncedFavorites();
-      for (final favorite in unsyncedFavorites) {
-        if (favorite.isDeleted) continue; // 삭제 대기 항목은 위에서 처리
-        try {
-          await _supabaseService.client.from('favorites').upsert({
-            'user_id': favorite.userId,
-            'type': favorite.type,
-            'target_id': favorite.targetId,
-            'note': favorite.note,
-            'created_at': favorite.createdAt.toIso8601String(),
-          });
-          await _localDb.database.markFavoriteAsSynced(favorite.id);
-        } catch (e) {
-          debugPrint('Error syncing favorite ${favorite.id}: $e');
+        final unsyncedFavorites = await _localDb.database
+            .getUnsyncedFavorites();
+        for (final favorite in unsyncedFavorites) {
+          if (favorite.isDeleted) continue;
+          try {
+            await _supabaseService.client.from('favorites').upsert({
+              'user_id': favorite.userId,
+              'type': favorite.type,
+              'target_id': favorite.targetId,
+              'note': favorite.note,
+              'created_at': favorite.createdAt.toIso8601String(),
+            });
+            await _localDb.database.markFavoriteAsSynced(favorite.id);
+          } catch (e) {
+            debugPrint('Error syncing favorite ${favorite.id}: $e');
+          }
         }
-      }
 
-      // 3. 서버에서 최신 데이터 다운로드
-      final serverFavorites = await _supabaseService.client
-          .from('favorites')
-          .select()
-          .eq('user_id', userId);
+        final serverFavorites = await _supabaseService.client
+            .from('favorites')
+            .select()
+            .eq('user_id', userId);
 
-      // 4. 캐시 갱신 (서버 데이터 기준)
-      _favoriteCache.clear();
+        _favoriteCache.clear();
+        for (final record in serverFavorites) {
+          final type = record['type'] as String;
+          final targetId = record['target_id'] as int;
+          _favoriteCache['${type}_$targetId'] = true;
+        }
 
-      for (final record in serverFavorites) {
-        final type = record['type'] as String;
-        final targetId = record['target_id'] as int;
-        final key = '${type}_$targetId';
-        _favoriteCache[key] = true;
-      }
-
-      notifyListeners();
-      debugPrint('FavoriteService: Sync completed, ${_favoriteCache.length} favorites in cache');
+        notifyListeners();
+        debugPrint(
+          'FavoriteService: Sync completed, ${_favoriteCache.length} favorites in cache',
+        );
+      });
     } catch (e) {
       debugPrint('Error syncing with Supabase: $e');
-    } finally {
-      _isSyncing = false;
     }
   }
 
@@ -330,7 +334,9 @@ class FavoriteService extends ChangeNotifier {
       }
 
       notifyListeners();
-      debugPrint('FavoriteService: Refreshed from Supabase, ${_favoriteCache.length} favorites');
+      debugPrint(
+        'FavoriteService: Refreshed from Supabase, ${_favoriteCache.length} favorites',
+      );
     } catch (e) {
       debugPrint('Error refreshing from Supabase: $e');
     }
@@ -338,7 +344,7 @@ class FavoriteService extends ChangeNotifier {
 
   @override
   void dispose() {
-    _connectivitySubscription?.cancel();
+    _syncHelper.dispose();
     super.dispose();
   }
 }

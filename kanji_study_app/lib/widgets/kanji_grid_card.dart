@@ -4,8 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:konnakanji/services/kanji_service.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
+import '../models/study_record_model.dart';
 import '../utils/korean_formatter.dart';
 import '../constants/app_spacing.dart';
+import '../services/study_record_service.dart';
 
 class KanjiGridCard extends StatelessWidget {
   final Kanji kanji;
@@ -25,7 +27,10 @@ class KanjiGridCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     final kanjiService = KanjiService.instance;
-    final progress = kanjiService.getProgress(kanji.character);
+    final progress = StudyRecordService.instance.getItemProgress(
+      StudyType.kanji,
+      kanji.id,
+    );
     final isFavorite = kanjiService.isFavorite(kanji.character);
 
     return GestureDetector(
@@ -51,7 +56,7 @@ class KanjiGridCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Check mark
-                    if (progress != null && progress.mastered)
+                    if (progress != null && progress.isMastered)
                       Container(
                         width: 20,
                         height: 20,
@@ -111,10 +116,11 @@ class KanjiGridCard extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   // Korean readings
-                  if (showMeaning && hasKoreanReadings(
-                    kanji.koreanKunReadings,
-                    kanji.koreanOnReadings,
-                  ))
+                  if (showMeaning &&
+                      hasKoreanReadings(
+                        kanji.koreanKunReadings,
+                        kanji.koreanOnReadings,
+                      ))
                     Text(
                       formatKoreanReadings(
                         kanji.koreanKunReadings,

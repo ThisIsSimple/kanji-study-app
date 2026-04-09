@@ -6,11 +6,7 @@ class GradeBadge extends StatelessWidget {
   final int grade;
   final double? fontSize;
 
-  const GradeBadge({
-    super.key,
-    required this.grade,
-    this.fontSize,
-  });
+  const GradeBadge({super.key, required this.grade, this.fontSize});
 
   /// Grade별 색상 반환
   static Color getGradeColor(int grade) {
@@ -48,17 +44,11 @@ class GradeBadge extends StatelessWidget {
     final color = getGradeColor(grade);
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 4,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withValues(alpha: 0.5),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
       ),
       child: Text(
         getGradeText(grade),
@@ -71,4 +61,3 @@ class GradeBadge extends StatelessWidget {
     );
   }
 }
-

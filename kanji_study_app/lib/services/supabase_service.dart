@@ -5,7 +5,6 @@ import '../models/kanji_example.dart';
 import '../models/user_progress.dart';
 import '../models/word_example_model.dart';
 import '../models/study_record_model.dart';
-import '../models/daily_study_stats.dart';
 
 /// Singleton service for managing Supabase operations
 class SupabaseService {
@@ -15,15 +14,19 @@ class SupabaseService {
   SupabaseService._internal();
 
   late final SupabaseClient _client;
+  bool _isInitialized = false;
 
   /// Get the Supabase client
   SupabaseClient get client => _client;
+  bool get isInitialized => _isInitialized;
 
   /// Get the current user
-  User? get currentUser => _client.auth.currentUser;
+  User? get currentUser => _isInitialized ? _client.auth.currentUser : null;
 
   /// Check if user is logged in
   bool get isLoggedIn => currentUser != null;
+  bool get hasActiveSession =>
+      _isInitialized && _client.auth.currentSession != null;
 
   /// Initialize Supabase
   Future<void> init() async {
@@ -33,6 +36,7 @@ class SupabaseService {
         anonKey: SupabaseConfig.supabaseAnonKey,
       );
       _client = Supabase.instance.client;
+      _isInitialized = true;
       debugPrint('Supabase initialized successfully');
     } catch (e) {
       debugPrint('Error initializing Supabase: $e');
@@ -103,7 +107,17 @@ class SupabaseService {
 
   /// Listen to auth state changes
   Stream<AuthState> authStateChanges() {
+    if (!_isInitialized) {
+      return const Stream<AuthState>.empty();
+    }
     return _client.auth.onAuthStateChange;
+  }
+
+  Stream<bool> sessionPresenceChanges() {
+    if (!_isInitialized) {
+      return const Stream<bool>.empty();
+    }
+    return _client.auth.onAuthStateChange.map((state) => state.session != null);
   }
 
   /// Sign in with Google using Supabase OAuth
@@ -494,6 +508,8 @@ class SupabaseService {
     int? targetId,
     StudyStatus? status,
     int? limit,
+    DateTime? startDate,
+    DateTime? endDate,
   }) async {
     if (!isLoggedIn) return [];
 
@@ -513,6 +529,14 @@ class SupabaseService {
 
       if (status != null) {
         query = query.eq('status', status.value);
+      }
+
+      if (startDate != null) {
+        query = query.gte('created_at', startDate.toUtc().toIso8601String());
+      }
+
+      if (endDate != null) {
+        query = query.lte('created_at', endDate.toUtc().toIso8601String());
       }
 
       // Apply ordering and limit in one chain
@@ -643,184 +667,6 @@ class SupabaseService {
     } catch (e) {
       debugPrint('Error deleting study record: $e');
       rethrow;
-    }
-  }
-
-  // ============= Calendar Methods =============
-
-  /// Get daily study statistics for a date range
-  Future<List<DailyStudyStats>> getDailyStudyStats({
-    required DateTime startDate,
-    required DateTime endDate,
-  }) async {
-    if (!isLoggedIn) return [];
-
-    try {
-      // Convert local dates to UTC for querying
-      final utcStartDate = DateTime(
-        startDate.year,
-        startDate.month,
-        startDate.day,
-      ).toUtc();
-      final utcEndDate = DateTime(
-        endDate.year,
-        endDate.month,
-        endDate.day,
-        23,
-        59,
-        59,
-      ).toUtc();
-
-      // Get study records for the date range
-      final response = await _client
-          .from('study_records')
-          .select()
-          .eq('user_id', currentUser!.id)
-          .gte('created_at', utcStartDate.toIso8601String())
-          .lte('created_at', utcEndDate.toIso8601String())
-          .order('created_at', ascending: true);
-
-      final records = (response as List)
-          .map((data) => StudyRecord.fromJson(data))
-          .toList();
-
-      // Group records by local date
-      final Map<String, List<StudyRecord>> groupedRecords = {};
-      for (final record in records) {
-        // Convert UTC to local time for grouping
-        final localDate = record.createdAt!.toLocal();
-        final dateKey =
-            '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
-        if (!groupedRecords.containsKey(dateKey)) {
-          groupedRecords[dateKey] = [];
-        }
-        groupedRecords[dateKey]!.add(record);
-      }
-
-      // Create DailyStudyStats for each date
-      final List<DailyStudyStats> dailyStats = [];
-      for (final entry in groupedRecords.entries) {
-        final date = DateTime.parse(entry.key);
-        final dayRecords = entry.value;
-
-        int kanjiStudied = 0;
-        int wordsStudied = 0;
-        int totalCompleted = 0;
-        int totalForgot = 0;
-        final List<StudyItem> studyItems = [];
-
-        // Track unique items studied
-        final Set<String> uniqueKanji = {};
-        final Set<String> uniqueWords = {};
-
-        for (final record in dayRecords) {
-          final itemKey = '${record.type.value}-${record.targetId}';
-
-          if (record.type == StudyType.kanji &&
-              !uniqueKanji.contains(itemKey)) {
-            uniqueKanji.add(itemKey);
-            kanjiStudied++;
-          } else if (record.type == StudyType.word &&
-              !uniqueWords.contains(itemKey)) {
-            uniqueWords.add(itemKey);
-            wordsStudied++;
-          }
-
-          if (record.status == StudyStatus.completed) {
-            totalCompleted++;
-          } else if (record.status == StudyStatus.forgot) {
-            totalForgot++;
-          }
-
-          // Create StudyItem
-          studyItems.add(
-            StudyItem(
-              id: record.targetId,
-              type: record.type.value,
-              name: '', // We'll need to fetch the actual names if needed
-              status: record.status.value,
-              studiedAt: record.createdAt!,
-            ),
-          );
-        }
-
-        dailyStats.add(
-          DailyStudyStats(
-            date: date,
-            kanjiStudied: kanjiStudied,
-            wordsStudied: wordsStudied,
-            totalCompleted: totalCompleted,
-            totalForgot: totalForgot,
-            studyItems: studyItems,
-          ),
-        );
-      }
-
-      return dailyStats;
-    } catch (e) {
-      debugPrint('Error getting daily study stats: $e');
-      return [];
-    }
-  }
-
-  /// Get monthly study statistics
-  Future<Map<DateTime, DailyStudyStats>> getMonthlyStudyStats({
-    required int year,
-    required int month,
-  }) async {
-    if (!isLoggedIn) return {};
-
-    try {
-      final startDate = DateTime(year, month, 1);
-      final endDate = DateTime(year, month + 1, 0, 23, 59, 59);
-
-      final dailyStats = await getDailyStudyStats(
-        startDate: startDate,
-        endDate: endDate,
-      );
-
-      final Map<DateTime, DailyStudyStats> statsMap = {};
-      for (final stats in dailyStats) {
-        // Normalize date to remove time component
-        final normalizedDate = DateTime(
-          stats.date.year,
-          stats.date.month,
-          stats.date.day,
-        );
-        statsMap[normalizedDate] = stats;
-      }
-
-      return statsMap;
-    } catch (e) {
-      debugPrint('Error getting monthly study stats: $e');
-      return {};
-    }
-  }
-
-  /// Get weekly study statistics (for ProfileScreen)
-  Future<List<DailyStudyStats>> getWeeklyStudyStats() async {
-    if (!isLoggedIn) return [];
-
-    try {
-      final now = DateTime.now();
-      final startOfWeek = DateTime(
-        now.year,
-        now.month,
-        now.day,
-      ).subtract(Duration(days: now.weekday - 1));
-      final endOfWeek = DateTime(
-        startOfWeek.year,
-        startOfWeek.month,
-        startOfWeek.day,
-      ).add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
-
-      return await getDailyStudyStats(
-        startDate: startOfWeek,
-        endDate: endOfWeek,
-      );
-    } catch (e) {
-      debugPrint('Error getting weekly study stats: $e');
-      return [];
     }
   }
 

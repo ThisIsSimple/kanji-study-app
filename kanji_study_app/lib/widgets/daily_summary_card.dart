@@ -113,9 +113,7 @@ class DailySummaryCard extends StatelessWidget {
       children: [
         Text(
           DateFormat('yyyy년 MM월 dd일').format(date),
-          style: theme.typography.lg.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: theme.typography.lg.copyWith(fontWeight: FontWeight.bold),
         ),
         if (showDetailButton)
           GestureDetector(

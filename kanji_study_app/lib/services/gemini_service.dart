@@ -7,7 +7,6 @@ import '../models/kanji_example.dart';
 import '../models/word_model.dart';
 import '../models/word_example_model.dart';
 
-
 class GeminiService {
   static final GeminiService _instance = GeminiService._internal();
   static GeminiService get instance => _instance;

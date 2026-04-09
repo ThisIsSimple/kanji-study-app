@@ -4,7 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../services/supabase_service.dart';
 import '../utils/nickname_generator.dart';
-import 'main_screen.dart';
+import '../widgets/auth_provider_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -54,13 +54,6 @@ class _LoginScreenState extends State<LoginScreen> {
           debugPrint('Failed to save nickname to Supabase: $updateError');
         }
       }
-
-      if (mounted) {
-        // Navigate to main screen
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
-      }
     } catch (e) {
       setState(() {
         _errorMessage = '게스트 로그인 실패: ${e.toString()}';
@@ -82,11 +75,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await _supabaseService.signInWithGoogle();
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
-      }
     } catch (e) {
       setState(() {
         _errorMessage = 'Google 로그인 실패: ${e.toString()}';
@@ -108,11 +96,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await _supabaseService.signInWithApple();
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
-      }
     } catch (e) {
       setState(() {
         _errorMessage = 'Apple 로그인 실패: ${e.toString()}';
@@ -134,11 +117,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await _supabaseService.signInWithKakao();
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
-      }
     } catch (e) {
       setState(() {
         _errorMessage = '카카오 로그인 실패: ${e.toString()}';
@@ -218,82 +196,28 @@ class _LoginScreenState extends State<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // Google Sign In
-                        FButton(
-                          onPress: _isLoading ? null : _handleGoogleSignIn,
-                          style: FButtonStyle.outline(),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(PhosphorIconsRegular.googleLogo, size: 20),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Google로 계속하기',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
+                        AuthProviderButton(
+                          onPressed: _isLoading ? null : _handleGoogleSignIn,
+                          icon: PhosphorIconsRegular.googleLogo,
+                          label: 'Google로 계속하기',
+                          outline: true,
                         ),
                         const SizedBox(height: 12),
 
-                        // Apple Sign In
-                        FButton(
-                          onPress: _isLoading ? null : _handleAppleSignIn,
-                          style: FButtonStyle.outline(),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(PhosphorIconsRegular.appleLogo, size: 20),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Apple로 계속하기',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
+                        AuthProviderButton(
+                          onPressed: _isLoading ? null : _handleAppleSignIn,
+                          icon: PhosphorIconsRegular.appleLogo,
+                          label: 'Apple로 계속하기',
+                          outline: true,
                         ),
                         const SizedBox(height: 12),
 
-                        // Kakao Sign In
-                        Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEE500),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: _isLoading ? null : _handleKakaoSignIn,
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      PhosphorIconsRegular.chatsCircle,
-                                      size: 20,
-                                      color: Colors.black87,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      '카카오로 계속하기',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
+                        AuthProviderButton(
+                          onPressed: _isLoading ? null : _handleKakaoSignIn,
+                          icon: PhosphorIconsRegular.chatsCircle,
+                          label: '카카오로 계속하기',
+                          backgroundColor: const Color(0xFFFEE500),
+                          foregroundColor: Colors.black87,
                         ),
 
                         const SizedBox(height: 24),
@@ -340,9 +264,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               const SizedBox(width: 12),
                               Text(
                                 '게스트로 시작하기',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                style: TextStyle(fontWeight: FontWeight.w500),
                               ),
                             ],
                           ),

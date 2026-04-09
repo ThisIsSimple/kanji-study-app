@@ -57,44 +57,13 @@ class WordService {
 
   // Toggle favorite status
   Future<void> toggleFavorite(int wordId) async {
-    await _favoriteService.toggleFavorite(
-      type: 'word',
-      targetId: wordId,
-    );
+    await _favoriteService.toggleFavorite(type: 'word', targetId: wordId);
   }
 
   // Get favorite words
   List<Word> getFavoriteWords() {
     final favoriteIds = _favoriteService.getFavoriteIds('word');
-    return _allWords
-        .where((word) => favoriteIds.contains(word.id))
-        .toList();
-  }
-
-  // Search words by query
-  List<Word> searchWords(String query, {int? jlptLevel}) {
-    if (query.isEmpty && jlptLevel == null) {
-      return _allWords;
-    }
-
-    List<Word> results = _allWords;
-
-    // Filter by JLPT level if specified
-    if (jlptLevel != null) {
-      results = results.where((word) => word.jlptLevel == jlptLevel).toList();
-    }
-
-    // Filter by search query if specified
-    if (query.isNotEmpty) {
-      results = results.where((word) => word.matchesQuery(query)).toList();
-    }
-
-    return results;
-  }
-
-  // Get words by JLPT level
-  List<Word> getWordsByJlptLevel(int level) {
-    return _allWords.where((word) => word.jlptLevel == level).toList();
+    return _allWords.where((word) => favoriteIds.contains(word.id)).toList();
   }
 
   // Get word by ID
@@ -105,23 +74,4 @@ class WordService {
       return null;
     }
   }
-
-  // Get statistics
-  Map<String, int> getStatistics() {
-    final favoriteIds = _favoriteService.getFavoriteIds('word');
-    final stats = <String, int>{
-      'total': _allWords.length,
-      'favorites': favoriteIds.length,
-    };
-
-    // Count by JLPT level
-    for (int level = 1; level <= 5; level++) {
-      stats['jlpt_n$level'] = _allWords
-          .where((w) => w.jlptLevel == level)
-          .length;
-    }
-
-    return stats;
-  }
-
 }

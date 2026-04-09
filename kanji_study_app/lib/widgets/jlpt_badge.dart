@@ -45,10 +45,7 @@ class JlptBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(showPrefix ? 16 : 12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.5),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
       ),
       child: Text(
         showPrefix ? 'JLPT N$level' : 'N$level',
@@ -61,4 +58,3 @@ class JlptBadge extends StatelessWidget {
     );
   }
 }
-

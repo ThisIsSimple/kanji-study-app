@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import '../services/supabase_service.dart';
+import '../services/analytics_service.dart';
 import '../models/daily_study_stats.dart';
 import '../constants/app_spacing.dart';
 import '../widgets/daily_summary_card.dart';
@@ -15,7 +15,7 @@ class StudyCalendarScreen extends StatefulWidget {
 }
 
 class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
-  final SupabaseService _supabaseService = SupabaseService.instance;
+  final AnalyticsService _analyticsService = AnalyticsService.instance;
 
   FCalendarController<DateTime?>? _calendarController;
   DateTime _focusedDay = DateTime.now();
@@ -62,7 +62,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
     }
 
     try {
-      final stats = await _supabaseService.getMonthlyStudyStats(
+      final stats = await _analyticsService.getMonthlyCalendarStats(
         year: _focusedDay.year,
         month: _focusedDay.month,
       );
@@ -94,10 +94,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
       backgroundColor: theme.colors.background,
       body: Column(
         children: [
-          CustomHeader(
-            title: const Text('학습 캘린더'),
-            withBack: true,
-          ),
+          CustomHeader(title: const Text('학습 캘린더'), withBack: true),
           Expanded(
             child: _isLoading || _calendarController == null
                 ? const Center(child: FCircularProgress())
@@ -107,9 +104,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // 1. Monthly Statistics (moved to top)
-                        FCard(
-                          child: _buildMonthlyStatistics(theme),
-                        ),
+                        FCard(child: _buildMonthlyStatistics(theme)),
                         const SizedBox(height: 16),
 
                         // 2. Calendar
@@ -145,8 +140,8 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                                 style: TextStyle(
                                   color: data.current
                                       ? (data.selected
-                                          ? theme.colors.primaryForeground
-                                          : theme.colors.foreground)
+                                            ? theme.colors.primaryForeground
+                                            : theme.colors.foreground)
                                       : theme.colors.mutedForeground,
                                   fontWeight: data.today
                                       ? FontWeight.bold
@@ -198,11 +193,12 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                           FCard(
                             child: DailySummaryCard(
                               date: _selectedDay!,
-                              stats: _monthlyStats[DateTime(
-                                _selectedDay!.year,
-                                _selectedDay!.month,
-                                _selectedDay!.day,
-                              )],
+                              stats:
+                                  _monthlyStats[DateTime(
+                                    _selectedDay!.year,
+                                    _selectedDay!.month,
+                                    _selectedDay!.day,
+                                  )],
                               showDetailButton: true,
                               onDetailPressed: () {
                                 Navigator.push(
@@ -210,8 +206,8 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         StudyCalendarDetailScreen(
-                                      date: _selectedDay!,
-                                    ),
+                                          date: _selectedDay!,
+                                        ),
                                   ),
                                 );
                               },
@@ -252,9 +248,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
       children: [
         Text(
           '${_focusedDay.month}월 통계',
-          style: theme.typography.lg.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: theme.typography.lg.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         _buildMonthlyStatRow('학습일', '$studyDays일', theme),
@@ -284,9 +278,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
         ),
         Text(
           value,
-          style: theme.typography.base.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: theme.typography.base.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
     );

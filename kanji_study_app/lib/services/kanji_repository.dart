@@ -140,5 +140,4 @@ class KanjiRepository {
       return japaneseMatch || koreanMatch;
     }).toList();
   }
-
 }

@@ -27,6 +27,9 @@ enum StudyStatus {
     );
   }
 
+  bool get countsAsCompleted =>
+      this == StudyStatus.completed || this == StudyStatus.mastered;
+
   String get displayText {
     switch (this) {
       case StudyStatus.completed:

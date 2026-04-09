@@ -113,10 +113,7 @@ class LocalDatabaseService {
       id: data.id,
       character: data.character,
       meanings: data.meanings,
-      readings: KanjiReadings(
-        on: data.readingsOn,
-        kun: data.readingsKun,
-      ),
+      readings: KanjiReadings(on: data.readingsOn, kun: data.readingsKun),
       koreanOnReadings: data.koreanOnReadings,
       koreanKunReadings: data.koreanKunReadings,
       grade: data.grade,
@@ -133,23 +130,28 @@ class LocalDatabaseService {
     return KanjiTableCompanion.insert(
       id: Value(json['id'] as int),
       character: json['character'] as String,
-      meanings: (json['meanings'] as List<dynamic>?)
+      meanings:
+          (json['meanings'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      readingsOn: (json['on_readings'] as List<dynamic>?)
+      readingsOn:
+          (json['on_readings'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      readingsKun: (json['kun_readings'] as List<dynamic>?)
+      readingsKun:
+          (json['kun_readings'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      koreanOnReadings: (json['korean_on_readings'] as List<dynamic>?)
+      koreanOnReadings:
+          (json['korean_on_readings'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      koreanKunReadings: (json['korean_kun_readings'] as List<dynamic>?)
+      koreanKunReadings:
+          (json['korean_kun_readings'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],

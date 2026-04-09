@@ -84,8 +84,10 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
   }
 
   Widget _buildFavoriteToggle(FThemeData theme) {
-    final isFavorite =
-        FavoriteService.instance.isFavorite('word', widget.word.id);
+    final isFavorite = FavoriteService.instance.isFavorite(
+      'word',
+      widget.word.id,
+    );
 
     return Positioned(
       top: 16,
@@ -210,7 +212,8 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
                             : null,
                         size: 48,
                         showStrokeOrder: _showStrokeOrder,
-                        showFurigana: widget.word.reading.isNotEmpty &&
+                        showFurigana:
+                            widget.word.reading.isNotEmpty &&
                             widget.word.reading != widget.word.word,
                         showKanjiHint: true,
                       ),

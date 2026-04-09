@@ -68,9 +68,9 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
       } catch (e) {
         debugPrint('Logout error: $e');
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('로그아웃 중 오류가 발생했습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('로그아웃 중 오류가 발생했습니다.')));
       }
     }
   }
@@ -100,7 +100,9 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: theme.colors.secondary.withValues(alpha: 0.1),
+                            color: theme.colors.secondary.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -109,7 +111,9 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
                                 width: 48,
                                 height: 48,
                                 decoration: BoxDecoration(
-                                  color: theme.colors.secondary.withValues(alpha: 0.2),
+                                  color: theme.colors.secondary.withValues(
+                                    alpha: 0.2,
+                                  ),
                                   borderRadius: BorderRadius.circular(24),
                                 ),
                                 child: Icon(

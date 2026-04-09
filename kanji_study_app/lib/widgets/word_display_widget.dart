@@ -93,7 +93,9 @@ class WordDisplayWidget extends StatelessWidget {
     final effectiveSize = showStrokeOrder ? math.max(80.0, size) : size;
 
     // 한자 데이터 추출
-    final kanjiMap = showKanjiHint ? _extractKanjiWithData() : <String, Kanji?>{};
+    final kanjiMap = showKanjiHint
+        ? _extractKanjiWithData()
+        : <String, Kanji?>{};
 
     Widget content;
 
@@ -119,10 +121,7 @@ class WordDisplayWidget extends StatelessWidget {
 
     // onTap이 있으면 전체를 탭 가능하게
     if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: content,
-      );
+      return GestureDetector(onTap: onTap, child: content);
     }
 
     return content;
@@ -224,10 +223,7 @@ class WordDisplayWidget extends StatelessWidget {
             style: baseStyle,
             dotColor: theme.colors.mutedForeground.withValues(alpha: 0.6),
             onTap: () {
-              KanjiInfoCard.showKanjiInfoSheet(
-                context: context,
-                kanji: kanji,
-              );
+              KanjiInfoCard.showKanjiInfoSheet(context: context, kanji: kanji);
             },
           ),
         );
@@ -303,10 +299,7 @@ class _RoundedDottedUnderlineText extends StatelessWidget {
             bottom: fontSize * 0.05, // 텍스트 바닥에서 약간 위
             child: CustomPaint(
               size: Size.zero,
-              painter: _RoundedDotsPainter(
-                color: dotColor,
-                fontSize: fontSize,
-              ),
+              painter: _RoundedDotsPainter(color: dotColor, fontSize: fontSize),
             ),
           ),
         ],
@@ -320,10 +313,7 @@ class _RoundedDotsPainter extends CustomPainter {
   final Color color;
   final double fontSize;
 
-  _RoundedDotsPainter({
-    required this.color,
-    required this.fontSize,
-  });
+  _RoundedDotsPainter({required this.color, required this.fontSize});
 
   @override
   void paint(Canvas canvas, Size size) {

@@ -8,6 +8,18 @@ This is a Flutter-based Japanese Kanji study application with a Python data proc
 
 ## Development Commands
 
+## TODO Workflow
+
+Agents should use [kanji_study_app/TODO.md](/Users/cordelia273/conductor/workspaces/kanji/tallahassee-v1/kanji_study_app/TODO.md) as the project's lightweight technical-debt and follow-up tracker.
+
+Rules:
+
+1. Before starting substantial work in `kanji_study_app/`, read `kanji_study_app/TODO.md`.
+2. If a task directly resolves an open TODO, update or move that item before finishing.
+3. If you discover a new issue that affects build stability, deployability, auth/config correctness, data integrity, or other project-critical behavior, add it to `kanji_study_app/TODO.md`.
+4. Do not add casual ideas or low-signal notes there. Keep it limited to actionable project work.
+5. Prefer the existing `Open / Doing / Done` structure and the `문제 / 영향 / 해결` item format.
+
 ### Code Validation (IMPORTANT for Claude Code)
 
 **⚠️ CRITICAL**: The user keeps `flutter run` running continuously. **NEVER use `flutter run` for code validation.**

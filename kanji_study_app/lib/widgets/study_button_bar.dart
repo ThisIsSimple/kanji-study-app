@@ -93,7 +93,10 @@ class StudyButtonBar extends StatelessWidget {
                     FButton(
                       onPress: onShowTimeline,
                       style: FButtonStyle.outline(),
-                      child: Icon(PhosphorIconsRegular.clockCounterClockwise, size: 18),
+                      child: Icon(
+                        PhosphorIconsRegular.clockCounterClockwise,
+                        size: 18,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     FButton(
@@ -193,12 +196,17 @@ class StudyButtonBar extends StatelessWidget {
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
                       itemCount: studyStats.recentRecords.length,
                       itemBuilder: (context, index) {
                         final record = studyStats.recentRecords[index];
-                        final isLast = index == studyStats.recentRecords.length - 1;
-                        final isCompleted = record.status == StudyStatus.completed;
+                        final isLast =
+                            index == studyStats.recentRecords.length - 1;
+                        final isCompleted =
+                            record.status == StudyStatus.completed;
 
                         return IntrinsicHeight(
                           child: Row(
@@ -232,11 +240,14 @@ class StudyButtonBar extends StatelessWidget {
                                 child: Padding(
                                   padding: const EdgeInsets.only(bottom: 24),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         record.createdAt != null
-                                            ? DateFormat('yyyy.MM.dd HH:mm').format(record.createdAt!)
+                                            ? DateFormat(
+                                                'yyyy.MM.dd HH:mm',
+                                              ).format(record.createdAt!)
                                             : '',
                                         style: theme.typography.sm.copyWith(
                                           color: theme.colors.mutedForeground,
@@ -247,8 +258,10 @@ class StudyButtonBar extends StatelessWidget {
                                         children: [
                                           Icon(
                                             isCompleted
-                                                ? PhosphorIconsRegular.checkCircle
-                                                : PhosphorIconsRegular.warningCircle,
+                                                ? PhosphorIconsRegular
+                                                      .checkCircle
+                                                : PhosphorIconsRegular
+                                                      .warningCircle,
                                             size: 16,
                                             color: isCompleted
                                                 ? Colors.green
@@ -257,12 +270,13 @@ class StudyButtonBar extends StatelessWidget {
                                           const SizedBox(width: 6),
                                           Text(
                                             isCompleted ? '학습 완료' : '까먹음',
-                                            style: theme.typography.base.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                              color: isCompleted
-                                                  ? Colors.green
-                                                  : Colors.red,
-                                            ),
+                                            style: theme.typography.base
+                                                .copyWith(
+                                                  fontWeight: FontWeight.w500,
+                                                  color: isCompleted
+                                                      ? Colors.green
+                                                      : Colors.red,
+                                                ),
                                           ),
                                         ],
                                       ),

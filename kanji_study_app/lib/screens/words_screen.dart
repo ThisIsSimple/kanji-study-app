@@ -1,18 +1,18 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/word_model.dart';
 import '../models/word_flashcard_adapter.dart';
+import '../models/study_record_model.dart';
 import '../services/word_service.dart';
 import '../services/flashcard_service.dart';
 import '../services/study_record_service.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/word_list_item.dart';
-import '../widgets/flashcard_count_selector.dart';
 import '../widgets/custom_header.dart';
 import 'word_detail_screen.dart';
-import 'flashcard_screen.dart';
 import '../constants/app_spacing.dart';
+import '../utils/study_session_launcher.dart';
 
 class WordsScreen extends StatefulWidget {
   final bool showMeanings;
@@ -67,7 +67,6 @@ class _WordsScreenState extends State<WordsScreen> {
       if (!_wordService.isInitialized) {
         await _wordService.init();
       }
-      // Load study status cache
       await _loadStudyStatusCache();
       if (mounted) {
         _applyFilters();
@@ -114,14 +113,15 @@ class _WordsScreenState extends State<WordsScreen> {
       // Apply study status filter
       if (_selectedStudyFilter != null) {
         words = words.where((word) {
-          final status = _studyRecordService.getStatus('word', word.id);
+          final status = _studyRecordService.getStatus(StudyType.word, word.id);
           switch (_selectedStudyFilter) {
             case 'not_studied':
               return status == null;
             case 'completed':
-              return status == 'completed' || status == 'mastered';
+              return status == StudyStatus.completed ||
+                  status == StudyStatus.mastered;
             case 'forgot':
-              return status == 'forgot';
+              return status == StudyStatus.forgot;
             default:
               return true;
           }
@@ -171,104 +171,40 @@ class _WordsScreenState extends State<WordsScreen> {
   }
 
   Future<void> _startFlashcardSession() async {
-    if (_filteredWords.isEmpty) {
-      final theme = FTheme.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('학습할 단어가 없습니다', style: TextStyle()),
-          backgroundColor: theme.colors.destructive,
-        ),
-      );
-      return;
-    }
-
-    // Check if there's an active word session
-    final existingSession = await _flashcardService.loadSessionByType('word');
-
-    if (existingSession != null && !existingSession.isCompleted && mounted) {
-      // Ask user if they want to resume or start new
-      showFDialog(
-        context: context,
-        builder: (context, style, animation) => FDialog(
-          style: style.call,
-          animation: animation,
-          direction: Axis.horizontal,
-          title: const Text('진행 중인 학습'),
-          body: const Text('이전에 진행 중이던 플래시카드 학습이 있습니다.\n계속하시겠습니까?'),
-          actions: [
-            FButton(
-              style: FButtonStyle.outline(),
-              onPress: () async {
-                final navigator = Navigator.of(context);
-                await _flashcardService.clearSession('word');
-                if (!mounted) return;
-                navigator.pop();
-                await _showCountSelectorAndStart();
-              },
-              child: const Text('새로 시작'),
-            ),
-            FButton(
-              onPress: () {
-                Navigator.of(context).pop();
-                _navigateToFlashcard(_filteredWords, existingSession);
-              },
-              child: const Text('이어하기'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      await _showCountSelectorAndStart();
-    }
-  }
-
-  Future<void> _showCountSelectorAndStart() async {
-    // 개수 선택 다이얼로그 표시
-    final selectedCount = await FlashcardCountSelector.show(
-      context,
-      _filteredWords.length,
+    await StudySessionLauncher.launch<Word>(
+      context: context,
+      itemType: 'word',
+      filteredItems: _filteredWords,
+      flashcardService: _flashcardService,
+      emptyMessage: '학습할 단어가 없습니다',
+      toFlashcardItems: (items) =>
+          items.map((word) => WordFlashcardAdapter(word)).toList(),
+      onComplete: () async {
+        await _loadStudyStatusCache();
+        if (mounted) {
+          _applyFilters();
+        }
+      },
     );
-
-    if (selectedCount != null && mounted) {
-      // 랜덤으로 단어 선택
-      final selectedWords = _selectRandomWords(_filteredWords, selectedCount);
-      _navigateToFlashcard(selectedWords, null);
-    }
   }
 
-  List<Word> _selectRandomWords(List<Word> words, int count) {
-    if (count >= words.length) return words;
-
-    final random = Random();
-    final selectedIndices = <int>{};
-
-    // 중복 없이 랜덤 인덱스 생성
-    while (selectedIndices.length < count) {
-      selectedIndices.add(random.nextInt(words.length));
+  Future<void> _toggleWordFavorite(Word word) async {
+    try {
+      await _wordService.toggleFavorite(word.id);
+      if (!mounted) return;
+      setState(() {
+        if (_showOnlyFavorites) {
+          _applyFilters();
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      showAppToast(
+        context,
+        message: '즐겨찾기 저장 실패: $e',
+        type: AppToastType.error,
+      );
     }
-
-    return selectedIndices.map((i) => words[i]).toList();
-  }
-
-  void _navigateToFlashcard(List<Word> selectedWords, dynamic session) {
-    // Convert selected words to FlashcardItem using adapter
-    final flashcardItems = selectedWords
-        .map((word) => WordFlashcardAdapter(word))
-        .toList();
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            FlashcardScreen(items: flashcardItems, initialSession: session),
-      ),
-    ).then((_) async {
-      // Refresh study status cache when coming back
-      await _loadStudyStatusCache();
-      if (mounted) {
-        _applyFilters();
-      }
-    });
   }
 
   void _showFilterBottomSheet() {
@@ -684,14 +620,8 @@ class _WordsScreenState extends State<WordsScreen> {
                                     }
                                   });
                                 },
-                                onFavoriteToggle: () {
-                                  setState(() {
-                                    _wordService.toggleFavorite(word.id);
-                                    if (_showOnlyFavorites) {
-                                      _applyFilters();
-                                    }
-                                  });
-                                },
+                                onFavoriteToggle: () =>
+                                    _toggleWordFavorite(word),
                               );
                             },
                           ),

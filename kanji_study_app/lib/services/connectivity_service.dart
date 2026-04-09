@@ -40,7 +40,8 @@ class ConnectivityService {
   /// 연결 상태 업데이트
   Future<void> _updateConnectionStatus(List<ConnectivityResult> results) async {
     // none이 아니면 온라인으로 간주
-    final bool hasConnection = results.isNotEmpty &&
+    final bool hasConnection =
+        results.isNotEmpty &&
         !results.every((result) => result == ConnectivityResult.none);
 
     _updateOnlineStatus(hasConnection);

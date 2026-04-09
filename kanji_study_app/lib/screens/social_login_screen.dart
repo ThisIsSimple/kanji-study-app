@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
+import '../widgets/auth_provider_button.dart';
 
 class SocialLoginScreen extends StatefulWidget {
   const SocialLoginScreen({super.key});
@@ -32,7 +33,9 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
   }
 
   void _setupAuthListener() {
-    _authSubscription = _supabaseService.authStateChanges().listen((AuthState state) {
+    _authSubscription = _supabaseService.authStateChanges().listen((
+      AuthState state,
+    ) {
       if (!mounted) return;
 
       // OAuth 로그인이 완료되면 자동으로 화면 닫기
@@ -164,32 +167,29 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
                   ),
                 )
               else ...[
-                _buildSocialButton(
+                AuthProviderButton(
                   onPressed: _handleGoogleSignIn,
                   icon: Icons.g_mobiledata_rounded,
                   label: 'Google로 계속하기',
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black87,
                   borderColor: Colors.grey.shade300,
-                  theme: theme,
                 ),
                 const SizedBox(height: 12),
-                _buildSocialButton(
+                AuthProviderButton(
                   onPressed: _handleAppleSignIn,
                   icon: PhosphorIconsFill.appleLogo,
                   label: 'Apple로 계속하기',
                   backgroundColor: Colors.black,
                   foregroundColor: Colors.white,
-                  theme: theme,
                 ),
                 const SizedBox(height: 12),
-                _buildSocialButton(
+                AuthProviderButton(
                   onPressed: _handleKakaoSignIn,
                   icon: Icons.chat_bubble_rounded,
                   label: '카카오로 계속하기',
                   backgroundColor: const Color(0xFFFEE500),
                   foregroundColor: const Color(0xFF000000),
-                  theme: theme,
                 ),
               ],
 
@@ -249,10 +249,7 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
                 FButton(
                   onPress: _continueAsGuest,
                   style: FButtonStyle.outline(),
-                  child: const Text(
-                    '게스트로 계속 사용하기',
-                    style: TextStyle(),
-                  ),
+                  child: const Text('게스트로 계속 사용하기', style: TextStyle()),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -264,46 +261,6 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
                 ),
                 const SizedBox(height: 24),
               ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSocialButton({
-    required VoidCallback onPressed,
-    required IconData icon,
-    required String label,
-    required Color backgroundColor,
-    required Color foregroundColor,
-    Color? borderColor,
-    required FThemeData theme,
-  }) {
-    return Material(
-      color: backgroundColor,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          decoration: BoxDecoration(
-            border: borderColor != null ? Border.all(color: borderColor) : null,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 24, color: foregroundColor),
-              const SizedBox(width: 12),
-              Text(
-                label,
-                style: theme.typography.base.copyWith(
-                  color: foregroundColor,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
             ],
           ),
         ),
