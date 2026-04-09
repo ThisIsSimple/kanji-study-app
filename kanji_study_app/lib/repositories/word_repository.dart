@@ -74,12 +74,6 @@ class WordRepository {
     _wordMap = null;
   }
 
-  // Force reload data
-  Future<void> reloadWordsData() async {
-    clearCache();
-    await loadWordsData();
-  }
-
   // Get all words
   List<Word> getAllWords() {
     return _wordList ?? [];
@@ -89,23 +83,4 @@ class WordRepository {
   Word? getWordById(int id) {
     return _wordMap?[id];
   }
-
-  // Get words by JLPT level
-  List<Word> getWordsByJlptLevel(int level) {
-    if (_wordList == null) return [];
-    return _wordList!.where((word) => word.jlptLevel == level).toList();
-  }
-
-  // Search words by query
-  List<Word> searchWords(String query) {
-    if (_wordList == null) return [];
-    final lowerQuery = query.toLowerCase();
-
-    return _wordList!.where((word) {
-      return word.word.toLowerCase().contains(lowerQuery) ||
-          word.reading.toLowerCase().contains(lowerQuery) ||
-          word.meaningsText.toLowerCase().contains(lowerQuery);
-    }).toList();
-  }
-
 }

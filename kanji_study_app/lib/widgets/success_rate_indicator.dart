@@ -8,10 +8,7 @@ import '../constants/app_spacing.dart';
 class SuccessRateIndicator extends StatelessWidget {
   final double successRate;
 
-  const SuccessRateIndicator({
-    super.key,
-    required this.successRate,
-  });
+  const SuccessRateIndicator({super.key, required this.successRate});
 
   @override
   Widget build(BuildContext context) {

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/flashcard_session_model.dart';
+import '../models/study_record_model.dart';
 import 'supabase_service.dart';
 import 'study_record_service.dart';
 
@@ -211,9 +212,9 @@ class FlashcardService {
       // This updates local DB + memory cache + Supabase (if online)
       for (final result in session.results) {
         await _studyRecordService.addRecord(
-          type: result.itemType,
+          type: StudyType.fromString(result.itemType),
           targetId: result.itemId,
-          status: result.isCorrect ? 'completed' : 'forgot',
+          status: result.isCorrect ? StudyStatus.completed : StudyStatus.forgot,
         );
       }
 
@@ -240,26 +241,34 @@ class FlashcardService {
       final client = _supabaseService.client;
 
       // 1. Insert flashcard session
-      final sessionData = await client.from('flashcard_sessions').insert({
-        'user_id': userId,
-        'item_type': session.itemType,
-        'total_count': session.itemIds.length,
-        'correct_count': session.correctCount,
-        'incorrect_count': session.incorrectCount,
-        'started_at': session.startTime.toIso8601String(),
-        'completed_at': session.endTime?.toIso8601String(),
-      }).select('id').single();
+      final sessionData = await client
+          .from('flashcard_sessions')
+          .insert({
+            'user_id': userId,
+            'item_type': session.itemType,
+            'total_count': session.itemIds.length,
+            'correct_count': session.correctCount,
+            'incorrect_count': session.incorrectCount,
+            'started_at': session.startTime.toIso8601String(),
+            'completed_at': session.endTime?.toIso8601String(),
+          })
+          .select('id')
+          .single();
 
       final sessionId = sessionData['id'] as int;
 
       // 2. Insert individual results
       if (session.results.isNotEmpty) {
-        final resultsData = session.results.map((result) => {
-          'session_id': sessionId,
-          'target_id': result.itemId,
-          'is_correct': result.isCorrect,
-          'answered_at': result.timestamp.toIso8601String(),
-        }).toList();
+        final resultsData = session.results
+            .map(
+              (result) => {
+                'session_id': sessionId,
+                'target_id': result.itemId,
+                'is_correct': result.isCorrect,
+                'answered_at': result.timestamp.toIso8601String(),
+              },
+            )
+            .toList();
 
         await client.from('flashcard_results').insert(resultsData);
       }

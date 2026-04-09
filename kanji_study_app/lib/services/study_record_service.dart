@@ -2,9 +2,12 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import '../database/app_database.dart';
+import '../models/study_progress.dart';
+import '../models/study_record_model.dart';
 import 'local_database_service.dart';
 import 'supabase_service.dart';
 import 'connectivity_service.dart';
+import 'connectivity_sync_helper.dart';
 
 /// 학습 기록 전역 상태 관리 서비스 (싱글톤)
 /// 오프라인 지원 + Supabase 동기화
@@ -17,14 +20,15 @@ class StudyRecordService extends ChangeNotifier {
   final LocalDatabaseService _localDb = LocalDatabaseService.instance;
   final SupabaseService _supabaseService = SupabaseService.instance;
   final ConnectivityService _connectivityService = ConnectivityService.instance;
+  late final ConnectivitySyncHelper _syncHelper = ConnectivitySyncHelper(
+    label: 'StudyRecordService',
+    onReconnect: syncWithSupabase,
+    connectivityService: _connectivityService,
+  );
 
-  // 메모리 캐시: "type_targetId" -> status
-  final Map<String, String> _statusCache = {};
-
-  StreamSubscription<bool>? _connectivitySubscription;
+  final Map<String, StudyItemProgress> _progressCache = {};
 
   bool _isInitialized = false;
-  bool _isSyncing = false;
   bool get isInitialized => _isInitialized;
 
   /// 서비스 초기화 - 로컬 DB에서 캐시 로드
@@ -38,35 +42,16 @@ class StudyRecordService extends ChangeNotifier {
         return;
       }
 
-      // 로컬 DB에서 학습 기록 로드
-      final records = await _localDb.database.getStudyRecords(userId);
-
-      // 캐시에 로드 (각 targetId별 최신 상태만 유지)
-      final Map<String, DateTime> latestDates = {};
-      for (final record in records) {
-        final key = '${record.studyType}_${record.targetId}';
-        final existingDate = latestDates[key];
-
-        if (existingDate == null || record.createdAt.isAfter(existingDate)) {
-          _statusCache[key] = record.status;
-          latestDates[key] = record.createdAt;
-        }
-      }
+      final records = await _getLocalRecords(userId);
+      _replaceCache(records);
 
       _isInitialized = true;
-      debugPrint('StudyRecordService initialized with ${_statusCache.length} records');
+      debugPrint(
+        'StudyRecordService initialized with ${_progressCache.length} tracked items',
+      );
 
-      // 온라인이면 동기화 시도
-      if (_connectivityService.isOnline) {
-        await syncWithSupabase();
-      }
-
-      // 연결 상태 변화 리스닝
-      _connectivitySubscription = _connectivityService.onConnectivityChanged.listen((isOnline) {
-        if (isOnline) {
-          syncWithSupabase();
-        }
-      });
+      _syncHelper.listen();
+      await syncWithSupabase();
     } catch (e) {
       debugPrint('Error initializing StudyRecordService: $e');
     }
@@ -74,9 +59,9 @@ class StudyRecordService extends ChangeNotifier {
 
   /// 학습 기록 추가 (로컬 + 온라인)
   Future<void> addRecord({
-    required String type,
+    required StudyType type,
     required int targetId,
-    required String status,
+    required StudyStatus status,
   }) async {
     final userId = _supabaseService.currentUser?.id;
     if (userId == null) {
@@ -91,148 +76,166 @@ class StudyRecordService extends ChangeNotifier {
       // 1. 로컬 DB에 저장
       final localRecord = StudyRecordsTableCompanion.insert(
         userId: userId,
-        studyType: type,
+        studyType: type.value,
         targetId: targetId,
-        status: status,
+        status: status.value,
         studyDate: now,
-        isSynced: Value(isOnline),
+        isSynced: Value(isOnline && _supabaseService.isInitialized),
         createdAt: Value(now),
       );
       await _localDb.database.insertStudyRecord(localRecord);
 
       // 2. 메모리 캐시 업데이트
-      final key = '${type}_$targetId';
-      _statusCache[key] = status;
+      final record = StudyRecord(
+        userId: userId,
+        type: type,
+        targetId: targetId,
+        status: status,
+        createdAt: now.toLocal(),
+      );
+      _upsertProgress(record);
 
       // 3. 온라인이면 Supabase에도 저장 (created_at은 DB default now() 사용)
-      if (isOnline) {
+      if (isOnline && _supabaseService.isInitialized) {
         await _supabaseService.client.from('study_records').insert({
           'user_id': userId,
-          'type': type,
+          'type': type.value,
           'target_id': targetId,
-          'status': status,
+          'status': status.value,
         });
       }
 
       // 4. 리스너에게 알림
       notifyListeners();
 
-      debugPrint('StudyRecordService: Added $type record for $targetId ($status)');
+      debugPrint(
+        'StudyRecordService: Added ${type.value} record for $targetId (${status.value})',
+      );
     } catch (e) {
       debugPrint('Error adding study record: $e');
     }
   }
 
   /// 특정 항목의 학습 상태 조회
-  String? getStatus(String type, int targetId) {
-    final key = '${type}_$targetId';
-    return _statusCache[key];
+  StudyStatus? getStatus(StudyType type, int targetId) {
+    return getItemProgress(type, targetId)?.lastStatus;
   }
 
-  /// 특정 타입의 모든 학습 상태 조회
-  Map<int, String> getStatusesByType(String type) {
-    final result = <int, String>{};
-    for (final entry in _statusCache.entries) {
-      if (entry.key.startsWith('${type}_')) {
-        final targetId = int.parse(entry.key.split('_')[1]);
-        result[targetId] = entry.value;
+  StudyItemProgress? getItemProgress(StudyType type, int targetId) {
+    return _progressCache['${type.value}_$targetId'];
+  }
+
+  Map<int, StudyItemProgress> getProgressByType(StudyType type) {
+    final result = <int, StudyItemProgress>{};
+    for (final entry in _progressCache.entries) {
+      if (entry.value.type == type) {
+        result[entry.value.targetId] = entry.value;
       }
     }
     return result;
   }
 
+  StudyProgressSummary getSummary(StudyType type) {
+    return buildProgressSummary(type, _progressCache.values);
+  }
+
   /// Supabase와 동기화
   Future<void> syncWithSupabase() async {
-    if (!_connectivityService.isOnline) return;
-    if (_isSyncing) return;
-
     final userId = _supabaseService.currentUser?.id;
     if (userId == null) return;
-
-    _isSyncing = true;
+    if (!_supabaseService.isInitialized) return;
 
     try {
-      debugPrint('StudyRecordService: Starting sync with Supabase...');
+      await _syncHelper.runGuarded(() async {
+        debugPrint('StudyRecordService: Starting sync with Supabase...');
 
-      // 1. 미동기화 로컬 레코드를 Supabase에 업로드
-      final unsyncedRecords = await _localDb.database.getUnsyncedRecords();
-      for (final record in unsyncedRecords) {
-        try {
-          await _supabaseService.client.from('study_records').insert({
-            'user_id': record.userId,
-            'type': record.studyType,
-            'target_id': record.targetId,
-            'status': record.status,
-            'created_at': record.createdAt.toIso8601String(),
-          });
-          await _localDb.database.markRecordAsSynced(record.id);
-        } catch (e) {
-          debugPrint('Error syncing record ${record.id}: $e');
-        }
-      }
-
-      // 2. Supabase에서 최신 데이터 다운로드
-      final serverRecords = await _supabaseService.getStudyRecords();
-
-      // 3. 캐시 갱신 (서버 데이터 기준)
-      _statusCache.clear();
-      final Map<String, DateTime> latestDates = {};
-
-      for (final record in serverRecords) {
-        final key = '${record.type.value}_${record.targetId}';
-        final existingDate = latestDates[key];
-
-        if (existingDate == null ||
-            (record.createdAt != null && record.createdAt!.isAfter(existingDate))) {
-          _statusCache[key] = record.status.value;
-          if (record.createdAt != null) {
-            latestDates[key] = record.createdAt!;
+        final unsyncedRecords = await _localDb.database.getUnsyncedRecords();
+        for (final record in unsyncedRecords) {
+          try {
+            await _supabaseService.client.from('study_records').insert({
+              'user_id': record.userId,
+              'type': record.studyType,
+              'target_id': record.targetId,
+              'status': record.status,
+              'created_at': record.createdAt.toIso8601String(),
+            });
+            await _localDb.database.markRecordAsSynced(record.id);
+          } catch (e) {
+            debugPrint('Error syncing record ${record.id}: $e');
           }
         }
-      }
 
-      notifyListeners();
-      debugPrint('StudyRecordService: Sync completed, ${_statusCache.length} records in cache');
+        final serverRecords = await _supabaseService.getStudyRecords();
+        _replaceCache(serverRecords);
+        notifyListeners();
+        debugPrint(
+          'StudyRecordService: Sync completed, ${_progressCache.length} tracked items',
+        );
+      });
     } catch (e) {
       debugPrint('Error syncing with Supabase: $e');
-    } finally {
-      _isSyncing = false;
     }
   }
 
   /// 캐시 강제 갱신 (Supabase에서 다시 로드)
   Future<void> refreshFromSupabase() async {
-    if (!_connectivityService.isOnline) return;
-
     try {
+      if (!_supabaseService.isInitialized) return;
       final serverRecords = await _supabaseService.getStudyRecords();
-
-      _statusCache.clear();
-      final Map<String, DateTime> latestDates = {};
-
-      for (final record in serverRecords) {
-        final key = '${record.type.value}_${record.targetId}';
-        final existingDate = latestDates[key];
-
-        if (existingDate == null ||
-            (record.createdAt != null && record.createdAt!.isAfter(existingDate))) {
-          _statusCache[key] = record.status.value;
-          if (record.createdAt != null) {
-            latestDates[key] = record.createdAt!;
-          }
-        }
-      }
-
+      _replaceCache(serverRecords);
       notifyListeners();
-      debugPrint('StudyRecordService: Refreshed from Supabase, ${_statusCache.length} records');
+      debugPrint(
+        'StudyRecordService: Refreshed from Supabase, ${_progressCache.length} tracked items',
+      );
     } catch (e) {
       debugPrint('Error refreshing from Supabase: $e');
     }
   }
 
+  Future<List<StudyRecord>> getStudyRecords({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) {
+    return _supabaseService.getStudyRecords(
+      startDate: startDate,
+      endDate: endDate,
+    );
+  }
+
+  Future<List<StudyRecord>> _getLocalRecords(String userId) async {
+    final rows = await _localDb.database.getStudyRecords(userId);
+    return rows
+        .map(
+          (row) => StudyRecord(
+            id: row.id,
+            userId: row.userId,
+            type: StudyType.fromString(row.studyType),
+            targetId: row.targetId,
+            status: StudyStatus.fromString(row.status),
+            notes: row.notes,
+            createdAt: row.createdAt.toLocal(),
+          ),
+        )
+        .toList();
+  }
+
+  void _replaceCache(List<StudyRecord> records) {
+    _progressCache
+      ..clear()
+      ..addAll(buildProgressIndex(records));
+  }
+
+  void _upsertProgress(StudyRecord record) {
+    final key = '${record.type.value}_${record.targetId}';
+    final current =
+        _progressCache[key] ??
+        StudyItemProgress.empty(record.type, record.targetId);
+    _progressCache[key] = current.copyWithRecord(record);
+  }
+
   @override
   void dispose() {
-    _connectivitySubscription?.cancel();
+    _syncHelper.dispose();
     super.dispose();
   }
 }

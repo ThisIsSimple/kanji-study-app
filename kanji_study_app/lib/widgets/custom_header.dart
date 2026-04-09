@@ -4,11 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../services/connectivity_service.dart';
 
 /// Title alignment options for CustomHeader
-enum HeaderTitleAlign {
-  left,
-  center,
-  right,
-}
+enum HeaderTitleAlign { left, center, right }
 
 /// Custom header widget with flexible action placement and dynamic title positioning
 class CustomHeader extends StatelessWidget {
@@ -56,8 +52,11 @@ class CustomHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, FThemeData theme, bool shouldShowBanner) {
-
+  Widget _buildHeader(
+    BuildContext context,
+    FThemeData theme,
+    bool shouldShowBanner,
+  ) {
     // Build left side with optional back button
     final List<Widget> leftSide = [];
     if (withBack) {
@@ -204,17 +203,11 @@ class CustomHeader extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (leftSide.isNotEmpty)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: leftSide,
-                )
+                Row(mainAxisSize: MainAxisSize.min, children: leftSide)
               else
                 const SizedBox.shrink(),
               if (rightActions.isNotEmpty)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: rightActions,
-                )
+                Row(mainAxisSize: MainAxisSize.min, children: rightActions)
               else
                 const SizedBox.shrink(),
             ],
@@ -243,39 +236,27 @@ class CustomHeader extends StatelessWidget {
         // Left alignment: leftActions + title + spacer + rightActions
         if (titleAlign == HeaderTitleAlign.left) ...[
           if (leftSide.isNotEmpty)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: leftSide,
-            ),
+            Row(mainAxisSize: MainAxisSize.min, children: leftSide),
           if (styledTitle != null)
             styledTitle is Expanded
                 ? styledTitle
                 : Flexible(child: styledTitle),
           const Spacer(),
           if (rightActions.isNotEmpty)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: rightActions,
-            ),
+            Row(mainAxisSize: MainAxisSize.min, children: rightActions),
         ],
 
         // Right alignment: leftActions + spacer + title + rightActions
         if (titleAlign == HeaderTitleAlign.right) ...[
           if (leftSide.isNotEmpty)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: leftSide,
-            ),
+            Row(mainAxisSize: MainAxisSize.min, children: leftSide),
           const Spacer(),
           if (styledTitle != null)
             styledTitle is Expanded
                 ? styledTitle
                 : Flexible(child: styledTitle),
           if (rightActions.isNotEmpty)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: rightActions,
-            ),
+            Row(mainAxisSize: MainAxisSize.min, children: rightActions),
         ],
       ],
     );

@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/supabase_service.dart';
+import '../services/analytics_service.dart';
 import '../models/daily_study_stats.dart';
 import '../constants/app_spacing.dart';
 import '../widgets/daily_summary_card.dart';
@@ -20,6 +21,7 @@ class StudyCalendarDetailScreen extends StatefulWidget {
 
 class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
   final SupabaseService _supabaseService = SupabaseService.instance;
+  final AnalyticsService _analyticsService = AnalyticsService.instance;
 
   late PageController _pageController;
   late FCalendarController<DateTime?> _lineCalendarController;
@@ -73,7 +75,9 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
       widget.date.day,
     );
     final normalizedDate = DateTime(date.year, date.month, date.day);
-    final daysDifference = normalizedDate.difference(normalizedInitialDate).inDays;
+    final daysDifference = normalizedDate
+        .difference(normalizedInitialDate)
+        .inDays;
     return _initialPage + daysDifference;
   }
 
@@ -105,19 +109,12 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
       );
 
       // Load daily statistics
-      final stats = await _supabaseService.getDailyStudyStats(
-        startDate: normalizedDate,
-        endDate: normalizedDate.add(
-          const Duration(hours: 23, minutes: 59, seconds: 59),
-        ),
-      );
+      final stats = await _analyticsService.getDailyStats(normalizedDate);
 
       if (!mounted) return;
       setState(() {
         _studyDetailsCache[normalizedDate] = details;
-        _dailyStatsCache[normalizedDate] = stats.isNotEmpty
-            ? stats.first
-            : null;
+        _dailyStatsCache[normalizedDate] = stats;
         _loadingDates.remove(normalizedDate);
       });
     } catch (e) {
@@ -152,13 +149,15 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
     // Load data for the selected date immediately
     _loadStudyDetailsForDate(date);
 
-    _pageController.animateToPage(
-      pageIndex,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    ).then((_) {
-      _isSyncingFromLineCalendar = false;
-    });
+    _pageController
+        .animateToPage(
+          pageIndex,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        )
+        .then((_) {
+          _isSyncingFromLineCalendar = false;
+        });
   }
 
   @override
@@ -167,9 +166,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
 
     return FScaffold(
       header: FHeader.nested(
-        title: Text(
-          DateFormat('yyyy년 MM월 dd일').format(_currentDate),
-        ),
+        title: Text(DateFormat('yyyy년 MM월 dd일').format(_currentDate)),
         prefixes: [
           FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
         ],
@@ -202,7 +199,8 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
                   pageDate.month,
                   pageDate.day,
                 );
-                final studyDetails = _studyDetailsCache[normalizedPageDate] ?? [];
+                final studyDetails =
+                    _studyDetailsCache[normalizedPageDate] ?? [];
                 final dailyStats = _dailyStatsCache[normalizedPageDate];
 
                 if (_loadingDates.contains(normalizedPageDate)) {
@@ -325,116 +323,111 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
 
     return FCard(
       child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Type Icon
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isKanji
-                    ? theme.colors.primary.withValues(alpha: 0.1)
-                    : theme.colors.secondary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Icon(
-                  isKanji
-                      ? PhosphorIconsRegular.translate
-                      : PhosphorIconsRegular.bookOpen,
-                  size: 20,
-                  color: isKanji
-                      ? theme.colors.primary
-                      : theme.colors.secondary,
-                ),
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Type Icon
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isKanji
+                  ? theme.colors.primary.withValues(alpha: 0.1)
+                  : theme.colors.secondary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Icon(
+                isKanji
+                    ? PhosphorIconsRegular.translate
+                    : PhosphorIconsRegular.bookOpen,
+                size: 20,
+                color: isKanji ? theme.colors.primary : theme.colors.secondary,
               ),
             ),
-            const SizedBox(width: 12),
+          ),
+          const SizedBox(width: 12),
 
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (isKanji) ...[
-                    Text(
-                      item['character'],
-                      style: GoogleFonts.notoSerifJp(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colors.foreground,
-                      ),
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isKanji) ...[
+                  Text(
+                    item['character'],
+                    style: GoogleFonts.notoSerifJp(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colors.foreground,
                     ),
-                    const SizedBox(height: 4),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item['meanings'],
+                    style: theme.typography.sm.copyWith(
+                      color: theme.colors.mutedForeground,
+                    ),
+                  ),
+                ] else ...[
+                  Text(
+                    item['word'],
+                    style: GoogleFonts.notoSerifJp(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colors.foreground,
+                    ),
+                  ),
+                  if (item['reading'] != null &&
+                      item['reading'].isNotEmpty) ...[
+                    const SizedBox(height: 2),
                     Text(
-                      item['meanings'],
+                      item['reading'],
                       style: theme.typography.sm.copyWith(
                         color: theme.colors.mutedForeground,
                       ),
                     ),
-                  ] else ...[
-                    Text(
-                      item['word'],
-                      style: GoogleFonts.notoSerifJp(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colors.foreground,
-                      ),
-                    ),
-                    if (item['reading'] != null &&
-                        item['reading'].isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        item['reading'],
-                        style: theme.typography.sm.copyWith(
-                          color: theme.colors.mutedForeground,
-                        ),
-                      ),
-                    ],
                   ],
                 ],
-              ),
-            ),
-
-            // Status and Time
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: getStatusColor().withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(getStatusIcon(), size: 14, color: getStatusColor()),
-                      const SizedBox(width: 4),
-                      Text(
-                        getStatusText(),
-                        style: theme.typography.xs.copyWith(
-                          color: getStatusColor(),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  DateFormat('HH:mm').format(studiedAt),
-                  style: theme.typography.xs.copyWith(
-                    color: theme.colors.mutedForeground,
-                  ),
-                ),
               ],
             ),
-          ],
-        ),
+          ),
+
+          // Status and Time
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: getStatusColor().withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(getStatusIcon(), size: 14, color: getStatusColor()),
+                    const SizedBox(width: 4),
+                    Text(
+                      getStatusText(),
+                      style: theme.typography.xs.copyWith(
+                        color: getStatusColor(),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                DateFormat('HH:mm').format(studiedAt),
+                style: theme.typography.xs.copyWith(
+                  color: theme.colors.mutedForeground,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

@@ -357,8 +357,9 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                                               color: theme.colors.border,
                                               width: 1,
                                             ),
-                                            borderRadius:
-                                                BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                           ),
                                           child: Row(
                                             mainAxisAlignment:
@@ -374,9 +375,10 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                                                 '모르겠어요',
                                                 style: theme.typography.sm
                                                     .copyWith(
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.red,
-                                                ),
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Colors.red,
+                                                    ),
                                               ),
                                             ],
                                           ),
@@ -403,9 +405,10 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                                                 '알았어요',
                                                 style: theme.typography.sm
                                                     .copyWith(
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                ),
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Colors.white,
+                                                    ),
                                               ),
                                             ],
                                           ),

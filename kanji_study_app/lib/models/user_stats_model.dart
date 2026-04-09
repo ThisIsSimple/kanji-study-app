@@ -2,17 +2,17 @@ import 'dart:math';
 
 /// User statistics model for home dashboard
 class UserStats {
-  final int streak;                    // Consecutive study days
-  final int totalXP;                   // Total XP points (for future implementation)
-  final int todayProgress;             // Number of items studied today
-  final int dailyGoal;                 // Daily goal target
-  final int weeklyCount;               // This week's study count
-  final double weeklyAverage;          // Weekly average study rate
-  final int reviewQueueSize;           // Number of items needing review
-  final int nextMilestone;             // Next milestone target
-  final int remainingToMilestone;      // Remaining to reach milestone
-  final int totalStudied;              // Total number of kanji studied
-  final int totalMastered;             // Total number of kanji mastered
+  final int streak; // Consecutive study days
+  final int totalXP; // Total XP points (for future implementation)
+  final int todayProgress; // Number of items studied today
+  final int dailyGoal; // Daily goal target
+  final int weeklyCount; // This week's study count
+  final double weeklyAverage; // Weekly average study rate
+  final int reviewQueueSize; // Number of items needing review
+  final int nextMilestone; // Next milestone target
+  final int remainingToMilestone; // Remaining to reach milestone
+  final int totalStudied; // Total number of kanji studied
+  final int totalMastered; // Total number of kanji mastered
 
   const UserStats({
     required this.streak,

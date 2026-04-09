@@ -40,7 +40,9 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
 
       if (_questions.isEmpty) {
         // 문제가 없으면 로드
-        final fullQuiz = await _aiQuizService.getQuizWithQuestions(widget.quiz.id);
+        final fullQuiz = await _aiQuizService.getQuizWithQuestions(
+          widget.quiz.id,
+        );
         _questions = fullQuiz.questions ?? [];
       }
 
@@ -50,9 +52,9 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
       setState(() => _isLoading = false);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('퀴즈 로드 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('퀴즈 로드 실패: $e')));
         Navigator.pop(context);
       }
     }
@@ -142,9 +144,9 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('제출 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('제출 실패: $e')));
       }
     }
   }
@@ -158,13 +160,8 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
         backgroundColor: theme.colors.background,
         body: Column(
           children: [
-            const CustomHeader(
-              title: Text('퀴즈'),
-              withBack: true,
-            ),
-            const Expanded(
-              child: Center(child: FCircularProgress()),
-            ),
+            const CustomHeader(title: Text('퀴즈'), withBack: true),
+            const Expanded(child: Center(child: FCircularProgress())),
           ],
         ),
       );
@@ -175,13 +172,8 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
         backgroundColor: theme.colors.background,
         body: Column(
           children: [
-            const CustomHeader(
-              title: Text('퀴즈'),
-              withBack: true,
-            ),
-            const Expanded(
-              child: Center(child: Text('문제가 없습니다.')),
-            ),
+            const CustomHeader(title: Text('퀴즈'), withBack: true),
+            const Expanded(child: Center(child: Text('문제가 없습니다.'))),
           ],
         ),
       );
@@ -255,7 +247,9 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
                     final index = entry.key;
                     final option = entry.value;
                     final isSelected = selectedAnswer == option;
-                    final optionLabel = String.fromCharCode(65 + index); // A, B, C, D
+                    final optionLabel = String.fromCharCode(
+                      65 + index,
+                    ); // A, B, C, D
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -330,9 +324,7 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: theme.colors.background,
-              border: Border(
-                top: BorderSide(color: theme.colors.border),
-              ),
+              border: Border(top: BorderSide(color: theme.colors.border)),
             ),
             child: SafeArea(
               child: Row(
@@ -365,8 +357,8 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
                       onPress: _isSubmitting
                           ? null
                           : _currentIndex < _questions.length - 1
-                              ? _nextQuestion
-                              : _submitQuiz,
+                          ? _nextQuestion
+                          : _submitQuiz,
                       child: _isSubmitting
                           ? const FCircularProgress()
                           : Row(
@@ -402,10 +394,7 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
 
     // 일본어 문자가 포함된 경우 일본어 폰트 사용
     if (_containsJapanese(question)) {
-      return GoogleFonts.notoSerifJp(
-        fontSize: 28,
-        fontWeight: FontWeight.bold,
-      );
+      return GoogleFonts.notoSerifJp(fontSize: 28, fontWeight: FontWeight.bold);
     }
 
     return theme.typography.xl2.copyWith(fontWeight: FontWeight.bold);

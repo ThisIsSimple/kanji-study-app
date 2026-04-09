@@ -206,21 +206,19 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
 
     try {
       await _studyRecordService.addRecord(
-        type: 'kanji',
+        type: StudyType.kanji,
         targetId: _currentKanji!.id,
-        status: status == StudyStatus.completed ? 'completed' : 'forgot',
+        status: status == StudyStatus.completed
+            ? StudyStatus.completed
+            : StudyStatus.forgot,
       );
 
-      // Reload stats after recording
       await _loadStudyStats();
 
       if (!mounted) return;
-      final scaffoldContext = _scaffoldKey.currentContext;
-      if (scaffoldContext == null) return;
       final isCompleted = status == StudyStatus.completed;
-      // ignore: use_build_context_synchronously
       showAppToast(
-        scaffoldContext,
+        context,
         message: isCompleted ? '학습 완료를 기록했습니다!' : '까먹음을 기록했습니다.',
         type: isCompleted ? AppToastType.info : AppToastType.error,
         icon: isCompleted
@@ -229,11 +227,8 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      final scaffoldContext = _scaffoldKey.currentContext;
-      if (scaffoldContext == null) return;
-      // ignore: use_build_context_synchronously
       showAppToast(
-        scaffoldContext,
+        context,
         message: '기록 저장 실패: $e',
         type: AppToastType.error,
         icon: PhosphorIconsRegular.warning,
@@ -245,12 +240,21 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
     }
   }
 
-  void _toggleFavorite() {
+  Future<void> _toggleFavorite() async {
     if (_currentKanji == null) return;
-    setState(() {
-      _kanjiService.toggleFavorite(_currentKanji!.character);
-      _isFavorite = !_isFavorite;
-    });
+    final nextValue = !_isFavorite;
+    setState(() => _isFavorite = nextValue);
+    try {
+      await _kanjiService.toggleFavorite(_currentKanji!.character);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isFavorite = !nextValue);
+      showAppToast(
+        context,
+        message: '즐겨찾기 저장 실패: $e',
+        type: AppToastType.error,
+      );
+    }
   }
 
   Future<void> _generateExamples() async {

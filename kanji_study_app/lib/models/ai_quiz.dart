@@ -52,8 +52,8 @@ class AiQuiz {
       createdAt: DateTime.parse(json['created_at'] as String),
       questions: json['ai_quiz_questions'] != null
           ? (json['ai_quiz_questions'] as List)
-              .map((q) => AiQuizQuestion.fromJson(q as Map<String, dynamic>))
-              .toList()
+                .map((q) => AiQuizQuestion.fromJson(q as Map<String, dynamic>))
+                .toList()
           : null,
     );
   }
@@ -147,4 +147,3 @@ class AiQuizQuestion {
     };
   }
 }
-

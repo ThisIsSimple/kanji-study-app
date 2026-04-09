@@ -3,8 +3,10 @@ import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/kanji_model.dart';
 import '../models/user_progress.dart';
+import '../models/study_record_model.dart';
 import 'kanji_repository.dart';
 import 'favorite_service.dart';
+import 'study_record_service.dart';
 
 class KanjiService {
   static final KanjiService _instance = KanjiService._internal();
@@ -14,39 +16,30 @@ class KanjiService {
 
   final KanjiRepository _repository = KanjiRepository.instance;
   final FavoriteService _favoriteService = FavoriteService.instance;
-  final Map<String, UserProgress> _progressMap = {};
+  final StudyRecordService _studyRecordService = StudyRecordService.instance;
+  final Map<String, UserProgress> _legacyProgressMap = {};
 
   Future<void> init() async {
     await _repository.loadKanjiData();
-    await _loadProgress();
+    await _loadLegacyProgress();
   }
 
   Future<void> reloadData() async {
     await _repository.reloadKanjiData();
-    await _loadProgress();
+    await _loadLegacyProgress();
   }
 
-  Future<void> _loadProgress() async {
+  Future<void> _loadLegacyProgress() async {
     final prefs = await SharedPreferences.getInstance();
     final progressData = prefs.getString('user_progress');
 
+    _legacyProgressMap.clear();
     if (progressData != null) {
       final Map<String, dynamic> decoded = json.decode(progressData);
       decoded.forEach((key, value) {
-        _progressMap[key] = UserProgress.fromJson(value);
+        _legacyProgressMap[key] = UserProgress.fromJson(value);
       });
     }
-  }
-
-  Future<void> _saveProgress() async {
-    final prefs = await SharedPreferences.getInstance();
-    final Map<String, dynamic> data = {};
-
-    _progressMap.forEach((key, value) {
-      data[key] = value.toJson();
-    });
-
-    await prefs.setString('user_progress', json.encode(data));
   }
 
   bool isFavorite(String character) {
@@ -58,10 +51,7 @@ class KanjiService {
   Future<void> toggleFavorite(String character) async {
     final kanji = _repository.getKanjiByCharacter(character);
     if (kanji == null) return;
-    await _favoriteService.toggleFavorite(
-      type: 'kanji',
-      targetId: kanji.id,
-    );
+    await _favoriteService.toggleFavorite(type: 'kanji', targetId: kanji.id);
   }
 
   List<Kanji> getFavoriteKanji() {
@@ -78,25 +68,29 @@ class KanjiService {
       throw Exception('No kanji data available');
     }
 
-    // Get kanji that haven't been studied or least recently studied
+    final progressById = _studyRecordService.getProgressByType(StudyType.kanji);
+
     final unstudiedKanji = allKanji.where((kanji) {
-      return !_progressMap.containsKey(kanji.character);
+      final progress = progressById[kanji.id];
+      final legacy = _legacyProgressMap[kanji.character];
+      return progress == null && legacy == null;
     }).toList();
 
     if (unstudiedKanji.isNotEmpty) {
-      // Return a random unstudied kanji from top candidates
       final topCandidates = unstudiedKanji.take(10).toList();
       return topCandidates[Random().nextInt(topCandidates.length)];
     }
 
-    // If all kanji have been studied, return the least recently studied one
     var oldestKanji = allKanji.first;
-    DateTime oldestDate = DateTime.now();
+    var oldestDate = DateTime.now();
 
     for (final kanji in allKanji) {
-      final progress = _progressMap[kanji.character];
-      if (progress != null && progress.lastStudied.isBefore(oldestDate)) {
-        oldestDate = progress.lastStudied;
+      final progress = progressById[kanji.id];
+      final progressDate =
+          progress?.lastStudiedAt ??
+          _legacyProgressMap[kanji.character]?.lastStudied;
+      if (progressDate != null && progressDate.isBefore(oldestDate)) {
+        oldestDate = progressDate;
         oldestKanji = kanji;
       }
     }
@@ -107,35 +101,6 @@ class KanjiService {
   List<Kanji> getAllKanji() => _repository.getAllKanji();
 
   Kanji? getKanjiById(int id) => _repository.getKanjiById(id);
-
-  UserProgress? getProgress(String character) => _progressMap[character];
-
-  Future<void> markAsStudied(String character) async {
-    final existing = _progressMap[character];
-
-    if (existing != null) {
-      _progressMap[character] = existing.copyWith(
-        lastStudied: DateTime.now(),
-        studyCount: existing.studyCount + 1,
-        mastered: existing.studyCount >= 4, // Consider mastered after 5 studies
-      );
-    } else {
-      _progressMap[character] = UserProgress(
-        kanjiCharacter: character,
-        lastStudied: DateTime.now(),
-        studyCount: 1,
-        mastered: false,
-      );
-    }
-
-    await _saveProgress();
-  }
-
-  int getStudiedCount() => _progressMap.length;
-
-  int getMasteredCount() {
-    return _progressMap.values.where((progress) => progress.mastered).length;
-  }
 
   List<Kanji> searchKanji(String query) {
     if (query.isEmpty) return [];
@@ -158,7 +123,4 @@ class KanjiService {
 
     return resultMap.values.toList();
   }
-
-  // Grade and JLPT methods removed - data is empty in current dataset
-
 }

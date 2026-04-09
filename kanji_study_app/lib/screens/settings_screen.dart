@@ -34,12 +34,11 @@ class SettingsScreen extends StatelessWidget {
                     prefix: Icon(PhosphorIconsRegular.userCircle, size: 26),
                     title: Text(
                       '계정 관리',
-                      style: typography.base.copyWith(fontWeight: FontWeight.w500),
+                      style: typography.base.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    details: Text(
-                      '로그인 정보 및 계정 설정',
-                      style: typography.sm,
-                    ),
+                    details: Text('로그인 정보 및 계정 설정', style: typography.sm),
                     suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () =>
                         _navigateTo(context, const SettingsAccountScreen()),
@@ -48,12 +47,11 @@ class SettingsScreen extends StatelessWidget {
                     prefix: Icon(PhosphorIconsRegular.bell, size: 26),
                     title: Text(
                       '알림',
-                      style: typography.base.copyWith(fontWeight: FontWeight.w500),
+                      style: typography.base.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    details: Text(
-                      '학습 알림 및 시간 설정',
-                      style: typography.sm,
-                    ),
+                    details: Text('학습 알림 및 시간 설정', style: typography.sm),
                     suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () => _navigateTo(
                       context,
@@ -64,12 +62,11 @@ class SettingsScreen extends StatelessWidget {
                     prefix: Icon(PhosphorIconsRegular.sparkle, size: 26),
                     title: Text(
                       'AI 설정',
-                      style: typography.base.copyWith(fontWeight: FontWeight.w500),
+                      style: typography.base.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    details: Text(
-                      'Gemini API 키 관리',
-                      style: typography.sm,
-                    ),
+                    details: Text('Gemini API 키 관리', style: typography.sm),
                     suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () =>
                         _navigateTo(context, const SettingsAiScreen()),
@@ -78,12 +75,11 @@ class SettingsScreen extends StatelessWidget {
                     prefix: Icon(PhosphorIconsRegular.info, size: 26),
                     title: Text(
                       '앱 정보',
-                      style: typography.base.copyWith(fontWeight: FontWeight.w500),
+                      style: typography.base.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    details: Text(
-                      '버전 및 개발자 정보',
-                      style: typography.sm,
-                    ),
+                    details: Text('버전 및 개발자 정보', style: typography.sm),
                     suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () =>
                         _navigateTo(context, const SettingsInfoScreen()),

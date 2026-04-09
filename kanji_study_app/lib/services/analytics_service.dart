@@ -1,13 +1,11 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_stats_model.dart';
 import '../models/daily_study_stats.dart';
 import '../models/study_record_model.dart';
-import '../config/supabase_config.dart';
-import 'supabase_service.dart';
-import 'kanji_service.dart';
+import 'study_record_service.dart';
 
 /// Analytics service for calculating user statistics and progress
 class AnalyticsService {
@@ -16,8 +14,7 @@ class AnalyticsService {
 
   AnalyticsService._internal();
 
-  final SupabaseService _supabase = SupabaseService.instance;
-  final KanjiService _kanji = KanjiService.instance;
+  final StudyRecordService _studyRecords = StudyRecordService.instance;
 
   // Cache duration
   static const Duration _cacheDuration = Duration(minutes: 5);
@@ -33,11 +30,7 @@ class AnalyticsService {
 
   /// Calculate consecutive study days (streak)
   Future<int> calculateStreak() async {
-    final userId = _supabase.currentUser?.id;
-    if (userId == null) return 0;
-
     try {
-      // Check cache first
       final prefs = await SharedPreferences.getInstance();
       final cachedTime = prefs.getString(_cacheKeyStreakTime);
       final cachedStreak = prefs.getInt(_cacheKeyStreak);
@@ -49,31 +42,25 @@ class AnalyticsService {
         }
       }
 
-      // Fetch study records grouped by date
-      final records = await _supabase.client
-          .from(SupabaseConfig.studyRecordsTable)
-          .select('created_at')
-          .eq('user_id', userId)
-          .order('created_at', ascending: false)
-          .limit(365); // Last year
+      final records = await _studyRecords.getStudyRecords(
+        startDate: DateTime.now().subtract(const Duration(days: 365)),
+      );
 
       if (records.isEmpty) {
         await _cacheStreak(0);
         return 0;
       }
 
-      // Group by date and count consecutive days
       final studyDates = <DateTime>{};
       for (final record in records) {
-        final date = DateTime.parse(record['created_at'] as String).toLocal();
+        final date = record.createdAt?.toLocal();
+        if (date == null) continue;
         final dateOnly = DateTime(date.year, date.month, date.day);
         studyDates.add(dateOnly);
       }
 
-      // Sort dates in descending order
       final sortedDates = studyDates.toList()..sort((a, b) => b.compareTo(a));
 
-      // Calculate streak
       int streak = 0;
       final today = DateTime.now();
       final todayDate = DateTime(today.year, today.month, today.day);
@@ -84,12 +71,10 @@ class AnalyticsService {
         if (sortedDates[i].isAtSameMomentAs(expectedDate)) {
           streak++;
         } else if (sortedDates[i].isBefore(expectedDate)) {
-          // Gap found, streak broken
           break;
         }
       }
 
-      // Cache the result
       await _cacheStreak(streak);
       return streak;
     } catch (e) {
@@ -109,90 +94,111 @@ class AnalyticsService {
 
   /// Get weekly statistics (last 7 days)
   Future<List<DailyStudyStats>> getWeeklyStats() async {
-    return _getStudyStatsForDays(
-      days: 7,
+    final endDate = _dateOnly(DateTime.now());
+    return getStudyStatsInRange(
+      startDate: endDate.subtract(const Duration(days: 6)),
+      endDate: endDate,
       cacheKey: _cacheKeyWeeklyStats,
       cacheTimeKey: _cacheKeyWeeklyStatsTime,
     );
   }
 
-  /// Get monthly statistics (last 28 days)
   Future<List<DailyStudyStats>> getMonthlyStats() async {
-    return _getStudyStatsForDays(
-      days: 28,
+    final endDate = _dateOnly(DateTime.now());
+    return getStudyStatsInRange(
+      startDate: endDate.subtract(const Duration(days: 27)),
+      endDate: endDate,
       cacheKey: _cacheKeyMonthlyStats,
       cacheTimeKey: _cacheKeyMonthlyStatsTime,
     );
   }
 
-  Future<List<DailyStudyStats>> _getStudyStatsForDays({
-    required int days,
-    required String cacheKey,
-    required String cacheTimeKey,
+  Future<Map<DateTime, DailyStudyStats>> getMonthlyCalendarStats({
+    required int year,
+    required int month,
   }) async {
-    final userId = _supabase.currentUser?.id;
-    if (userId == null) return [];
+    final startDate = DateTime(year, month, 1);
+    final endDate = DateTime(year, month + 1, 0);
+    final stats = await getStudyStatsInRange(
+      startDate: startDate,
+      endDate: endDate,
+    );
+    return {for (final stat in stats) _dateOnly(stat.date): stat};
+  }
 
+  Future<DailyStudyStats?> getDailyStats(DateTime date) async {
+    final stats = await getStudyStatsInRange(
+      startDate: _dateOnly(date),
+      endDate: _dateOnly(date),
+    );
+    return stats.isEmpty ? null : stats.first;
+  }
+
+  Future<List<DailyStudyStats>> getStudyStatsInRange({
+    required DateTime startDate,
+    required DateTime endDate,
+    String? cacheKey,
+    String? cacheTimeKey,
+  }) async {
     try {
-      // Check cache
-      final prefs = await SharedPreferences.getInstance();
-      final cachedTime = prefs.getString(cacheTimeKey);
-      final cachedStats = prefs.getString(cacheKey);
+      if (cacheKey != null && cacheTimeKey != null) {
+        final prefs = await SharedPreferences.getInstance();
+        final cachedTime = prefs.getString(cacheTimeKey);
+        final cachedStats = prefs.getString(cacheKey);
 
-      if (cachedTime != null && cachedStats != null) {
-        final cacheAge = DateTime.now().difference(DateTime.parse(cachedTime));
-        if (cacheAge < _cacheDuration) {
-          final List<dynamic> decoded = json.decode(cachedStats);
-          return decoded.map((json) => DailyStudyStats.fromJson(json)).toList();
+        if (cachedTime != null && cachedStats != null) {
+          final cacheAge = DateTime.now().difference(
+            DateTime.parse(cachedTime),
+          );
+          if (cacheAge < _cacheDuration) {
+            final List<dynamic> decoded = json.decode(cachedStats);
+            return decoded
+                .map((json) => DailyStudyStats.fromJson(json))
+                .toList();
+          }
         }
       }
 
-      final now = DateTime.now();
-      final start = now.subtract(Duration(days: days - 1));
-      final startDate = DateTime(start.year, start.month, start.day);
+      final normalizedStart = _dateOnly(startDate);
+      final normalizedEnd = _dateOnly(endDate);
+      final records = await _studyRecords.getStudyRecords(
+        startDate: normalizedStart,
+        endDate: normalizedEnd.add(
+          const Duration(hours: 23, minutes: 59, seconds: 59),
+        ),
+      );
 
-      final records = await _supabase.client
-          .from(SupabaseConfig.studyRecordsTable)
-          .select('*')
-          .eq('user_id', userId)
-          .gte('created_at', startDate.toIso8601String())
-          .order('created_at', ascending: true);
-
-      // Group by date
-      final Map<String, List<StudyRecord>> recordsByDate = {};
+      final recordsByDate = <String, List<StudyRecord>>{};
       for (final record in records) {
-        final studyRecord = StudyRecord.fromJson(record);
-        final date = studyRecord.createdAt!;
-        final dateKey =
-            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-
-        recordsByDate.putIfAbsent(dateKey, () => []);
-        recordsByDate[dateKey]!.add(studyRecord);
+        final date = record.createdAt == null
+            ? null
+            : _dateOnly(record.createdAt!.toLocal());
+        if (date == null) continue;
+        final dateKey = _dateKey(date);
+        recordsByDate.putIfAbsent(dateKey, () => []).add(record);
       }
 
-      // Create DailyStudyStats for the requested period
       final List<DailyStudyStats> dailyStats = [];
-      for (int i = 0; i < days; i++) {
-        final date = startDate.add(Duration(days: i));
-        final dateKey =
-            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final days = normalizedEnd.difference(normalizedStart).inDays + 1;
+      for (var i = 0; i < days; i++) {
+        final date = normalizedStart.add(Duration(days: i));
+        final dateKey = _dateKey(date);
         final dayRecords = recordsByDate[dateKey] ?? [];
 
-        int kanjiStudied = 0;
-        int wordsStudied = 0;
+        final uniqueKanji = <int>{};
+        final uniqueWords = <int>{};
         int totalCompleted = 0;
         int totalForgot = 0;
         final List<StudyItem> studyItems = [];
 
         for (final record in dayRecords) {
           if (record.type == StudyType.kanji) {
-            kanjiStudied++;
+            uniqueKanji.add(record.targetId);
           } else if (record.type == StudyType.word) {
-            wordsStudied++;
+            uniqueWords.add(record.targetId);
           }
 
-          if (record.status == StudyStatus.completed ||
-              record.status == StudyStatus.mastered) {
+          if (record.status.countsAsCompleted) {
             totalCompleted++;
           } else if (record.status == StudyStatus.forgot) {
             totalForgot++;
@@ -212,8 +218,8 @@ class AnalyticsService {
         dailyStats.add(
           DailyStudyStats(
             date: date,
-            kanjiStudied: kanjiStudied,
-            wordsStudied: wordsStudied,
+            kanjiStudied: uniqueKanji.length,
+            wordsStudied: uniqueWords.length,
             totalCompleted: totalCompleted,
             totalForgot: totalForgot,
             studyItems: studyItems,
@@ -221,12 +227,13 @@ class AnalyticsService {
         );
       }
 
-      // Cache the results
-      await _cacheStudyStats(
-        stats: dailyStats,
-        cacheKey: cacheKey,
-        cacheTimeKey: cacheTimeKey,
-      );
+      if (cacheKey != null && cacheTimeKey != null) {
+        await _cacheStudyStats(
+          stats: dailyStats,
+          cacheKey: cacheKey,
+          cacheTimeKey: cacheTimeKey,
+        );
+      }
       return dailyStats;
     } catch (e) {
       debugPrint('Error getting daily stats: $e');
@@ -274,9 +281,9 @@ class AnalyticsService {
       );
       final weeklyAverage = weeklyCount / 7.0;
 
-      // Get total studied and mastered from KanjiService
-      final totalStudied = _kanji.getStudiedCount();
-      final totalMastered = _kanji.getMasteredCount();
+      final kanjiSummary = _studyRecords.getSummary(StudyType.kanji);
+      final totalStudied = kanjiSummary.studiedItems;
+      final totalMastered = kanjiSummary.masteredItems;
 
       // Calculate next milestone
       final milestoneInfo = getNextMilestone(totalMastered);
@@ -325,5 +332,90 @@ class AnalyticsService {
     return left.year == right.year &&
         left.month == right.month &&
         left.day == right.day;
+  }
+
+  static List<DailyStudyStats> buildDailyStats(
+    List<StudyRecord> records, {
+    required DateTime startDate,
+    required DateTime endDate,
+  }) {
+    final service = AnalyticsService.instance;
+    return service._buildDailyStats(
+      records,
+      startDate: startDate,
+      endDate: endDate,
+    );
+  }
+
+  List<DailyStudyStats> _buildDailyStats(
+    List<StudyRecord> records, {
+    required DateTime startDate,
+    required DateTime endDate,
+  }) {
+    final recordsByDate = <String, List<StudyRecord>>{};
+    for (final record in records) {
+      final date = record.createdAt == null
+          ? null
+          : _dateOnly(record.createdAt!);
+      if (date == null) continue;
+      recordsByDate.putIfAbsent(_dateKey(date), () => []).add(record);
+    }
+
+    final dailyStats = <DailyStudyStats>[];
+    final totalDays =
+        _dateOnly(endDate).difference(_dateOnly(startDate)).inDays + 1;
+    for (var i = 0; i < totalDays; i++) {
+      final date = _dateOnly(startDate).add(Duration(days: i));
+      final dayRecords = recordsByDate[_dateKey(date)] ?? const <StudyRecord>[];
+      final uniqueKanji = <int>{};
+      final uniqueWords = <int>{};
+      var totalCompleted = 0;
+      var totalForgot = 0;
+      final studyItems = <StudyItem>[];
+
+      for (final record in dayRecords) {
+        if (record.type == StudyType.kanji) {
+          uniqueKanji.add(record.targetId);
+        } else if (record.type == StudyType.word) {
+          uniqueWords.add(record.targetId);
+        }
+
+        if (record.status.countsAsCompleted) {
+          totalCompleted++;
+        } else if (record.status == StudyStatus.forgot) {
+          totalForgot++;
+        }
+
+        studyItems.add(
+          StudyItem(
+            id: record.targetId,
+            type: record.type.value,
+            name: '',
+            status: record.status.value,
+            studiedAt: record.createdAt ?? date,
+          ),
+        );
+      }
+
+      dailyStats.add(
+        DailyStudyStats(
+          date: date,
+          kanjiStudied: uniqueKanji.length,
+          wordsStudied: uniqueWords.length,
+          totalCompleted: totalCompleted,
+          totalForgot: totalForgot,
+          studyItems: studyItems,
+        ),
+      );
+    }
+
+    return dailyStats;
+  }
+
+  DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
+
+  String _dateKey(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 }

@@ -23,7 +23,9 @@ class AppSpacing {
   // Common EdgeInsets presets
 
   /// Standard padding for screen-level content (ListView, GridView, etc.)
-  static const EdgeInsets screenPadding = EdgeInsets.all(base); // 16px all sides
+  static const EdgeInsets screenPadding = EdgeInsets.all(
+    base,
+  ); // 16px all sides
 
   /// Standard padding for card internal content
   static const EdgeInsets cardPadding = EdgeInsets.all(base); // 16px all sides

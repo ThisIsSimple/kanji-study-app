@@ -40,16 +40,15 @@ class _AiQuizResultScreenState extends State<AiQuizResultScreen> {
     final theme = FTheme.of(context);
     final correctCount = widget.attempt.correctCount ?? 0;
     final totalCount = widget.questions.length;
-    final percentage = totalCount > 0 ? (correctCount / totalCount * 100).round() : 0;
+    final percentage = totalCount > 0
+        ? (correctCount / totalCount * 100).round()
+        : 0;
 
     return Scaffold(
       backgroundColor: theme.colors.background,
       body: Column(
         children: [
-          CustomHeader(
-            title: const Text('퀴즈 결과'),
-            withBack: true,
-          ),
+          CustomHeader(title: const Text('퀴즈 결과'), withBack: true),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -62,7 +61,9 @@ class _AiQuizResultScreenState extends State<AiQuizResultScreen> {
                   // 문제별 결과
                   Text(
                     '문제별 결과',
-                    style: theme.typography.lg.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.typography.lg.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 12),
 
@@ -91,7 +92,9 @@ class _AiQuizResultScreenState extends State<AiQuizResultScreen> {
                       Expanded(
                         child: FButton(
                           style: FButtonStyle.outline(),
-                          onPress: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                          onPress: () => Navigator.of(
+                            context,
+                          ).popUntil((route) => route.isFirst),
                           child: const Text('홈으로'),
                         ),
                       ),
@@ -315,7 +318,9 @@ class _AiQuizResultScreenState extends State<AiQuizResultScreen> {
                     Row(
                       children: [
                         Icon(
-                          isCorrect ? PhosphorIconsFill.check : PhosphorIconsFill.x,
+                          isCorrect
+                              ? PhosphorIconsFill.check
+                              : PhosphorIconsFill.x,
                           size: 16,
                           color: isCorrect ? Colors.green : Colors.red,
                         ),

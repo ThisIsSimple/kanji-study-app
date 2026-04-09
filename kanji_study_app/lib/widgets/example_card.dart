@@ -50,10 +50,7 @@ class ExampleCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colors.background,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: theme.colors.border,
-          width: 1,
-        ),
+        border: Border.all(color: theme.colors.border, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

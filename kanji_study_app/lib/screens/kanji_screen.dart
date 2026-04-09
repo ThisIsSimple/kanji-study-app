@@ -1,20 +1,19 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
 import '../models/kanji_flashcard_adapter.dart';
+import '../models/study_record_model.dart';
 import '../services/kanji_service.dart';
 import '../services/flashcard_service.dart';
 import '../services/study_record_service.dart';
-
-import '../widgets/flashcard_count_selector.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/kanji_grid_card.dart';
 import '../widgets/custom_header.dart';
 import 'kanji_detail_screen.dart';
-import 'flashcard_screen.dart';
 import '../constants/app_spacing.dart';
+import '../utils/study_session_launcher.dart';
 
 class KanjiScreen extends StatefulWidget {
   final bool showMeanings;
@@ -73,6 +72,9 @@ class _KanjiScreenState extends State<KanjiScreen> {
       } else {
         await _kanjiService.init();
       }
+      if (!_studyRecordService.isInitialized) {
+        await _studyRecordService.initialize();
+      }
       setState(() {
         _allKanji = _kanjiService.getAllKanji();
         _applyFilters();
@@ -117,14 +119,17 @@ class _KanjiScreenState extends State<KanjiScreen> {
 
       // Apply study status filter
       if (_selectedStudyFilter != null) {
-        final status = _studyRecordService.getStatus('kanji', kanji.id);
+        final status = _studyRecordService.getStatus(StudyType.kanji, kanji.id);
         switch (_selectedStudyFilter) {
           case 'not_studied':
             if (status != null) return false;
           case 'completed':
-            if (status != 'completed' && status != 'mastered') return false;
+            if (status != StudyStatus.completed &&
+                status != StudyStatus.mastered) {
+              return false;
+            }
           case 'forgot':
-            if (status != 'forgot') return false;
+            if (status != StudyStatus.forgot) return false;
         }
       }
 
@@ -580,105 +585,38 @@ class _KanjiScreenState extends State<KanjiScreen> {
   }
 
   Future<void> _startFlashcardSession() async {
-    if (_filteredKanji.isEmpty) {
-      final theme = FTheme.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('학습할 한자가 없습니다'),
-          backgroundColor: theme.colors.destructive,
-        ),
-      );
-      return;
-    }
-
-    // Check if there's an active kanji session
-    final existingSession = await _flashcardService.loadSessionByType('kanji');
-
-    if (existingSession != null && !existingSession.isCompleted && mounted) {
-      // Ask user if they want to resume or start new
-      showFDialog(
-        context: context,
-        builder: (context, style, animation) => FDialog(
-          style: style.call,
-          animation: animation,
-          direction: Axis.horizontal,
-          title: const Text('진행 중인 학습'),
-          body: const Text('이전에 진행 중이던 플래시카드 학습이 있습니다.\n계속하시겠습니까?'),
-          actions: [
-            FButton(
-              style: FButtonStyle.outline(),
-              onPress: () async {
-                final navigator = Navigator.of(context);
-                await _flashcardService.clearSession('kanji');
-                if (!mounted) return;
-                navigator.pop();
-                await _showCountSelectorAndStart();
-              },
-              child: const Text('새로 시작'),
-            ),
-            FButton(
-              onPress: () {
-                Navigator.of(context).pop();
-                _navigateToFlashcard(_filteredKanji, existingSession);
-              },
-              child: const Text('이어하기'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      await _showCountSelectorAndStart();
-    }
-  }
-
-  Future<void> _showCountSelectorAndStart() async {
-    // 개수 선택 다이얼로그 표시
-    final selectedCount = await FlashcardCountSelector.show(
-      context,
-      _filteredKanji.length,
+    await StudySessionLauncher.launch<Kanji>(
+      context: context,
+      itemType: 'kanji',
+      filteredItems: _filteredKanji,
+      flashcardService: _flashcardService,
+      emptyMessage: '학습할 한자가 없습니다',
+      toFlashcardItems: (items) =>
+          items.map((kanji) => KanjiFlashcardAdapter(kanji)).toList(),
+      onComplete: () async {
+        if (!mounted) return;
+        setState(_applyFilters);
+      },
     );
-
-    if (selectedCount != null && mounted) {
-      // 랜덤으로 한자 선택
-      final selectedKanji = _selectRandomKanji(_filteredKanji, selectedCount);
-      _navigateToFlashcard(selectedKanji, null);
-    }
   }
 
-  List<Kanji> _selectRandomKanji(List<Kanji> kanjiList, int count) {
-    if (count >= kanjiList.length) return kanjiList;
-
-    final random = Random();
-    final selectedIndices = <int>{};
-
-    // 중복 없이 랜덤 인덱스 생성
-    while (selectedIndices.length < count) {
-      selectedIndices.add(random.nextInt(kanjiList.length));
-    }
-
-    return selectedIndices.map((i) => kanjiList[i]).toList();
-  }
-
-  void _navigateToFlashcard(List<Kanji> selectedKanji, dynamic session) {
-    // Convert selected kanji to FlashcardItem using adapter
-    final flashcardItems = selectedKanji
-        .map((kanji) => KanjiFlashcardAdapter(kanji))
-        .toList();
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            FlashcardScreen(items: flashcardItems, initialSession: session),
-      ),
-    ).then((_) {
-      // Refresh filters when coming back (study status may have changed)
-      if (mounted) {
-        setState(() {
+  Future<void> _toggleKanjiFavorite(Kanji kanji) async {
+    try {
+      await _kanjiService.toggleFavorite(kanji.character);
+      if (!mounted) return;
+      setState(() {
+        if (_showOnlyFavorites) {
           _applyFilters();
-        });
-      }
-    });
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      showAppToast(
+        context,
+        message: '즐겨찾기 저장 실패: $e',
+        type: AppToastType.error,
+      );
+    }
   }
 
   @override
@@ -815,16 +753,8 @@ class _KanjiScreenState extends State<KanjiScreen> {
                                 kanji: kanji,
                                 showMeaning: widget.showMeanings,
                                 onTap: () => _navigateToStudy(kanji),
-                                onFavoriteToggle: () {
-                                  setState(() {
-                                    _kanjiService.toggleFavorite(
-                                      kanji.character,
-                                    );
-                                    if (_showOnlyFavorites) {
-                                      _applyFilters();
-                                    }
-                                  });
-                                },
+                                onFavoriteToggle: () =>
+                                    _toggleKanjiFavorite(kanji),
                               );
                             },
                           ),

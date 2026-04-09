@@ -67,7 +67,9 @@ class _SettingsInfoScreenState extends State<SettingsInfoScreen> {
                                 width: 80,
                                 height: 80,
                                 decoration: BoxDecoration(
-                                  color: theme.colors.primary.withValues(alpha: 0.1),
+                                  color: theme.colors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Icon(
@@ -145,11 +147,7 @@ class _SettingsInfoScreenState extends State<SettingsInfoScreen> {
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 24,
-            color: theme.colors.foreground,
-          ),
+          Icon(icon, size: 24, color: theme.colors.foreground),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

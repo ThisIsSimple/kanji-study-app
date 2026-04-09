@@ -47,9 +47,9 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
     if (apiKey.isNotEmpty) {
       await _geminiService.setApiKey(apiKey);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('API 키가 저장되었습니다.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('API 키가 저장되었습니다.')));
     }
   }
 
@@ -170,7 +170,9 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: theme.colors.secondary.withValues(alpha: 0.1),
+                              color: theme.colors.secondary.withValues(
+                                alpha: 0.1,
+                              ),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -185,7 +187,8 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
                                     ),
                                     const SizedBox(width: 12),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'API 키 받기',

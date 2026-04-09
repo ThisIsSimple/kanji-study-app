@@ -39,7 +39,9 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
 
     try {
       final attempts = await _aiQuizService.getRecentAttempts(limit: 5);
-      final flashcardHistory = await _flashcardService.getFlashcardHistory(limit: 3);
+      final flashcardHistory = await _flashcardService.getFlashcardHistory(
+        limit: 3,
+      );
 
       if (mounted) {
         setState(() {
@@ -94,9 +96,7 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
 
         final result = await Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => AiQuizScreen(quiz: quiz),
-          ),
+          MaterialPageRoute(builder: (context) => AiQuizScreen(quiz: quiz)),
         );
 
         if (result == true) {
@@ -106,9 +106,9 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // 로딩 다이얼로그 닫기
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('퀴즈 생성 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('퀴즈 생성 실패: $e')));
       }
     }
   }
@@ -118,7 +118,9 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
       context: context,
       builder: (context) => FDialog(
         title: const Text('API 키 필요'),
-        body: const Text('AI 퀴즈를 사용하려면 Gemini API 키가 필요합니다.\n설정에서 API 키를 입력해주세요.'),
+        body: const Text(
+          'AI 퀴즈를 사용하려면 Gemini API 키가 필요합니다.\n설정에서 API 키를 입력해주세요.',
+        ),
         actions: [
           FButton(
             style: FButtonStyle.outline(),
@@ -130,7 +132,9 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsAiScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const SettingsAiScreen(),
+                ),
               );
             },
             child: const Text('설정으로 이동'),
@@ -173,21 +177,33 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // AI 퀴즈 섹션
-                          _buildSectionTitle(theme, 'AI 퀴즈', PhosphorIconsRegular.brain),
+                          _buildSectionTitle(
+                            theme,
+                            'AI 퀴즈',
+                            PhosphorIconsRegular.brain,
+                          ),
                           const SizedBox(height: 12),
                           _buildQuizTypeGrid(theme),
                           const SizedBox(height: 24),
 
                           // 최근 퀴즈 기록
                           if (_recentAttempts.isNotEmpty) ...[
-                            _buildSectionTitle(theme, '최근 퀴즈 기록', PhosphorIconsRegular.chartBar),
+                            _buildSectionTitle(
+                              theme,
+                              '최근 퀴즈 기록',
+                              PhosphorIconsRegular.chartBar,
+                            ),
                             const SizedBox(height: 12),
                             _buildRecentAttempts(theme),
                             const SizedBox(height: 24),
                           ],
 
                           // 플래시카드 섹션
-                          _buildSectionTitle(theme, '플래시카드', PhosphorIconsRegular.cards),
+                          _buildSectionTitle(
+                            theme,
+                            '플래시카드',
+                            PhosphorIconsRegular.cards,
+                          ),
                           const SizedBox(height: 12),
                           _buildFlashcardSection(theme),
                         ],
@@ -282,10 +298,10 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
               type == AiQuizType.jpToKr
                   ? '뜻 맞추기'
                   : type == AiQuizType.krToJp
-                      ? '단어 맞추기'
-                      : type == AiQuizType.kanjiReading
-                          ? '후리가나'
-                          : '문장 완성',
+                  ? '단어 맞추기'
+                  : type == AiQuizType.kanjiReading
+                  ? '후리가나'
+                  : '문장 완성',
               style: theme.typography.xs.copyWith(
                 color: theme.colors.mutedForeground,
               ),
@@ -310,8 +326,8 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
               backgroundColor: percentage >= 80
                   ? Colors.green.withValues(alpha: 0.1)
                   : percentage >= 60
-                      ? Colors.orange.withValues(alpha: 0.1)
-                      : Colors.red.withValues(alpha: 0.1),
+                  ? Colors.orange.withValues(alpha: 0.1)
+                  : Colors.red.withValues(alpha: 0.1),
               child: Text(
                 '$percentage%',
                 style: theme.typography.xs.copyWith(
@@ -319,8 +335,8 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
                   color: percentage >= 80
                       ? Colors.green
                       : percentage >= 60
-                          ? Colors.orange
-                          : Colors.red,
+                      ? Colors.orange
+                      : Colors.red,
                 ),
               ),
             ),
@@ -343,7 +359,9 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
             onTap: () async {
               // 같은 퀴즈 다시 풀기
               if (quiz != null) {
-                final fullQuiz = await _aiQuizService.getQuizWithQuestions(quiz.id);
+                final fullQuiz = await _aiQuizService.getQuizWithQuestions(
+                  quiz.id,
+                );
                 if (mounted) {
                   final result = await Navigator.push(
                     context,
@@ -411,7 +429,9 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
                   ),
                   title: Text(
                     itemType == 'word' ? '단어 플래시카드' : '한자 플래시카드',
-                    style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
+                    style: theme.typography.sm.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   subtitle: Text(
                     '$correctCount/$totalCount 정답',
@@ -474,4 +494,3 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
     }
   }
 }
-
