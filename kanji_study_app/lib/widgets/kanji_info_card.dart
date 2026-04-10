@@ -3,9 +3,14 @@ import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
+import '../models/study_record_model.dart';
+import '../services/study_record_service.dart';
+import '../services/supabase_service.dart';
 import '../utils/korean_formatter.dart';
+import 'app_toast.dart';
 import 'jlpt_badge.dart';
 import 'grade_badge.dart';
+import 'study_button_bar.dart';
 
 /// 한자 상세 정보 카드 위젯
 ///
@@ -37,33 +42,7 @@ class KanjiInfoCard extends StatefulWidget {
           color: theme.colors.background,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Content
-            Flexible(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  0,
-                  16,
-                  16 + MediaQuery.of(context).padding.bottom,
-                ),
-                child: KanjiInfoCard(kanji: kanji),
-              ),
-            ),
-          ],
-        ),
+        child: _KanjiInfoSheetContent(kanji: kanji),
       ),
     );
   }
@@ -282,6 +261,159 @@ class _KanjiInfoCardState extends State<KanjiInfoCard> {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(text, style: theme.typography.base),
+    );
+  }
+}
+
+class _KanjiInfoSheetContent extends StatefulWidget {
+  final Kanji kanji;
+
+  const _KanjiInfoSheetContent({required this.kanji});
+
+  @override
+  State<_KanjiInfoSheetContent> createState() => _KanjiInfoSheetContentState();
+}
+
+class _KanjiInfoSheetContentState extends State<_KanjiInfoSheetContent> {
+  final StudyRecordService _studyRecordService = StudyRecordService.instance;
+  final SupabaseService _supabaseService = SupabaseService.instance;
+
+  StudyStats? _studyStats;
+  StudyStatus? _currentStatus;
+  bool _isLoadingStats = true;
+  bool _isRecordingStudy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentStatus = _studyRecordService.getStatus(
+      StudyType.kanji,
+      widget.kanji.id,
+    );
+    _loadStudyStats();
+  }
+
+  Future<void> _loadStudyStats() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoadingStats = true;
+    });
+
+    try {
+      final stats = await _supabaseService.getStudyStats(
+        type: StudyType.kanji,
+        targetId: widget.kanji.id,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _studyStats = stats;
+        _currentStatus =
+            _studyRecordService.getStatus(StudyType.kanji, widget.kanji.id) ??
+            stats?.currentStatus;
+        _isLoadingStats = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingStats = false;
+      });
+    }
+  }
+
+  Future<void> _recordStudy(StudyStatus status) async {
+    if (_isRecordingStudy) return;
+
+    final recordedStatus = status == StudyStatus.completed
+        ? StudyStatus.completed
+        : StudyStatus.forgot;
+
+    setState(() {
+      _isRecordingStudy = true;
+    });
+
+    try {
+      await _studyRecordService.addRecord(
+        type: StudyType.kanji,
+        targetId: widget.kanji.id,
+        status: recordedStatus,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _currentStatus = recordedStatus;
+      });
+
+      await _loadStudyStats();
+
+      if (!mounted) return;
+      showAppToast(
+        context,
+        message: recordedStatus == StudyStatus.completed
+            ? '학습 완료를 기록했습니다!'
+            : '까먹음을 기록했습니다.',
+        type: recordedStatus == StudyStatus.completed
+            ? AppToastType.info
+            : AppToastType.error,
+        icon: recordedStatus == StudyStatus.completed
+            ? PhosphorIconsRegular.checkCircle
+            : PhosphorIconsRegular.warningCircle,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      showAppToast(
+        context,
+        message: '기록 저장 실패: $e',
+        type: AppToastType.error,
+        icon: PhosphorIconsRegular.warning,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRecordingStudy = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 12, bottom: 8),
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: theme.colors.border,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: KanjiInfoCard(kanji: widget.kanji),
+          ),
+        ),
+        StudyButtonBar(
+          positioned: false,
+          isLoading: _isLoadingStats,
+          isRecording: _isRecordingStudy,
+          studyStats: _studyStats,
+          currentStatus: _currentStatus,
+          onStudyComplete: () => _recordStudy(StudyStatus.completed),
+          onForgot: () => _recordStudy(StudyStatus.forgot),
+          onShowTimeline: () => StudyButtonBar.showTimelineSheet(
+            context: context,
+            studyStats: _studyStats,
+          ),
+        ),
+      ],
     );
   }
 }

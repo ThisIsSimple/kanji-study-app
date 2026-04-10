@@ -55,6 +55,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
   bool _isLoadingExamples = true;
 
   StudyStats? _studyStats;
+  StudyStatus? _currentStatus;
   bool _isLoadingStats = true;
   bool _isRecordingStudy = false;
   bool _showStrokeOrder = false;
@@ -74,6 +75,10 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
     _currentKanji = _kanjiList![_currentIndex];
     _pageController = PageController(initialPage: _currentIndex);
     _isFavorite = _kanjiService.isFavorite(_currentKanji!.character);
+    _currentStatus = _studyRecordService.getStatus(
+      StudyType.kanji,
+      _currentKanji!.id,
+    );
     _loadDatabaseExamples();
     _loadStudyStats();
     _loadRelatedWords();
@@ -94,6 +99,10 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
         _generatedExamples = null;
         _databaseExamples = [];
         _studyStats = null;
+        _currentStatus = _studyRecordService.getStatus(
+          StudyType.kanji,
+          _currentKanji!.id,
+        );
         _isLoadingStats = true;
         _showStrokeOrder = false;
         _relatedWords = [];
@@ -174,7 +183,8 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
   }
 
   Future<void> _loadStudyStats() async {
-    if (_currentKanji == null) return;
+    final currentKanji = _currentKanji;
+    if (currentKanji == null) return;
 
     setState(() {
       _isLoadingStats = true;
@@ -183,13 +193,18 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
     try {
       final stats = await _supabaseService.getStudyStats(
         type: StudyType.kanji,
-        targetId: _currentKanji!.id,
+        targetId: currentKanji.id,
       );
+      if (!mounted || _currentKanji?.id != currentKanji.id) return;
       setState(() {
         _studyStats = stats;
+        _currentStatus =
+            _studyRecordService.getStatus(StudyType.kanji, currentKanji.id) ??
+            stats?.currentStatus;
         _isLoadingStats = false;
       });
     } catch (e) {
+      if (!mounted || _currentKanji?.id != currentKanji.id) return;
       setState(() {
         _isLoadingStats = false;
       });
@@ -199,6 +214,9 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
 
   Future<void> _recordStudy(StudyStatus status) async {
     if (_currentKanji == null || _isRecordingStudy) return;
+    final recordedStatus = status == StudyStatus.completed
+        ? StudyStatus.completed
+        : StudyStatus.forgot;
 
     setState(() {
       _isRecordingStudy = true;
@@ -208,15 +226,18 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
       await _studyRecordService.addRecord(
         type: StudyType.kanji,
         targetId: _currentKanji!.id,
-        status: status == StudyStatus.completed
-            ? StudyStatus.completed
-            : StudyStatus.forgot,
+        status: recordedStatus,
       );
+
+      if (!mounted) return;
+      setState(() {
+        _currentStatus = recordedStatus;
+      });
 
       await _loadStudyStats();
 
       if (!mounted) return;
-      final isCompleted = status == StudyStatus.completed;
+      final isCompleted = recordedStatus == StudyStatus.completed;
       showAppToast(
         context,
         message: isCompleted ? '학습 완료를 기록했습니다!' : '까먹음을 기록했습니다.',
@@ -859,6 +880,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                 isLoading: _isLoadingStats,
                 isRecording: _isRecordingStudy,
                 studyStats: _studyStats,
+                currentStatus: _currentStatus,
                 onStudyComplete: () => _recordStudy(StudyStatus.completed),
                 onForgot: () => _recordStudy(StudyStatus.forgot),
                 onShowTimeline: () => StudyButtonBar.showTimelineSheet(
@@ -911,6 +933,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
               isLoading: _isLoadingStats,
               isRecording: _isRecordingStudy,
               studyStats: _studyStats,
+              currentStatus: _currentStatus,
               onStudyComplete: () => _recordStudy(StudyStatus.completed),
               onForgot: () => _recordStudy(StudyStatus.forgot),
               onShowTimeline: () => StudyButtonBar.showTimelineSheet(
