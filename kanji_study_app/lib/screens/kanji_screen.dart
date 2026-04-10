@@ -10,6 +10,7 @@ import '../services/flashcard_service.dart';
 import '../services/study_record_service.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/kanji_grid_card.dart';
+import '../widgets/kanji_handwriting_sheet.dart';
 import '../widgets/custom_header.dart';
 import 'kanji_detail_screen.dart';
 import '../constants/app_spacing.dart';
@@ -176,6 +177,45 @@ class _KanjiScreenState extends State<KanjiScreen> {
         _applyFilters();
       }
     });
+  }
+
+  Future<void> _openHandwritingSearch() async {
+    final wasSearchMode = _isSearchMode;
+
+    if (!wasSearchMode) {
+      setState(() {
+        _isSearchMode = true;
+      });
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    if (!mounted) return;
+
+    final selectedKanji = await showKanjiHandwritingSheet(
+      context,
+      availableKanjiCharacters: _allKanji.map((kanji) => kanji.character).toSet(),
+    );
+
+    if (!mounted) return;
+
+    if (selectedKanji == null) {
+      if (!wasSearchMode && _searchController.text.isEmpty) {
+        setState(() {
+          _isSearchMode = false;
+        });
+      }
+      return;
+    }
+
+    _searchController
+      ..text = selectedKanji
+      ..selection = TextSelection.collapsed(offset: selectedKanji.length);
+
+    showAppToast(
+      context,
+      message: '$selectedKanji 검색 결과를 표시합니다',
+      type: AppToastType.info,
+    );
   }
 
   void _showFilterBottomSheet() {
@@ -651,6 +691,13 @@ class _KanjiScreenState extends State<KanjiScreen> {
                   ),
                   rightActions: [
                     HeaderActionButton(
+                      icon: Icon(
+                        PhosphorIconsRegular.pencilSimpleLine,
+                        size: 20,
+                      ),
+                      onPressed: _openHandwritingSearch,
+                    ),
+                    HeaderActionButton(
                       icon: Icon(PhosphorIconsRegular.x, size: 20),
                       onPressed: _toggleSearchMode,
                     ),
@@ -707,6 +754,13 @@ class _KanjiScreenState extends State<KanjiScreen> {
                         size: 20,
                       ),
                       onPressed: _toggleSearchMode,
+                    ),
+                    HeaderActionButton(
+                      icon: Icon(
+                        PhosphorIconsRegular.pencilSimpleLine,
+                        size: 20,
+                      ),
+                      onPressed: _openHandwritingSearch,
                     ),
                   ],
                 ),
