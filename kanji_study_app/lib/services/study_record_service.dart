@@ -65,8 +65,7 @@ class StudyRecordService extends ChangeNotifier {
   }) async {
     final userId = _supabaseService.currentUser?.id;
     if (userId == null) {
-      debugPrint('StudyRecordService: No user logged in');
-      return;
+      throw StateError('StudyRecordService: No user logged in');
     }
 
     try {
@@ -113,6 +112,7 @@ class StudyRecordService extends ChangeNotifier {
       );
     } catch (e) {
       debugPrint('Error adding study record: $e');
+      rethrow;
     }
   }
 

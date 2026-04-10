@@ -10,6 +10,8 @@ class StudyButtonBar extends StatelessWidget {
   final bool isLoading;
   final bool isRecording;
   final StudyStats? studyStats;
+  final StudyStatus? currentStatus;
+  final bool positioned;
   final VoidCallback onStudyComplete;
   final VoidCallback onForgot;
   final VoidCallback onShowTimeline;
@@ -19,6 +21,8 @@ class StudyButtonBar extends StatelessWidget {
     required this.isLoading,
     required this.isRecording,
     required this.studyStats,
+    this.currentStatus,
+    this.positioned = true,
     required this.onStudyComplete,
     required this.onForgot,
     required this.onShowTimeline,
@@ -27,96 +31,111 @@ class StudyButtonBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final content = Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colors.background,
+        border: Border(top: BorderSide(color: theme.colors.border, width: 1)),
+      ),
+      child: SafeArea(top: false, child: _buildContent(context, theme)),
+    );
 
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colors.background,
-          border: Border(top: BorderSide(color: theme.colors.border, width: 1)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: isLoading
-              ? const Center(
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: FCircularProgress(),
-                  ),
-                )
-              : studyStats == null || studyStats!.totalRecords == 0
-              ? FButton(
-                  onPress: isRecording ? null : onStudyComplete,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(PhosphorIconsRegular.checkCircle, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        isRecording ? '기록 중...' : '학습 완료',
-                        style: TextStyle(),
-                      ),
-                    ],
-                  ),
-                )
-              : Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            studyStats!.lastStudied != null
-                                ? '${DateFormat('yyyy년 MM월 dd일').format(studyStats!.lastStudied!)} 학습'
-                                : '학습 기록',
-                            style: theme.typography.sm.copyWith(
-                              color: theme.colors.mutedForeground,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            studyStats!.summaryText,
-                            style: theme.typography.base.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Timeline button
-                    FButton(
-                      onPress: onShowTimeline,
-                      style: FButtonStyle.outline(),
-                      child: Icon(
-                        PhosphorIconsRegular.clockCounterClockwise,
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    FButton(
-                      onPress: isRecording ? null : onForgot,
-                      style: FButtonStyle.outline(),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(PhosphorIconsRegular.warningCircle, size: 18),
-                          const SizedBox(width: 6),
-                          Text(
-                            isRecording ? '기록 중...' : '까먹음',
-                            style: TextStyle(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+    if (!positioned) {
+      return content;
+    }
+
+    return Positioned(left: 0, right: 0, bottom: 0, child: content);
+  }
+
+  Widget _buildContent(BuildContext context, FThemeData theme) {
+    final hasStudyStats = studyStats != null && studyStats!.totalRecords > 0;
+    final showTimeline =
+        studyStats != null && studyStats!.recentRecords.isNotEmpty;
+    final showStudyComplete =
+        currentStatus == null ||
+        currentStatus == StudyStatus.forgot ||
+        currentStatus == StudyStatus.reviewing;
+    final showForgot =
+        currentStatus == StudyStatus.completed ||
+        currentStatus == StudyStatus.mastered;
+
+    if (!hasStudyStats) {
+      if (showForgot) {
+        return _buildForgotButton();
+      }
+      return _buildStudyCompleteButton();
+    }
+
+    final actionButton = showStudyComplete
+        ? _buildStudyCompleteButton()
+        : _buildForgotButton();
+
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                studyStats!.lastStudied != null
+                    ? '${DateFormat('yyyy년 MM월 dd일').format(studyStats!.lastStudied!)} 학습'
+                    : '학습 기록',
+                style: theme.typography.sm.copyWith(
+                  color: theme.colors.mutedForeground,
                 ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                studyStats!.summaryText,
+                style: theme.typography.base.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
+        if (showTimeline) ...[
+          const SizedBox(width: 12),
+          FButton(
+            onPress: onShowTimeline,
+            style: FButtonStyle.outline(),
+            child: Icon(PhosphorIconsRegular.clockCounterClockwise, size: 18),
+          ),
+        ],
+        const SizedBox(width: 8),
+        Flexible(child: actionButton),
+      ],
+    );
+  }
+
+  Widget _buildStudyCompleteButton() {
+    return FButton(
+      onPress: isRecording ? null : onStudyComplete,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(PhosphorIconsRegular.checkCircle, size: 20),
+          const SizedBox(width: 8),
+          Text(isRecording ? '기록 중...' : '학습 완료', style: TextStyle()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildForgotButton() {
+    return FButton(
+      onPress: isRecording ? null : onForgot,
+      style: FButtonStyle.outline(),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(PhosphorIconsRegular.warningCircle, size: 18),
+          const SizedBox(width: 6),
+          Text(isRecording ? '기록 중...' : '까먹음', style: TextStyle()),
+        ],
       ),
     );
   }
@@ -205,8 +224,20 @@ class StudyButtonBar extends StatelessWidget {
                         final record = studyStats.recentRecords[index];
                         final isLast =
                             index == studyStats.recentRecords.length - 1;
-                        final isCompleted =
-                            record.status == StudyStatus.completed;
+                        final color = switch (record.status) {
+                          StudyStatus.completed ||
+                          StudyStatus.mastered => Colors.green,
+                          StudyStatus.forgot => Colors.red,
+                          StudyStatus.reviewing => theme.colors.primary,
+                        };
+                        final icon = switch (record.status) {
+                          StudyStatus.completed || StudyStatus.mastered =>
+                            PhosphorIconsRegular.checkCircle,
+                          StudyStatus.forgot =>
+                            PhosphorIconsRegular.warningCircle,
+                          StudyStatus.reviewing =>
+                            PhosphorIconsRegular.bookOpen,
+                        };
 
                         return IntrinsicHeight(
                           child: Row(
@@ -220,9 +251,7 @@ class StudyButtonBar extends StatelessWidget {
                                     height: 12,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: isCompleted
-                                          ? Colors.green
-                                          : Colors.red,
+                                      color: color,
                                     ),
                                   ),
                                   if (!isLast)
@@ -256,26 +285,14 @@ class StudyButtonBar extends StatelessWidget {
                                       const SizedBox(height: 4),
                                       Row(
                                         children: [
-                                          Icon(
-                                            isCompleted
-                                                ? PhosphorIconsRegular
-                                                      .checkCircle
-                                                : PhosphorIconsRegular
-                                                      .warningCircle,
-                                            size: 16,
-                                            color: isCompleted
-                                                ? Colors.green
-                                                : Colors.red,
-                                          ),
+                                          Icon(icon, size: 16, color: color),
                                           const SizedBox(width: 6),
                                           Text(
-                                            isCompleted ? '학습 완료' : '까먹음',
+                                            record.status.displayText,
                                             style: theme.typography.base
                                                 .copyWith(
                                                   fontWeight: FontWeight.w500,
-                                                  color: isCompleted
-                                                      ? Colors.green
-                                                      : Colors.red,
+                                                  color: color,
                                                 ),
                                           ),
                                         ],

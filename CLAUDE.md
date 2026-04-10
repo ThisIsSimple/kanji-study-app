@@ -8,6 +8,15 @@ This is a Flutter-based Japanese Kanji study application with a Python data proc
 
 ## Development Commands
 
+## PR Workflow
+
+- PR 제목은 반드시 `[TSK-123] 작업 내용` 형식을 따라야 한다.
+- `main` 대상으로 여는 PR은 GitHub Actions `PR Title Check`에서 이 형식을 검증한다.
+- 형식을 지키지 않으면 `validate-pr-title` CI가 실패한다.
+- 예시:
+  - `[TSK-23] Add kanji study actions to info sheet`
+  - `[TSK-104] Fix flashcard session restore bug`
+
 ## TODO Workflow
 
 Agents should use [kanji_study_app/TODO.md](/Users/cordelia273/conductor/workspaces/kanji/tallahassee-v1/kanji_study_app/TODO.md) as the project's lightweight technical-debt and follow-up tracker.
