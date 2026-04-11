@@ -11,6 +11,8 @@ Future<String?> showKanjiHandwritingSheet(
   return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
+    enableDrag: false,
+    requestFocus: false,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.6),
     builder: (context) {
@@ -208,52 +210,29 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
       ),
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: theme.colors.border,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '손글씨로 한자 찾기',
-                          style: theme.typography.xl2.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '손글씨로 한자 찾기',
+                        style: theme.typography.xl2.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '한 글자를 쓰고 인식 버튼을 누르면 검색 후보를 보여줍니다.',
-                          style: theme.typography.sm.copyWith(
-                            color: theme.colors.mutedForeground,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                  FButton.icon(
-                    onPress: () => Navigator.of(context).pop(),
-                    style: FButtonStyle.ghost(),
-                    child: Icon(PhosphorIconsRegular.x, size: 20),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
+                    FButton.icon(
+                      onPress: () => Navigator.of(context).pop(),
+                      style: FButtonStyle.ghost(),
+                      child: Icon(PhosphorIconsRegular.x, size: 20),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
               Expanded(
                 child: _isCheckingModel
                     ? const Center(child: FCircularProgress())

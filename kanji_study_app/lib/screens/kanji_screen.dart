@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -189,6 +190,10 @@ class _KanjiScreenState extends State<KanjiScreen> {
       await Future<void>.delayed(Duration.zero);
     }
 
+    if (!mounted) return;
+
+    FocusManager.instance.primaryFocus?.unfocus();
+    await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
     if (!mounted) return;
 
     final selectedKanji = await showKanjiHandwritingSheet(
