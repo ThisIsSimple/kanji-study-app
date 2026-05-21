@@ -93,14 +93,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       // Get current user info
       final currentUser = _supabaseService.currentUser;
-      debugPrint('Current user ID: ${currentUser?.id}');
-      debugPrint('Current user email: ${currentUser?.email}');
-      debugPrint('Is anonymous: ${_supabaseService.isAnonymousUser}');
-      debugPrint('User metadata: ${currentUser?.userMetadata}');
 
       // Get user profile from Supabase
       final profile = await _supabaseService.getUserProfile();
-      debugPrint('Loaded profile: $profile');
 
       // Check for username in profile or metadata
       String? username;
@@ -119,20 +114,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           _username = username!;
         });
-        debugPrint('Username loaded: $_username');
       } else {
-        debugPrint('No username found in profile or metadata');
         // If no username, try to generate one
         if (currentUser != null) {
           final nickname = NicknameGenerator.instance.generate(currentUser.id);
-          debugPrint('Generated nickname for display: $nickname');
           setState(() {
             _username = nickname;
           });
           // Try to save it
           try {
             await _supabaseService.updateUserProfile(username: nickname);
-            debugPrint('Saved generated nickname to profile');
           } catch (e) {
             debugPrint('Failed to save nickname: $e');
           }

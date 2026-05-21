@@ -92,7 +92,6 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
     try {
       final initialUri = await _appLinks.getInitialLink();
       if (initialUri != null) {
-        debugPrint('Initial deep link: $initialUri');
         _handleDeepLink(initialUri);
       }
     } catch (e) {
@@ -102,7 +101,6 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
     // Listen for deep links while app is running
     _appLinks.uriLinkStream.listen(
       (uri) {
-        debugPrint('Deep link received: $uri');
         _handleDeepLink(uri);
       },
       onError: (err) {
@@ -113,8 +111,6 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
 
   /// Handle incoming deep links (OAuth callbacks)
   void _handleDeepLink(Uri uri) {
-    debugPrint('Handling deep link: $uri');
-
     // Check if this is a Supabase OAuth callback
     if (uri.scheme == 'space.cordelia273.konnakanji' &&
         uri.host == 'login-callback') {

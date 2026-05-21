@@ -43,17 +43,28 @@ class _SettingsNotificationScreenState
   }
 
   Future<void> _toggleNotifications(bool value) async {
-    setState(() {
-      _notificationsEnabled = value;
-    });
+    try {
+      if (value) {
+        await _notificationService.scheduleDailyNotification(
+          hour: _selectedTime.hour,
+          minute: _selectedTime.minute,
+        );
+      } else {
+        await _notificationService.disableNotifications();
+      }
 
-    if (value) {
-      await _notificationService.scheduleDailyNotification(
-        hour: _selectedTime.hour,
-        minute: _selectedTime.minute,
-      );
-    } else {
-      await _notificationService.disableNotifications();
+      if (!mounted) return;
+      setState(() {
+        _notificationsEnabled = value;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _notificationsEnabled = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('알림 권한을 확인해주세요.')));
     }
   }
 

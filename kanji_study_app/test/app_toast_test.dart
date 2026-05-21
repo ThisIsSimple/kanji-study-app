@@ -17,6 +17,7 @@ class _ToastHarnessState extends State<_ToastHarness> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: AppTheme.getLightTheme(),
       home: FTheme(
         data: AppTheme.getFTheme(),
         child: FScaffold(

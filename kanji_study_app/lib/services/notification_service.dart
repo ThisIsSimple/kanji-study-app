@@ -17,9 +17,9 @@ class NotificationService {
 
     const DarwinInitializationSettings iosSettings =
         DarwinInitializationSettings(
-          requestAlertPermission: true,
-          requestBadgePermission: true,
-          requestSoundPermission: true,
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
         );
 
     const InitializationSettings settings = InitializationSettings(
@@ -32,16 +32,15 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
-    // Request permissions for iOS
-    await _requestIOSPermissions();
   }
 
-  Future<void> _requestIOSPermissions() async {
-    await _notifications
+  Future<bool> _requestIOSPermissions() async {
+    final granted = await _notifications
         .resolvePlatformSpecificImplementation<
           IOSFlutterLocalNotificationsPlugin
         >()
         ?.requestPermissions(alert: true, badge: true, sound: true);
+    return granted ?? true;
   }
 
   void _onNotificationTapped(NotificationResponse response) {
@@ -53,6 +52,11 @@ class NotificationService {
     required int hour,
     required int minute,
   }) async {
+    final hasPermission = await _requestIOSPermissions();
+    if (!hasPermission) {
+      throw Exception('알림 권한이 허용되지 않았습니다.');
+    }
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('notification_hour', hour);
     await prefs.setInt('notification_minute', minute);

@@ -80,14 +80,14 @@ class _SettingsInfoScreenState extends State<SettingsInfoScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                '한자 학습',
+                                '콘나칸지',
                                 style: theme.typography.xl.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '체계적인 한자 학습 앱',
+                                '일본어 한자와 단어를 이어서 학습하는 앱',
                                 style: theme.typography.sm.copyWith(
                                   color: theme.colors.mutedForeground,
                                 ),
@@ -118,7 +118,7 @@ class _SettingsInfoScreenState extends State<SettingsInfoScreen> {
                         // Copyright
                         Center(
                           child: Text(
-                            '© 2024 space.cordelia273',
+                            '© 2026 space.cordelia273',
                             style: theme.typography.sm.copyWith(
                               color: theme.colors.mutedForeground,
                             ),

@@ -5,6 +5,7 @@ class AppTheme {
   static ThemeData getLightTheme() {
     return ThemeData(
       brightness: Brightness.light,
+      splashFactory: InkRipple.splashFactory,
       fontFamily: 'SUITE', // SUITE 폰트를 기본 폰트로 설정
       textTheme: const TextTheme(
         // Display
