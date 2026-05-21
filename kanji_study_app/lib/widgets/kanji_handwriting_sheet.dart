@@ -59,15 +59,13 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
 
   Future<void> _loadModelStatus() async {
     try {
-      final isDownloaded =
-          await _recognitionService.isJapaneseModelDownloaded();
+      final isDownloaded = await _recognitionService
+          .isJapaneseModelDownloaded();
       if (!mounted) return;
       setState(() {
         _isModelReady = isDownloaded;
         _isCheckingModel = false;
-        _statusMessage = isDownloaded
-            ? null
-            : '일본어 필기 인식 모델을 먼저 내려받아야 합니다.';
+        _statusMessage = isDownloaded ? null : '일본어 필기 인식 모델을 먼저 내려받아야 합니다.';
       });
     } catch (error) {
       if (!mounted) return;
@@ -162,10 +160,8 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
     });
 
     try {
-      final recognizedCandidates = await _recognitionService.recognizeSingleKanji(
-        strokes: _strokes,
-        writingArea: _canvasSize,
-      );
+      final recognizedCandidates = await _recognitionService
+          .recognizeSingleKanji(strokes: _strokes, writingArea: _canvasSize);
 
       final matchedCandidates = recognizedCandidates
           .where(widget.availableKanjiCharacters.contains)
@@ -185,7 +181,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _statusMessage = '필기 인식에 실패했습니다: $error';
+        _statusMessage = HandwritingRecognitionService.describeFailure(error);
       });
     } finally {
       if (mounted) {
@@ -210,29 +206,29 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
       ),
       child: SafeArea(
         top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '손글씨로 한자 찾기',
-                        style: theme.typography.xl2.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '손글씨로 한자 찾기',
+                      style: theme.typography.xl2.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    FButton.icon(
-                      onPress: () => Navigator.of(context).pop(),
-                      style: FButtonStyle.ghost(),
-                      child: Icon(PhosphorIconsRegular.x, size: 20),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                  ),
+                  FButton.icon(
+                    onPress: () => Navigator.of(context).pop(),
+                    style: FButtonStyle.ghost(),
+                    child: Icon(PhosphorIconsRegular.x, size: 20),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
               Expanded(
                 child: _isCheckingModel
                     ? const Center(child: FCircularProgress())
@@ -299,10 +295,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              _canvasSize = Size(
-                constraints.maxWidth,
-                constraints.maxHeight,
-              );
+              _canvasSize = Size(constraints.maxWidth, constraints.maxHeight);
 
               return Container(
                 decoration: BoxDecoration(
@@ -438,17 +431,12 @@ class _KanjiHandwritingPainter extends CustomPainter {
       Offset(size.width, size.height),
       guidePaint,
     );
-    canvas.drawLine(
-      Offset(0, size.height),
-      Offset(size.width, 0),
-      guidePaint,
-    );
+    canvas.drawLine(Offset(0, size.height), Offset(size.width, 0), guidePaint);
 
     for (final stroke in strokes) {
       if (stroke.points.isEmpty) continue;
 
-      final path = Path()
-        ..moveTo(stroke.points.first.x, stroke.points.first.y);
+      final path = Path()..moveTo(stroke.points.first.x, stroke.points.first.y);
 
       for (final point in stroke.points.skip(1)) {
         path.lineTo(point.x, point.y);

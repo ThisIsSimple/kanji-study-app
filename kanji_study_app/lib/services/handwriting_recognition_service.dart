@@ -22,6 +22,9 @@ class HandwritingStrokeData {
 
 class HandwritingRecognitionService {
   static const String japaneseLanguageCode = 'ja';
+  static const String iosSimulatorLimitationMessage =
+      'iOS 시뮬레이터에서는 ML Kit 필기 인식이 제한될 수 있습니다. '
+      'iPhone/iPad 실기기 또는 TestFlight에서 필기 인식을 검증해주세요.';
 
   static final HandwritingRecognitionService instance =
       HandwritingRecognitionService._internal();
@@ -59,11 +62,8 @@ class HandwritingRecognitionService {
         final digitalStroke = Stroke()
           ..points = stroke.points
               .map(
-                (point) => StrokePoint(
-                  x: point.x,
-                  y: point.y,
-                  t: point.timestamp,
-                ),
+                (point) =>
+                    StrokePoint(x: point.x, y: point.y, t: point.timestamp),
               )
               .toList();
         return digitalStroke;
@@ -79,7 +79,9 @@ class HandwritingRecognitionService {
       ),
     );
 
-    return extractKanjiCandidates(candidates.map((candidate) => candidate.text));
+    return extractKanjiCandidates(
+      candidates.map((candidate) => candidate.text),
+    );
   }
 
   static List<String> extractKanjiCandidates(Iterable<String> candidates) {
@@ -105,6 +107,34 @@ class HandwritingRecognitionService {
     return (rune >= 0x3400 && rune <= 0x4DBF) ||
         (rune >= 0x4E00 && rune <= 0x9FFF) ||
         (rune >= 0xF900 && rune <= 0xFAFF);
+  }
+
+  static String describeFailure(Object error) {
+    if (isLikelyIosSimulatorMlKitIssue(error)) {
+      return iosSimulatorLimitationMessage;
+    }
+
+    return '필기 인식에 실패했습니다: $error';
+  }
+
+  static bool isLikelyIosSimulatorMlKitIssue(Object error) {
+    final message = error.toString().toLowerCase();
+    final mentionsSimulator =
+        message.contains('simulator') ||
+        message.contains('iphonesimulator') ||
+        message.contains('iOS-simulator'.toLowerCase());
+    final mentionsMlKit =
+        message.contains('mlkit') ||
+        message.contains('mlimage') ||
+        message.contains('googlemlkit') ||
+        message.contains('digitalink');
+    final mentionsArchitecture =
+        message.contains('arm64') ||
+        message.contains('architecture') ||
+        message.contains('built for ios') ||
+        message.contains('linker command failed');
+
+    return mentionsSimulator && mentionsMlKit && mentionsArchitecture;
   }
 
   void dispose() {

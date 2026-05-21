@@ -80,6 +80,16 @@ This workspace currently does not have `flutter` on `PATH`, so validation must r
 - `phosphor_flutter` on pub.dev is still `2.1.0` and extends `IconData`, which fails after Flutter marked `IconData` as final. This repo uses `third_party/phosphor_flutter` as a narrow compatibility shim for the icons currently referenced by the app.
 - After pulling these changes, run `flutter pub get` so `pubspec.lock` records the local `phosphor_flutter` override and the newer `google_fonts` version.
 
+## Handwriting Recognition Release Path
+
+- Keep Google ML Kit Digital Ink Recognition as the primary recognizer. The app records stroke data from the handwriting canvas, and ML Kit is still the best fit for on-device Japanese stroke recognition.
+- The current iOS setup matches the ML Kit release constraints used by this app: `platform :ios, '15.5'`, `GoogleMLKit/DigitalInkRecognition 9.0.0`, and `MLKitDigitalInkRecognition 8.0.0`.
+- Do not rewrite the Flutter plugin as a direct native iOS wrapper just to solve simulator issues. A direct wrapper would still depend on the same Google ML Kit iOS Pods and would not remove the Apple Silicon simulator architecture limitation.
+- Treat physical iPhone/iPad and TestFlight as the release verification path for handwriting recognition.
+- Treat iOS 26 Apple Silicon simulators as limited for handwriting recognition. They may fail because the ML Kit simulator/device architecture requirements conflict; use simulators for non-handwriting UI checks only.
+- Apple Scribble is an optional future iPad + Apple Pencil input path, not a replacement for the current custom canvas recognizer. If added, pass the resulting text through the existing single-Kanji candidate filtering.
+- MyScript iink SDK is the first paid replacement candidate only if ML Kit fails on the real release path. Image OCR or cloud OCR should be considered fallback validation, not the main handwriting engine.
+
 ## Manual QA
 
 - First launch, guest login, logout.
@@ -89,6 +99,8 @@ This workspace currently does not have `flutter` on `PATH`, so validation must r
 - Study record creation, favorites, flashcard history, AI quiz flow.
 - Gemini API key add/remove and AI unavailable state.
 - Notification opt-in, daily reminder scheduling, permission denied state.
+- Handwriting recognition on a physical iPhone: model download, finger input, candidate selection, offline reuse after model download.
+- Handwriting recognition on a physical iPad: finger input, Apple Pencil input, landscape and portrait layout.
 - Settings > Privacy data disclosure screen.
 - Settings > Account Management > Delete Study Data.
 - Settings > Account Management > Delete Account after Edge Function deployment.
