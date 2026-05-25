@@ -277,6 +277,17 @@ class AppDatabase extends _$AppDatabase {
                 t.targetId.equals(targetId),
           ))
           .go();
+
+  Future<void> clearUserData(String userId) async {
+    await transaction(() async {
+      await (delete(studyRecordsTable)..where(
+            (t) => t.userId.equals(userId),
+          ))
+          .go();
+      await (delete(favoritesTable)..where((t) => t.userId.equals(userId)))
+          .go();
+    });
+  }
 }
 
 LazyDatabase _openConnection() {

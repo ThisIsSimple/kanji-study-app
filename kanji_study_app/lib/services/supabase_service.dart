@@ -123,15 +123,12 @@ class SupabaseService {
   /// Sign in with Google using Supabase OAuth
   Future<bool> signInWithGoogle() async {
     try {
-      debugPrint('Starting Google Sign In with Supabase OAuth...');
-
-      final result = await _client.auth.signInWithOAuth(
+      await _client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: 'space.cordelia273.konnakanji://login-callback',
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
 
-      debugPrint('Google OAuth initiated: $result');
       return true;
     } catch (e) {
       debugPrint('Google sign in error: $e');
@@ -142,15 +139,12 @@ class SupabaseService {
   /// Sign in with Apple using Supabase OAuth
   Future<bool> signInWithApple() async {
     try {
-      debugPrint('Starting Apple Sign In with Supabase OAuth...');
-
-      final result = await _client.auth.signInWithOAuth(
+      await _client.auth.signInWithOAuth(
         OAuthProvider.apple,
         redirectTo: 'space.cordelia273.konnakanji://login-callback',
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
 
-      debugPrint('Apple OAuth initiated: $result');
       return true;
     } catch (e) {
       debugPrint('Apple sign in error: $e');
@@ -161,15 +155,12 @@ class SupabaseService {
   /// Sign in with Kakao using Supabase OAuth
   Future<bool> signInWithKakao() async {
     try {
-      debugPrint('Starting Kakao Sign In with Supabase OAuth...');
-
-      final result = await _client.auth.signInWithOAuth(
+      await _client.auth.signInWithOAuth(
         OAuthProvider.kakao,
         redirectTo: 'space.cordelia273.konnakanji://login-callback',
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
 
-      debugPrint('Kakao OAuth initiated: $result');
       return true;
     } catch (e) {
       debugPrint('Kakao sign in error: $e');
@@ -424,6 +415,99 @@ class SupabaseService {
     } catch (e) {
       debugPrint('Error getting user profile: $e');
       return null;
+    }
+  }
+
+  Future<void> deleteCurrentUserServerData() async {
+    if (!isLoggedIn) return;
+
+    final userId = currentUser!.id;
+
+    try {
+      final attempts = await _client
+          .from('ai_quiz_attempts')
+          .select('id')
+          .eq('user_id', userId);
+      final attemptIds = (attempts as List)
+          .map((attempt) => attempt['id'] as int)
+          .toList();
+      if (attemptIds.isNotEmpty) {
+        await _client
+            .from('ai_quiz_answers')
+            .delete()
+            .inFilter('attempt_id', attemptIds);
+      }
+
+      final quizzes = await _client
+          .from('ai_quizzes')
+          .select('id')
+          .eq('user_id', userId);
+      final quizIds = (quizzes as List)
+          .map((quiz) => quiz['id'] as int)
+          .toList();
+      if (quizIds.isNotEmpty) {
+        await _client
+            .from('ai_quiz_questions')
+            .delete()
+            .inFilter('quiz_id', quizIds);
+      }
+
+      final flashcardSessions = await _client
+          .from('flashcard_sessions')
+          .select('id')
+          .eq('user_id', userId);
+      final flashcardSessionIds = (flashcardSessions as List)
+          .map((session) => session['id'] as int)
+          .toList();
+      if (flashcardSessionIds.isNotEmpty) {
+        await _client
+            .from('flashcard_results')
+            .delete()
+            .inFilter('session_id', flashcardSessionIds);
+      }
+
+      await _client.from('ai_quiz_attempts').delete().eq('user_id', userId);
+      await _client.from('ai_quizzes').delete().eq('user_id', userId);
+      await _client.from('flashcard_sessions').delete().eq('user_id', userId);
+      await _client.from('favorites').delete().eq('user_id', userId);
+      await _client
+          .from(SupabaseConfig.kanjiExamplesTable)
+          .delete()
+          .eq('user_id', userId);
+      await _client.from('word_examples').delete().eq('user_id', userId);
+      await _client.from('study_records').delete().eq('user_id', userId);
+      await _client
+          .from(SupabaseConfig.studySessionsTable)
+          .delete()
+          .eq('user_id', userId);
+      await _client
+          .from(SupabaseConfig.userProgressTable)
+          .delete()
+          .eq('user_id', userId);
+    } catch (e) {
+      debugPrint('Error deleting current user server data: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCurrentUserAccount() async {
+    if (!isLoggedIn) return;
+
+    try {
+      final response = await _client.functions.invoke('delete-user-account');
+      if (response.status >= 400) {
+        throw Exception('Account deletion function failed: ${response.status}');
+      }
+      try {
+        await _client.auth.signOut(scope: SignOutScope.local);
+      } catch (signOutError) {
+        debugPrint(
+          'Local sign out after account deletion failed: $signOutError',
+        );
+      }
+    } catch (e) {
+      debugPrint('Error deleting current user account: $e');
+      rethrow;
     }
   }
 

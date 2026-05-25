@@ -42,6 +42,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
   String _searchQuery = '';
   bool _isLoading = true;
   bool _isSearchMode = false;
+  bool _autofocusSearchField = false;
 
   bool _showOnlyFavorites = false;
 
@@ -172,6 +173,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
   void _toggleSearchMode() {
     setState(() {
       _isSearchMode = !_isSearchMode;
+      _autofocusSearchField = _isSearchMode;
       if (!_isSearchMode) {
         _searchController.clear();
         _searchQuery = '';
@@ -181,40 +183,37 @@ class _KanjiScreenState extends State<KanjiScreen> {
   }
 
   Future<void> _openHandwritingSearch() async {
-    final wasSearchMode = _isSearchMode;
-
-    if (!wasSearchMode) {
-      setState(() {
-        _isSearchMode = true;
-      });
-      await Future<void>.delayed(Duration.zero);
-    }
-
-    if (!mounted) return;
-
     FocusManager.instance.primaryFocus?.unfocus();
     await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
     if (!mounted) return;
 
     final selectedKanji = await showKanjiHandwritingSheet(
       context,
-      availableKanjiCharacters: _allKanji.map((kanji) => kanji.character).toSet(),
+      availableKanjiCharacters: _allKanji
+          .map((kanji) => kanji.character)
+          .toSet(),
     );
 
     if (!mounted) return;
 
     if (selectedKanji == null) {
-      if (!wasSearchMode && _searchController.text.isEmpty) {
-        setState(() {
-          _isSearchMode = false;
-        });
-      }
       return;
+    }
+
+    if (!_isSearchMode) {
+      setState(() {
+        _isSearchMode = true;
+        _autofocusSearchField = false;
+      });
     }
 
     _searchController
       ..text = selectedKanji
       ..selection = TextSelection.collapsed(offset: selectedKanji.length);
+
+    FocusManager.instance.primaryFocus?.unfocus();
+    await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+    if (!mounted) return;
 
     showAppToast(
       context,
@@ -691,7 +690,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                     child: FTextField(
                       controller: _searchController,
                       hint: '한자, 의미, 읽기로 검색...',
-                      autofocus: true,
+                      autofocus: _autofocusSearchField,
                     ),
                   ),
                   rightActions: [

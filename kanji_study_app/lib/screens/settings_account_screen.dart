@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../services/supabase_service.dart';
+import '../services/local_database_service.dart';
 import '../constants/app_spacing.dart';
 import '../widgets/custom_header.dart';
 
@@ -17,6 +18,7 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
   String? _userEmail;
   bool _isAnonymous = false;
   bool _isLoading = true;
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -71,6 +73,109 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('로그아웃 중 오류가 발생했습니다.')));
+      }
+    }
+  }
+
+  Future<void> _clearLocalUserData(String userId) async {
+    final localDb = LocalDatabaseService.instance;
+    await localDb.database.clearUserData(userId);
+  }
+
+  Future<void> _handleDeleteAppData() async {
+    final shouldDelete = await showFDialog<bool>(
+      context: context,
+      builder: (context, style, animation) => FDialog(
+        style: style.call,
+        animation: animation,
+        direction: Axis.horizontal,
+        title: const Text('학습 데이터 삭제'),
+        body: const Text('학습 기록, 즐겨찾기, AI 퀴즈 기록을 삭제합니다. 계정 로그인 정보는 유지됩니다.'),
+        actions: [
+          FButton(
+            style: FButtonStyle.outline(),
+            onPress: () => Navigator.of(context).pop(false),
+            child: const Text('취소'),
+          ),
+          FButton(
+            style: FButtonStyle.destructive(),
+            onPress: () => Navigator.of(context).pop(true),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true || !mounted) return;
+
+    final userId = _supabaseService.currentUser?.id;
+    if (userId == null) return;
+
+    setState(() => _isProcessing = true);
+    try {
+      await _supabaseService.deleteCurrentUserServerData();
+      await _clearLocalUserData(userId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('학습 데이터가 삭제되었습니다.')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('데이터 삭제 중 오류가 발생했습니다.')));
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  Future<void> _handleDeleteAccount() async {
+    final shouldDelete = await showFDialog<bool>(
+      context: context,
+      builder: (context, style, animation) => FDialog(
+        style: style.call,
+        animation: animation,
+        direction: Axis.horizontal,
+        title: const Text('계정 삭제'),
+        body: const Text('계정과 서버에 저장된 학습 데이터를 삭제합니다. 이 작업은 되돌릴 수 없습니다.'),
+        actions: [
+          FButton(
+            style: FButtonStyle.outline(),
+            onPress: () => Navigator.of(context).pop(false),
+            child: const Text('취소'),
+          ),
+          FButton(
+            style: FButtonStyle.destructive(),
+            onPress: () => Navigator.of(context).pop(true),
+            child: const Text('계정 삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true || !mounted) return;
+
+    final userId = _supabaseService.currentUser?.id;
+    if (userId == null) return;
+
+    setState(() => _isProcessing = true);
+    try {
+      await _supabaseService.deleteCurrentUserAccount();
+      await _clearLocalUserData(userId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('계정 삭제가 요청되었습니다.')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('계정 삭제 서버 기능을 확인해주세요. 데이터는 삭제되지 않았습니다.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
       }
     }
   }
@@ -190,7 +295,37 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
 
                         // Logout Button
                         FButton(
-                          onPress: _handleLogout,
+                          onPress: _isProcessing ? null : _handleDeleteAppData,
+                          style: FButtonStyle.outline(),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(PhosphorIconsRegular.trash, size: 18),
+                              SizedBox(width: 8),
+                              Text('학습 데이터 삭제'),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        FButton(
+                          onPress: _isProcessing ? null : _handleDeleteAccount,
+                          style: FButtonStyle.destructive(),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(PhosphorIconsRegular.userMinus, size: 18),
+                              SizedBox(width: 8),
+                              Text('계정 삭제'),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        FButton(
+                          onPress: _isProcessing ? null : _handleLogout,
                           style: FButtonStyle.destructive(),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,

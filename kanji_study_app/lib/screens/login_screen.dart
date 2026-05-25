@@ -39,17 +39,14 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       // Sign in anonymously
       await _supabaseService.signInAnonymously();
-      debugPrint('Signed in anonymously');
 
       // Generate and save nickname for anonymous user
       if (_supabaseService.isLoggedIn) {
         final userId = _supabaseService.currentUser!.id;
         final nickname = NicknameGenerator.instance.generate(userId);
-        debugPrint('Generated nickname for guest: $nickname');
 
         try {
           await _supabaseService.updateUserProfile(username: nickname);
-          debugPrint('Successfully saved nickname to Supabase');
         } catch (updateError) {
           debugPrint('Failed to save nickname to Supabase: $updateError');
         }

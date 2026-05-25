@@ -7,6 +7,7 @@ import 'settings_account_screen.dart';
 import 'settings_notification_screen.dart';
 import 'settings_ai_screen.dart';
 import 'settings_info_screen.dart';
+import 'settings_privacy_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -70,6 +71,19 @@ class SettingsScreen extends StatelessWidget {
                     suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () =>
                         _navigateTo(context, const SettingsAiScreen()),
+                  ),
+                  FItem(
+                    prefix: Icon(PhosphorIconsRegular.shieldCheck, size: 26),
+                    title: Text(
+                      '개인정보',
+                      style: typography.base.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    details: Text('수집 데이터 및 삭제 안내', style: typography.sm),
+                    suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
+                    onPress: () =>
+                        _navigateTo(context, const SettingsPrivacyScreen()),
                   ),
                   FItem(
                     prefix: Icon(PhosphorIconsRegular.info, size: 26),
