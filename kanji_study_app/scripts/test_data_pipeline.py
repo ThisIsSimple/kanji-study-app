@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 sys.path.insert(0, str(Path(__file__).resolve().parent / "data_pipeline"))
 
 from fetch_sources import SourceSpec, metadata_for
+from generate_ko_meaning_drafts import apply_mapping_to_words, build_cli_prompt, parse_translation_payload
 from merge_dataset import merge_kanji, merge_words, quality_report
 from normalize_jmdict import entry_to_words
 from normalize_kanjidic import character_to_kanji
@@ -124,6 +125,54 @@ class DataPipelineTest(unittest.TestCase):
         self.assertEqual(metadata["license"], "CC0")
         self.assertEqual(metadata["source_version"], "Tue, 26 May 2026 00:00:00 GMT")
         self.assertEqual(len(metadata["sha256"]), 64)
+
+    def test_cli_prompt_and_parser_keep_translation_keys(self):
+        row = {
+            "external_id": "jmdict:1:0",
+            "word": "学校",
+            "reading": "がっこう",
+            "meanings": [{"part_of_speech": "n", "meaning": "school"}],
+        }
+
+        prompt = build_cli_prompt([row])
+        parsed = parse_translation_payload('{"translations":[{"key":"jmdict:1:0","meanings":["학교"]}]}')
+        wrapped = parse_translation_payload(
+            '{"structured_output":{"translations":[{"key":"jmdict:1:0","meanings":["학교"]}]}}'
+        )
+
+        self.assertIn("jmdict:1:0", prompt)
+        self.assertEqual(parsed["jmdict:1:0"], ["학교"])
+        self.assertEqual(wrapped["jmdict:1:0"], ["학교"])
+
+    def test_apply_mapping_can_scope_to_cli_batch_keys(self):
+        words = [
+            {
+                "external_id": "jmdict:1:0",
+                "word": "学校",
+                "reading": "がっこう",
+                "quality_status": "ai_draft",
+                "meanings": [{"part_of_speech": "n", "meaning": "school"}],
+            },
+            {
+                "external_id": "jmdict:2:0",
+                "word": "会社",
+                "reading": "かいしゃ",
+                "quality_status": "ai_draft",
+                "meanings": [{"part_of_speech": "n", "meaning": "company"}],
+            },
+        ]
+
+        updated, _, needs_translation = apply_mapping_to_words(
+            words,
+            {"jmdict:1:0": ["학교"]},
+            None,
+            {"jmdict:1:0"},
+        )
+
+        self.assertEqual(updated, 1)
+        self.assertEqual(needs_translation, [])
+        self.assertEqual(words[0]["meaning_source"], "ai_translation")
+        self.assertEqual(words[1]["meanings"][0]["meaning"], "company")
 
 
 if __name__ == "__main__":
