@@ -152,13 +152,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _saveGoal() async {
     setState(() => _isSavingGoal = true);
     try {
-      await _learningGoalService.saveGoal(
+      final result = await _learningGoalService.saveGoal(
         dailyGoal: _draftDailyGoal,
         targetJlptLevel: _draftJlptLevel,
       );
       await _analyticsService.clearCache();
       if (!mounted) return;
-      showAppToast(context, message: '학습 목표를 저장했습니다.');
+      showAppToast(
+        context,
+        message: result.syncedRemotely
+            ? '학습 목표를 저장했습니다.'
+            : '학습 목표를 저장했습니다. 서버 동기화는 나중에 다시 시도됩니다.',
+      );
       await _loadData();
     } catch (e) {
       if (!mounted) return;
@@ -184,6 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
       emptyMessage: '오늘 학습할 단어가 없습니다',
       toFlashcardItems: (items) =>
           items.map((word) => WordFlashcardAdapter(word)).toList(),
+      resumeItems: _wordService.allWords,
       onComplete: () async {
         await _analyticsService.clearCache();
         await _loadData();

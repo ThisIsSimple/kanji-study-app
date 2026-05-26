@@ -46,13 +46,18 @@ class _SettingsLearningGoalScreenState
   Future<void> _saveGoal() async {
     setState(() => _isSaving = true);
     try {
-      await _learningGoalService.saveGoal(
+      final result = await _learningGoalService.saveGoal(
         dailyGoal: _dailyGoal,
         targetJlptLevel: _targetJlptLevel,
       );
       await _analyticsService.clearCache();
       if (!mounted) return;
-      showAppToast(context, message: '학습 목표를 저장했습니다.');
+      showAppToast(
+        context,
+        message: result.syncedRemotely
+            ? '학습 목표를 저장했습니다.'
+            : '학습 목표를 저장했습니다. 서버 동기화는 나중에 다시 시도됩니다.',
+      );
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
