@@ -265,7 +265,7 @@ class AnalyticsService {
   }
 
   /// Get comprehensive user statistics
-  Future<UserStats> getUserStats() async {
+  Future<UserStats> getUserStats({int? dailyGoal}) async {
     try {
       // Fetch all data in parallel
       final results = await Future.wait([calculateStreak(), getWeeklyStats()]);
@@ -292,7 +292,7 @@ class AnalyticsService {
         streak: streak,
         totalXP: totalMastered * 10,
         todayProgress: todayProgress,
-        dailyGoal: 10,
+        dailyGoal: dailyGoal ?? 10,
         weeklyCount: weeklyCount,
         weeklyAverage: weeklyAverage,
         reviewQueueSize: 0,
@@ -322,7 +322,7 @@ class AnalyticsService {
     final today = DateTime.now();
     for (final stat in stats) {
       if (_isSameDate(stat.date, today)) {
-        return stat.totalStudied;
+        return stat.wordsStudied;
       }
     }
     return 0;

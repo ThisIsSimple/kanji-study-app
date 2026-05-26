@@ -381,13 +381,22 @@ class SupabaseService {
   // ============= User Profile Methods =============
 
   /// Update user profile
-  Future<void> updateUserProfile({String? username, String? avatarUrl}) async {
+  Future<void> updateUserProfile({
+    String? username,
+    String? avatarUrl,
+    int? dailyGoal,
+    int? targetJlptLevel,
+  }) async {
     if (!isLoggedIn) return;
 
     try {
       final updates = <String, dynamic>{};
       if (username != null) updates['username'] = username;
       if (avatarUrl != null) updates['avatar_url'] = avatarUrl;
+      if (dailyGoal != null) updates['daily_goal'] = dailyGoal;
+      if (targetJlptLevel != null) {
+        updates['target_jlpt_level'] = targetJlptLevel;
+      }
 
       await _client.from(SupabaseConfig.usersTable).upsert({
         'id': currentUser!.id,

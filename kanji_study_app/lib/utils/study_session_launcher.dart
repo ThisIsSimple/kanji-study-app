@@ -12,6 +12,85 @@ import '../widgets/flashcard_count_selector.dart';
 class StudySessionLauncher {
   const StudySessionLauncher._();
 
+  static Future<void> launchFixed<T>({
+    required BuildContext context,
+    required String itemType,
+    required List<T> items,
+    required FlashcardService flashcardService,
+    required String emptyMessage,
+    required List<FlashcardItem> Function(List<T> items) toFlashcardItems,
+    required Future<void> Function() onComplete,
+    List<T>? resumeItems,
+  }) async {
+    if (items.isEmpty) {
+      final theme = FTheme.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(emptyMessage),
+          backgroundColor: theme.colors.destructive,
+        ),
+      );
+      return;
+    }
+
+    final existingSession = await flashcardService.loadSessionByType(itemType);
+    if (existingSession != null &&
+        !existingSession.isCompleted &&
+        context.mounted) {
+      showFDialog(
+        context: context,
+        builder: (dialogContext, style, animation) => FDialog(
+          animation: animation,
+          direction: Axis.horizontal,
+          title: const Text('진행 중인 단어 학습'),
+          body: const Text('진행 중인 단어 학습이 있습니다. 이어하거나 오늘 학습을 새로 시작할 수 있습니다.'),
+          actions: [
+            FButton(
+              variant: FButtonVariant.outline,
+              onPress: () async {
+                final navigator = Navigator.of(dialogContext);
+                await flashcardService.clearSession(itemType);
+                if (!dialogContext.mounted) return;
+                navigator.pop();
+                _pushFlashcards(
+                  context: context,
+                  items: items,
+                  session: null,
+                  toFlashcardItems: toFlashcardItems,
+                  onComplete: onComplete,
+                );
+              },
+              child: const Text('오늘 학습 새로 시작'),
+            ),
+            FButton(
+              onPress: () {
+                Navigator.of(dialogContext).pop();
+                _pushFlashcards(
+                  context: context,
+                  items: resumeItems ?? items,
+                  session: existingSession,
+                  toFlashcardItems: toFlashcardItems,
+                  onComplete: onComplete,
+                );
+              },
+              child: const Text('이어하기'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (!context.mounted) return;
+    _pushFlashcards(
+      context: context,
+      items: items,
+      session: null,
+      toFlashcardItems: toFlashcardItems,
+      onComplete: onComplete,
+    );
+  }
+
   static Future<void> launch<T>({
     required BuildContext context,
     required String itemType,

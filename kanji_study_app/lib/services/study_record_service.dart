@@ -101,6 +101,7 @@ class StudyRecordService extends ChangeNotifier {
           'type': type.value,
           'target_id': targetId,
           'status': status.value,
+          'created_at': now.toIso8601String(),
         });
       }
 
@@ -165,8 +166,9 @@ class StudyRecordService extends ChangeNotifier {
           }
         }
 
+        final localRecords = await _getLocalRecords(userId);
         final serverRecords = await _supabaseService.getStudyRecords();
-        _replaceCache(serverRecords);
+        _replaceCache(_mergeStudyRecords(localRecords, serverRecords));
         notifyListeners();
         debugPrint(
           'StudyRecordService: Sync completed, ${_progressCache.length} tracked items',
@@ -181,8 +183,11 @@ class StudyRecordService extends ChangeNotifier {
   Future<void> refreshFromSupabase() async {
     try {
       if (!_supabaseService.isInitialized) return;
+      final userId = _supabaseService.currentUser?.id;
+      if (userId == null) return;
+      final localRecords = await _getLocalRecords(userId);
       final serverRecords = await _supabaseService.getStudyRecords();
-      _replaceCache(serverRecords);
+      _replaceCache(_mergeStudyRecords(localRecords, serverRecords));
       notifyListeners();
       debugPrint(
         'StudyRecordService: Refreshed from Supabase, ${_progressCache.length} tracked items',
@@ -195,11 +200,40 @@ class StudyRecordService extends ChangeNotifier {
   Future<List<StudyRecord>> getStudyRecords({
     DateTime? startDate,
     DateTime? endDate,
-  }) {
-    return _supabaseService.getStudyRecords(
+  }) async {
+    final userId = _supabaseService.currentUser?.id;
+    if (userId == null) return [];
+
+    final localRecords = filterRecordsByDateRange(
+      await _getLocalRecords(userId),
       startDate: startDate,
       endDate: endDate,
     );
+
+    if (!_connectivityService.isOnline || !_supabaseService.isInitialized) {
+      return localRecords;
+    }
+
+    final serverRecords = await _supabaseService.getStudyRecords(
+      startDate: startDate,
+      endDate: endDate,
+    );
+    return _mergeStudyRecords(localRecords, serverRecords);
+  }
+
+  @visibleForTesting
+  static List<StudyRecord> filterRecordsByDateRange(
+    Iterable<StudyRecord> records, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) {
+    return records.where((record) {
+      final createdAt = record.createdAt;
+      if (createdAt == null) return false;
+      if (startDate != null && createdAt.isBefore(startDate)) return false;
+      if (endDate != null && createdAt.isAfter(endDate)) return false;
+      return true;
+    }).toList();
   }
 
   Future<List<StudyRecord>> _getLocalRecords(String userId) async {
@@ -223,6 +257,40 @@ class StudyRecordService extends ChangeNotifier {
     _progressCache
       ..clear()
       ..addAll(buildProgressIndex(records));
+  }
+
+  static List<StudyRecord> _mergeStudyRecords(
+    Iterable<StudyRecord> localRecords,
+    Iterable<StudyRecord> serverRecords,
+  ) {
+    final merged = <StudyRecord>[];
+    final seen = <String>{};
+
+    for (final record in [...localRecords, ...serverRecords]) {
+      final key = _recordMergeKey(record);
+      if (seen.add(key)) {
+        merged.add(record);
+      }
+    }
+
+    merged.sort((left, right) {
+      final leftTime = left.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final rightTime =
+          right.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return rightTime.compareTo(leftTime);
+    });
+    return merged;
+  }
+
+  static String _recordMergeKey(StudyRecord record) {
+    final timestamp = record.createdAt?.toUtc().toIso8601String() ?? 'no-time';
+    return [
+      record.userId ?? '',
+      record.type.value,
+      record.targetId,
+      record.status.value,
+      timestamp,
+    ].join('|');
   }
 
   void _upsertProgress(StudyRecord record) {

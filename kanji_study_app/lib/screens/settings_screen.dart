@@ -8,6 +8,7 @@ import 'settings_notification_screen.dart';
 import 'settings_ai_screen.dart';
 import 'settings_info_screen.dart';
 import 'settings_privacy_screen.dart';
+import 'settings_learning_goal_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -60,6 +61,21 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   FItem(
+                    prefix: Icon(PhosphorIconsRegular.trophy, size: 26),
+                    title: Text(
+                      '학습 목표',
+                      style: typography.md.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    details: Text('하루 단어 수와 목표 JLPT 설정', style: typography.sm),
+                    suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
+                    onPress: () => _navigateTo(
+                      context,
+                      const SettingsLearningGoalScreen(),
+                    ),
+                  ),
+                  FItem(
                     prefix: Icon(PhosphorIconsRegular.sparkle, size: 26),
                     title: Text(
                       'AI 설정',
@@ -107,7 +123,12 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  void _navigateTo(BuildContext context, Widget screen) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => screen));
+  Future<void> _navigateTo(BuildContext context, Widget screen) async {
+    final result = await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => screen));
+    if (result == true && context.mounted) {
+      Navigator.of(context).pop(true);
+    }
   }
 }
