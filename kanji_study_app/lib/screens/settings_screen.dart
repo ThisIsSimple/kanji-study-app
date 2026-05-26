@@ -35,7 +35,7 @@ class SettingsScreen extends StatelessWidget {
                     prefix: Icon(PhosphorIconsRegular.userCircle, size: 26),
                     title: Text(
                       '계정 관리',
-                      style: typography.base.copyWith(
+                      style: typography.md.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -48,7 +48,7 @@ class SettingsScreen extends StatelessWidget {
                     prefix: Icon(PhosphorIconsRegular.bell, size: 26),
                     title: Text(
                       '알림',
-                      style: typography.base.copyWith(
+                      style: typography.md.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -63,7 +63,7 @@ class SettingsScreen extends StatelessWidget {
                     prefix: Icon(PhosphorIconsRegular.sparkle, size: 26),
                     title: Text(
                       'AI 설정',
-                      style: typography.base.copyWith(
+                      style: typography.md.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -76,7 +76,7 @@ class SettingsScreen extends StatelessWidget {
                     prefix: Icon(PhosphorIconsRegular.shieldCheck, size: 26),
                     title: Text(
                       '개인정보',
-                      style: typography.base.copyWith(
+                      style: typography.md.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -89,7 +89,7 @@ class SettingsScreen extends StatelessWidget {
                     prefix: Icon(PhosphorIconsRegular.info, size: 26),
                     title: Text(
                       '앱 정보',
-                      style: typography.base.copyWith(
+                      style: typography.md.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),

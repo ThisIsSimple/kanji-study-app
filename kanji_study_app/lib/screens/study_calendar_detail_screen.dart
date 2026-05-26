@@ -45,9 +45,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
     );
     _initialPage = _totalDays ~/ 2;
     _pageController = PageController(initialPage: _initialPage);
-    _lineCalendarController = FCalendarController.date(
-      initialSelection: _currentDate,
-    );
+    _lineCalendarController = FCalendarController.date(initial: _currentDate);
     _loadStudyDetailsForDate(_currentDate);
   }
 
@@ -177,12 +175,16 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: FLineCalendar(
-              controller: _lineCalendarController,
-              start: DateTime(2024, 1, 1),
-              end: DateTime.now().add(const Duration(days: 365)),
-              today: DateTime.now(),
-              initialScroll: _currentDate,
-              onChange: _onLineCalendarChanged,
+              control: FLineCalendarControl.managed(
+                controller: _lineCalendarController,
+                onChange: _onLineCalendarChanged,
+              ),
+              scrollControl: FLineCalendarScrollControl.managed(
+                start: DateTime(2024, 1, 1),
+                end: DateTime.now().add(const Duration(days: 365)),
+                today: DateTime.now(),
+                initialDate: _currentDate,
+              ),
             ),
           ),
 
@@ -220,7 +222,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
                         const SizedBox(height: 16),
                         Text(
                           '이 날짜에 학습 기록이 없습니다',
-                          style: theme.typography.base.copyWith(
+                          style: theme.typography.md.copyWith(
                             color: theme.colors.mutedForeground,
                           ),
                         ),

@@ -300,11 +300,10 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('예문 생성 실패: $e'),
-            backgroundColor: FTheme.of(context).colors.destructive,
-          ),
+        showAppToast(
+          context,
+          message: '예문 생성 실패: $e',
+          type: AppToastType.error,
         );
       }
     }
@@ -352,7 +351,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
           padding: const EdgeInsets.all(16),
           child: Text(
             _relatedWordsError!,
-            style: theme.typography.base.copyWith(
+            style: theme.typography.md.copyWith(
               color: theme.colors.mutedForeground,
             ),
           ),
@@ -366,7 +365,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
           padding: const EdgeInsets.all(16),
           child: Text(
             '로컬에 저장된 단어 중 "${kanji.character}"가 포함된 단어가 없습니다.',
-            style: theme.typography.base.copyWith(
+            style: theme.typography.md.copyWith(
               color: theme.colors.mutedForeground,
             ),
           ),
@@ -607,7 +606,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                           ),
                           child: Text(
                             kanji.radical!,
-                            style: theme.typography.base,
+                            style: theme.typography.md,
                           ),
                         ),
                       ],
@@ -641,7 +640,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                               ),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: Text(reading, style: theme.typography.base),
+                            child: Text(reading, style: theme.typography.md),
                           );
                         }),
                       ],
@@ -677,7 +676,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                               ),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: Text(reading, style: theme.typography.base),
+                            child: Text(reading, style: theme.typography.md),
                           );
                         }),
                       ],
@@ -740,7 +739,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
               if (_geminiService.isInitialized)
                 FButton(
                   onPress: _isGeneratingExamples ? null : _generateExamples,
-                  style: FButtonStyle.outline(),
+                  variant: FButtonVariant.outline,
                   child: _isGeneratingExamples
                       ? const SizedBox(
                           width: 16,
@@ -805,7 +804,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: theme.colors.border, width: 1),
                   ),
-                  child: Text(example.toString(), style: theme.typography.base),
+                  child: Text(example.toString(), style: theme.typography.md),
                 ),
               );
             }),
@@ -815,7 +814,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
               child: Center(
                 child: Text(
                   '예문이 없습니다.',
-                  style: theme.typography.base.copyWith(
+                  style: theme.typography.md.copyWith(
                     color: theme.colors.mutedForeground,
                   ),
                 ),
@@ -859,14 +858,15 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
             FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
           ],
           suffixes: [
-            IconButton(
-              icon: Icon(
+            FButton.icon(
+              variant: FButtonVariant.ghost,
+              onPress: _toggleFavorite,
+              child: Icon(
                 _isFavorite
                     ? PhosphorIconsFill.star
                     : PhosphorIconsRegular.star,
                 color: _isFavorite ? Colors.amber : null,
               ),
-              onPressed: _toggleFavorite,
             ),
           ],
         ),
@@ -907,12 +907,13 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
           FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
         ],
         suffixes: [
-          IconButton(
-            icon: Icon(
+          FButton.icon(
+            variant: FButtonVariant.ghost,
+            onPress: _toggleFavorite,
+            child: Icon(
               _isFavorite ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
               color: _isFavorite ? Colors.amber : null,
             ),
-            onPressed: _toggleFavorite,
           ),
         ],
       ),

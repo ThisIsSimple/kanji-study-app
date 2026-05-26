@@ -332,7 +332,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                           Expanded(
                                             child: Text(
                                               label,
-                                              style: theme.typography.base
+                                              style: theme.typography.md
                                                   .copyWith(
                                                     fontWeight: isSelected
                                                         ? FontWeight.w600
@@ -421,7 +421,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                           Expanded(
                                             child: Text(
                                               label,
-                                              style: theme.typography.base
+                                              style: theme.typography.md
                                                   .copyWith(
                                                     fontWeight: isSelected
                                                         ? FontWeight.w600
@@ -484,7 +484,9 @@ class _WordsScreenState extends State<WordsScreen> {
               ? CustomHeader(
                   title: Expanded(
                     child: FTextField(
-                      controller: _searchController,
+                      control: FTextFieldControl.managed(
+                        controller: _searchController,
+                      ),
                       hint: '일본어, 한글, 후리가나로 검색...',
                       autofocus: true,
                     ),
@@ -574,7 +576,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                   _showOnlyFavorites
                                       ? '즐겨찾기한 단어가 없습니다'
                                       : '검색 결과가 없습니다',
-                                  style: theme.typography.base.copyWith(
+                                  style: theme.typography.md.copyWith(
                                     color: theme.colors.mutedForeground,
                                   ),
                                 ),

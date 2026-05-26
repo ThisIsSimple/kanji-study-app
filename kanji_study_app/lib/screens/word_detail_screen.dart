@@ -210,11 +210,10 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
     } catch (e) {
       debugPrint('Error generating examples: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('예문 생성 중 오류가 발생했습니다: $e'),
-            backgroundColor: Colors.red,
-          ),
+        showAppToast(
+          context,
+          message: '예문 생성 중 오류가 발생했습니다: $e',
+          type: AppToastType.error,
         );
       }
     } finally {
@@ -307,7 +306,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                                 Flexible(
                                   child: Text(
                                     meaning.meaning,
-                                    style: theme.typography.base.copyWith(
+                                    style: theme.typography.md.copyWith(
                                       height: 1.2,
                                     ),
                                     textAlign: TextAlign.center,
@@ -387,7 +386,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
               if (_geminiService.isInitialized)
                 FButton(
                   onPress: _isGeneratingExamples ? null : _generateExamples,
-                  style: FButtonStyle.outline(),
+                  variant: FButtonVariant.outline,
                   child: _isGeneratingExamples
                       ? const SizedBox(
                           width: 16,
@@ -459,7 +458,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                       const SizedBox(height: 16),
                       Text(
                         'AI로 예문을 생성해보세요',
-                        style: theme.typography.base.copyWith(
+                        style: theme.typography.md.copyWith(
                           color: theme.colors.mutedForeground,
                         ),
                       ),
@@ -490,14 +489,15 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
             FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
           ],
           suffixes: [
-            IconButton(
-              icon: Icon(
+            FButton.icon(
+              variant: FButtonVariant.ghost,
+              onPress: _toggleFavorite,
+              child: Icon(
                 _isFavorite
                     ? PhosphorIconsFill.star
                     : PhosphorIconsRegular.star,
                 color: _isFavorite ? Colors.amber : null,
               ),
-              onPressed: _toggleFavorite,
             ),
           ],
         ),
@@ -537,12 +537,13 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
           FHeaderAction.back(onPress: () => Navigator.of(context).pop()),
         ],
         suffixes: [
-          IconButton(
-            icon: Icon(
+          FButton.icon(
+            variant: FButtonVariant.ghost,
+            onPress: _toggleFavorite,
+            child: Icon(
               _isFavorite ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
               color: _isFavorite ? Colors.amber : null,
             ),
-            onPressed: _toggleFavorite,
           ),
         ],
       ),

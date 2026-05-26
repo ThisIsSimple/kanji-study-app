@@ -31,7 +31,7 @@ class SuccessRateIndicator extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           Text(
             '성공률: ${(successRate * 100).toStringAsFixed(1)}%',
-            style: theme.typography.base.copyWith(
+            style: theme.typography.md.copyWith(
               fontWeight: FontWeight.w600,
               color: theme.colors.secondary,
             ),

@@ -91,7 +91,7 @@ class _AiQuizResultScreenState extends State<AiQuizResultScreen> {
                     children: [
                       Expanded(
                         child: FButton(
-                          style: FButtonStyle.outline(),
+                          variant: FButtonVariant.outline,
                           onPress: () => Navigator.of(
                             context,
                           ).popUntil((route) => route.isFirst),

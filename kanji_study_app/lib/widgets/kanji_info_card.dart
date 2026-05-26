@@ -260,7 +260,7 @@ class _KanjiInfoCardState extends State<KanjiInfoCard> {
         color: theme.colors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(text, style: theme.typography.base),
+      child: Text(text, style: theme.typography.md),
     );
   }
 }

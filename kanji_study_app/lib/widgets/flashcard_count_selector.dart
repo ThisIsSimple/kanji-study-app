@@ -186,7 +186,7 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
                               child: Center(
                                 child: Text(
                                   '$count개',
-                                  style: theme.typography.base.copyWith(
+                                  style: theme.typography.md.copyWith(
                                     fontWeight: isSelected
                                         ? FontWeight.bold
                                         : FontWeight.normal,
@@ -218,16 +218,19 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
                             children: [
                               Expanded(
                                 child: FTextField(
-                                  controller: _customCountController,
+                                  control: FTextFieldControl.managed(
+                                    controller: _customCountController,
+                                    onChange: (value) =>
+                                        _onCustomCountChanged(value.text),
+                                  ),
                                   keyboardType: TextInputType.number,
                                   maxLines: 1,
-                                  onChange: _onCustomCountChanged,
                                 ),
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 '개',
-                                style: theme.typography.base.copyWith(
+                                style: theme.typography.md.copyWith(
                                   color: theme.colors.mutedForeground,
                                 ),
                               ),
@@ -271,7 +274,7 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
                             child: Center(
                               child: Text(
                                 '전체 (${widget.totalCount}개)',
-                                style: theme.typography.base.copyWith(
+                                style: theme.typography.md.copyWith(
                                   fontWeight:
                                       _selectedCount == widget.totalCount
                                       ? FontWeight.bold

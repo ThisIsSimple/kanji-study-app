@@ -52,7 +52,6 @@ class ConnectivityService {
     if (_isOnline != isOnline) {
       _isOnline = isOnline;
       _connectivityController.add(_isOnline);
-      debugPrint('Connectivity changed: ${_isOnline ? "Online" : "Offline"}');
     }
   }
 

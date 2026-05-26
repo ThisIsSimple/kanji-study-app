@@ -114,8 +114,6 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
     // Check if this is a Supabase OAuth callback
     if (uri.scheme == 'space.cordelia273.konnakanji' &&
         uri.host == 'login-callback') {
-      debugPrint('Supabase OAuth callback detected');
-
       // Supabase SDK will automatically handle the OAuth callback
       // The auth state change listener will be triggered
       // No additional handling needed here
@@ -144,12 +142,16 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
       ],
       builder: (context, child) => FTheme(
         data: AppTheme.getFTheme(),
-        child: AppSessionGate(
-          isInitialized: SupabaseService.instance.isInitialized,
-          hasSession: SupabaseService.instance.hasActiveSession,
-          sessionStream: SupabaseService.instance.sessionPresenceChanges(),
-          authenticatedChild: child!,
-          unauthenticatedChild: const LoginScreen(),
+        child: FTooltipGroup(
+          child: FToaster(
+            child: AppSessionGate(
+              isInitialized: SupabaseService.instance.isInitialized,
+              hasSession: SupabaseService.instance.hasActiveSession,
+              sessionStream: SupabaseService.instance.sessionPresenceChanges(),
+              authenticatedChild: child!,
+              unauthenticatedChild: const LoginScreen(),
+            ),
+          ),
         ),
       ),
       home: const MainScreen(),

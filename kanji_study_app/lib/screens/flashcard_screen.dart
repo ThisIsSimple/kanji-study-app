@@ -132,7 +132,6 @@ class _FlashcardScreenState extends State<FlashcardScreen>
     showFDialog(
       context: context,
       builder: (context, style, animation) => FDialog(
-        style: style.call,
         animation: animation,
         direction: Axis.vertical,
         title: Row(
@@ -195,13 +194,13 @@ class _FlashcardScreenState extends State<FlashcardScreen>
       children: [
         Text(
           label,
-          style: theme.typography.base.copyWith(
+          style: theme.typography.md.copyWith(
             color: theme.colors.mutedForeground,
           ),
         ),
         Text(
           value,
-          style: theme.typography.base.copyWith(
+          style: theme.typography.md.copyWith(
             fontWeight: FontWeight.bold,
             color: valueColor ?? theme.colors.foreground,
           ),
@@ -259,20 +258,19 @@ class _FlashcardScreenState extends State<FlashcardScreen>
           ],
         ),
         suffixes: [
-          IconButton(
-            icon: Icon(PhosphorIconsRegular.x),
-            onPressed: () {
+          FButton.icon(
+            variant: FButtonVariant.ghost,
+            onPress: () {
               showFDialog(
                 context: context,
-                builder: (context, style, animation) => FDialog(
-                  style: style.call,
+                builder: (context, _, animation) => FDialog(
                   animation: animation,
                   direction: Axis.horizontal,
                   title: const Text('학습 종료'),
                   body: const Text('플래시카드 학습을 종료하시겠습니까?\n진행 상태가 저장됩니다.'),
                   actions: [
                     FButton(
-                      style: FButtonStyle.outline(),
+                      variant: FButtonVariant.outline,
                       onPress: () => Navigator.of(context).pop(),
                       child: const Text('취소'),
                     ),
@@ -287,6 +285,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                 ),
               );
             },
+            child: Icon(PhosphorIconsRegular.x),
           ),
         ],
       ),
@@ -460,7 +459,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
         border: Border.all(color: theme.colors.border, width: 2),
       ),
       child: Center(
-        child: Text('카드를 불러올 수 없습니다', style: theme.typography.base.copyWith()),
+        child: Text('카드를 불러올 수 없습니다', style: theme.typography.md.copyWith()),
       ),
     );
   }
@@ -489,7 +488,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
         border: Border.all(color: theme.colors.border, width: 2),
       ),
       child: Center(
-        child: Text('카드를 불러올 수 없습니다', style: theme.typography.base.copyWith()),
+        child: Text('카드를 불러올 수 없습니다', style: theme.typography.md.copyWith()),
       ),
     );
   }

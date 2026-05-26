@@ -42,7 +42,7 @@ class StudyStatCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             value,
-            style: theme.typography.base.copyWith(
+            style: theme.typography.md.copyWith(
               fontWeight: FontWeight.bold,
               color: color,
             ),

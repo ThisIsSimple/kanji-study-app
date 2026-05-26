@@ -92,7 +92,7 @@ class ExampleCard extends StatelessWidget {
           // Korean translation
           Text(
             korean,
-            style: theme.typography.base.copyWith(
+            style: theme.typography.md.copyWith(
               fontWeight: FontWeight.w500,
               fontSize: koreanFontSize,
             ),

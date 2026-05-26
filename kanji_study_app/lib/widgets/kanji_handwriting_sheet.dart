@@ -223,7 +223,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
                   ),
                   FButton.icon(
                     onPress: () => Navigator.of(context).pop(),
-                    style: FButtonStyle.ghost(),
+                    variant: FButtonVariant.ghost,
                     child: Icon(PhosphorIconsRegular.x, size: 20),
                   ),
                 ],
@@ -348,7 +348,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
             ),
             FButton(
               onPress: _strokes.isEmpty ? null : _clearCanvas,
-              style: FButtonStyle.outline(),
+              variant: FButtonVariant.outline,
               child: const Text('지우기'),
             ),
           ],
@@ -375,7 +375,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
               return ActionChip(
                 label: Text(
                   candidate,
-                  style: theme.typography.base.copyWith(
+                  style: theme.typography.md.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),

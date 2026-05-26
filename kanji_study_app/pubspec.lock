@@ -417,18 +417,18 @@ packages:
     dependency: "direct main"
     description:
       name: forui
-      sha256: "6cc43d4a07fefc8a6ff875483546babf614ec68ab091016399ab5526ac8124b9"
+      sha256: "91488f812d61016385410e403d2f9690408e3f89b3f18e53d1c40c576a73f600"
       url: "https://pub.dev"
     source: hosted
-    version: "0.16.0"
+    version: "0.22.1"
   forui_assets:
     dependency: transitive
     description:
       name: forui_assets
-      sha256: "0f74f49250bca9076b5ee9ffb9c7f0476c436f9a8299aa68aa7f1cb3f1b429f4"
+      sha256: "5d81724c7d6b1bb538a0220fabcbeb5ceb0491ba3e80d5a19d694688e8fd1fbe"
       url: "https://pub.dev"
     source: hosted
-    version: "0.16.0"
+    version: "0.22.0"
   frontend_server_client:
     dependency: transitive
     description:
@@ -645,14 +645,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-  nitrogen_types:
-    dependency: transitive
-    description:
-      name: nitrogen_types
-      sha256: "5d4ec453aea14e34607bc6021ff1381192e8fcd8541bf103638baa4d013e668f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.4.0+1"
   nm:
     dependency: transitive
     description:
@@ -1234,5 +1226,5 @@ packages:
     source: hosted
     version: "2.1.0"
 sdks:
-  dart: ">=3.10.0-0 <4.0.0"
-  flutter: ">=3.35.0"
+  dart: ">=3.12.0 <4.0.0"
+  flutter: ">=3.44.0"

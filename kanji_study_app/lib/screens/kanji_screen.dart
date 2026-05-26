@@ -366,7 +366,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                                               Expanded(
                                                 child: Text(
                                                   label,
-                                                  style: theme.typography.base
+                                                  style: theme.typography.md
                                                       .copyWith(
                                                         fontWeight: isSelected
                                                             ? FontWeight.w600
@@ -467,7 +467,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                                               Expanded(
                                                 child: Text(
                                                   label,
-                                                  style: theme.typography.base
+                                                  style: theme.typography.md
                                                       .copyWith(
                                                         fontWeight: isSelected
                                                             ? FontWeight.w600
@@ -566,7 +566,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                                               Expanded(
                                                 child: Text(
                                                   label,
-                                                  style: theme.typography.base
+                                                  style: theme.typography.md
                                                       .copyWith(
                                                         fontWeight: isSelected
                                                             ? FontWeight.w600
@@ -688,7 +688,9 @@ class _KanjiScreenState extends State<KanjiScreen> {
               ? CustomHeader(
                   title: Expanded(
                     child: FTextField(
-                      controller: _searchController,
+                      control: FTextFieldControl.managed(
+                        controller: _searchController,
+                      ),
                       hint: '한자, 의미, 읽기로 검색...',
                       autofocus: _autofocusSearchField,
                     ),
@@ -788,7 +790,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                                   _showOnlyFavorites
                                       ? '즐겨찾기한 한자가 없습니다'
                                       : '검색 결과가 없습니다',
-                                  style: theme.typography.base.copyWith(
+                                  style: theme.typography.md.copyWith(
                                     color: theme.colors.mutedForeground,
                                   ),
                                 ),

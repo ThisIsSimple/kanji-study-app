@@ -13,6 +13,7 @@ import 'kanji_detail_screen.dart';
 import '../widgets/monthly_word_heatmap.dart';
 import '../widgets/today_learning_goal_card.dart';
 import '../widgets/news_placeholder_card.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/custom_header.dart';
 import '../constants/app_spacing.dart';
 
@@ -64,11 +65,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // 오프라인 상태에서 초기 다운로드 실패 시 안내
         if (!_connectivityService.isOnline) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('초기 데이터 다운로드를 위해 인터넷 연결이 필요합니다.'),
-              duration: Duration(seconds: 5),
-            ),
+          showAppToast(
+            context,
+            message: '초기 데이터 다운로드를 위해 인터넷 연결이 필요합니다.',
+            type: AppToastType.error,
+            duration: const Duration(seconds: 5),
           );
         }
       }
@@ -166,10 +167,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             todayKanji: todayKanji!,
                             onStartStudy: _navigateToStudy,
                             onReviewTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('복습 기능은 곧 추가될 예정입니다.'),
-                                ),
+                              showAppToast(
+                                context,
+                                message: '복습 기능은 곧 추가될 예정입니다.',
                               );
                             },
                           ),

@@ -179,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 8),
                         Text(
                           '일본어 공부, 바로 이런 느낌!',
-                          style: theme.typography.base.copyWith(
+                          style: theme.typography.md.copyWith(
                             color: theme.colors.mutedForeground,
                           ),
                         ),
@@ -253,7 +253,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Guest Login Button
                         FButton(
                           onPress: _isLoading ? null : _handleGuestLogin,
-                          style: FButtonStyle.secondary(),
+                          variant: FButtonVariant.secondary,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [

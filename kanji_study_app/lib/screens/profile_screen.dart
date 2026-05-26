@@ -387,7 +387,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           ),
                                         );
                                       },
-                                      style: FButtonStyle.outline(),
+                                      variant: FButtonVariant.outline,
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [

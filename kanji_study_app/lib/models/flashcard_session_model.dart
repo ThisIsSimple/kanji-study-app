@@ -62,12 +62,6 @@ class FlashcardSession {
     return null;
   }
 
-  /// 하위 호환성을 위한 getter (deprecated)
-  @Deprecated(
-    'Use currentItemId instead. This will be removed in a future version.',
-  )
-  int? get currentWordId => currentItemId;
-
   /// Get progress percentage (0-100)
   double get progressPercentage {
     if (itemIds.isEmpty) return 0;
