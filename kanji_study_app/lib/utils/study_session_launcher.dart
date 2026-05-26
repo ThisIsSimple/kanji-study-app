@@ -12,6 +12,43 @@ import '../widgets/flashcard_count_selector.dart';
 class StudySessionLauncher {
   const StudySessionLauncher._();
 
+  static Future<void> launchFixed<T>({
+    required BuildContext context,
+    required String itemType,
+    required List<T> items,
+    required FlashcardService flashcardService,
+    required String emptyMessage,
+    required List<FlashcardItem> Function(List<T> items) toFlashcardItems,
+    required Future<void> Function() onComplete,
+  }) async {
+    if (items.isEmpty) {
+      final theme = FTheme.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(emptyMessage),
+          backgroundColor: theme.colors.destructive,
+        ),
+      );
+      return;
+    }
+
+    final existingSession = await flashcardService.loadSessionByType(itemType);
+    if (existingSession != null &&
+        !existingSession.isCompleted &&
+        context.mounted) {
+      await flashcardService.clearSession(itemType);
+    }
+
+    if (!context.mounted) return;
+    _pushFlashcards(
+      context: context,
+      items: items,
+      session: null,
+      toFlashcardItems: toFlashcardItems,
+      onComplete: onComplete,
+    );
+  }
+
   static Future<void> launch<T>({
     required BuildContext context,
     required String itemType,

@@ -8,6 +8,7 @@ import 'settings_notification_screen.dart';
 import 'settings_ai_screen.dart';
 import 'settings_info_screen.dart';
 import 'settings_privacy_screen.dart';
+import 'settings_learning_goal_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -57,6 +58,21 @@ class SettingsScreen extends StatelessWidget {
                     onPress: () => _navigateTo(
                       context,
                       const SettingsNotificationScreen(),
+                    ),
+                  ),
+                  FItem(
+                    prefix: Icon(PhosphorIconsRegular.trophy, size: 26),
+                    title: Text(
+                      '학습 목표',
+                      style: typography.md.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    details: Text('하루 단어 수와 목표 JLPT 설정', style: typography.sm),
+                    suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
+                    onPress: () => _navigateTo(
+                      context,
+                      const SettingsLearningGoalScreen(),
                     ),
                   ),
                   FItem(
