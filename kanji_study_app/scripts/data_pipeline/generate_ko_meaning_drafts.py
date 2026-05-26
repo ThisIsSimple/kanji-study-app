@@ -133,6 +133,7 @@ def build_cli_prompt(rows: list[dict[str, Any]]) -> str:
         "- 영어 뜻을 직역하지 말고 일본어 단어/읽기에 맞는 자연스러운 한국어 뜻을 쓰세요.\n"
         "- 뜻마다 30자 이내를 권장하고, 예문/설명 문장은 쓰지 마세요.\n"
         "- 확실하지 않으면 가장 일반적인 뜻만 반환하세요.\n\n"
+        f"- 입력 entries {len(entries)}개 각각에 대해 translations 항목을 정확히 1개씩 반환하세요.\n\n"
         f"입력 JSON:\n{json.dumps({'entries': entries}, ensure_ascii=False, indent=2)}"
     )
 
@@ -266,6 +267,7 @@ def generate_cli_mapping(
         parsed_output_path = checkpoint_dir / f"{base_name}_translations.json"
         codex_last_message_path = checkpoint_dir / f"{base_name}_codex_last_message.json"
 
+        expected_keys = {draft_key(row) for row in batch_rows}
         prompt_path.write_text(prompt, encoding="utf-8")
         prompt_files.append(str(prompt_path))
 
@@ -296,6 +298,16 @@ def generate_cli_mapping(
                 )
 
             mapping.update(batch_mapping)
+            missing_keys = sorted(expected_keys.difference(batch_mapping.keys()))
+            if missing_keys:
+                failed_batches.append(
+                    {
+                        "batch": batch_index,
+                        "prompt": str(prompt_path),
+                        "error": f"missing {len(missing_keys)} translations from CLI output",
+                        "missing_keys": missing_keys[:20],
+                    }
+                )
             completed_batches += 1
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, json.JSONDecodeError, ValueError) as error:
             failed_batches.append({"batch": batch_index, "prompt": str(prompt_path), **cli_error_report(error)})
@@ -398,7 +410,8 @@ def apply_drafts(
     limit: int | None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     cli_report: dict[str, Any] | None = None
-    target_rows = rows_needing_translation(words, limit)
+    candidate_rows = rows_needing_translation(words, limit)
+    target_rows = candidate_rows
     allowed_keys: set[str] | None = None
     if provider in ("claude-cli", "codex-cli"):
         checkpoint_mapping = load_checkpoint_mapping(apply_drafts.output_dir, provider, model)
@@ -417,7 +430,7 @@ def apply_drafts(
             apply_drafts.prompts_only,
         )
         mapping = {**mapping, **cli_mapping}
-        allowed_keys = set(mapping.keys())
+        allowed_keys = {draft_key(row) for row in candidate_rows}
         cli_report["checkpoint_translations"] = len(checkpoint_mapping)
         cli_report["generated_target_rows"] = len(target_rows)
     else:
