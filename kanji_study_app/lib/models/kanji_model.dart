@@ -13,6 +13,15 @@ class Kanji {
   final List<KanjiExample> examples;
   final String? radical; // 부수
   final String? commentary; // 한자 해설
+  final String source;
+  final String? externalId;
+  final String? sourceVersion;
+  final String qualityStatus;
+  final String meaningSource;
+  final bool isCommon;
+  final int? priorityRank;
+  final List<String> tags;
+  final DateTime? updatedAt;
 
   const Kanji({
     required this.id,
@@ -27,6 +36,15 @@ class Kanji {
     required this.examples,
     this.radical,
     this.commentary,
+    this.source = 'legacy_excel',
+    this.externalId,
+    this.sourceVersion,
+    this.qualityStatus = 'reviewed',
+    this.meaningSource = 'legacy_excel',
+    this.isCommon = false,
+    this.priorityRank,
+    this.tags = const [],
+    this.updatedAt,
   });
 
   factory Kanji.fromJson(Map<String, dynamic> json) {
@@ -70,6 +88,17 @@ class Kanji {
       examples: parseExamples(json['examples']),
       radical: json['radical'] as String?,
       commentary: json['commentary'] as String?,
+      source: json['source'] as String? ?? 'legacy_excel',
+      externalId: json['external_id'] as String?,
+      sourceVersion: json['source_version'] as String?,
+      qualityStatus: json['quality_status'] as String? ?? 'reviewed',
+      meaningSource: json['meaning_source'] as String? ?? 'legacy_excel',
+      isCommon: json['is_common'] as bool? ?? false,
+      priorityRank: json['priority_rank'] as int?,
+      tags: json['tags'] != null ? List<String>.from(json['tags'] as List) : [],
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'].toString())
+          : null,
     );
   }
 
@@ -87,6 +116,15 @@ class Kanji {
       'examples': examples.map((e) => e.toJson()).toList(),
       'radical': radical,
       'commentary': commentary,
+      'source': source,
+      'external_id': externalId,
+      'source_version': sourceVersion,
+      'quality_status': qualityStatus,
+      'meaning_source': meaningSource,
+      'is_common': isCommon,
+      'priority_rank': priorityRank,
+      'tags': tags,
+      'updated_at': updatedAt?.toUtc().toIso8601String(),
     };
   }
 }

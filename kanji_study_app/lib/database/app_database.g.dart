@@ -139,6 +139,109 @@ class $KanjiTableTable extends KanjiTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('legacy_excel'),
+  );
+  static const VerificationMeta _externalIdMeta = const VerificationMeta(
+    'externalId',
+  );
+  @override
+  late final GeneratedColumn<String> externalId = GeneratedColumn<String>(
+    'external_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceVersionMeta = const VerificationMeta(
+    'sourceVersion',
+  );
+  @override
+  late final GeneratedColumn<String> sourceVersion = GeneratedColumn<String>(
+    'source_version',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _qualityStatusMeta = const VerificationMeta(
+    'qualityStatus',
+  );
+  @override
+  late final GeneratedColumn<String> qualityStatus = GeneratedColumn<String>(
+    'quality_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('reviewed'),
+  );
+  static const VerificationMeta _meaningSourceMeta = const VerificationMeta(
+    'meaningSource',
+  );
+  @override
+  late final GeneratedColumn<String> meaningSource = GeneratedColumn<String>(
+    'meaning_source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('legacy_excel'),
+  );
+  static const VerificationMeta _isCommonMeta = const VerificationMeta(
+    'isCommon',
+  );
+  @override
+  late final GeneratedColumn<bool> isCommon = GeneratedColumn<bool>(
+    'is_common',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_common" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _priorityRankMeta = const VerificationMeta(
+    'priorityRank',
+  );
+  @override
+  late final GeneratedColumn<int> priorityRank = GeneratedColumn<int>(
+    'priority_rank',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<List<String>, String> tags =
+      GeneratedColumn<String>(
+        'tags',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      ).withConverter<List<String>>($KanjiTableTable.$convertertags);
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -154,6 +257,15 @@ class $KanjiTableTable extends KanjiTable
     examples,
     radical,
     commentary,
+    source,
+    externalId,
+    sourceVersion,
+    qualityStatus,
+    meaningSource,
+    isCommon,
+    priorityRank,
+    tags,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -215,6 +327,66 @@ class $KanjiTableTable extends KanjiTable
       context.handle(
         _commentaryMeta,
         commentary.isAcceptableOrUnknown(data['commentary']!, _commentaryMeta),
+      );
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
+    if (data.containsKey('external_id')) {
+      context.handle(
+        _externalIdMeta,
+        externalId.isAcceptableOrUnknown(data['external_id']!, _externalIdMeta),
+      );
+    }
+    if (data.containsKey('source_version')) {
+      context.handle(
+        _sourceVersionMeta,
+        sourceVersion.isAcceptableOrUnknown(
+          data['source_version']!,
+          _sourceVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quality_status')) {
+      context.handle(
+        _qualityStatusMeta,
+        qualityStatus.isAcceptableOrUnknown(
+          data['quality_status']!,
+          _qualityStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('meaning_source')) {
+      context.handle(
+        _meaningSourceMeta,
+        meaningSource.isAcceptableOrUnknown(
+          data['meaning_source']!,
+          _meaningSourceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_common')) {
+      context.handle(
+        _isCommonMeta,
+        isCommon.isAcceptableOrUnknown(data['is_common']!, _isCommonMeta),
+      );
+    }
+    if (data.containsKey('priority_rank')) {
+      context.handle(
+        _priorityRankMeta,
+        priorityRank.isAcceptableOrUnknown(
+          data['priority_rank']!,
+          _priorityRankMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
     return context;
@@ -290,6 +462,44 @@ class $KanjiTableTable extends KanjiTable
         DriftSqlType.string,
         data['${effectivePrefix}commentary'],
       ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      externalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}external_id'],
+      ),
+      sourceVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_version'],
+      ),
+      qualityStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quality_status'],
+      )!,
+      meaningSource: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}meaning_source'],
+      )!,
+      isCommon: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_common'],
+      )!,
+      priorityRank: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}priority_rank'],
+      ),
+      tags: $KanjiTableTable.$convertertags.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}tags'],
+        )!,
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -310,6 +520,8 @@ class $KanjiTableTable extends KanjiTable
       const StringListConverter();
   static TypeConverter<List<String>, String> $converterexamples =
       const StringListConverter();
+  static TypeConverter<List<String>, String> $convertertags =
+      const StringListConverter();
 }
 
 class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
@@ -326,6 +538,15 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
   final List<String> examples;
   final String? radical;
   final String? commentary;
+  final String source;
+  final String? externalId;
+  final String? sourceVersion;
+  final String qualityStatus;
+  final String meaningSource;
+  final bool isCommon;
+  final int? priorityRank;
+  final List<String> tags;
+  final DateTime? updatedAt;
   const KanjiTableData({
     required this.id,
     required this.character,
@@ -340,6 +561,15 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     required this.examples,
     this.radical,
     this.commentary,
+    required this.source,
+    this.externalId,
+    this.sourceVersion,
+    required this.qualityStatus,
+    required this.meaningSource,
+    required this.isCommon,
+    this.priorityRank,
+    required this.tags,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -385,6 +615,27 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     if (!nullToAbsent || commentary != null) {
       map['commentary'] = Variable<String>(commentary);
     }
+    map['source'] = Variable<String>(source);
+    if (!nullToAbsent || externalId != null) {
+      map['external_id'] = Variable<String>(externalId);
+    }
+    if (!nullToAbsent || sourceVersion != null) {
+      map['source_version'] = Variable<String>(sourceVersion);
+    }
+    map['quality_status'] = Variable<String>(qualityStatus);
+    map['meaning_source'] = Variable<String>(meaningSource);
+    map['is_common'] = Variable<bool>(isCommon);
+    if (!nullToAbsent || priorityRank != null) {
+      map['priority_rank'] = Variable<int>(priorityRank);
+    }
+    {
+      map['tags'] = Variable<String>(
+        $KanjiTableTable.$convertertags.toSql(tags),
+      );
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -407,6 +658,23 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
       commentary: commentary == null && nullToAbsent
           ? const Value.absent()
           : Value(commentary),
+      source: Value(source),
+      externalId: externalId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(externalId),
+      sourceVersion: sourceVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceVersion),
+      qualityStatus: Value(qualityStatus),
+      meaningSource: Value(meaningSource),
+      isCommon: Value(isCommon),
+      priorityRank: priorityRank == null && nullToAbsent
+          ? const Value.absent()
+          : Value(priorityRank),
+      tags: Value(tags),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -433,6 +701,15 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
       examples: serializer.fromJson<List<String>>(json['examples']),
       radical: serializer.fromJson<String?>(json['radical']),
       commentary: serializer.fromJson<String?>(json['commentary']),
+      source: serializer.fromJson<String>(json['source']),
+      externalId: serializer.fromJson<String?>(json['externalId']),
+      sourceVersion: serializer.fromJson<String?>(json['sourceVersion']),
+      qualityStatus: serializer.fromJson<String>(json['qualityStatus']),
+      meaningSource: serializer.fromJson<String>(json['meaningSource']),
+      isCommon: serializer.fromJson<bool>(json['isCommon']),
+      priorityRank: serializer.fromJson<int?>(json['priorityRank']),
+      tags: serializer.fromJson<List<String>>(json['tags']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -452,6 +729,15 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
       'examples': serializer.toJson<List<String>>(examples),
       'radical': serializer.toJson<String?>(radical),
       'commentary': serializer.toJson<String?>(commentary),
+      'source': serializer.toJson<String>(source),
+      'externalId': serializer.toJson<String?>(externalId),
+      'sourceVersion': serializer.toJson<String?>(sourceVersion),
+      'qualityStatus': serializer.toJson<String>(qualityStatus),
+      'meaningSource': serializer.toJson<String>(meaningSource),
+      'isCommon': serializer.toJson<bool>(isCommon),
+      'priorityRank': serializer.toJson<int?>(priorityRank),
+      'tags': serializer.toJson<List<String>>(tags),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -469,6 +755,15 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     List<String>? examples,
     Value<String?> radical = const Value.absent(),
     Value<String?> commentary = const Value.absent(),
+    String? source,
+    Value<String?> externalId = const Value.absent(),
+    Value<String?> sourceVersion = const Value.absent(),
+    String? qualityStatus,
+    String? meaningSource,
+    bool? isCommon,
+    Value<int?> priorityRank = const Value.absent(),
+    List<String>? tags,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => KanjiTableData(
     id: id ?? this.id,
     character: character ?? this.character,
@@ -483,6 +778,17 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     examples: examples ?? this.examples,
     radical: radical.present ? radical.value : this.radical,
     commentary: commentary.present ? commentary.value : this.commentary,
+    source: source ?? this.source,
+    externalId: externalId.present ? externalId.value : this.externalId,
+    sourceVersion: sourceVersion.present
+        ? sourceVersion.value
+        : this.sourceVersion,
+    qualityStatus: qualityStatus ?? this.qualityStatus,
+    meaningSource: meaningSource ?? this.meaningSource,
+    isCommon: isCommon ?? this.isCommon,
+    priorityRank: priorityRank.present ? priorityRank.value : this.priorityRank,
+    tags: tags ?? this.tags,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   KanjiTableData copyWithCompanion(KanjiTableCompanion data) {
     return KanjiTableData(
@@ -511,6 +817,25 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
       commentary: data.commentary.present
           ? data.commentary.value
           : this.commentary,
+      source: data.source.present ? data.source.value : this.source,
+      externalId: data.externalId.present
+          ? data.externalId.value
+          : this.externalId,
+      sourceVersion: data.sourceVersion.present
+          ? data.sourceVersion.value
+          : this.sourceVersion,
+      qualityStatus: data.qualityStatus.present
+          ? data.qualityStatus.value
+          : this.qualityStatus,
+      meaningSource: data.meaningSource.present
+          ? data.meaningSource.value
+          : this.meaningSource,
+      isCommon: data.isCommon.present ? data.isCommon.value : this.isCommon,
+      priorityRank: data.priorityRank.present
+          ? data.priorityRank.value
+          : this.priorityRank,
+      tags: data.tags.present ? data.tags.value : this.tags,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -529,13 +854,22 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
           ..write('strokeCount: $strokeCount, ')
           ..write('examples: $examples, ')
           ..write('radical: $radical, ')
-          ..write('commentary: $commentary')
+          ..write('commentary: $commentary, ')
+          ..write('source: $source, ')
+          ..write('externalId: $externalId, ')
+          ..write('sourceVersion: $sourceVersion, ')
+          ..write('qualityStatus: $qualityStatus, ')
+          ..write('meaningSource: $meaningSource, ')
+          ..write('isCommon: $isCommon, ')
+          ..write('priorityRank: $priorityRank, ')
+          ..write('tags: $tags, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     character,
     meanings,
@@ -549,7 +883,16 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     examples,
     radical,
     commentary,
-  );
+    source,
+    externalId,
+    sourceVersion,
+    qualityStatus,
+    meaningSource,
+    isCommon,
+    priorityRank,
+    tags,
+    updatedAt,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -566,7 +909,16 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
           other.strokeCount == this.strokeCount &&
           other.examples == this.examples &&
           other.radical == this.radical &&
-          other.commentary == this.commentary);
+          other.commentary == this.commentary &&
+          other.source == this.source &&
+          other.externalId == this.externalId &&
+          other.sourceVersion == this.sourceVersion &&
+          other.qualityStatus == this.qualityStatus &&
+          other.meaningSource == this.meaningSource &&
+          other.isCommon == this.isCommon &&
+          other.priorityRank == this.priorityRank &&
+          other.tags == this.tags &&
+          other.updatedAt == this.updatedAt);
 }
 
 class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
@@ -583,6 +935,15 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
   final Value<List<String>> examples;
   final Value<String?> radical;
   final Value<String?> commentary;
+  final Value<String> source;
+  final Value<String?> externalId;
+  final Value<String?> sourceVersion;
+  final Value<String> qualityStatus;
+  final Value<String> meaningSource;
+  final Value<bool> isCommon;
+  final Value<int?> priorityRank;
+  final Value<List<String>> tags;
+  final Value<DateTime?> updatedAt;
   const KanjiTableCompanion({
     this.id = const Value.absent(),
     this.character = const Value.absent(),
@@ -597,6 +958,15 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     this.examples = const Value.absent(),
     this.radical = const Value.absent(),
     this.commentary = const Value.absent(),
+    this.source = const Value.absent(),
+    this.externalId = const Value.absent(),
+    this.sourceVersion = const Value.absent(),
+    this.qualityStatus = const Value.absent(),
+    this.meaningSource = const Value.absent(),
+    this.isCommon = const Value.absent(),
+    this.priorityRank = const Value.absent(),
+    this.tags = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   KanjiTableCompanion.insert({
     this.id = const Value.absent(),
@@ -612,6 +982,15 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     this.examples = const Value.absent(),
     this.radical = const Value.absent(),
     this.commentary = const Value.absent(),
+    this.source = const Value.absent(),
+    this.externalId = const Value.absent(),
+    this.sourceVersion = const Value.absent(),
+    this.qualityStatus = const Value.absent(),
+    this.meaningSource = const Value.absent(),
+    this.isCommon = const Value.absent(),
+    this.priorityRank = const Value.absent(),
+    this.tags = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : character = Value(character),
        meanings = Value(meanings),
        readingsOn = Value(readingsOn),
@@ -635,6 +1014,15 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     Expression<String>? examples,
     Expression<String>? radical,
     Expression<String>? commentary,
+    Expression<String>? source,
+    Expression<String>? externalId,
+    Expression<String>? sourceVersion,
+    Expression<String>? qualityStatus,
+    Expression<String>? meaningSource,
+    Expression<bool>? isCommon,
+    Expression<int>? priorityRank,
+    Expression<String>? tags,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -650,6 +1038,15 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
       if (examples != null) 'examples': examples,
       if (radical != null) 'radical': radical,
       if (commentary != null) 'commentary': commentary,
+      if (source != null) 'source': source,
+      if (externalId != null) 'external_id': externalId,
+      if (sourceVersion != null) 'source_version': sourceVersion,
+      if (qualityStatus != null) 'quality_status': qualityStatus,
+      if (meaningSource != null) 'meaning_source': meaningSource,
+      if (isCommon != null) 'is_common': isCommon,
+      if (priorityRank != null) 'priority_rank': priorityRank,
+      if (tags != null) 'tags': tags,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -667,6 +1064,15 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     Value<List<String>>? examples,
     Value<String?>? radical,
     Value<String?>? commentary,
+    Value<String>? source,
+    Value<String?>? externalId,
+    Value<String?>? sourceVersion,
+    Value<String>? qualityStatus,
+    Value<String>? meaningSource,
+    Value<bool>? isCommon,
+    Value<int?>? priorityRank,
+    Value<List<String>>? tags,
+    Value<DateTime?>? updatedAt,
   }) {
     return KanjiTableCompanion(
       id: id ?? this.id,
@@ -682,6 +1088,15 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
       examples: examples ?? this.examples,
       radical: radical ?? this.radical,
       commentary: commentary ?? this.commentary,
+      source: source ?? this.source,
+      externalId: externalId ?? this.externalId,
+      sourceVersion: sourceVersion ?? this.sourceVersion,
+      qualityStatus: qualityStatus ?? this.qualityStatus,
+      meaningSource: meaningSource ?? this.meaningSource,
+      isCommon: isCommon ?? this.isCommon,
+      priorityRank: priorityRank ?? this.priorityRank,
+      tags: tags ?? this.tags,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -743,6 +1158,35 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     if (commentary.present) {
       map['commentary'] = Variable<String>(commentary.value);
     }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (externalId.present) {
+      map['external_id'] = Variable<String>(externalId.value);
+    }
+    if (sourceVersion.present) {
+      map['source_version'] = Variable<String>(sourceVersion.value);
+    }
+    if (qualityStatus.present) {
+      map['quality_status'] = Variable<String>(qualityStatus.value);
+    }
+    if (meaningSource.present) {
+      map['meaning_source'] = Variable<String>(meaningSource.value);
+    }
+    if (isCommon.present) {
+      map['is_common'] = Variable<bool>(isCommon.value);
+    }
+    if (priorityRank.present) {
+      map['priority_rank'] = Variable<int>(priorityRank.value);
+    }
+    if (tags.present) {
+      map['tags'] = Variable<String>(
+        $KanjiTableTable.$convertertags.toSql(tags.value),
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -761,7 +1205,16 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
           ..write('strokeCount: $strokeCount, ')
           ..write('examples: $examples, ')
           ..write('radical: $radical, ')
-          ..write('commentary: $commentary')
+          ..write('commentary: $commentary, ')
+          ..write('source: $source, ')
+          ..write('externalId: $externalId, ')
+          ..write('sourceVersion: $sourceVersion, ')
+          ..write('qualityStatus: $qualityStatus, ')
+          ..write('meaningSource: $meaningSource, ')
+          ..write('isCommon: $isCommon, ')
+          ..write('priorityRank: $priorityRank, ')
+          ..write('tags: $tags, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -826,6 +1279,109 @@ class $WordsTableTable extends WordsTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('legacy_naver'),
+  );
+  static const VerificationMeta _externalIdMeta = const VerificationMeta(
+    'externalId',
+  );
+  @override
+  late final GeneratedColumn<String> externalId = GeneratedColumn<String>(
+    'external_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceVersionMeta = const VerificationMeta(
+    'sourceVersion',
+  );
+  @override
+  late final GeneratedColumn<String> sourceVersion = GeneratedColumn<String>(
+    'source_version',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _qualityStatusMeta = const VerificationMeta(
+    'qualityStatus',
+  );
+  @override
+  late final GeneratedColumn<String> qualityStatus = GeneratedColumn<String>(
+    'quality_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('reviewed'),
+  );
+  static const VerificationMeta _meaningSourceMeta = const VerificationMeta(
+    'meaningSource',
+  );
+  @override
+  late final GeneratedColumn<String> meaningSource = GeneratedColumn<String>(
+    'meaning_source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('legacy_naver'),
+  );
+  static const VerificationMeta _isCommonMeta = const VerificationMeta(
+    'isCommon',
+  );
+  @override
+  late final GeneratedColumn<bool> isCommon = GeneratedColumn<bool>(
+    'is_common',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_common" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _priorityRankMeta = const VerificationMeta(
+    'priorityRank',
+  );
+  @override
+  late final GeneratedColumn<int> priorityRank = GeneratedColumn<int>(
+    'priority_rank',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<List<String>, String> tags =
+      GeneratedColumn<String>(
+        'tags',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      ).withConverter<List<String>>($WordsTableTable.$convertertags);
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -833,6 +1389,15 @@ class $WordsTableTable extends WordsTable
     reading,
     meanings,
     jlptLevel,
+    source,
+    externalId,
+    sourceVersion,
+    qualityStatus,
+    meaningSource,
+    isCommon,
+    priorityRank,
+    tags,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -873,6 +1438,66 @@ class $WordsTableTable extends WordsTable
     } else if (isInserting) {
       context.missing(_jlptLevelMeta);
     }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
+    if (data.containsKey('external_id')) {
+      context.handle(
+        _externalIdMeta,
+        externalId.isAcceptableOrUnknown(data['external_id']!, _externalIdMeta),
+      );
+    }
+    if (data.containsKey('source_version')) {
+      context.handle(
+        _sourceVersionMeta,
+        sourceVersion.isAcceptableOrUnknown(
+          data['source_version']!,
+          _sourceVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quality_status')) {
+      context.handle(
+        _qualityStatusMeta,
+        qualityStatus.isAcceptableOrUnknown(
+          data['quality_status']!,
+          _qualityStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('meaning_source')) {
+      context.handle(
+        _meaningSourceMeta,
+        meaningSource.isAcceptableOrUnknown(
+          data['meaning_source']!,
+          _meaningSourceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_common')) {
+      context.handle(
+        _isCommonMeta,
+        isCommon.isAcceptableOrUnknown(data['is_common']!, _isCommonMeta),
+      );
+    }
+    if (data.containsKey('priority_rank')) {
+      context.handle(
+        _priorityRankMeta,
+        priorityRank.isAcceptableOrUnknown(
+          data['priority_rank']!,
+          _priorityRankMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -904,6 +1529,44 @@ class $WordsTableTable extends WordsTable
         DriftSqlType.int,
         data['${effectivePrefix}jlpt_level'],
       )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      externalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}external_id'],
+      ),
+      sourceVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_version'],
+      ),
+      qualityStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quality_status'],
+      )!,
+      meaningSource: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}meaning_source'],
+      )!,
+      isCommon: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_common'],
+      )!,
+      priorityRank: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}priority_rank'],
+      ),
+      tags: $WordsTableTable.$convertertags.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}tags'],
+        )!,
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -914,6 +1577,8 @@ class $WordsTableTable extends WordsTable
 
   static TypeConverter<String, String> $convertermeanings =
       const JsonStringConverter();
+  static TypeConverter<List<String>, String> $convertertags =
+      const StringListConverter();
 }
 
 class WordsTableData extends DataClass implements Insertable<WordsTableData> {
@@ -922,12 +1587,30 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
   final String reading;
   final String meanings;
   final int jlptLevel;
+  final String source;
+  final String? externalId;
+  final String? sourceVersion;
+  final String qualityStatus;
+  final String meaningSource;
+  final bool isCommon;
+  final int? priorityRank;
+  final List<String> tags;
+  final DateTime? updatedAt;
   const WordsTableData({
     required this.id,
     required this.word,
     required this.reading,
     required this.meanings,
     required this.jlptLevel,
+    required this.source,
+    this.externalId,
+    this.sourceVersion,
+    required this.qualityStatus,
+    required this.meaningSource,
+    required this.isCommon,
+    this.priorityRank,
+    required this.tags,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -941,6 +1624,27 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
       );
     }
     map['jlpt_level'] = Variable<int>(jlptLevel);
+    map['source'] = Variable<String>(source);
+    if (!nullToAbsent || externalId != null) {
+      map['external_id'] = Variable<String>(externalId);
+    }
+    if (!nullToAbsent || sourceVersion != null) {
+      map['source_version'] = Variable<String>(sourceVersion);
+    }
+    map['quality_status'] = Variable<String>(qualityStatus);
+    map['meaning_source'] = Variable<String>(meaningSource);
+    map['is_common'] = Variable<bool>(isCommon);
+    if (!nullToAbsent || priorityRank != null) {
+      map['priority_rank'] = Variable<int>(priorityRank);
+    }
+    {
+      map['tags'] = Variable<String>(
+        $WordsTableTable.$convertertags.toSql(tags),
+      );
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -951,6 +1655,23 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
       reading: Value(reading),
       meanings: Value(meanings),
       jlptLevel: Value(jlptLevel),
+      source: Value(source),
+      externalId: externalId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(externalId),
+      sourceVersion: sourceVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceVersion),
+      qualityStatus: Value(qualityStatus),
+      meaningSource: Value(meaningSource),
+      isCommon: Value(isCommon),
+      priorityRank: priorityRank == null && nullToAbsent
+          ? const Value.absent()
+          : Value(priorityRank),
+      tags: Value(tags),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -965,6 +1686,15 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
       reading: serializer.fromJson<String>(json['reading']),
       meanings: serializer.fromJson<String>(json['meanings']),
       jlptLevel: serializer.fromJson<int>(json['jlptLevel']),
+      source: serializer.fromJson<String>(json['source']),
+      externalId: serializer.fromJson<String?>(json['externalId']),
+      sourceVersion: serializer.fromJson<String?>(json['sourceVersion']),
+      qualityStatus: serializer.fromJson<String>(json['qualityStatus']),
+      meaningSource: serializer.fromJson<String>(json['meaningSource']),
+      isCommon: serializer.fromJson<bool>(json['isCommon']),
+      priorityRank: serializer.fromJson<int?>(json['priorityRank']),
+      tags: serializer.fromJson<List<String>>(json['tags']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -976,6 +1706,15 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
       'reading': serializer.toJson<String>(reading),
       'meanings': serializer.toJson<String>(meanings),
       'jlptLevel': serializer.toJson<int>(jlptLevel),
+      'source': serializer.toJson<String>(source),
+      'externalId': serializer.toJson<String?>(externalId),
+      'sourceVersion': serializer.toJson<String?>(sourceVersion),
+      'qualityStatus': serializer.toJson<String>(qualityStatus),
+      'meaningSource': serializer.toJson<String>(meaningSource),
+      'isCommon': serializer.toJson<bool>(isCommon),
+      'priorityRank': serializer.toJson<int?>(priorityRank),
+      'tags': serializer.toJson<List<String>>(tags),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -985,12 +1724,32 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
     String? reading,
     String? meanings,
     int? jlptLevel,
+    String? source,
+    Value<String?> externalId = const Value.absent(),
+    Value<String?> sourceVersion = const Value.absent(),
+    String? qualityStatus,
+    String? meaningSource,
+    bool? isCommon,
+    Value<int?> priorityRank = const Value.absent(),
+    List<String>? tags,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => WordsTableData(
     id: id ?? this.id,
     word: word ?? this.word,
     reading: reading ?? this.reading,
     meanings: meanings ?? this.meanings,
     jlptLevel: jlptLevel ?? this.jlptLevel,
+    source: source ?? this.source,
+    externalId: externalId.present ? externalId.value : this.externalId,
+    sourceVersion: sourceVersion.present
+        ? sourceVersion.value
+        : this.sourceVersion,
+    qualityStatus: qualityStatus ?? this.qualityStatus,
+    meaningSource: meaningSource ?? this.meaningSource,
+    isCommon: isCommon ?? this.isCommon,
+    priorityRank: priorityRank.present ? priorityRank.value : this.priorityRank,
+    tags: tags ?? this.tags,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   WordsTableData copyWithCompanion(WordsTableCompanion data) {
     return WordsTableData(
@@ -999,6 +1758,25 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
       reading: data.reading.present ? data.reading.value : this.reading,
       meanings: data.meanings.present ? data.meanings.value : this.meanings,
       jlptLevel: data.jlptLevel.present ? data.jlptLevel.value : this.jlptLevel,
+      source: data.source.present ? data.source.value : this.source,
+      externalId: data.externalId.present
+          ? data.externalId.value
+          : this.externalId,
+      sourceVersion: data.sourceVersion.present
+          ? data.sourceVersion.value
+          : this.sourceVersion,
+      qualityStatus: data.qualityStatus.present
+          ? data.qualityStatus.value
+          : this.qualityStatus,
+      meaningSource: data.meaningSource.present
+          ? data.meaningSource.value
+          : this.meaningSource,
+      isCommon: data.isCommon.present ? data.isCommon.value : this.isCommon,
+      priorityRank: data.priorityRank.present
+          ? data.priorityRank.value
+          : this.priorityRank,
+      tags: data.tags.present ? data.tags.value : this.tags,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -1009,13 +1787,37 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
           ..write('word: $word, ')
           ..write('reading: $reading, ')
           ..write('meanings: $meanings, ')
-          ..write('jlptLevel: $jlptLevel')
+          ..write('jlptLevel: $jlptLevel, ')
+          ..write('source: $source, ')
+          ..write('externalId: $externalId, ')
+          ..write('sourceVersion: $sourceVersion, ')
+          ..write('qualityStatus: $qualityStatus, ')
+          ..write('meaningSource: $meaningSource, ')
+          ..write('isCommon: $isCommon, ')
+          ..write('priorityRank: $priorityRank, ')
+          ..write('tags: $tags, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, word, reading, meanings, jlptLevel);
+  int get hashCode => Object.hash(
+    id,
+    word,
+    reading,
+    meanings,
+    jlptLevel,
+    source,
+    externalId,
+    sourceVersion,
+    qualityStatus,
+    meaningSource,
+    isCommon,
+    priorityRank,
+    tags,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1024,7 +1826,16 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
           other.word == this.word &&
           other.reading == this.reading &&
           other.meanings == this.meanings &&
-          other.jlptLevel == this.jlptLevel);
+          other.jlptLevel == this.jlptLevel &&
+          other.source == this.source &&
+          other.externalId == this.externalId &&
+          other.sourceVersion == this.sourceVersion &&
+          other.qualityStatus == this.qualityStatus &&
+          other.meaningSource == this.meaningSource &&
+          other.isCommon == this.isCommon &&
+          other.priorityRank == this.priorityRank &&
+          other.tags == this.tags &&
+          other.updatedAt == this.updatedAt);
 }
 
 class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
@@ -1033,12 +1844,30 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
   final Value<String> reading;
   final Value<String> meanings;
   final Value<int> jlptLevel;
+  final Value<String> source;
+  final Value<String?> externalId;
+  final Value<String?> sourceVersion;
+  final Value<String> qualityStatus;
+  final Value<String> meaningSource;
+  final Value<bool> isCommon;
+  final Value<int?> priorityRank;
+  final Value<List<String>> tags;
+  final Value<DateTime?> updatedAt;
   const WordsTableCompanion({
     this.id = const Value.absent(),
     this.word = const Value.absent(),
     this.reading = const Value.absent(),
     this.meanings = const Value.absent(),
     this.jlptLevel = const Value.absent(),
+    this.source = const Value.absent(),
+    this.externalId = const Value.absent(),
+    this.sourceVersion = const Value.absent(),
+    this.qualityStatus = const Value.absent(),
+    this.meaningSource = const Value.absent(),
+    this.isCommon = const Value.absent(),
+    this.priorityRank = const Value.absent(),
+    this.tags = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   WordsTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1046,6 +1875,15 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
     required String reading,
     required String meanings,
     required int jlptLevel,
+    this.source = const Value.absent(),
+    this.externalId = const Value.absent(),
+    this.sourceVersion = const Value.absent(),
+    this.qualityStatus = const Value.absent(),
+    this.meaningSource = const Value.absent(),
+    this.isCommon = const Value.absent(),
+    this.priorityRank = const Value.absent(),
+    this.tags = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : word = Value(word),
        reading = Value(reading),
        meanings = Value(meanings),
@@ -1056,6 +1894,15 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
     Expression<String>? reading,
     Expression<String>? meanings,
     Expression<int>? jlptLevel,
+    Expression<String>? source,
+    Expression<String>? externalId,
+    Expression<String>? sourceVersion,
+    Expression<String>? qualityStatus,
+    Expression<String>? meaningSource,
+    Expression<bool>? isCommon,
+    Expression<int>? priorityRank,
+    Expression<String>? tags,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1063,6 +1910,15 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
       if (reading != null) 'reading': reading,
       if (meanings != null) 'meanings': meanings,
       if (jlptLevel != null) 'jlpt_level': jlptLevel,
+      if (source != null) 'source': source,
+      if (externalId != null) 'external_id': externalId,
+      if (sourceVersion != null) 'source_version': sourceVersion,
+      if (qualityStatus != null) 'quality_status': qualityStatus,
+      if (meaningSource != null) 'meaning_source': meaningSource,
+      if (isCommon != null) 'is_common': isCommon,
+      if (priorityRank != null) 'priority_rank': priorityRank,
+      if (tags != null) 'tags': tags,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -1072,6 +1928,15 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
     Value<String>? reading,
     Value<String>? meanings,
     Value<int>? jlptLevel,
+    Value<String>? source,
+    Value<String?>? externalId,
+    Value<String?>? sourceVersion,
+    Value<String>? qualityStatus,
+    Value<String>? meaningSource,
+    Value<bool>? isCommon,
+    Value<int?>? priorityRank,
+    Value<List<String>>? tags,
+    Value<DateTime?>? updatedAt,
   }) {
     return WordsTableCompanion(
       id: id ?? this.id,
@@ -1079,6 +1944,15 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
       reading: reading ?? this.reading,
       meanings: meanings ?? this.meanings,
       jlptLevel: jlptLevel ?? this.jlptLevel,
+      source: source ?? this.source,
+      externalId: externalId ?? this.externalId,
+      sourceVersion: sourceVersion ?? this.sourceVersion,
+      qualityStatus: qualityStatus ?? this.qualityStatus,
+      meaningSource: meaningSource ?? this.meaningSource,
+      isCommon: isCommon ?? this.isCommon,
+      priorityRank: priorityRank ?? this.priorityRank,
+      tags: tags ?? this.tags,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -1102,6 +1976,35 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
     if (jlptLevel.present) {
       map['jlpt_level'] = Variable<int>(jlptLevel.value);
     }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (externalId.present) {
+      map['external_id'] = Variable<String>(externalId.value);
+    }
+    if (sourceVersion.present) {
+      map['source_version'] = Variable<String>(sourceVersion.value);
+    }
+    if (qualityStatus.present) {
+      map['quality_status'] = Variable<String>(qualityStatus.value);
+    }
+    if (meaningSource.present) {
+      map['meaning_source'] = Variable<String>(meaningSource.value);
+    }
+    if (isCommon.present) {
+      map['is_common'] = Variable<bool>(isCommon.value);
+    }
+    if (priorityRank.present) {
+      map['priority_rank'] = Variable<int>(priorityRank.value);
+    }
+    if (tags.present) {
+      map['tags'] = Variable<String>(
+        $WordsTableTable.$convertertags.toSql(tags.value),
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -1112,7 +2015,16 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
           ..write('word: $word, ')
           ..write('reading: $reading, ')
           ..write('meanings: $meanings, ')
-          ..write('jlptLevel: $jlptLevel')
+          ..write('jlptLevel: $jlptLevel, ')
+          ..write('source: $source, ')
+          ..write('externalId: $externalId, ')
+          ..write('sourceVersion: $sourceVersion, ')
+          ..write('qualityStatus: $qualityStatus, ')
+          ..write('meaningSource: $meaningSource, ')
+          ..write('isCommon: $isCommon, ')
+          ..write('priorityRank: $priorityRank, ')
+          ..write('tags: $tags, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -2195,6 +3107,15 @@ typedef $$KanjiTableTableCreateCompanionBuilder =
       Value<List<String>> examples,
       Value<String?> radical,
       Value<String?> commentary,
+      Value<String> source,
+      Value<String?> externalId,
+      Value<String?> sourceVersion,
+      Value<String> qualityStatus,
+      Value<String> meaningSource,
+      Value<bool> isCommon,
+      Value<int?> priorityRank,
+      Value<List<String>> tags,
+      Value<DateTime?> updatedAt,
     });
 typedef $$KanjiTableTableUpdateCompanionBuilder =
     KanjiTableCompanion Function({
@@ -2211,6 +3132,15 @@ typedef $$KanjiTableTableUpdateCompanionBuilder =
       Value<List<String>> examples,
       Value<String?> radical,
       Value<String?> commentary,
+      Value<String> source,
+      Value<String?> externalId,
+      Value<String?> sourceVersion,
+      Value<String> qualityStatus,
+      Value<String> meaningSource,
+      Value<bool> isCommon,
+      Value<int?> priorityRank,
+      Value<List<String>> tags,
+      Value<DateTime?> updatedAt,
     });
 
 class $$KanjiTableTableFilterComposer
@@ -2292,6 +3222,52 @@ class $$KanjiTableTableFilterComposer
     column: $table.commentary,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceVersion => $composableBuilder(
+    column: $table.sourceVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get qualityStatus => $composableBuilder(
+    column: $table.qualityStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get meaningSource => $composableBuilder(
+    column: $table.meaningSource,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCommon => $composableBuilder(
+    column: $table.isCommon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get priorityRank => $composableBuilder(
+    column: $table.priorityRank,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<List<String>, List<String>, String> get tags =>
+      $composableBuilder(
+        column: $table.tags,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$KanjiTableTableOrderingComposer
@@ -2367,6 +3343,51 @@ class $$KanjiTableTableOrderingComposer
     column: $table.commentary,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceVersion => $composableBuilder(
+    column: $table.sourceVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get qualityStatus => $composableBuilder(
+    column: $table.qualityStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get meaningSource => $composableBuilder(
+    column: $table.meaningSource,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCommon => $composableBuilder(
+    column: $table.isCommon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get priorityRank => $composableBuilder(
+    column: $table.priorityRank,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tags => $composableBuilder(
+    column: $table.tags,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$KanjiTableTableAnnotationComposer
@@ -2432,6 +3453,43 @@ class $$KanjiTableTableAnnotationComposer
     column: $table.commentary,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceVersion => $composableBuilder(
+    column: $table.sourceVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get qualityStatus => $composableBuilder(
+    column: $table.qualityStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get meaningSource => $composableBuilder(
+    column: $table.meaningSource,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isCommon =>
+      $composableBuilder(column: $table.isCommon, builder: (column) => column);
+
+  GeneratedColumn<int> get priorityRank => $composableBuilder(
+    column: $table.priorityRank,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<List<String>, String> get tags =>
+      $composableBuilder(column: $table.tags, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$KanjiTableTableTableManager
@@ -2478,6 +3536,15 @@ class $$KanjiTableTableTableManager
                 Value<List<String>> examples = const Value.absent(),
                 Value<String?> radical = const Value.absent(),
                 Value<String?> commentary = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String?> externalId = const Value.absent(),
+                Value<String?> sourceVersion = const Value.absent(),
+                Value<String> qualityStatus = const Value.absent(),
+                Value<String> meaningSource = const Value.absent(),
+                Value<bool> isCommon = const Value.absent(),
+                Value<int?> priorityRank = const Value.absent(),
+                Value<List<String>> tags = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => KanjiTableCompanion(
                 id: id,
                 character: character,
@@ -2492,6 +3559,15 @@ class $$KanjiTableTableTableManager
                 examples: examples,
                 radical: radical,
                 commentary: commentary,
+                source: source,
+                externalId: externalId,
+                sourceVersion: sourceVersion,
+                qualityStatus: qualityStatus,
+                meaningSource: meaningSource,
+                isCommon: isCommon,
+                priorityRank: priorityRank,
+                tags: tags,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -2508,6 +3584,15 @@ class $$KanjiTableTableTableManager
                 Value<List<String>> examples = const Value.absent(),
                 Value<String?> radical = const Value.absent(),
                 Value<String?> commentary = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String?> externalId = const Value.absent(),
+                Value<String?> sourceVersion = const Value.absent(),
+                Value<String> qualityStatus = const Value.absent(),
+                Value<String> meaningSource = const Value.absent(),
+                Value<bool> isCommon = const Value.absent(),
+                Value<int?> priorityRank = const Value.absent(),
+                Value<List<String>> tags = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => KanjiTableCompanion.insert(
                 id: id,
                 character: character,
@@ -2522,6 +3607,15 @@ class $$KanjiTableTableTableManager
                 examples: examples,
                 radical: radical,
                 commentary: commentary,
+                source: source,
+                externalId: externalId,
+                sourceVersion: sourceVersion,
+                qualityStatus: qualityStatus,
+                meaningSource: meaningSource,
+                isCommon: isCommon,
+                priorityRank: priorityRank,
+                tags: tags,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -2555,6 +3649,15 @@ typedef $$WordsTableTableCreateCompanionBuilder =
       required String reading,
       required String meanings,
       required int jlptLevel,
+      Value<String> source,
+      Value<String?> externalId,
+      Value<String?> sourceVersion,
+      Value<String> qualityStatus,
+      Value<String> meaningSource,
+      Value<bool> isCommon,
+      Value<int?> priorityRank,
+      Value<List<String>> tags,
+      Value<DateTime?> updatedAt,
     });
 typedef $$WordsTableTableUpdateCompanionBuilder =
     WordsTableCompanion Function({
@@ -2563,6 +3666,15 @@ typedef $$WordsTableTableUpdateCompanionBuilder =
       Value<String> reading,
       Value<String> meanings,
       Value<int> jlptLevel,
+      Value<String> source,
+      Value<String?> externalId,
+      Value<String?> sourceVersion,
+      Value<String> qualityStatus,
+      Value<String> meaningSource,
+      Value<bool> isCommon,
+      Value<int?> priorityRank,
+      Value<List<String>> tags,
+      Value<DateTime?> updatedAt,
     });
 
 class $$WordsTableTableFilterComposer
@@ -2597,6 +3709,52 @@ class $$WordsTableTableFilterComposer
 
   ColumnFilters<int> get jlptLevel => $composableBuilder(
     column: $table.jlptLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceVersion => $composableBuilder(
+    column: $table.sourceVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get qualityStatus => $composableBuilder(
+    column: $table.qualityStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get meaningSource => $composableBuilder(
+    column: $table.meaningSource,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCommon => $composableBuilder(
+    column: $table.isCommon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get priorityRank => $composableBuilder(
+    column: $table.priorityRank,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<List<String>, List<String>, String> get tags =>
+      $composableBuilder(
+        column: $table.tags,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2634,6 +3792,51 @@ class $$WordsTableTableOrderingComposer
     column: $table.jlptLevel,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceVersion => $composableBuilder(
+    column: $table.sourceVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get qualityStatus => $composableBuilder(
+    column: $table.qualityStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get meaningSource => $composableBuilder(
+    column: $table.meaningSource,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCommon => $composableBuilder(
+    column: $table.isCommon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get priorityRank => $composableBuilder(
+    column: $table.priorityRank,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tags => $composableBuilder(
+    column: $table.tags,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$WordsTableTableAnnotationComposer
@@ -2659,6 +3862,43 @@ class $$WordsTableTableAnnotationComposer
 
   GeneratedColumn<int> get jlptLevel =>
       $composableBuilder(column: $table.jlptLevel, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get externalId => $composableBuilder(
+    column: $table.externalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceVersion => $composableBuilder(
+    column: $table.sourceVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get qualityStatus => $composableBuilder(
+    column: $table.qualityStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get meaningSource => $composableBuilder(
+    column: $table.meaningSource,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isCommon =>
+      $composableBuilder(column: $table.isCommon, builder: (column) => column);
+
+  GeneratedColumn<int> get priorityRank => $composableBuilder(
+    column: $table.priorityRank,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<List<String>, String> get tags =>
+      $composableBuilder(column: $table.tags, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$WordsTableTableTableManager
@@ -2697,12 +3937,30 @@ class $$WordsTableTableTableManager
                 Value<String> reading = const Value.absent(),
                 Value<String> meanings = const Value.absent(),
                 Value<int> jlptLevel = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String?> externalId = const Value.absent(),
+                Value<String?> sourceVersion = const Value.absent(),
+                Value<String> qualityStatus = const Value.absent(),
+                Value<String> meaningSource = const Value.absent(),
+                Value<bool> isCommon = const Value.absent(),
+                Value<int?> priorityRank = const Value.absent(),
+                Value<List<String>> tags = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => WordsTableCompanion(
                 id: id,
                 word: word,
                 reading: reading,
                 meanings: meanings,
                 jlptLevel: jlptLevel,
+                source: source,
+                externalId: externalId,
+                sourceVersion: sourceVersion,
+                qualityStatus: qualityStatus,
+                meaningSource: meaningSource,
+                isCommon: isCommon,
+                priorityRank: priorityRank,
+                tags: tags,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -2711,12 +3969,30 @@ class $$WordsTableTableTableManager
                 required String reading,
                 required String meanings,
                 required int jlptLevel,
+                Value<String> source = const Value.absent(),
+                Value<String?> externalId = const Value.absent(),
+                Value<String?> sourceVersion = const Value.absent(),
+                Value<String> qualityStatus = const Value.absent(),
+                Value<String> meaningSource = const Value.absent(),
+                Value<bool> isCommon = const Value.absent(),
+                Value<int?> priorityRank = const Value.absent(),
+                Value<List<String>> tags = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => WordsTableCompanion.insert(
                 id: id,
                 word: word,
                 reading: reading,
                 meanings: meanings,
                 jlptLevel: jlptLevel,
+                source: source,
+                externalId: externalId,
+                sourceVersion: sourceVersion,
+                qualityStatus: qualityStatus,
+                meaningSource: meaningSource,
+                isCommon: isCommon,
+                priorityRank: priorityRank,
+                tags: tags,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

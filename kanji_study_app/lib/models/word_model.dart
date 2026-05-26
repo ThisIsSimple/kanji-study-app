@@ -6,6 +6,15 @@ class Word {
   final String reading;
   final List<WordMeaning> meanings;
   final int jlptLevel;
+  final String source;
+  final String? externalId;
+  final String? sourceVersion;
+  final String qualityStatus;
+  final String meaningSource;
+  final bool isCommon;
+  final int? priorityRank;
+  final List<String> tags;
+  final DateTime? updatedAt;
 
   const Word({
     required this.id,
@@ -13,6 +22,15 @@ class Word {
     required this.reading,
     required this.meanings,
     required this.jlptLevel,
+    this.source = 'legacy_naver',
+    this.externalId,
+    this.sourceVersion,
+    this.qualityStatus = 'reviewed',
+    this.meaningSource = 'legacy_naver',
+    this.isCommon = false,
+    this.priorityRank,
+    this.tags = const [],
+    this.updatedAt,
   });
 
   factory Word.fromJson(Map<String, dynamic> json) {
@@ -34,6 +52,17 @@ class Word {
       reading: json['reading'] as String,
       meanings: parseMeanings(json['meanings']),
       jlptLevel: json['jlpt_level'] as int,
+      source: json['source'] as String? ?? 'legacy_naver',
+      externalId: json['external_id'] as String?,
+      sourceVersion: json['source_version'] as String?,
+      qualityStatus: json['quality_status'] as String? ?? 'reviewed',
+      meaningSource: json['meaning_source'] as String? ?? 'legacy_naver',
+      isCommon: json['is_common'] as bool? ?? false,
+      priorityRank: json['priority_rank'] as int?,
+      tags: json['tags'] != null ? List<String>.from(json['tags'] as List) : [],
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'].toString())
+          : null,
     );
   }
 
@@ -44,6 +73,15 @@ class Word {
       'reading': reading,
       'meanings': meanings.map((m) => m.toJson()).toList(),
       'jlpt_level': jlptLevel,
+      'source': source,
+      'external_id': externalId,
+      'source_version': sourceVersion,
+      'quality_status': qualityStatus,
+      'meaning_source': meaningSource,
+      'is_common': isCommon,
+      'priority_rank': priorityRank,
+      'tags': tags,
+      'updated_at': updatedAt?.toUtc().toIso8601String(),
     };
   }
 

@@ -27,6 +27,19 @@ class KanjiTable extends Table {
       .withDefault(const Constant('[]'))();
   TextColumn get radical => text().nullable()(); // 부수
   TextColumn get commentary => text().nullable()(); // 한자 해설
+  TextColumn get source => text().withDefault(const Constant('legacy_excel'))();
+  TextColumn get externalId => text().nullable()();
+  TextColumn get sourceVersion => text().nullable()();
+  TextColumn get qualityStatus =>
+      text().withDefault(const Constant('reviewed'))();
+  TextColumn get meaningSource =>
+      text().withDefault(const Constant('legacy_excel'))();
+  BoolColumn get isCommon => boolean().withDefault(const Constant(false))();
+  IntColumn get priorityRank => integer().nullable()();
+  TextColumn get tags => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
 }
 
 /// 단어 테이블 - Supabase words 테이블과 동일한 구조
@@ -37,6 +50,19 @@ class WordsTable extends Table {
   TextColumn get meanings =>
       text().map(const JsonStringConverter())(); // JSON array of objects
   IntColumn get jlptLevel => integer()();
+  TextColumn get source => text().withDefault(const Constant('legacy_naver'))();
+  TextColumn get externalId => text().nullable()();
+  TextColumn get sourceVersion => text().nullable()();
+  TextColumn get qualityStatus =>
+      text().withDefault(const Constant('reviewed'))();
+  TextColumn get meaningSource =>
+      text().withDefault(const Constant('legacy_naver'))();
+  BoolColumn get isCommon => boolean().withDefault(const Constant(false))();
+  IntColumn get priorityRank => integer().nullable()();
+  TextColumn get tags => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
 }
 
 /// 학습 기록 테이블 - 로컬 + 동기화 상태
@@ -120,7 +146,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -140,6 +166,27 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 5) {
         await customStatement('DROP TABLE IF EXISTS sync_queue_table');
+      }
+      if (from < 6) {
+        await m.addColumn(kanjiTable, kanjiTable.source);
+        await m.addColumn(kanjiTable, kanjiTable.externalId);
+        await m.addColumn(kanjiTable, kanjiTable.sourceVersion);
+        await m.addColumn(kanjiTable, kanjiTable.qualityStatus);
+        await m.addColumn(kanjiTable, kanjiTable.meaningSource);
+        await m.addColumn(kanjiTable, kanjiTable.isCommon);
+        await m.addColumn(kanjiTable, kanjiTable.priorityRank);
+        await m.addColumn(kanjiTable, kanjiTable.tags);
+        await m.addColumn(kanjiTable, kanjiTable.updatedAt);
+
+        await m.addColumn(wordsTable, wordsTable.source);
+        await m.addColumn(wordsTable, wordsTable.externalId);
+        await m.addColumn(wordsTable, wordsTable.sourceVersion);
+        await m.addColumn(wordsTable, wordsTable.qualityStatus);
+        await m.addColumn(wordsTable, wordsTable.meaningSource);
+        await m.addColumn(wordsTable, wordsTable.isCommon);
+        await m.addColumn(wordsTable, wordsTable.priorityRank);
+        await m.addColumn(wordsTable, wordsTable.tags);
+        await m.addColumn(wordsTable, wordsTable.updatedAt);
       }
     },
   );
