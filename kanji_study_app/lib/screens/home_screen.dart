@@ -50,7 +50,24 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _learningGoalService.addListener(_handleLearningGoalChanged);
     _initializeServices();
+  }
+
+  @override
+  void dispose() {
+    _learningGoalService.removeListener(_handleLearningGoalChanged);
+    super.dispose();
+  }
+
+  void _handleLearningGoalChanged() {
+    if (_isSavingGoal) return;
+    _reloadAfterLearningGoalChanged();
+  }
+
+  Future<void> _reloadAfterLearningGoalChanged() async {
+    await _analyticsService.clearCache();
+    await _loadData();
   }
 
   Future<void> _initializeServices() async {

@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/learning_goal.dart';
 import 'supabase_service.dart';
 
-class LearningGoalService {
+class LearningGoalService extends ChangeNotifier {
   static final LearningGoalService _instance = LearningGoalService._internal();
   static LearningGoalService get instance => _instance;
 
@@ -38,12 +38,14 @@ class LearningGoalService {
 
     await _cacheGoal(goal);
 
-    if (!_supabaseService.isLoggedIn) return;
+    if (_supabaseService.isLoggedIn) {
+      await _supabaseService.updateUserProfile(
+        dailyGoal: goal.dailyGoal,
+        targetJlptLevel: goal.targetJlptLevel,
+      );
+    }
 
-    await _supabaseService.updateUserProfile(
-      dailyGoal: goal.dailyGoal,
-      targetJlptLevel: goal.targetJlptLevel,
-    );
+    notifyListeners();
   }
 
   Future<LearningGoal?> _getRemoteGoal() async {

@@ -123,7 +123,12 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  void _navigateTo(BuildContext context, Widget screen) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => screen));
+  Future<void> _navigateTo(BuildContext context, Widget screen) async {
+    final result = await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => screen));
+    if (result == true && context.mounted) {
+      Navigator.of(context).pop(true);
+    }
   }
 }
