@@ -88,7 +88,7 @@ class StudyButtonBar extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 studyStats!.summaryText,
-                style: theme.typography.base.copyWith(
+                style: theme.typography.md.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -99,7 +99,7 @@ class StudyButtonBar extends StatelessWidget {
           const SizedBox(width: 12),
           FButton(
             onPress: onShowTimeline,
-            style: FButtonStyle.outline(),
+            variant: FButtonVariant.outline,
             child: Icon(PhosphorIconsRegular.clockCounterClockwise, size: 18),
           ),
         ],
@@ -127,7 +127,7 @@ class StudyButtonBar extends StatelessWidget {
   Widget _buildForgotButton() {
     return FButton(
       onPress: isRecording ? null : onForgot,
-      style: FButtonStyle.outline(),
+      variant: FButtonVariant.outline,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
@@ -207,7 +207,7 @@ class StudyButtonBar extends StatelessWidget {
                           const SizedBox(height: 16),
                           Text(
                             '학습 기록이 없습니다',
-                            style: theme.typography.base.copyWith(
+                            style: theme.typography.md.copyWith(
                               color: theme.colors.mutedForeground,
                             ),
                           ),
@@ -289,11 +289,10 @@ class StudyButtonBar extends StatelessWidget {
                                           const SizedBox(width: 6),
                                           Text(
                                             record.status.displayText,
-                                            style: theme.typography.base
-                                                .copyWith(
-                                                  fontWeight: FontWeight.w500,
-                                                  color: color,
-                                                ),
+                                            style: theme.typography.md.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color: color,
+                                            ),
                                           ),
                                         ],
                                       ),

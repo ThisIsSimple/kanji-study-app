@@ -112,9 +112,10 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
           style: const TextStyle(),
         ),
         suffixes: [
-          IconButton(
-            icon: const Icon(PhosphorIconsRegular.x),
-            onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          FButton.icon(
+            variant: FButtonVariant.ghost,
+            onPress: _isLoading ? null : () => Navigator.of(context).pop(),
+            child: const Icon(PhosphorIconsRegular.x),
           ),
         ],
       ),
@@ -248,7 +249,7 @@ class _SocialLoginScreenState extends State<SocialLoginScreen> {
                 const SizedBox(height: 16),
                 FButton(
                   onPress: _continueAsGuest,
-                  style: FButtonStyle.outline(),
+                  variant: FButtonVariant.outline,
                   child: const Text('게스트로 계속 사용하기', style: TextStyle()),
                 ),
                 const SizedBox(height: 8),

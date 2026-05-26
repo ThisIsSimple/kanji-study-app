@@ -35,8 +35,11 @@ class WordListItem extends StatelessWidget {
               right: 0,
               top: 0,
               child: // Favorite button
-              IconButton(
-                icon: Icon(
+              FButton.icon(
+                onPress: onFavoriteToggle,
+                variant: FButtonVariant.ghost,
+                size: FButtonSizeVariant.xs,
+                child: Icon(
                   isFavorite
                       ? PhosphorIconsFill.star
                       : PhosphorIconsRegular.star,
@@ -45,9 +48,6 @@ class WordListItem extends StatelessWidget {
                       ? Colors.amber
                       : theme.colors.mutedForeground,
                 ),
-                onPressed: onFavoriteToggle,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               ),
             ),
             Padding(

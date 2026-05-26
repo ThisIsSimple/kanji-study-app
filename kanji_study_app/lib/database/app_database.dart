@@ -280,12 +280,12 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> clearUserData(String userId) async {
     await transaction(() async {
-      await (delete(studyRecordsTable)..where(
-            (t) => t.userId.equals(userId),
-          ))
-          .go();
-      await (delete(favoritesTable)..where((t) => t.userId.equals(userId)))
-          .go();
+      await (delete(
+        studyRecordsTable,
+      )..where((t) => t.userId.equals(userId))).go();
+      await (delete(
+        favoritesTable,
+      )..where((t) => t.userId.equals(userId))).go();
     });
   }
 }

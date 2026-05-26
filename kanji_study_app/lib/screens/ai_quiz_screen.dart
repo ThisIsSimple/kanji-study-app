@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/ai_quiz.dart';
 import '../models/ai_quiz_attempt.dart';
 import '../services/ai_quiz_service.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/custom_header.dart';
 import 'ai_quiz_result_screen.dart';
 
@@ -52,9 +53,11 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
       setState(() => _isLoading = false);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
+        showAppToast(
           context,
-        ).showSnackBar(SnackBar(content: Text('퀴즈 로드 실패: $e')));
+          message: '퀴즈 로드 실패: $e',
+          type: AppToastType.error,
+        );
         Navigator.pop(context);
       }
     }
@@ -86,14 +89,16 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
     // 미응답 문제 확인
     final unanswered = _questions.where((q) => _answers[q.id] == null).length;
     if (unanswered > 0) {
-      final shouldSubmit = await showDialog<bool>(
+      final shouldSubmit = await showFDialog<bool>(
         context: context,
-        builder: (context) => FDialog(
+        builder: (context, _, animation) => FDialog(
+          animation: animation,
+          direction: Axis.horizontal,
           title: const Text('제출 확인'),
           body: Text('아직 $unanswered개 문제에 응답하지 않았습니다.\n그래도 제출하시겠습니까?'),
           actions: [
             FButton(
-              style: FButtonStyle.outline(),
+              variant: FButtonVariant.outline,
               onPress: () => Navigator.pop(context, false),
               child: const Text('취소'),
             ),
@@ -144,9 +149,7 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('제출 실패: $e')));
+        showAppToast(context, message: '제출 실패: $e', type: AppToastType.error);
       }
     }
   }
@@ -333,7 +336,7 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
                   if (_currentIndex > 0)
                     Expanded(
                       child: FButton(
-                        style: FButtonStyle.outline(),
+                        variant: FButtonVariant.outline,
                         onPress: _prevQuestion,
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -404,7 +407,7 @@ class _AiQuizScreenState extends State<AiQuizScreen> {
     if (_containsJapanese(option)) {
       return GoogleFonts.notoSerifJp(fontSize: 16);
     }
-    return theme.typography.base;
+    return theme.typography.md;
   }
 
   bool _containsJapanese(String text) {

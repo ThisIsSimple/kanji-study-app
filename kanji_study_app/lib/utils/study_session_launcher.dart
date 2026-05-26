@@ -39,14 +39,13 @@ class StudySessionLauncher {
       showFDialog(
         context: context,
         builder: (dialogContext, style, animation) => FDialog(
-          style: style.call,
           animation: animation,
           direction: Axis.horizontal,
           title: const Text('진행 중인 학습'),
           body: const Text('이전에 진행 중이던 플래시카드 학습이 있습니다.\n계속하시겠습니까?'),
           actions: [
             FButton(
-              style: FButtonStyle.outline(),
+              variant: FButtonVariant.outline,
               onPress: () async {
                 final navigator = Navigator.of(dialogContext);
                 await flashcardService.clearSession(itemType);

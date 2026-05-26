@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../services/notification_service.dart';
 import '../constants/app_spacing.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/custom_header.dart';
 
 class SettingsNotificationScreen extends StatefulWidget {
@@ -62,9 +63,11 @@ class _SettingsNotificationScreenState
       setState(() {
         _notificationsEnabled = false;
       });
-      ScaffoldMessenger.of(
+      showAppToast(
         context,
-      ).showSnackBar(const SnackBar(content: Text('알림 권한을 확인해주세요.')));
+        message: '알림 권한을 확인해주세요.',
+        type: AppToastType.error,
+      );
     }
   }
 
@@ -141,7 +144,7 @@ class _SettingsNotificationScreenState
                                     children: [
                                       Text(
                                         '학습 알림',
-                                        style: theme.typography.base.copyWith(
+                                        style: theme.typography.md.copyWith(
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -196,10 +199,9 @@ class _SettingsNotificationScreenState
                                         children: [
                                           Text(
                                             '알림 시간',
-                                            style: theme.typography.base
-                                                .copyWith(
-                                                  fontWeight: FontWeight.w600,
-                                                ),
+                                            style: theme.typography.md.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
@@ -268,7 +270,7 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
   void initState() {
     super.initState();
     _controller = FTimePickerController(
-      initial: FTime(widget.initialTime.hour, widget.initialTime.minute),
+      time: FTime(widget.initialTime.hour, widget.initialTime.minute),
     );
   }
 
@@ -316,7 +318,9 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
               // Time Picker
               SizedBox(
                 height: 200,
-                child: FTimePicker(controller: _controller),
+                child: FTimePicker(
+                  control: FTimePickerControl.managed(controller: _controller),
+                ),
               ),
 
               const SizedBox(height: 24),
@@ -326,7 +330,7 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
                 children: [
                   Expanded(
                     child: FButton(
-                      style: FButtonStyle.outline(),
+                      variant: FButtonVariant.outline,
                       onPress: () => Navigator.of(context).pop(),
                       child: const Text('취소'),
                     ),

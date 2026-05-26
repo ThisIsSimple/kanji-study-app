@@ -25,9 +25,7 @@ class MonthlyWordHeatmap extends StatelessWidget {
           children: [
             Text(
               '최근 한 달 단어 학습',
-              style: theme.typography.base.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: theme.typography.md.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
             Text(

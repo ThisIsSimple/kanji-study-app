@@ -20,37 +20,39 @@ class _ToastHarnessState extends State<_ToastHarness> {
       theme: AppTheme.getLightTheme(),
       home: FTheme(
         data: AppTheme.getFTheme(),
-        child: FScaffold(
-          childPad: false,
-          child: Builder(
-            builder: (context) {
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FilledButton(
-                      onPressed: () {
-                        showAppToast(
-                          context,
-                          message: '학습 완료를 기록했습니다!',
-                          duration: const Duration(seconds: 10),
-                        );
-                      },
-                      child: const Text('Show toast'),
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: () {
-                        setState(() {
-                          _tapCount += 1;
-                        });
-                      },
-                      child: Text('Target $_tapCount'),
-                    ),
-                  ],
-                ),
-              );
-            },
+        child: FToaster(
+          child: FScaffold(
+            childPad: false,
+            child: Builder(
+              builder: (context) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FilledButton(
+                        onPressed: () {
+                          showAppToast(
+                            context,
+                            message: '학습 완료를 기록했습니다!',
+                            duration: const Duration(seconds: 10),
+                          );
+                        },
+                        child: const Text('Show toast'),
+                      ),
+                      const SizedBox(height: 24),
+                      FilledButton(
+                        onPressed: () {
+                          setState(() {
+                            _tapCount += 1;
+                          });
+                        },
+                        child: Text('Target $_tapCount'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),

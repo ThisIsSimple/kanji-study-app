@@ -38,25 +38,41 @@ class AuthProviderButton extends StatelessWidget {
     if (outline) {
       return FButton(
         onPress: onPressed,
-        style: FButtonStyle.outline(),
+        variant: FButtonVariant.outline,
         child: child,
       );
     }
 
-    return SizedBox(
-      height: 52,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          foregroundColor: foregroundColor,
-          side: borderColor != null ? BorderSide(color: borderColor!) : null,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+    final theme = FTheme.of(context);
+    final textColor = foregroundColor ?? theme.colors.primaryForeground;
+
+    return FButton.raw(
+      onPress: onPressed,
+      variant: FButtonVariant.ghost,
+      child: SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: backgroundColor ?? theme.colors.primary,
+            border: borderColor != null
+                ? Border.all(color: borderColor!)
+                : null,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: IconTheme(
+              data: IconThemeData(color: textColor, size: 20),
+              child: DefaultTextStyle(
+                style: theme.typography.sm.copyWith(
+                  color: textColor,
+                  fontWeight: FontWeight.w500,
+                ),
+                child: child,
+              ),
+            ),
           ),
         ),
-        child: child,
       ),
     );
   }

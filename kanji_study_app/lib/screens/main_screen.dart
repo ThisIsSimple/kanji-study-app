@@ -41,24 +41,9 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          const HomeScreen(),
-          KanjiScreen(
-            showMeanings: _kanjiShowMeanings,
-            onMeaningsToggle: _onKanjiMeaningsToggle,
-          ),
-          WordsScreen(
-            showMeanings: _wordsShowMeanings,
-            onMeaningsToggle: _onWordsMeaningsToggle,
-          ),
-          const QuizDashboardScreen(),
-          const ProfileScreen(),
-        ],
-      ),
-      bottomNavigationBar: FBottomNavigationBar(
+    return FScaffold(
+      childPad: false,
+      footer: FBottomNavigationBar(
         index: _selectedIndex,
         onChange: _onItemTapped,
         children: [
@@ -102,6 +87,22 @@ class _MainScreenState extends State<MainScreen> {
             ),
             label: const Text('프로필'),
           ),
+        ],
+      ),
+      child: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          const HomeScreen(),
+          KanjiScreen(
+            showMeanings: _kanjiShowMeanings,
+            onMeaningsToggle: _onKanjiMeaningsToggle,
+          ),
+          WordsScreen(
+            showMeanings: _wordsShowMeanings,
+            onMeaningsToggle: _onWordsMeaningsToggle,
+          ),
+          const QuizDashboardScreen(),
+          const ProfileScreen(),
         ],
       ),
     );

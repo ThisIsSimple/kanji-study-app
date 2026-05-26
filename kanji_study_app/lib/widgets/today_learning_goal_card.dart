@@ -82,7 +82,7 @@ class TodayLearningGoalCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           primaryText,
-                          style: theme.typography.base.copyWith(
+                          style: theme.typography.md.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                           maxLines: 1,
@@ -144,7 +144,7 @@ class TodayLearningGoalCard extends StatelessWidget {
                 Expanded(
                   child: FButton(
                     onPress: onStartStudy,
-                    style: FButtonStyle.primary(),
+                    variant: FButtonVariant.primary,
                     child: const Text('오늘 학습 시작'),
                   ),
                 ),
@@ -152,7 +152,7 @@ class TodayLearningGoalCard extends StatelessWidget {
                 Expanded(
                   child: FButton(
                     onPress: onReviewTap,
-                    style: FButtonStyle.outline(),
+                    variant: FButtonVariant.outline,
                     child: const Text('복습하기'),
                   ),
                 ),

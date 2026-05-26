@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../services/supabase_service.dart';
 import '../services/local_database_service.dart';
 import '../constants/app_spacing.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/custom_header.dart';
 
 class SettingsAccountScreen extends StatefulWidget {
@@ -39,7 +40,6 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
     final shouldLogout = await showFDialog<bool>(
       context: context,
       builder: (context, style, animation) => FDialog(
-        style: style.call,
         animation: animation,
         direction: Axis.horizontal,
         title: const Text('로그아웃'),
@@ -50,12 +50,12 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
         ),
         actions: [
           FButton(
-            style: FButtonStyle.outline(),
+            variant: FButtonVariant.outline,
             onPress: () => Navigator.of(context).pop(false),
             child: const Text('취소'),
           ),
           FButton(
-            style: FButtonStyle.destructive(),
+            variant: FButtonVariant.destructive,
             onPress: () => Navigator.of(context).pop(true),
             child: const Text('로그아웃'),
           ),
@@ -66,13 +66,14 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
     if (shouldLogout == true && mounted) {
       try {
         await _supabaseService.signOut();
-        debugPrint('User signed out successfully');
       } catch (e) {
         debugPrint('Logout error: $e');
         if (!mounted) return;
-        ScaffoldMessenger.of(
+        showAppToast(
           context,
-        ).showSnackBar(const SnackBar(content: Text('로그아웃 중 오류가 발생했습니다.')));
+          message: '로그아웃 중 오류가 발생했습니다.',
+          type: AppToastType.error,
+        );
       }
     }
   }
@@ -86,19 +87,18 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
     final shouldDelete = await showFDialog<bool>(
       context: context,
       builder: (context, style, animation) => FDialog(
-        style: style.call,
         animation: animation,
         direction: Axis.horizontal,
         title: const Text('학습 데이터 삭제'),
         body: const Text('학습 기록, 즐겨찾기, AI 퀴즈 기록을 삭제합니다. 계정 로그인 정보는 유지됩니다.'),
         actions: [
           FButton(
-            style: FButtonStyle.outline(),
+            variant: FButtonVariant.outline,
             onPress: () => Navigator.of(context).pop(false),
             child: const Text('취소'),
           ),
           FButton(
-            style: FButtonStyle.destructive(),
+            variant: FButtonVariant.destructive,
             onPress: () => Navigator.of(context).pop(true),
             child: const Text('삭제'),
           ),
@@ -116,14 +116,14 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
       await _supabaseService.deleteCurrentUserServerData();
       await _clearLocalUserData(userId);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('학습 데이터가 삭제되었습니다.')));
+      showAppToast(context, message: '학습 데이터가 삭제되었습니다.');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
+      showAppToast(
         context,
-      ).showSnackBar(const SnackBar(content: Text('데이터 삭제 중 오류가 발생했습니다.')));
+        message: '데이터 삭제 중 오류가 발생했습니다.',
+        type: AppToastType.error,
+      );
     } finally {
       if (mounted) {
         setState(() => _isProcessing = false);
@@ -135,19 +135,18 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
     final shouldDelete = await showFDialog<bool>(
       context: context,
       builder: (context, style, animation) => FDialog(
-        style: style.call,
         animation: animation,
         direction: Axis.horizontal,
         title: const Text('계정 삭제'),
         body: const Text('계정과 서버에 저장된 학습 데이터를 삭제합니다. 이 작업은 되돌릴 수 없습니다.'),
         actions: [
           FButton(
-            style: FButtonStyle.outline(),
+            variant: FButtonVariant.outline,
             onPress: () => Navigator.of(context).pop(false),
             child: const Text('취소'),
           ),
           FButton(
-            style: FButtonStyle.destructive(),
+            variant: FButtonVariant.destructive,
             onPress: () => Navigator.of(context).pop(true),
             child: const Text('계정 삭제'),
           ),
@@ -165,13 +164,13 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
       await _supabaseService.deleteCurrentUserAccount();
       await _clearLocalUserData(userId);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('계정 삭제가 요청되었습니다.')));
+      showAppToast(context, message: '계정 삭제가 요청되었습니다.');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('계정 삭제 서버 기능을 확인해주세요. 데이터는 삭제되지 않았습니다.')),
+      showAppToast(
+        context,
+        message: '계정 삭제 서버 기능을 확인해주세요. 데이터는 삭제되지 않았습니다.',
+        type: AppToastType.error,
       );
     } finally {
       if (mounted) {
@@ -238,7 +237,7 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
                                       _isAnonymous
                                           ? '게스트 사용자'
                                           : (_userEmail ?? '사용자'),
-                                      style: theme.typography.base.copyWith(
+                                      style: theme.typography.md.copyWith(
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -296,7 +295,7 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
                         // Logout Button
                         FButton(
                           onPress: _isProcessing ? null : _handleDeleteAppData,
-                          style: FButtonStyle.outline(),
+                          variant: FButtonVariant.outline,
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -311,7 +310,7 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
 
                         FButton(
                           onPress: _isProcessing ? null : _handleDeleteAccount,
-                          style: FButtonStyle.destructive(),
+                          variant: FButtonVariant.destructive,
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -326,7 +325,7 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
 
                         FButton(
                           onPress: _isProcessing ? null : _handleLogout,
-                          style: FButtonStyle.destructive(),
+                          variant: FButtonVariant.destructive,
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [

@@ -256,7 +256,7 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
                                 Flexible(
                                   child: Text(
                                     meaning.meaning,
-                                    style: theme.typography.base.copyWith(
+                                    style: theme.typography.md.copyWith(
                                       height: 1.2,
                                     ),
                                     textAlign: TextAlign.center,

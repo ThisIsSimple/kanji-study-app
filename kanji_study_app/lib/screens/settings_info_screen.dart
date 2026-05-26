@@ -152,14 +152,12 @@ class _SettingsInfoScreenState extends State<SettingsInfoScreen> {
           Expanded(
             child: Text(
               label,
-              style: theme.typography.base.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: theme.typography.md.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
           Text(
             value,
-            style: theme.typography.base.copyWith(
+            style: theme.typography.md.copyWith(
               color: theme.colors.mutedForeground,
             ),
           ),

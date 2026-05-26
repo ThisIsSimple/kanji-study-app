@@ -39,7 +39,7 @@ class DailySummaryCard extends StatelessWidget {
           ],
           Text(
             '학습 기록이 없습니다',
-            style: theme.typography.base.copyWith(
+            style: theme.typography.md.copyWith(
               color: theme.colors.mutedForeground,
             ),
           ),

@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/gemini_service.dart';
 import '../constants/app_spacing.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/custom_header.dart';
 
 class SettingsAiScreen extends StatefulWidget {
@@ -47,9 +48,7 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
     if (apiKey.isNotEmpty) {
       await _geminiService.setApiKey(apiKey);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('API 키가 저장되었습니다.')));
+      showAppToast(context, message: 'API 키가 저장되었습니다.');
     }
   }
 
@@ -59,10 +58,10 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('브라우저에서 aistudio.google.com을 방문하여 API 키를 생성하세요.'),
-        ),
+      showAppToast(
+        context,
+        message: '브라우저에서 aistudio.google.com을 방문하여 API 키를 생성하세요.',
+        type: AppToastType.error,
       );
     }
   }
@@ -131,7 +130,9 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
                           children: [
                             Expanded(
                               child: FTextField(
-                                controller: _apiKeyController,
+                                control: FTextFieldControl.managed(
+                                  controller: _apiKeyController,
+                                ),
                                 hint: 'API 키를 입력하세요',
                                 obscureText: !_apiKeyVisible,
                               ),
@@ -143,7 +144,7 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
                                   _apiKeyVisible = !_apiKeyVisible;
                                 });
                               },
-                              style: FButtonStyle.ghost(),
+                              variant: FButtonVariant.ghost,
                               child: Icon(
                                 _apiKeyVisible
                                     ? PhosphorIconsRegular.eyeSlash
@@ -158,7 +159,7 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
 
                         FButton(
                           onPress: _saveApiKey,
-                          style: FButtonStyle.primary(),
+                          variant: FButtonVariant.primary,
                           child: const Text('API 키 저장'),
                         ),
 
@@ -192,7 +193,7 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
                                       children: [
                                         Text(
                                           'API 키 받기',
-                                          style: theme.typography.base.copyWith(
+                                          style: theme.typography.md.copyWith(
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),

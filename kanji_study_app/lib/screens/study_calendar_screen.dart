@@ -30,9 +30,7 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
     final today = DateTime.now();
     _focusedDay = DateTime(today.year, today.month, today.day);
     _selectedDay = _focusedDay;
-    _calendarController = FCalendarController.date(
-      initialSelection: _selectedDay,
-    );
+    _calendarController = FCalendarController.date(initial: _selectedDay);
     _loadMonthlyStats();
   }
 
@@ -110,7 +108,9 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
                         // 2. Calendar
                         Center(
                           child: FCalendar(
-                            controller: _calendarController!,
+                            control: FCalendarControl.managedDate(
+                              controller: _calendarController!,
+                            ),
                             start: DateTime(2024, 1, 1),
                             end: DateTime.now().add(const Duration(days: 365)),
                             today: DateTime.now(),
@@ -272,13 +272,13 @@ class _StudyCalendarScreenState extends State<StudyCalendarScreen> {
       children: [
         Text(
           label,
-          style: theme.typography.base.copyWith(
+          style: theme.typography.md.copyWith(
             color: theme.colors.mutedForeground,
           ),
         ),
         Text(
           value,
-          style: theme.typography.base.copyWith(fontWeight: FontWeight.w600),
+          style: theme.typography.md.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
     );

@@ -146,7 +146,7 @@ class _PrivacyRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: theme.typography.base.copyWith(
+                  style: theme.typography.md.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),

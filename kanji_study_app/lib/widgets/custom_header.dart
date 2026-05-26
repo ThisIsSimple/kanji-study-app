@@ -63,7 +63,7 @@ class CustomHeader extends StatelessWidget {
       leftSide.add(
         FButton.icon(
           onPress: () => Navigator.of(context).pop(),
-          style: FButtonStyle.ghost(),
+          variant: FButtonVariant.ghost,
           child: Icon(PhosphorIconsRegular.caretLeft, size: 20),
         ),
       );
@@ -134,55 +134,30 @@ class CustomHeader extends StatelessWidget {
 
     // Build search bar widget
     Widget buildSearchBar() {
-      final hasText = searchController?.text.isNotEmpty ?? false;
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: TextField(
-          controller: searchController,
-          decoration: InputDecoration(
-            hintText: searchHint ?? '검색...',
-            hintStyle: theme.typography.sm.copyWith(
-              color: theme.colors.mutedForeground,
-            ),
-            prefixIcon: Icon(
-              PhosphorIconsRegular.magnifyingGlass,
-              color: theme.colors.mutedForeground,
-              size: 20,
-            ),
-            suffixIcon: hasText
-                ? IconButton(
-                    icon: Icon(
-                      PhosphorIconsRegular.x,
-                      color: theme.colors.mutedForeground,
-                      size: 18,
-                    ),
-                    onPressed: () {
-                      searchController?.clear();
-                      onSearchClear?.call();
-                    },
-                  )
-                : null,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: theme.colors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: theme.colors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: theme.colors.primary),
-            ),
-            filled: true,
-            fillColor: theme.colors.background,
+        child: FTextField(
+          control: FTextFieldControl.managed(
+            controller: searchController,
+            onChange: (value) => onSearchChanged?.call(value.text),
           ),
-          style: theme.typography.sm,
-          onChanged: onSearchChanged,
+          hint: searchHint ?? '검색...',
+          prefixBuilder: (context, style, variants) =>
+              FTextField.prefixIconBuilder(
+                context,
+                style,
+                variants,
+                Icon(PhosphorIconsRegular.magnifyingGlass, size: 18),
+              ),
+          clearable: (value) => value.text.isNotEmpty,
+          clearIconBuilder: (context, style, clear) {
+            return FTextField.defaultClearIconBuilder(context, style, () {
+              clear();
+              onSearchClear?.call();
+            });
+          },
+          onSubmit: (_) => FocusScope.of(context).unfocus(),
+          textInputAction: TextInputAction.search,
         ),
       );
     }
@@ -292,7 +267,7 @@ class HeaderActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return FButton.icon(
       onPress: onPressed,
-      style: FButtonStyle.ghost(),
+      variant: FButtonVariant.ghost,
       child: icon,
     );
   }

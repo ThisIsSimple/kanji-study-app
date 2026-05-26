@@ -91,20 +91,12 @@ class FlashcardService {
     return null;
   }
 
-  /// Load saved session from storage (deprecated - use loadSessionByType instead)
-  @Deprecated('Use loadSessionByType instead')
-  Future<FlashcardSession?> loadSession() async {
-    // 하위 호환성을 위해 word 세션을 로드
-    return loadSessionByType('word');
-  }
-
   /// Save session to storage
   Future<void> _saveSession(FlashcardSession session) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final sessionKey = _getSessionKey(session.itemType);
       await prefs.setString(sessionKey, session.toJsonString());
-      debugPrint('Saved ${session.itemType} flashcard session');
     } catch (e) {
       debugPrint('Error saving ${session.itemType} flashcard session: $e');
     }
@@ -121,7 +113,6 @@ class FlashcardService {
     final prefs = await SharedPreferences.getInstance();
     final sessionKey = _getSessionKey(itemType);
     await prefs.remove(sessionKey);
-    debugPrint('Cleared $itemType flashcard session');
   }
 
   /// Clear all sessions
@@ -132,7 +123,6 @@ class FlashcardService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_getSessionKey('word'));
     await prefs.remove(_getSessionKey('kanji'));
-    debugPrint('Cleared all flashcard sessions');
   }
 
   /// Record a flashcard result and move to next card

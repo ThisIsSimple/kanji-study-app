@@ -6,6 +6,7 @@ import '../models/ai_quiz_attempt.dart';
 import '../services/ai_quiz_service.dart';
 import '../services/flashcard_service.dart';
 import '../services/gemini_service.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/custom_header.dart';
 import 'ai_quiz_screen.dart';
 import 'settings_ai_screen.dart';
@@ -106,24 +107,28 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // 로딩 다이얼로그 닫기
-        ScaffoldMessenger.of(
+        showAppToast(
           context,
-        ).showSnackBar(SnackBar(content: Text('퀴즈 생성 실패: $e')));
+          message: '퀴즈 생성 실패: $e',
+          type: AppToastType.error,
+        );
       }
     }
   }
 
   void _showApiKeyDialog() {
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (context) => FDialog(
+      builder: (context, _, animation) => FDialog(
+        animation: animation,
+        direction: Axis.horizontal,
         title: const Text('API 키 필요'),
         body: const Text(
           'AI 퀴즈를 사용하려면 Gemini API 키가 필요합니다.\n설정에서 API 키를 입력해주세요.',
         ),
         actions: [
           FButton(
-            style: FButtonStyle.outline(),
+            variant: FButtonVariant.outline,
             onPress: () => Navigator.pop(context),
             child: const Text('취소'),
           ),
@@ -289,9 +294,7 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
             const SizedBox(height: 8),
             Text(
               type.displayName,
-              style: theme.typography.base.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: theme.typography.md.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 2),
             Text(
@@ -321,8 +324,8 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
               ? (attempt.correctCount! / quiz.questionCount * 100).round()
               : 0;
 
-          return ListTile(
-            leading: CircleAvatar(
+          return FItem(
+            prefix: CircleAvatar(
               backgroundColor: percentage >= 80
                   ? Colors.green.withValues(alpha: 0.1)
                   : percentage >= 60
@@ -350,13 +353,13 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
                 color: theme.colors.mutedForeground,
               ),
             ),
-            trailing: Text(
+            details: Text(
               _formatDate(attempt.completedAt ?? attempt.startedAt),
               style: theme.typography.xs.copyWith(
                 color: theme.colors.mutedForeground,
               ),
             ),
-            onTap: () async {
+            onPress: () async {
               // 같은 퀴즈 다시 풀기
               if (quiz != null) {
                 final fullQuiz = await _aiQuizService.getQuizWithQuestions(
@@ -420,8 +423,8 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
                     ? DateTime.parse(session['started_at'] as String)
                     : DateTime.now();
 
-                return ListTile(
-                  leading: Icon(
+                return FItem(
+                  prefix: Icon(
                     itemType == 'word'
                         ? PhosphorIconsRegular.bookOpen
                         : PhosphorIconsRegular.translate,
@@ -439,7 +442,7 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
                       color: theme.colors.mutedForeground,
                     ),
                   ),
-                  trailing: Text(
+                  details: Text(
                     _formatDate(startedAt),
                     style: theme.typography.xs.copyWith(
                       color: theme.colors.mutedForeground,

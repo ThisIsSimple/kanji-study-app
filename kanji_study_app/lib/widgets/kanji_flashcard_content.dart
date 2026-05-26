@@ -240,7 +240,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                       widget.kanji.koreanOnReadings,
                     ),
                     textAlign: TextAlign.center,
-                    style: theme.typography.base,
+                    style: theme.typography.md,
                   ),
                 ),
                 const SizedBox(height: 16),
