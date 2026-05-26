@@ -4,6 +4,12 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../services/handwriting_recognition_service.dart';
 
+typedef HandwritingCandidateRecognizer =
+    Future<List<String>> Function({
+      required List<HandwritingStrokeData> strokes,
+      required Size writingArea,
+    });
+
 Future<String?> showKanjiHandwritingSheet(
   BuildContext context, {
   required Set<String> availableKanjiCharacters,
@@ -19,7 +25,39 @@ Future<String?> showKanjiHandwritingSheet(
       return FractionallySizedBox(
         heightFactor: 0.88,
         child: KanjiHandwritingSheet(
-          availableKanjiCharacters: availableKanjiCharacters,
+          title: '손글씨로 한자 찾기',
+          availableCandidates: availableKanjiCharacters,
+          emptyStrokesMessage: '먼저 한 글자를 써주세요.',
+          noMatchingCandidatesMessage: '앱 데이터와 일치하는 한자 후보를 찾지 못했습니다.',
+          recognizeCandidates:
+              HandwritingRecognitionService.instance.recognizeSingleKanji,
+        ),
+      );
+    },
+  );
+}
+
+Future<String?> showWordHandwritingSheet(
+  BuildContext context, {
+  required Set<String> availableWords,
+}) {
+  return showModalBottomSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    enableDrag: false,
+    requestFocus: false,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withValues(alpha: 0.6),
+    builder: (context) {
+      return FractionallySizedBox(
+        heightFactor: 0.88,
+        child: KanjiHandwritingSheet(
+          title: '손글씨로 단어 찾기',
+          availableCandidates: availableWords,
+          emptyStrokesMessage: '먼저 단어를 써주세요.',
+          noMatchingCandidatesMessage: '앱 데이터와 일치하는 단어 후보를 찾지 못했습니다.',
+          recognizeCandidates:
+              HandwritingRecognitionService.instance.recognizeJapaneseText,
         ),
       );
     },
@@ -27,11 +65,19 @@ Future<String?> showKanjiHandwritingSheet(
 }
 
 class KanjiHandwritingSheet extends StatefulWidget {
-  final Set<String> availableKanjiCharacters;
+  final String title;
+  final Set<String> availableCandidates;
+  final String emptyStrokesMessage;
+  final String noMatchingCandidatesMessage;
+  final HandwritingCandidateRecognizer recognizeCandidates;
 
   const KanjiHandwritingSheet({
     super.key,
-    required this.availableKanjiCharacters,
+    required this.title,
+    required this.availableCandidates,
+    required this.emptyStrokesMessage,
+    required this.noMatchingCandidatesMessage,
+    required this.recognizeCandidates,
   });
 
   @override
@@ -149,7 +195,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
   Future<void> _recognize() async {
     if (_strokes.isEmpty) {
       setState(() {
-        _statusMessage = '먼저 한 글자를 써주세요.';
+        _statusMessage = widget.emptyStrokesMessage;
       });
       return;
     }
@@ -160,11 +206,13 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
     });
 
     try {
-      final recognizedCandidates = await _recognitionService
-          .recognizeSingleKanji(strokes: _strokes, writingArea: _canvasSize);
+      final recognizedCandidates = await widget.recognizeCandidates(
+        strokes: _strokes,
+        writingArea: _canvasSize,
+      );
 
       final matchedCandidates = recognizedCandidates
-          .where(widget.availableKanjiCharacters.contains)
+          .where(widget.availableCandidates.contains)
           .take(5)
           .toList();
 
@@ -175,7 +223,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
         if (matchedCandidates.isEmpty) {
           _statusMessage = recognizedCandidates.isEmpty
               ? '인식 결과가 없습니다. 조금 더 크게 또박또박 써보세요.'
-              : '앱 데이터와 일치하는 한자 후보를 찾지 못했습니다.';
+              : widget.noMatchingCandidatesMessage;
         }
       });
     } catch (error) {
@@ -215,7 +263,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      '손글씨로 한자 찾기',
+                      widget.title,
                       style: theme.typography.xl2.copyWith(
                         fontWeight: FontWeight.w700,
                       ),

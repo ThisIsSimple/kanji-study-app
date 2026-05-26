@@ -49,6 +49,18 @@ class HandwritingRecognitionService {
     required List<HandwritingStrokeData> strokes,
     required Size writingArea,
   }) async {
+    final candidates = await recognizeJapaneseText(
+      strokes: strokes,
+      writingArea: writingArea,
+    );
+
+    return extractKanjiCandidates(candidates);
+  }
+
+  Future<List<String>> recognizeJapaneseText({
+    required List<HandwritingStrokeData> strokes,
+    required Size writingArea,
+  }) async {
     final meaningfulStrokes = strokes
         .where((stroke) => stroke.points.length >= 2)
         .toList();
@@ -79,7 +91,7 @@ class HandwritingRecognitionService {
       ),
     );
 
-    return extractKanjiCandidates(
+    return extractJapaneseTextCandidates(
       candidates.map((candidate) => candidate.text),
     );
   }
@@ -101,12 +113,47 @@ class HandwritingRecognitionService {
     return result;
   }
 
+  static List<String> extractJapaneseTextCandidates(
+    Iterable<String> candidates,
+  ) {
+    final seen = <String>{};
+    final result = <String>[];
+
+    for (final rawCandidate in candidates) {
+      final candidate = rawCandidate.trim();
+      if (candidate.isEmpty) continue;
+      if (!_isJapaneseTextCandidate(candidate)) continue;
+      if (seen.add(candidate)) {
+        result.add(candidate);
+      }
+    }
+
+    return result;
+  }
+
   static bool _isKanji(String candidate) {
     final rune = candidate.runes.first;
 
     return (rune >= 0x3400 && rune <= 0x4DBF) ||
         (rune >= 0x4E00 && rune <= 0x9FFF) ||
         (rune >= 0xF900 && rune <= 0xFAFF);
+  }
+
+  static bool _isJapaneseTextCandidate(String candidate) {
+    return candidate.runes.every(_isJapaneseTextRune);
+  }
+
+  static bool _isJapaneseTextRune(int rune) {
+    return (rune >= 0x3040 && rune <= 0x309F) ||
+        (rune >= 0x30A0 && rune <= 0x30FF) ||
+        (rune >= 0x31F0 && rune <= 0x31FF) ||
+        (rune >= 0x3400 && rune <= 0x4DBF) ||
+        (rune >= 0x4E00 && rune <= 0x9FFF) ||
+        (rune >= 0xF900 && rune <= 0xFAFF) ||
+        (rune >= 0xFF66 && rune <= 0xFF9D) ||
+        rune == 0x3005 ||
+        rune == 0x3006 ||
+        rune == 0x303B;
   }
 
   static String describeFailure(Object error) {

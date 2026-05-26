@@ -17,6 +17,36 @@ void main() {
     expect(candidates, ['日', '本']);
   });
 
+  test('extractJapaneseTextCandidates keeps Japanese text candidates', () {
+    final candidates =
+        HandwritingRecognitionService.extractJapaneseTextCandidates([
+          '日本',
+          '勉強',
+          'ありがとう',
+          'カタカナ',
+          '時々',
+          ' コーヒー ',
+        ]);
+
+    expect(candidates, ['日本', '勉強', 'ありがとう', 'カタカナ', '時々', 'コーヒー']);
+  });
+
+  test('extractJapaneseTextCandidates removes non-Japanese and duplicates', () {
+    final candidates =
+        HandwritingRecognitionService.extractJapaneseTextCandidates([
+          '',
+          ' ',
+          '日本',
+          '日本',
+          '日本1',
+          'study',
+          '勉強A',
+          'カタカナ',
+        ]);
+
+    expect(candidates, ['日本', 'カタカナ']);
+  });
+
   test('describeFailure explains known iOS simulator ML Kit issues', () {
     final message = HandwritingRecognitionService.describeFailure(
       "Building for 'iOS-simulator', but linking in object file "
