@@ -21,6 +21,7 @@ import '../utils/study_session_launcher.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/custom_header.dart';
 import '../widgets/jlpt_badge.dart';
+import 'study_calendar_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -294,9 +295,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildProgressHeader(theme, goal, stats, progress),
-        const SizedBox(height: 16),
         _buildWeeklyCalendar(theme),
+        const SizedBox(height: 16),
+        _buildProgressHeader(theme, goal, stats, progress),
         const SizedBox(height: 16),
         _buildTodayWordsCard(theme, stats),
       ],
@@ -387,36 +388,43 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
 
-    return FCard(
-      child: Padding(
-        padding: AppSpacing.cardPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '이번 주',
-              style: theme.typography.md.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                for (int i = 0; i < 7; i++)
-                  _buildCalendarDay(startOfWeek.add(Duration(days: i)), theme),
-              ],
-            ),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '이번 주',
+            style: theme.typography.md.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (int i = 0; i < 7; i++)
+                _buildCalendarDay(startOfWeek.add(Duration(days: i)), theme),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openCalendarDetail(DateTime date) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => StudyCalendarDetailScreen(date: date),
       ),
     );
   }
 
   Widget _buildCalendarDay(DateTime date, FThemeData theme) {
-    final isToday = DateUtils.isSameDay(date, DateTime.now());
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+    final isToday = DateUtils.isSameDay(normalizedDate, DateTime.now());
     final stats = _weeklyData.firstWhere(
-      (item) => DateUtils.isSameDay(item.date, date),
+      (item) => DateUtils.isSameDay(item.date, normalizedDate),
       orElse: () => DailyStudyStats(
-        date: date,
+        date: normalizedDate,
         kanjiStudied: 0,
         wordsStudied: 0,
         totalCompleted: 0,
@@ -426,45 +434,49 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     final completed = stats.wordsStudied > 0;
 
-    return SizedBox(
-      width: 42,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            DateFormat('E', 'ko_KR').format(date)[0],
-            style: theme.typography.xs.copyWith(
-              color: theme.colors.mutedForeground,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: 36,
-            height: 36,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: isToday
-                  ? theme.colors.primary
-                  : completed
-                  ? const Color(0xFFE5F9C8)
-                  : theme.colors.secondary.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(18),
-              border: completed && !isToday
-                  ? Border.all(color: const Color(0xFFA3E635), width: 2)
-                  : null,
-            ),
-            child: Text(
-              '${date.day}',
-              style: theme.typography.sm.copyWith(
-                color: isToday
-                    ? theme.colors.primaryForeground
-                    : theme.colors.foreground,
-                fontWeight: FontWeight.w700,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _openCalendarDetail(normalizedDate),
+      child: SizedBox(
+        width: 42,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              DateFormat('E', 'ko_KR').format(normalizedDate)[0],
+              style: theme.typography.xs.copyWith(
+                color: theme.colors.mutedForeground,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isToday
+                    ? theme.colors.primary
+                    : completed
+                    ? const Color(0xFFE5F9C8)
+                    : theme.colors.secondary.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(18),
+                border: completed && !isToday
+                    ? Border.all(color: const Color(0xFFA3E635), width: 2)
+                    : null,
+              ),
+              child: Text(
+                '${normalizedDate.day}',
+                style: theme.typography.sm.copyWith(
+                  color: isToday
+                      ? theme.colors.primaryForeground
+                      : theme.colors.foreground,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

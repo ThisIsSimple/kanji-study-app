@@ -110,6 +110,66 @@ void main() {
     expect(recommendations.map((item) => item.word.id), isNot(contains(300)));
   });
 
+  test('keeps a stable schedule for the same future date', () {
+    final words = _wordsByLevel(perLevel: 20);
+    final goal = LearningGoal(dailyGoal: 12, targetJlptLevel: 3);
+    final futureDate = DateTime(2026, 5, 29);
+
+    final first = TodayWordRecommendationService.buildRecommendations(
+      allWords: words,
+      progressById: const {},
+      todayRecords: const [],
+      goal: goal,
+      alreadyStudiedToday: 0,
+      userSeed: 'user-1',
+      date: futureDate,
+    );
+    final second = TodayWordRecommendationService.buildRecommendations(
+      allWords: words,
+      progressById: const {},
+      todayRecords: const [],
+      goal: goal,
+      alreadyStudiedToday: 0,
+      userSeed: 'user-1',
+      date: futureDate,
+    );
+
+    expect(first, hasLength(12));
+    expect(
+      second.map((item) => item.word.id),
+      first.map((item) => item.word.id),
+    );
+  });
+
+  test('uses the date seed so future schedules can differ by day', () {
+    final words = _wordsByLevel(perLevel: 20);
+    final goal = LearningGoal(dailyGoal: 12, targetJlptLevel: 3);
+
+    final firstDay = TodayWordRecommendationService.buildRecommendations(
+      allWords: words,
+      progressById: const {},
+      todayRecords: const [],
+      goal: goal,
+      alreadyStudiedToday: 0,
+      userSeed: 'user-1',
+      date: DateTime(2026, 5, 29),
+    );
+    final secondDay = TodayWordRecommendationService.buildRecommendations(
+      allWords: words,
+      progressById: const {},
+      todayRecords: const [],
+      goal: goal,
+      alreadyStudiedToday: 0,
+      userSeed: 'user-1',
+      date: DateTime(2026, 5, 30),
+    );
+
+    expect(
+      secondDay.map((item) => item.word.id),
+      isNot(firstDay.map((item) => item.word.id)),
+    );
+  });
+
   test('returns empty when goal is already complete', () {
     final recommendations = TodayWordRecommendationService.buildRecommendations(
       allWords: _wordsByLevel(),

@@ -24,26 +24,38 @@ class TodayWordRecommendationService {
     required LearningGoal goal,
     required int alreadyStudiedToday,
   }) async {
+    final today = DateTime.now();
+    return getWordsForDate(
+      goal: goal,
+      date: today,
+      alreadyStudiedForDate: alreadyStudiedToday,
+    );
+  }
+
+  Future<List<TodayWordRecommendation>> getWordsForDate({
+    required LearningGoal goal,
+    required DateTime date,
+    required int alreadyStudiedForDate,
+  }) async {
     await _wordService.init();
 
-    final today = DateTime.now();
-    final todayStart = DateTime(today.year, today.month, today.day);
-    final todayEnd = todayStart.add(
+    final dateStart = DateTime(date.year, date.month, date.day);
+    final dateEnd = dateStart.add(
       const Duration(hours: 23, minutes: 59, seconds: 59),
     );
-    final todayRecords = await _studyRecordService.getStudyRecords(
-      startDate: todayStart,
-      endDate: todayEnd,
+    final dateRecords = await _studyRecordService.getStudyRecords(
+      startDate: dateStart,
+      endDate: dateEnd,
     );
 
     return buildRecommendations(
       allWords: _wordService.allWords,
       progressById: _studyRecordService.getProgressByType(StudyType.word),
-      todayRecords: todayRecords,
+      todayRecords: dateRecords,
       goal: goal,
-      alreadyStudiedToday: alreadyStudiedToday,
+      alreadyStudiedToday: alreadyStudiedForDate,
       userSeed: _supabaseService.currentUser?.id ?? 'local',
-      date: todayStart,
+      date: dateStart,
     );
   }
 

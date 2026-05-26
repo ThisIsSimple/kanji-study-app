@@ -5,9 +5,13 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/supabase_service.dart';
 import '../services/analytics_service.dart';
+import '../services/learning_goal_service.dart';
+import '../services/today_word_recommendation_service.dart';
 import '../models/daily_study_stats.dart';
+import '../models/today_word_recommendation.dart';
 import '../constants/app_spacing.dart';
 import '../widgets/daily_summary_card.dart';
+import '../widgets/jlpt_badge.dart';
 
 class StudyCalendarDetailScreen extends StatefulWidget {
   final DateTime date;
@@ -22,6 +26,9 @@ class StudyCalendarDetailScreen extends StatefulWidget {
 class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
   final SupabaseService _supabaseService = SupabaseService.instance;
   final AnalyticsService _analyticsService = AnalyticsService.instance;
+  final LearningGoalService _learningGoalService = LearningGoalService.instance;
+  final TodayWordRecommendationService _recommendationService =
+      TodayWordRecommendationService.instance;
 
   late PageController _pageController;
   late FCalendarController<DateTime?> _lineCalendarController;
@@ -33,6 +40,7 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
 
   final Map<DateTime, List<Map<String, dynamic>>> _studyDetailsCache = {};
   final Map<DateTime, DailyStudyStats?> _dailyStatsCache = {};
+  final Map<DateTime, List<TodayWordRecommendation>> _plannedWordsCache = {};
   final Set<DateTime> _loadingDates = {};
 
   @override
@@ -79,8 +87,16 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
     return _initialPage + daysDifference;
   }
 
+  DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
+
+  bool _isFutureDate(DateTime date) {
+    return _dateOnly(date).isAfter(_dateOnly(DateTime.now()));
+  }
+
   Future<void> _loadStudyDetailsForDate(DateTime date) async {
-    final normalizedDate = DateTime(date.year, date.month, date.day);
+    final normalizedDate = _dateOnly(date);
+    final isFuture = _isFutureDate(normalizedDate);
 
     // Update header title immediately
     if (!mounted) return;
@@ -90,7 +106,8 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
 
     // Check cache first - no loading needed
     if (_studyDetailsCache.containsKey(normalizedDate) &&
-        _dailyStatsCache.containsKey(normalizedDate)) {
+        _dailyStatsCache.containsKey(normalizedDate) &&
+        (!isFuture || _plannedWordsCache.containsKey(normalizedDate))) {
       return;
     }
 
@@ -109,10 +126,25 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
       // Load daily statistics
       final stats = await _analyticsService.getDailyStats(normalizedDate);
 
+      var plannedWords = const <TodayWordRecommendation>[];
+      if (details.isEmpty && isFuture) {
+        final goal = await _learningGoalService.getGoal();
+        if (goal != null) {
+          plannedWords = await _recommendationService.getWordsForDate(
+            goal: goal,
+            date: normalizedDate,
+            alreadyStudiedForDate: 0,
+          );
+        }
+      }
+
       if (!mounted) return;
       setState(() {
         _studyDetailsCache[normalizedDate] = details;
         _dailyStatsCache[normalizedDate] = stats;
+        if (isFuture) {
+          _plannedWordsCache[normalizedDate] = plannedWords;
+        }
         _loadingDates.remove(normalizedDate);
       });
     } catch (e) {
@@ -121,6 +153,9 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
       setState(() {
         _studyDetailsCache[normalizedDate] = [];
         _dailyStatsCache[normalizedDate] = null;
+        if (isFuture) {
+          _plannedWordsCache[normalizedDate] = [];
+        }
         _loadingDates.remove(normalizedDate);
       });
     }
@@ -204,31 +239,22 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
                 final studyDetails =
                     _studyDetailsCache[normalizedPageDate] ?? [];
                 final dailyStats = _dailyStatsCache[normalizedPageDate];
+                final plannedWords =
+                    _plannedWordsCache[normalizedPageDate] ??
+                    const <TodayWordRecommendation>[];
 
                 if (_loadingDates.contains(normalizedPageDate)) {
                   return const Center(child: FCircularProgress());
                 }
 
                 if (studyDetails.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          PhosphorIconsRegular.calendarBlank,
-                          size: 64,
-                          color: theme.colors.mutedForeground,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          '이 날짜에 학습 기록이 없습니다',
-                          style: theme.typography.md.copyWith(
-                            color: theme.colors.mutedForeground,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
+                  if (_isFutureDate(normalizedPageDate)) {
+                    return _buildFuturePlanView(
+                      plannedWords: plannedWords,
+                      theme: theme,
+                    );
+                  }
+                  return _buildEmptyStudyState(theme);
                 }
 
                 return SingleChildScrollView(
@@ -266,6 +292,176 @@ class _StudyCalendarDetailScreenState extends State<StudyCalendarDetailScreen> {
                   ),
                 );
               },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyStudyState(FThemeData theme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            PhosphorIconsRegular.calendarBlank,
+            size: 64,
+            color: theme.colors.mutedForeground,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '이 날짜에 학습 내용이 없습니다',
+            style: theme.typography.md.copyWith(
+              color: theme.colors.mutedForeground,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFuturePlanView({
+    required List<TodayWordRecommendation> plannedWords,
+    required FThemeData theme,
+  }) {
+    if (plannedWords.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: AppSpacing.screenPadding,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                PhosphorIconsRegular.calendar,
+                size: 64,
+                color: theme.colors.mutedForeground,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '학습 예정 단어가 없습니다',
+                style: theme.typography.md.copyWith(
+                  color: theme.colors.mutedForeground,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '학습 목표를 설정하거나 단어 데이터를 확인해주세요.',
+                style: theme.typography.sm.copyWith(
+                  color: theme.colors.mutedForeground,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: AppSpacing.screenPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '학습 예정 단어',
+                  style: theme.typography.lg.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Text(
+                '${plannedWords.length}개',
+                style: theme.typography.sm.copyWith(
+                  color: theme.colors.mutedForeground,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...plannedWords.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: _buildPlannedWordCard(item, theme),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlannedWordCard(TodayWordRecommendation item, FThemeData theme) {
+    final word = item.word;
+    final meaning = word.meaningsText.isEmpty ? '뜻 정보 없음' : word.meaningsText;
+
+    return FCard(
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        word.word,
+                        style: GoogleFonts.notoSerifJp(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: theme.colors.foreground,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    JlptBadge(level: word.jlptLevel, showPrefix: true),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  word.reading,
+                  style: theme.typography.xs.copyWith(
+                    color: theme.colors.mutedForeground,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  meaning,
+                  style: theme.typography.sm,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            decoration: BoxDecoration(
+              color: item.isReview
+                  ? const Color(0xFFFFF7ED)
+                  : const Color(0xFFECFDF5),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: item.isReview
+                    ? const Color(0xFFFED7AA)
+                    : const Color(0xFFA7F3D0),
+              ),
+            ),
+            child: Text(
+              item.isReview ? '복습' : '새 단어',
+              style: theme.typography.xs.copyWith(
+                fontWeight: FontWeight.w700,
+                color: item.isReview
+                    ? const Color(0xFFC2410C)
+                    : const Color(0xFF047857),
+              ),
             ),
           ),
         ],
