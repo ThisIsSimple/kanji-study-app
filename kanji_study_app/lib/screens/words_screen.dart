@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/word_model.dart';
@@ -10,6 +11,7 @@ import '../services/study_record_service.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/word_list_item.dart';
 import '../widgets/custom_header.dart';
+import '../widgets/kanji_handwriting_sheet.dart';
 import 'word_detail_screen.dart';
 import '../constants/app_spacing.dart';
 import '../utils/study_session_launcher.dart';
@@ -40,6 +42,7 @@ class _WordsScreenState extends State<WordsScreen> {
   bool _isLoading = true;
   bool _showOnlyFavorites = false;
   bool _isSearchMode = false;
+  bool _autofocusSearchField = false;
 
   // Study status filter: null=전체, 'not_studied', 'completed', 'forgot'
   String? _selectedStudyFilter;
@@ -162,12 +165,51 @@ class _WordsScreenState extends State<WordsScreen> {
   void _toggleSearchMode() {
     setState(() {
       _isSearchMode = !_isSearchMode;
+      _autofocusSearchField = _isSearchMode;
       if (!_isSearchMode) {
         _searchController.clear();
         _searchQuery = '';
         _applyFilters();
       }
     });
+  }
+
+  Future<void> _openHandwritingSearch() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+    if (!mounted) return;
+
+    final selectedWord = await showWordHandwritingSheet(
+      context,
+      availableWords: _wordService.allWords.map((word) => word.word).toSet(),
+    );
+
+    if (!mounted) return;
+
+    if (selectedWord == null) {
+      return;
+    }
+
+    if (!_isSearchMode) {
+      setState(() {
+        _isSearchMode = true;
+        _autofocusSearchField = false;
+      });
+    }
+
+    _searchController
+      ..text = selectedWord
+      ..selection = TextSelection.collapsed(offset: selectedWord.length);
+
+    FocusManager.instance.primaryFocus?.unfocus();
+    await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+    if (!mounted) return;
+
+    showAppToast(
+      context,
+      message: '$selectedWord 검색 결과를 표시합니다',
+      type: AppToastType.info,
+    );
   }
 
   Future<void> _startFlashcardSession() async {
@@ -488,10 +530,17 @@ class _WordsScreenState extends State<WordsScreen> {
                         controller: _searchController,
                       ),
                       hint: '일본어, 한글, 후리가나로 검색...',
-                      autofocus: true,
+                      autofocus: _autofocusSearchField,
                     ),
                   ),
                   rightActions: [
+                    HeaderActionButton(
+                      icon: Icon(
+                        PhosphorIconsRegular.pencilSimpleLine,
+                        size: 20,
+                      ),
+                      onPressed: _openHandwritingSearch,
+                    ),
                     HeaderActionButton(
                       icon: Icon(PhosphorIconsRegular.x, size: 20),
                       onPressed: _toggleSearchMode,
@@ -548,6 +597,13 @@ class _WordsScreenState extends State<WordsScreen> {
                         size: 20,
                       ),
                       onPressed: _toggleSearchMode,
+                    ),
+                    HeaderActionButton(
+                      icon: Icon(
+                        PhosphorIconsRegular.pencilSimpleLine,
+                        size: 20,
+                      ),
+                      onPressed: _openHandwritingSearch,
                     ),
                   ],
                 ),
