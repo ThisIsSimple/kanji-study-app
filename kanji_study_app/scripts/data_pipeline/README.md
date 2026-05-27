@@ -32,7 +32,7 @@ python scripts/data_pipeline/import_to_supabase.py \
   --kanji ../.context/data-pipeline/recommended_v1_kanji_split_meanings.json
 ```
 
-`import_to_supabase.py`는 기본값이 dry-run입니다. 실제 반영은 `--apply`를 붙이고 `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`를 설정한 경우에만 수행합니다.
+`import_to_supabase.py`는 기본값이 dry-run입니다. 실제 반영은 `--apply`를 붙이고 `SUPABASE_URL`, `SUPABASE_SECRET_KEY` 또는 기존 `SUPABASE_SERVICE_ROLE_KEY`를 설정한 경우에만 수행합니다.
 
 `split_meanings.py`는 실제 import 후보를 만들 때 사용합니다. `meanings`와 `meanings_ko`에는 한국어 뜻만 남기고, JMdict/KANJIDIC 영어 gloss는 `meanings_en`에 보존합니다. 신규 중복이나 영어-only 뜻이 한국어 표시 필드에 남으면 `split_meanings_report.json`에서 실패로 표시합니다.
 
@@ -67,3 +67,30 @@ python scripts/data_pipeline/generate_ko_meaning_drafts.py \
 ```
 
 전체 권장 v1은 약 38,000개 초안 대상이므로 처음에는 `--max-batches`로 샘플 품질을 확인한 뒤 범위를 늘리는 것을 권장합니다.
+
+## New Kanji Korean Draft Generation
+
+단어 운영 반영 후 별도로 처리하는 신규 KANJIDIC2 한자는 `generate_kanji_ko_meaning_drafts.py`를 사용합니다. 이 스크립트는 `recommended_v1_kanji.json`에서 `source=kanjidic2`, `quality_status=ai_draft` 후보 966개만 골라 한국어 뜻 초안을 만들고, `meanings`/`meanings_ko`와 `meanings_en`을 분리한 import 후보 및 dry-run 리포트를 생성합니다.
+
+```sh
+# 프롬프트만 생성해서 후보와 배치 내용을 확인
+python scripts/data_pipeline/generate_kanji_ko_meaning_drafts.py \
+  --input ../.context/data-pipeline/recommended_v1_kanji.json \
+  --provider codex-cli \
+  --batch-size 50 \
+  --prompts-only
+
+# Codex CLI로 신규 한자 966개 한국어 뜻 초안 생성
+python scripts/data_pipeline/generate_kanji_ko_meaning_drafts.py \
+  --input ../.context/data-pipeline/recommended_v1_kanji.json \
+  --provider codex-cli \
+  --batch-size 50
+
+# 한자만 dry-run import
+python scripts/data_pipeline/import_to_supabase.py \
+  --kanji ../.context/data-pipeline/recommended_v1_new_kanji_split_meanings.json \
+  --preflight-report ../.context/data-pipeline/new_kanji_split_meanings_report.json \
+  --report ../.context/data-pipeline/recommended_v1_new_kanji_import_dry_run.json
+```
+
+한자 체크포인트는 `.context/data-pipeline/ko-draft-cli-kanji/<provider>/`에 저장됩니다. 운영 반영 전에는 `new_kanji_split_meanings_report.json`의 `preflight.failed == false`, 후보 수 966개, 한국어 표시 필드 영어-only 0건을 확인해야 합니다.

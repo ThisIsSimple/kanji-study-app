@@ -15,9 +15,11 @@ from common import DEFAULT_OUTPUT_DIR, write_json
 
 def fetch_table(table: str, batch_size: int) -> list[dict]:
     url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_ANON_KEY") or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    key = os.getenv("SUPABASE_ANON_KEY") or os.getenv("SUPABASE_SECRET_KEY") or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
     if not url or not key:
-        raise RuntimeError("SUPABASE_URL and SUPABASE_ANON_KEY or SUPABASE_SERVICE_ROLE_KEY are required")
+        raise RuntimeError(
+            "SUPABASE_URL and SUPABASE_ANON_KEY, SUPABASE_SECRET_KEY, or SUPABASE_SERVICE_ROLE_KEY are required"
+        )
 
     rows: list[dict] = []
     offset = 0

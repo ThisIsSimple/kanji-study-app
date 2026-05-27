@@ -11,6 +11,12 @@ import xml.etree.ElementTree as ET
 sys.path.insert(0, str(Path(__file__).resolve().parent / "data_pipeline"))
 
 from fetch_sources import SourceSpec, metadata_for
+from generate_kanji_ko_meaning_drafts import (
+    build_kanji_prompt,
+    candidate_rows,
+    preflight_report as new_kanji_preflight_report,
+    split_new_kanji,
+)
 from generate_ko_meaning_drafts import apply_mapping_to_words, build_cli_prompt, parse_translation_payload
 from merge_dataset import merge_kanji, merge_words, quality_report
 from normalize_jmdict import entry_to_words
@@ -220,6 +226,69 @@ class DataPipelineTest(unittest.TestCase):
         self.assertEqual(split[0]["meanings"], ["학문"])
         self.assertEqual(split[0]["meanings_en"], ["study"])
         self.assertEqual(report["excluded_no_korean"][0]["id"], 2)
+
+    def test_new_kanji_drafts_split_korean_and_english_meanings(self):
+        rows = [
+            {
+                "id": 2138,
+                "character": "娃",
+                "meanings": ["beautiful"],
+                "readings": {"on": ["ア"], "kun": []},
+                "korean_on_readings": ["왜"],
+                "source": "kanjidic2",
+                "external_id": "kanjidic2:U+5A03",
+                "quality_status": "ai_draft",
+            }
+        ]
+
+        prompt = build_kanji_prompt(rows)
+        split, report = split_new_kanji(rows, {"kanjidic2:U+5A03": ["예쁠"]})
+
+        self.assertIn("kanjidic2:U+5A03", prompt)
+        self.assertEqual(report["excluded_no_korean"], [])
+        self.assertEqual(split[0]["meanings"], ["예쁠"])
+        self.assertEqual(split[0]["meanings_ko"], ["예쁠"])
+        self.assertEqual(split[0]["meanings_en"], ["beautiful"])
+        self.assertEqual(split[0]["meaning_source"], "ai_translation")
+
+    def test_new_kanji_preflight_fails_duplicates_and_english_only(self):
+        rows = [
+            {
+                "id": 1,
+                "character": "娃",
+                "external_id": "kanjidic2:U+5A03",
+                "meanings": ["beautiful"],
+                "meanings_ko": ["beautiful"],
+                "meanings_en": ["beautiful"],
+                "readings": {"on": [], "kun": []},
+            },
+            {
+                "id": 1,
+                "character": "娃",
+                "external_id": "kanjidic2:U+5A03",
+                "meanings": ["예쁠"],
+                "meanings_ko": ["예쁠"],
+                "meanings_en": ["beautiful"],
+                "readings": {"on": [], "kun": []},
+            },
+        ]
+
+        report = new_kanji_preflight_report(rows, [], required_count=2)
+
+        self.assertTrue(report["failed"])
+        self.assertIn("duplicate_kanji_ids", [error["type"] for error in report["errors"]])
+        self.assertIn("kanji_korean_meanings_contain_english_only", [error["type"] for error in report["errors"]])
+
+    def test_candidate_rows_selects_only_new_kanjidic_ai_drafts(self):
+        rows = [
+            {"id": 1, "source": "legacy_excel", "quality_status": "reviewed"},
+            {"id": 2, "source": "kanjidic2", "quality_status": "ai_draft"},
+            {"id": 3, "source": "kanjidic2", "quality_status": "reviewed"},
+        ]
+
+        candidates = candidate_rows(rows, required_count=1)
+
+        self.assertEqual([row["id"] for row in candidates], [2])
 
     def test_preflight_allows_existing_duplicates_but_fails_new_duplicates(self):
         words = [
