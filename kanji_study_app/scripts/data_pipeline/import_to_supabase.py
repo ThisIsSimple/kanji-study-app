@@ -39,6 +39,8 @@ def prepare_word(row: dict[str, Any]) -> dict[str, Any]:
         "word": row["word"],
         "reading": row["reading"],
         "meanings": row.get("meanings") or [],
+        "meanings_ko": row.get("meanings_ko") or row.get("meanings") or [],
+        "meanings_en": row.get("meanings_en") or [],
         "jlpt_level": row.get("jlpt_level", 0),
         "source": row.get("source") or "legacy_naver",
         "external_id": row.get("external_id"),
@@ -58,6 +60,8 @@ def prepare_kanji(row: dict[str, Any]) -> dict[str, Any]:
         "id": row["id"],
         "character": row["character"],
         "meanings": row.get("meanings") or [],
+        "meanings_ko": row.get("meanings_ko") or row.get("meanings") or [],
+        "meanings_en": row.get("meanings_en") or [],
         "on_readings": readings.get("on") or [],
         "kun_readings": readings.get("kun") or [],
         "korean_on_readings": row.get("korean_on_readings") or [],
@@ -92,6 +96,16 @@ def upsert_rows(client, table: str, rows: list[dict[str, Any]], batch_size: int)
     return total
 
 
+def load_preflight(path: Path | None) -> dict[str, Any] | None:
+    if not path or not path.exists():
+        return None
+    report = read_json(path)
+    preflight = report.get("preflight") if isinstance(report, dict) else None
+    if isinstance(preflight, dict):
+        return preflight
+    return None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--words", type=Path, help="merged_words.json")
@@ -99,7 +113,17 @@ def main() -> None:
     parser.add_argument("--apply", action="store_true", help="실제로 Supabase에 upsert")
     parser.add_argument("--batch-size", type=int, default=100)
     parser.add_argument("--report", type=Path, default=DEFAULT_OUTPUT_DIR / "import_report.json")
+    parser.add_argument(
+        "--preflight-report",
+        type=Path,
+        default=DEFAULT_OUTPUT_DIR / "split_meanings_report.json",
+        help="split_meanings.py preflight report. 실패 상태면 import를 중단합니다.",
+    )
     args = parser.parse_args()
+
+    preflight = load_preflight(args.preflight_report)
+    if preflight and preflight.get("failed"):
+        raise RuntimeError(f"preflight failed: {args.preflight_report}")
 
     words = [prepare_word(row) for row in _rows(args.words, "words")] if args.words else []
     kanji = [prepare_kanji(row) for row in _rows(args.kanji, "kanji")] if args.kanji else []
@@ -107,6 +131,7 @@ def main() -> None:
         "dry_run": not args.apply,
         "words": {"count": len(words), "first_ids": [row["id"] for row in words[:5]]},
         "kanji": {"count": len(kanji), "first_ids": [row["id"] for row in kanji[:5]]},
+        "preflight": preflight,
     }
 
     if args.apply:

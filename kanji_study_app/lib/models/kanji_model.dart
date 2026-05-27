@@ -4,6 +4,8 @@ class Kanji {
   final int id;
   final String character;
   final List<String> meanings;
+  final List<String> meaningsKo;
+  final List<String> meaningsEn;
   final KanjiReadings readings;
   final List<String> koreanOnReadings; // 한글 음독
   final List<String> koreanKunReadings; // 한글 훈독
@@ -27,6 +29,8 @@ class Kanji {
     required this.id,
     required this.character,
     required this.meanings,
+    List<String>? meaningsKo,
+    this.meaningsEn = const [],
     required this.readings,
     this.koreanOnReadings = const [],
     this.koreanKunReadings = const [],
@@ -45,7 +49,7 @@ class Kanji {
     this.priorityRank,
     this.tags = const [],
     this.updatedAt,
-  });
+  }) : meaningsKo = meaningsKo ?? meanings;
 
   factory Kanji.fromJson(Map<String, dynamic> json) {
     // Handle legacy format (List<String>) and new format (List<KanjiExample>)
@@ -69,10 +73,33 @@ class Kanji {
       return result;
     }
 
+    List<String> parseStringList(dynamic value) {
+      if (value == null || value is! List) {
+        return [];
+      }
+      return value.map((item) => item.toString()).toList();
+    }
+
+    bool hasKorean(String value) => RegExp(r'[가-힣]').hasMatch(value);
+
+    final rawMeanings = parseStringList(json['meanings']);
+    final explicitMeaningsKo = parseStringList(json['meanings_ko']);
+    final explicitMeaningsEn = parseStringList(json['meanings_en']);
+    final fallbackMeaningsKo = rawMeanings.where(hasKorean).toList();
+    final fallbackMeaningsEn = rawMeanings.where((m) => !hasKorean(m)).toList();
+    final meaningsKo = explicitMeaningsKo.isNotEmpty
+        ? explicitMeaningsKo
+        : fallbackMeaningsKo;
+    final meaningsEn = explicitMeaningsEn.isNotEmpty
+        ? explicitMeaningsEn
+        : fallbackMeaningsEn;
+
     return Kanji(
       id: json['id'] as int,
       character: json['character'] as String,
-      meanings: List<String>.from(json['meanings'] as List),
+      meanings: meaningsKo,
+      meaningsKo: meaningsKo,
+      meaningsEn: meaningsEn,
       readings: KanjiReadings.fromJson(
         json['readings'] as Map<String, dynamic>,
       ),
@@ -107,6 +134,8 @@ class Kanji {
       'id': id,
       'character': character,
       'meanings': meanings,
+      'meanings_ko': meaningsKo,
+      'meanings_en': meaningsEn,
       'readings': readings.toJson(),
       'korean_on_readings': koreanOnReadings,
       'korean_kun_readings': koreanKunReadings,

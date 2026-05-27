@@ -43,6 +43,26 @@ class $KanjiTableTable extends KanjiTable
         requiredDuringInsert: true,
       ).withConverter<List<String>>($KanjiTableTable.$convertermeanings);
   @override
+  late final GeneratedColumnWithTypeConverter<List<String>, String> meaningsKo =
+      GeneratedColumn<String>(
+        'meanings_ko',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      ).withConverter<List<String>>($KanjiTableTable.$convertermeaningsKo);
+  @override
+  late final GeneratedColumnWithTypeConverter<List<String>, String> meaningsEn =
+      GeneratedColumn<String>(
+        'meanings_en',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      ).withConverter<List<String>>($KanjiTableTable.$convertermeaningsEn);
+  @override
   late final GeneratedColumnWithTypeConverter<List<String>, String> readingsOn =
       GeneratedColumn<String>(
         'readings_on',
@@ -247,6 +267,8 @@ class $KanjiTableTable extends KanjiTable
     id,
     character,
     meanings,
+    meaningsKo,
+    meaningsEn,
     readingsOn,
     readingsKun,
     koreanOnReadings,
@@ -412,6 +434,18 @@ class $KanjiTableTable extends KanjiTable
           data['${effectivePrefix}meanings'],
         )!,
       ),
+      meaningsKo: $KanjiTableTable.$convertermeaningsKo.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}meanings_ko'],
+        )!,
+      ),
+      meaningsEn: $KanjiTableTable.$convertermeaningsEn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}meanings_en'],
+        )!,
+      ),
       readingsOn: $KanjiTableTable.$converterreadingsOn.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
@@ -510,6 +544,10 @@ class $KanjiTableTable extends KanjiTable
 
   static TypeConverter<List<String>, String> $convertermeanings =
       const StringListConverter();
+  static TypeConverter<List<String>, String> $convertermeaningsKo =
+      const StringListConverter();
+  static TypeConverter<List<String>, String> $convertermeaningsEn =
+      const StringListConverter();
   static TypeConverter<List<String>, String> $converterreadingsOn =
       const StringListConverter();
   static TypeConverter<List<String>, String> $converterreadingsKun =
@@ -528,6 +566,8 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
   final int id;
   final String character;
   final List<String> meanings;
+  final List<String> meaningsKo;
+  final List<String> meaningsEn;
   final List<String> readingsOn;
   final List<String> readingsKun;
   final List<String> koreanOnReadings;
@@ -551,6 +591,8 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     required this.id,
     required this.character,
     required this.meanings,
+    required this.meaningsKo,
+    required this.meaningsEn,
     required this.readingsOn,
     required this.readingsKun,
     required this.koreanOnReadings,
@@ -579,6 +621,16 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     {
       map['meanings'] = Variable<String>(
         $KanjiTableTable.$convertermeanings.toSql(meanings),
+      );
+    }
+    {
+      map['meanings_ko'] = Variable<String>(
+        $KanjiTableTable.$convertermeaningsKo.toSql(meaningsKo),
+      );
+    }
+    {
+      map['meanings_en'] = Variable<String>(
+        $KanjiTableTable.$convertermeaningsEn.toSql(meaningsEn),
       );
     }
     {
@@ -644,6 +696,8 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
       id: Value(id),
       character: Value(character),
       meanings: Value(meanings),
+      meaningsKo: Value(meaningsKo),
+      meaningsEn: Value(meaningsEn),
       readingsOn: Value(readingsOn),
       readingsKun: Value(readingsKun),
       koreanOnReadings: Value(koreanOnReadings),
@@ -687,6 +741,8 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
       id: serializer.fromJson<int>(json['id']),
       character: serializer.fromJson<String>(json['character']),
       meanings: serializer.fromJson<List<String>>(json['meanings']),
+      meaningsKo: serializer.fromJson<List<String>>(json['meaningsKo']),
+      meaningsEn: serializer.fromJson<List<String>>(json['meaningsEn']),
       readingsOn: serializer.fromJson<List<String>>(json['readingsOn']),
       readingsKun: serializer.fromJson<List<String>>(json['readingsKun']),
       koreanOnReadings: serializer.fromJson<List<String>>(
@@ -719,6 +775,8 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
       'id': serializer.toJson<int>(id),
       'character': serializer.toJson<String>(character),
       'meanings': serializer.toJson<List<String>>(meanings),
+      'meaningsKo': serializer.toJson<List<String>>(meaningsKo),
+      'meaningsEn': serializer.toJson<List<String>>(meaningsEn),
       'readingsOn': serializer.toJson<List<String>>(readingsOn),
       'readingsKun': serializer.toJson<List<String>>(readingsKun),
       'koreanOnReadings': serializer.toJson<List<String>>(koreanOnReadings),
@@ -745,6 +803,8 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     int? id,
     String? character,
     List<String>? meanings,
+    List<String>? meaningsKo,
+    List<String>? meaningsEn,
     List<String>? readingsOn,
     List<String>? readingsKun,
     List<String>? koreanOnReadings,
@@ -768,6 +828,8 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     id: id ?? this.id,
     character: character ?? this.character,
     meanings: meanings ?? this.meanings,
+    meaningsKo: meaningsKo ?? this.meaningsKo,
+    meaningsEn: meaningsEn ?? this.meaningsEn,
     readingsOn: readingsOn ?? this.readingsOn,
     readingsKun: readingsKun ?? this.readingsKun,
     koreanOnReadings: koreanOnReadings ?? this.koreanOnReadings,
@@ -795,6 +857,12 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
       id: data.id.present ? data.id.value : this.id,
       character: data.character.present ? data.character.value : this.character,
       meanings: data.meanings.present ? data.meanings.value : this.meanings,
+      meaningsKo: data.meaningsKo.present
+          ? data.meaningsKo.value
+          : this.meaningsKo,
+      meaningsEn: data.meaningsEn.present
+          ? data.meaningsEn.value
+          : this.meaningsEn,
       readingsOn: data.readingsOn.present
           ? data.readingsOn.value
           : this.readingsOn,
@@ -845,6 +913,8 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
           ..write('id: $id, ')
           ..write('character: $character, ')
           ..write('meanings: $meanings, ')
+          ..write('meaningsKo: $meaningsKo, ')
+          ..write('meaningsEn: $meaningsEn, ')
           ..write('readingsOn: $readingsOn, ')
           ..write('readingsKun: $readingsKun, ')
           ..write('koreanOnReadings: $koreanOnReadings, ')
@@ -873,6 +943,8 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
     id,
     character,
     meanings,
+    meaningsKo,
+    meaningsEn,
     readingsOn,
     readingsKun,
     koreanOnReadings,
@@ -900,6 +972,8 @@ class KanjiTableData extends DataClass implements Insertable<KanjiTableData> {
           other.id == this.id &&
           other.character == this.character &&
           other.meanings == this.meanings &&
+          other.meaningsKo == this.meaningsKo &&
+          other.meaningsEn == this.meaningsEn &&
           other.readingsOn == this.readingsOn &&
           other.readingsKun == this.readingsKun &&
           other.koreanOnReadings == this.koreanOnReadings &&
@@ -925,6 +999,8 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
   final Value<int> id;
   final Value<String> character;
   final Value<List<String>> meanings;
+  final Value<List<String>> meaningsKo;
+  final Value<List<String>> meaningsEn;
   final Value<List<String>> readingsOn;
   final Value<List<String>> readingsKun;
   final Value<List<String>> koreanOnReadings;
@@ -948,6 +1024,8 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     this.id = const Value.absent(),
     this.character = const Value.absent(),
     this.meanings = const Value.absent(),
+    this.meaningsKo = const Value.absent(),
+    this.meaningsEn = const Value.absent(),
     this.readingsOn = const Value.absent(),
     this.readingsKun = const Value.absent(),
     this.koreanOnReadings = const Value.absent(),
@@ -972,6 +1050,8 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     this.id = const Value.absent(),
     required String character,
     required List<String> meanings,
+    this.meaningsKo = const Value.absent(),
+    this.meaningsEn = const Value.absent(),
     required List<String> readingsOn,
     required List<String> readingsKun,
     required List<String> koreanOnReadings,
@@ -1004,6 +1084,8 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     Expression<int>? id,
     Expression<String>? character,
     Expression<String>? meanings,
+    Expression<String>? meaningsKo,
+    Expression<String>? meaningsEn,
     Expression<String>? readingsOn,
     Expression<String>? readingsKun,
     Expression<String>? koreanOnReadings,
@@ -1028,6 +1110,8 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
       if (id != null) 'id': id,
       if (character != null) 'character': character,
       if (meanings != null) 'meanings': meanings,
+      if (meaningsKo != null) 'meanings_ko': meaningsKo,
+      if (meaningsEn != null) 'meanings_en': meaningsEn,
       if (readingsOn != null) 'readings_on': readingsOn,
       if (readingsKun != null) 'readings_kun': readingsKun,
       if (koreanOnReadings != null) 'korean_on_readings': koreanOnReadings,
@@ -1054,6 +1138,8 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     Value<int>? id,
     Value<String>? character,
     Value<List<String>>? meanings,
+    Value<List<String>>? meaningsKo,
+    Value<List<String>>? meaningsEn,
     Value<List<String>>? readingsOn,
     Value<List<String>>? readingsKun,
     Value<List<String>>? koreanOnReadings,
@@ -1078,6 +1164,8 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
       id: id ?? this.id,
       character: character ?? this.character,
       meanings: meanings ?? this.meanings,
+      meaningsKo: meaningsKo ?? this.meaningsKo,
+      meaningsEn: meaningsEn ?? this.meaningsEn,
       readingsOn: readingsOn ?? this.readingsOn,
       readingsKun: readingsKun ?? this.readingsKun,
       koreanOnReadings: koreanOnReadings ?? this.koreanOnReadings,
@@ -1112,6 +1200,16 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
     if (meanings.present) {
       map['meanings'] = Variable<String>(
         $KanjiTableTable.$convertermeanings.toSql(meanings.value),
+      );
+    }
+    if (meaningsKo.present) {
+      map['meanings_ko'] = Variable<String>(
+        $KanjiTableTable.$convertermeaningsKo.toSql(meaningsKo.value),
+      );
+    }
+    if (meaningsEn.present) {
+      map['meanings_en'] = Variable<String>(
+        $KanjiTableTable.$convertermeaningsEn.toSql(meaningsEn.value),
       );
     }
     if (readingsOn.present) {
@@ -1196,6 +1294,8 @@ class KanjiTableCompanion extends UpdateCompanion<KanjiTableData> {
           ..write('id: $id, ')
           ..write('character: $character, ')
           ..write('meanings: $meanings, ')
+          ..write('meaningsKo: $meaningsKo, ')
+          ..write('meaningsEn: $meaningsEn, ')
           ..write('readingsOn: $readingsOn, ')
           ..write('readingsKun: $readingsKun, ')
           ..write('koreanOnReadings: $koreanOnReadings, ')
@@ -1268,6 +1368,26 @@ class $WordsTableTable extends WordsTable
         type: DriftSqlType.string,
         requiredDuringInsert: true,
       ).withConverter<String>($WordsTableTable.$convertermeanings);
+  @override
+  late final GeneratedColumnWithTypeConverter<String, String> meaningsKo =
+      GeneratedColumn<String>(
+        'meanings_ko',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      ).withConverter<String>($WordsTableTable.$convertermeaningsKo);
+  @override
+  late final GeneratedColumnWithTypeConverter<String, String> meaningsEn =
+      GeneratedColumn<String>(
+        'meanings_en',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      ).withConverter<String>($WordsTableTable.$convertermeaningsEn);
   static const VerificationMeta _jlptLevelMeta = const VerificationMeta(
     'jlptLevel',
   );
@@ -1388,6 +1508,8 @@ class $WordsTableTable extends WordsTable
     word,
     reading,
     meanings,
+    meaningsKo,
+    meaningsEn,
     jlptLevel,
     source,
     externalId,
@@ -1525,6 +1647,18 @@ class $WordsTableTable extends WordsTable
           data['${effectivePrefix}meanings'],
         )!,
       ),
+      meaningsKo: $WordsTableTable.$convertermeaningsKo.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}meanings_ko'],
+        )!,
+      ),
+      meaningsEn: $WordsTableTable.$convertermeaningsEn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}meanings_en'],
+        )!,
+      ),
       jlptLevel: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}jlpt_level'],
@@ -1577,6 +1711,10 @@ class $WordsTableTable extends WordsTable
 
   static TypeConverter<String, String> $convertermeanings =
       const JsonStringConverter();
+  static TypeConverter<String, String> $convertermeaningsKo =
+      const JsonStringConverter();
+  static TypeConverter<String, String> $convertermeaningsEn =
+      const JsonStringConverter();
   static TypeConverter<List<String>, String> $convertertags =
       const StringListConverter();
 }
@@ -1586,6 +1724,8 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
   final String word;
   final String reading;
   final String meanings;
+  final String meaningsKo;
+  final String meaningsEn;
   final int jlptLevel;
   final String source;
   final String? externalId;
@@ -1601,6 +1741,8 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
     required this.word,
     required this.reading,
     required this.meanings,
+    required this.meaningsKo,
+    required this.meaningsEn,
     required this.jlptLevel,
     required this.source,
     this.externalId,
@@ -1621,6 +1763,16 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
     {
       map['meanings'] = Variable<String>(
         $WordsTableTable.$convertermeanings.toSql(meanings),
+      );
+    }
+    {
+      map['meanings_ko'] = Variable<String>(
+        $WordsTableTable.$convertermeaningsKo.toSql(meaningsKo),
+      );
+    }
+    {
+      map['meanings_en'] = Variable<String>(
+        $WordsTableTable.$convertermeaningsEn.toSql(meaningsEn),
       );
     }
     map['jlpt_level'] = Variable<int>(jlptLevel);
@@ -1654,6 +1806,8 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
       word: Value(word),
       reading: Value(reading),
       meanings: Value(meanings),
+      meaningsKo: Value(meaningsKo),
+      meaningsEn: Value(meaningsEn),
       jlptLevel: Value(jlptLevel),
       source: Value(source),
       externalId: externalId == null && nullToAbsent
@@ -1685,6 +1839,8 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
       word: serializer.fromJson<String>(json['word']),
       reading: serializer.fromJson<String>(json['reading']),
       meanings: serializer.fromJson<String>(json['meanings']),
+      meaningsKo: serializer.fromJson<String>(json['meaningsKo']),
+      meaningsEn: serializer.fromJson<String>(json['meaningsEn']),
       jlptLevel: serializer.fromJson<int>(json['jlptLevel']),
       source: serializer.fromJson<String>(json['source']),
       externalId: serializer.fromJson<String?>(json['externalId']),
@@ -1705,6 +1861,8 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
       'word': serializer.toJson<String>(word),
       'reading': serializer.toJson<String>(reading),
       'meanings': serializer.toJson<String>(meanings),
+      'meaningsKo': serializer.toJson<String>(meaningsKo),
+      'meaningsEn': serializer.toJson<String>(meaningsEn),
       'jlptLevel': serializer.toJson<int>(jlptLevel),
       'source': serializer.toJson<String>(source),
       'externalId': serializer.toJson<String?>(externalId),
@@ -1723,6 +1881,8 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
     String? word,
     String? reading,
     String? meanings,
+    String? meaningsKo,
+    String? meaningsEn,
     int? jlptLevel,
     String? source,
     Value<String?> externalId = const Value.absent(),
@@ -1738,6 +1898,8 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
     word: word ?? this.word,
     reading: reading ?? this.reading,
     meanings: meanings ?? this.meanings,
+    meaningsKo: meaningsKo ?? this.meaningsKo,
+    meaningsEn: meaningsEn ?? this.meaningsEn,
     jlptLevel: jlptLevel ?? this.jlptLevel,
     source: source ?? this.source,
     externalId: externalId.present ? externalId.value : this.externalId,
@@ -1757,6 +1919,12 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
       word: data.word.present ? data.word.value : this.word,
       reading: data.reading.present ? data.reading.value : this.reading,
       meanings: data.meanings.present ? data.meanings.value : this.meanings,
+      meaningsKo: data.meaningsKo.present
+          ? data.meaningsKo.value
+          : this.meaningsKo,
+      meaningsEn: data.meaningsEn.present
+          ? data.meaningsEn.value
+          : this.meaningsEn,
       jlptLevel: data.jlptLevel.present ? data.jlptLevel.value : this.jlptLevel,
       source: data.source.present ? data.source.value : this.source,
       externalId: data.externalId.present
@@ -1787,6 +1955,8 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
           ..write('word: $word, ')
           ..write('reading: $reading, ')
           ..write('meanings: $meanings, ')
+          ..write('meaningsKo: $meaningsKo, ')
+          ..write('meaningsEn: $meaningsEn, ')
           ..write('jlptLevel: $jlptLevel, ')
           ..write('source: $source, ')
           ..write('externalId: $externalId, ')
@@ -1807,6 +1977,8 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
     word,
     reading,
     meanings,
+    meaningsKo,
+    meaningsEn,
     jlptLevel,
     source,
     externalId,
@@ -1826,6 +1998,8 @@ class WordsTableData extends DataClass implements Insertable<WordsTableData> {
           other.word == this.word &&
           other.reading == this.reading &&
           other.meanings == this.meanings &&
+          other.meaningsKo == this.meaningsKo &&
+          other.meaningsEn == this.meaningsEn &&
           other.jlptLevel == this.jlptLevel &&
           other.source == this.source &&
           other.externalId == this.externalId &&
@@ -1843,6 +2017,8 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
   final Value<String> word;
   final Value<String> reading;
   final Value<String> meanings;
+  final Value<String> meaningsKo;
+  final Value<String> meaningsEn;
   final Value<int> jlptLevel;
   final Value<String> source;
   final Value<String?> externalId;
@@ -1858,6 +2034,8 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
     this.word = const Value.absent(),
     this.reading = const Value.absent(),
     this.meanings = const Value.absent(),
+    this.meaningsKo = const Value.absent(),
+    this.meaningsEn = const Value.absent(),
     this.jlptLevel = const Value.absent(),
     this.source = const Value.absent(),
     this.externalId = const Value.absent(),
@@ -1874,6 +2052,8 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
     required String word,
     required String reading,
     required String meanings,
+    this.meaningsKo = const Value.absent(),
+    this.meaningsEn = const Value.absent(),
     required int jlptLevel,
     this.source = const Value.absent(),
     this.externalId = const Value.absent(),
@@ -1893,6 +2073,8 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
     Expression<String>? word,
     Expression<String>? reading,
     Expression<String>? meanings,
+    Expression<String>? meaningsKo,
+    Expression<String>? meaningsEn,
     Expression<int>? jlptLevel,
     Expression<String>? source,
     Expression<String>? externalId,
@@ -1909,6 +2091,8 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
       if (word != null) 'word': word,
       if (reading != null) 'reading': reading,
       if (meanings != null) 'meanings': meanings,
+      if (meaningsKo != null) 'meanings_ko': meaningsKo,
+      if (meaningsEn != null) 'meanings_en': meaningsEn,
       if (jlptLevel != null) 'jlpt_level': jlptLevel,
       if (source != null) 'source': source,
       if (externalId != null) 'external_id': externalId,
@@ -1927,6 +2111,8 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
     Value<String>? word,
     Value<String>? reading,
     Value<String>? meanings,
+    Value<String>? meaningsKo,
+    Value<String>? meaningsEn,
     Value<int>? jlptLevel,
     Value<String>? source,
     Value<String?>? externalId,
@@ -1943,6 +2129,8 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
       word: word ?? this.word,
       reading: reading ?? this.reading,
       meanings: meanings ?? this.meanings,
+      meaningsKo: meaningsKo ?? this.meaningsKo,
+      meaningsEn: meaningsEn ?? this.meaningsEn,
       jlptLevel: jlptLevel ?? this.jlptLevel,
       source: source ?? this.source,
       externalId: externalId ?? this.externalId,
@@ -1971,6 +2159,16 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
     if (meanings.present) {
       map['meanings'] = Variable<String>(
         $WordsTableTable.$convertermeanings.toSql(meanings.value),
+      );
+    }
+    if (meaningsKo.present) {
+      map['meanings_ko'] = Variable<String>(
+        $WordsTableTable.$convertermeaningsKo.toSql(meaningsKo.value),
+      );
+    }
+    if (meaningsEn.present) {
+      map['meanings_en'] = Variable<String>(
+        $WordsTableTable.$convertermeaningsEn.toSql(meaningsEn.value),
       );
     }
     if (jlptLevel.present) {
@@ -2015,6 +2213,8 @@ class WordsTableCompanion extends UpdateCompanion<WordsTableData> {
           ..write('word: $word, ')
           ..write('reading: $reading, ')
           ..write('meanings: $meanings, ')
+          ..write('meaningsKo: $meaningsKo, ')
+          ..write('meaningsEn: $meaningsEn, ')
           ..write('jlptLevel: $jlptLevel, ')
           ..write('source: $source, ')
           ..write('externalId: $externalId, ')
@@ -3097,6 +3297,8 @@ typedef $$KanjiTableTableCreateCompanionBuilder =
       Value<int> id,
       required String character,
       required List<String> meanings,
+      Value<List<String>> meaningsKo,
+      Value<List<String>> meaningsEn,
       required List<String> readingsOn,
       required List<String> readingsKun,
       required List<String> koreanOnReadings,
@@ -3122,6 +3324,8 @@ typedef $$KanjiTableTableUpdateCompanionBuilder =
       Value<int> id,
       Value<String> character,
       Value<List<String>> meanings,
+      Value<List<String>> meaningsKo,
+      Value<List<String>> meaningsEn,
       Value<List<String>> readingsOn,
       Value<List<String>> readingsKun,
       Value<List<String>> koreanOnReadings,
@@ -3165,6 +3369,18 @@ class $$KanjiTableTableFilterComposer
   ColumnWithTypeConverterFilters<List<String>, List<String>, String>
   get meanings => $composableBuilder(
     column: $table.meanings,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<List<String>, List<String>, String>
+  get meaningsKo => $composableBuilder(
+    column: $table.meaningsKo,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<List<String>, List<String>, String>
+  get meaningsEn => $composableBuilder(
+    column: $table.meaningsEn,
     builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
@@ -3294,6 +3510,16 @@ class $$KanjiTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get meaningsKo => $composableBuilder(
+    column: $table.meaningsKo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get meaningsEn => $composableBuilder(
+    column: $table.meaningsEn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get readingsOn => $composableBuilder(
     column: $table.readingsOn,
     builder: (column) => ColumnOrderings(column),
@@ -3407,6 +3633,18 @@ class $$KanjiTableTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<List<String>, String> get meanings =>
       $composableBuilder(column: $table.meanings, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<List<String>, String> get meaningsKo =>
+      $composableBuilder(
+        column: $table.meaningsKo,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<List<String>, String> get meaningsEn =>
+      $composableBuilder(
+        column: $table.meaningsEn,
+        builder: (column) => column,
+      );
 
   GeneratedColumnWithTypeConverter<List<String>, String> get readingsOn =>
       $composableBuilder(
@@ -3526,6 +3764,8 @@ class $$KanjiTableTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> character = const Value.absent(),
                 Value<List<String>> meanings = const Value.absent(),
+                Value<List<String>> meaningsKo = const Value.absent(),
+                Value<List<String>> meaningsEn = const Value.absent(),
                 Value<List<String>> readingsOn = const Value.absent(),
                 Value<List<String>> readingsKun = const Value.absent(),
                 Value<List<String>> koreanOnReadings = const Value.absent(),
@@ -3549,6 +3789,8 @@ class $$KanjiTableTableTableManager
                 id: id,
                 character: character,
                 meanings: meanings,
+                meaningsKo: meaningsKo,
+                meaningsEn: meaningsEn,
                 readingsOn: readingsOn,
                 readingsKun: readingsKun,
                 koreanOnReadings: koreanOnReadings,
@@ -3574,6 +3816,8 @@ class $$KanjiTableTableTableManager
                 Value<int> id = const Value.absent(),
                 required String character,
                 required List<String> meanings,
+                Value<List<String>> meaningsKo = const Value.absent(),
+                Value<List<String>> meaningsEn = const Value.absent(),
                 required List<String> readingsOn,
                 required List<String> readingsKun,
                 required List<String> koreanOnReadings,
@@ -3597,6 +3841,8 @@ class $$KanjiTableTableTableManager
                 id: id,
                 character: character,
                 meanings: meanings,
+                meaningsKo: meaningsKo,
+                meaningsEn: meaningsEn,
                 readingsOn: readingsOn,
                 readingsKun: readingsKun,
                 koreanOnReadings: koreanOnReadings,
@@ -3648,6 +3894,8 @@ typedef $$WordsTableTableCreateCompanionBuilder =
       required String word,
       required String reading,
       required String meanings,
+      Value<String> meaningsKo,
+      Value<String> meaningsEn,
       required int jlptLevel,
       Value<String> source,
       Value<String?> externalId,
@@ -3665,6 +3913,8 @@ typedef $$WordsTableTableUpdateCompanionBuilder =
       Value<String> word,
       Value<String> reading,
       Value<String> meanings,
+      Value<String> meaningsKo,
+      Value<String> meaningsEn,
       Value<int> jlptLevel,
       Value<String> source,
       Value<String?> externalId,
@@ -3704,6 +3954,18 @@ class $$WordsTableTableFilterComposer
   ColumnWithTypeConverterFilters<String, String, String> get meanings =>
       $composableBuilder(
         column: $table.meanings,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<String, String, String> get meaningsKo =>
+      $composableBuilder(
+        column: $table.meaningsKo,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<String, String, String> get meaningsEn =>
+      $composableBuilder(
+        column: $table.meaningsEn,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
@@ -3788,6 +4050,16 @@ class $$WordsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get meaningsKo => $composableBuilder(
+    column: $table.meaningsKo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get meaningsEn => $composableBuilder(
+    column: $table.meaningsEn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get jlptLevel => $composableBuilder(
     column: $table.jlptLevel,
     builder: (column) => ColumnOrderings(column),
@@ -3859,6 +4131,18 @@ class $$WordsTableTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<String, String> get meanings =>
       $composableBuilder(column: $table.meanings, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<String, String> get meaningsKo =>
+      $composableBuilder(
+        column: $table.meaningsKo,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<String, String> get meaningsEn =>
+      $composableBuilder(
+        column: $table.meaningsEn,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<int> get jlptLevel =>
       $composableBuilder(column: $table.jlptLevel, builder: (column) => column);
@@ -3936,6 +4220,8 @@ class $$WordsTableTableTableManager
                 Value<String> word = const Value.absent(),
                 Value<String> reading = const Value.absent(),
                 Value<String> meanings = const Value.absent(),
+                Value<String> meaningsKo = const Value.absent(),
+                Value<String> meaningsEn = const Value.absent(),
                 Value<int> jlptLevel = const Value.absent(),
                 Value<String> source = const Value.absent(),
                 Value<String?> externalId = const Value.absent(),
@@ -3951,6 +4237,8 @@ class $$WordsTableTableTableManager
                 word: word,
                 reading: reading,
                 meanings: meanings,
+                meaningsKo: meaningsKo,
+                meaningsEn: meaningsEn,
                 jlptLevel: jlptLevel,
                 source: source,
                 externalId: externalId,
@@ -3968,6 +4256,8 @@ class $$WordsTableTableTableManager
                 required String word,
                 required String reading,
                 required String meanings,
+                Value<String> meaningsKo = const Value.absent(),
+                Value<String> meaningsEn = const Value.absent(),
                 required int jlptLevel,
                 Value<String> source = const Value.absent(),
                 Value<String?> externalId = const Value.absent(),
@@ -3983,6 +4273,8 @@ class $$WordsTableTableTableManager
                 word: word,
                 reading: reading,
                 meanings: meanings,
+                meaningsKo: meaningsKo,
+                meaningsEn: meaningsEn,
                 jlptLevel: jlptLevel,
                 source: source,
                 externalId: externalId,

@@ -537,7 +537,9 @@ class SupabaseService {
         result.add({
           'id': item['id'],
           'character': item['character'],
-          'meanings': item['meanings'],
+          'meanings': item['meanings_ko'] ?? item['meanings'],
+          'meanings_ko': item['meanings_ko'] ?? item['meanings'],
+          'meanings_en': item['meanings_en'] ?? [],
           'readings': {
             'on': item['on_readings'] ?? [],
             'kun': item['kun_readings'] ?? [],

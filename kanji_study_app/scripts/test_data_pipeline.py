@@ -13,6 +13,7 @@ from generate_ko_meaning_drafts import apply_mapping_to_words, build_cli_prompt,
 from merge_dataset import merge_kanji, merge_words, quality_report
 from normalize_jmdict import entry_to_words
 from normalize_kanjidic import character_to_kanji
+from split_meanings import preflight_report, split_kanji, split_words
 
 
 class DataPipelineTest(unittest.TestCase):
@@ -173,6 +174,64 @@ class DataPipelineTest(unittest.TestCase):
         self.assertEqual(needs_translation, [])
         self.assertEqual(words[0]["meaning_source"], "ai_translation")
         self.assertEqual(words[1]["meanings"][0]["meaning"], "company")
+
+    def test_split_words_separates_korean_display_and_english_gloss(self):
+        rows = [
+            {
+                "id": 1,
+                "word": "学校",
+                "reading": "がっこう",
+                "quality_status": "reviewed",
+                "meanings": [
+                    {"part_of_speech": "명사", "meaning": "학교"},
+                    {"part_of_speech": "n", "meaning": "school", "source": "jmdict"},
+                ],
+            },
+            {
+                "id": 2,
+                "external_id": "jmdict:2:0",
+                "word": "会社",
+                "reading": "かいしゃ",
+                "quality_status": "ai_draft",
+                "meanings": [{"part_of_speech": "n", "meaning": "company"}],
+            },
+        ]
+
+        split, report = split_words(rows, {"jmdict:2:0": ["회사"]})
+
+        self.assertEqual(report["excluded_no_korean"], [])
+        self.assertEqual(split[0]["meanings"], [{"part_of_speech": "명사", "meaning": "학교"}])
+        self.assertEqual(split[0]["meanings_en"][0]["meaning"], "school")
+        self.assertEqual(split[1]["meanings"][0]["meaning"], "회사")
+        self.assertEqual(split[1]["meaning_source"], "ai_translation")
+
+    def test_split_kanji_excludes_rows_without_korean_meanings(self):
+        split, report = split_kanji(
+            [
+                {"id": 1, "character": "学", "meanings": ["학문", "study"]},
+                {"id": 2, "character": "𠮟", "meanings": ["scold"]},
+            ]
+        )
+
+        self.assertEqual(len(split), 1)
+        self.assertEqual(split[0]["meanings"], ["학문"])
+        self.assertEqual(split[0]["meanings_en"], ["study"])
+        self.assertEqual(report["excluded_no_korean"][0]["id"], 2)
+
+    def test_preflight_allows_existing_duplicates_but_fails_new_duplicates(self):
+        words = [
+            {"id": 1, "word": "一杯", "reading": "いっぱい", "meanings": [{"meaning": "한 잔"}]},
+            {"id": 2, "word": "一杯", "reading": "いっぱい", "meanings": [{"meaning": "가득"}]},
+            {"id": 3, "word": "学校", "reading": "がっこう", "meanings": [{"meaning": "학교"}]},
+            {"id": 4, "word": "学校", "reading": "がっこう", "meanings": [{"meaning": "학교"}]},
+        ]
+        existing_words = words[:2]
+
+        report = preflight_report(words, [], existing_words, [])
+
+        self.assertTrue(report["failed"])
+        self.assertEqual(report["warnings"][0]["type"], "existing_word_reading_duplicate")
+        self.assertEqual(report["errors"][0]["type"], "new_word_reading_duplicate")
 
 
 if __name__ == "__main__":

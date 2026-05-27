@@ -5,6 +5,8 @@ class Word {
   final String word;
   final String reading;
   final List<WordMeaning> meanings;
+  final List<WordMeaning> meaningsKo;
+  final List<WordMeaning> meaningsEn;
   final int jlptLevel;
   final String source;
   final String? externalId;
@@ -21,6 +23,8 @@ class Word {
     required this.word,
     required this.reading,
     required this.meanings,
+    List<WordMeaning>? meaningsKo,
+    this.meaningsEn = const [],
     required this.jlptLevel,
     this.source = 'legacy_naver',
     this.externalId,
@@ -31,7 +35,7 @@ class Word {
     this.priorityRank,
     this.tags = const [],
     this.updatedAt,
-  });
+  }) : meaningsKo = meaningsKo ?? meanings;
 
   factory Word.fromJson(Map<String, dynamic> json) {
     List<WordMeaning> parseMeanings(dynamic meaningsData) {
@@ -46,11 +50,31 @@ class Word {
           .toList();
     }
 
+    bool hasKorean(String value) => RegExp(r'[가-힣]').hasMatch(value);
+
+    final rawMeanings = parseMeanings(json['meanings']);
+    final explicitMeaningsKo = parseMeanings(json['meanings_ko']);
+    final explicitMeaningsEn = parseMeanings(json['meanings_en']);
+    final fallbackMeaningsKo = rawMeanings
+        .where((meaning) => hasKorean(meaning.meaning))
+        .toList();
+    final fallbackMeaningsEn = rawMeanings
+        .where((meaning) => !hasKorean(meaning.meaning))
+        .toList();
+    final meaningsKo = explicitMeaningsKo.isNotEmpty
+        ? explicitMeaningsKo
+        : fallbackMeaningsKo;
+    final meaningsEn = explicitMeaningsEn.isNotEmpty
+        ? explicitMeaningsEn
+        : fallbackMeaningsEn;
+
     return Word(
       id: json['id'] as int,
       word: json['word'] as String,
       reading: json['reading'] as String,
-      meanings: parseMeanings(json['meanings']),
+      meanings: meaningsKo,
+      meaningsKo: meaningsKo,
+      meaningsEn: meaningsEn,
       jlptLevel: json['jlpt_level'] as int,
       source: json['source'] as String? ?? 'legacy_naver',
       externalId: json['external_id'] as String?,
@@ -72,6 +96,8 @@ class Word {
       'word': word,
       'reading': reading,
       'meanings': meanings.map((m) => m.toJson()).toList(),
+      'meanings_ko': meaningsKo.map((m) => m.toJson()).toList(),
+      'meanings_en': meaningsEn.map((m) => m.toJson()).toList(),
       'jlpt_level': jlptLevel,
       'source': source,
       'external_id': externalId,

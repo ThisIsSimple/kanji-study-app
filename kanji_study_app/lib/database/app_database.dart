@@ -13,6 +13,12 @@ class KanjiTable extends Table {
   TextColumn get character => text()();
   TextColumn get meanings =>
       text().map(const StringListConverter())(); // JSON array
+  TextColumn get meaningsKo => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
+  TextColumn get meaningsEn => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
   TextColumn get readingsOn =>
       text().map(const StringListConverter())(); // readings.on
   TextColumn get readingsKun =>
@@ -49,6 +55,12 @@ class WordsTable extends Table {
   TextColumn get reading => text()();
   TextColumn get meanings =>
       text().map(const JsonStringConverter())(); // JSON array of objects
+  TextColumn get meaningsKo => text()
+      .map(const JsonStringConverter())
+      .withDefault(const Constant('[]'))();
+  TextColumn get meaningsEn => text()
+      .map(const JsonStringConverter())
+      .withDefault(const Constant('[]'))();
   IntColumn get jlptLevel => integer()();
   TextColumn get source => text().withDefault(const Constant('legacy_naver'))();
   TextColumn get externalId => text().nullable()();
@@ -146,7 +158,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -187,6 +199,12 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(wordsTable, wordsTable.priorityRank);
         await m.addColumn(wordsTable, wordsTable.tags);
         await m.addColumn(wordsTable, wordsTable.updatedAt);
+      }
+      if (from < 7) {
+        await m.addColumn(kanjiTable, kanjiTable.meaningsKo);
+        await m.addColumn(kanjiTable, kanjiTable.meaningsEn);
+        await m.addColumn(wordsTable, wordsTable.meaningsKo);
+        await m.addColumn(wordsTable, wordsTable.meaningsEn);
       }
     },
   );

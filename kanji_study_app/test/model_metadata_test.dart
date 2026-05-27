@@ -25,8 +25,24 @@ void main() {
       'meanings': [
         {
           'part_of_speech': 'n',
+          'meaning': 'school',
+          'source': 'jmdict',
+          'quality_status': 'ai_draft',
+        },
+      ],
+      'meanings_ko': [
+        {
+          'part_of_speech': 'n',
           'meaning': '학교',
           'source': 'ai_translation',
+          'quality_status': 'ai_draft',
+        },
+      ],
+      'meanings_en': [
+        {
+          'part_of_speech': 'n',
+          'meaning': 'school',
+          'source': 'jmdict',
           'quality_status': 'ai_draft',
         },
       ],
@@ -45,9 +61,34 @@ void main() {
     expect(expandedWord.source, 'jmdict');
     expect(expandedWord.externalId, 'jmdict:1000010:0');
     expect(expandedWord.meanings.single.source, 'ai_translation');
+    expect(expandedWord.meaningsText, '학교');
+    expect(expandedWord.meaningsEn.single.meaning, 'school');
     expect(expandedWord.isCommon, isTrue);
+    expect(expandedWord.toJson()['meanings_ko'], isNotEmpty);
+    expect(expandedWord.toJson()['meanings_en'], isNotEmpty);
     expect(expandedWord.toJson()['tags'], ['ichi1']);
   });
+
+  test(
+    'Word falls back to Korean-only meanings from legacy mixed meanings',
+    () {
+      final word = Word.fromJson({
+        'id': 3,
+        'word': '声',
+        'reading': 'こえ',
+        'meanings': [
+          {'part_of_speech': '명사', 'meaning': '소리'},
+          {'part_of_speech': 'n', 'meaning': 'voice', 'source': 'jmdict'},
+        ],
+        'jlpt_level': 5,
+      });
+
+      expect(word.meaningsText, '소리');
+      expect(word.meaningsEn.single.meaning, 'voice');
+      expect(word.matchesQuery('voice'), isFalse);
+      expect(word.matchesQuery('소리'), isTrue);
+    },
+  );
 
   test('Kanji parses source metadata with legacy defaults', () {
     final legacyKanji = Kanji.fromJson({
@@ -70,7 +111,9 @@ void main() {
     final expandedKanji = Kanji.fromJson({
       'id': 2,
       'character': '𠮟',
-      'meanings': ['scold'],
+      'meanings': ['꾸짖을', 'scold'],
+      'meanings_ko': ['꾸짖을'],
+      'meanings_en': ['scold'],
       'readings': {
         'on': [],
         'kun': ['しか.る'],
@@ -91,7 +134,10 @@ void main() {
 
     expect(expandedKanji.source, 'kanjidic2');
     expect(expandedKanji.externalId, 'kanjidic2:U+20B9F');
+    expect(expandedKanji.meanings, ['꾸짖을']);
+    expect(expandedKanji.meaningsEn, ['scold']);
     expect(expandedKanji.tags, ['kanjidic2']);
     expect(expandedKanji.toJson()['quality_status'], 'ai_draft');
+    expect(expandedKanji.toJson()['meanings_en'], ['scold']);
   });
 }

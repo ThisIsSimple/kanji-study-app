@@ -22,10 +22,19 @@ python scripts/data_pipeline/merge_dataset.py \
   --incoming-words ../.context/data-pipeline/normalized_jmdict_words.json \
   --incoming-kanji ../.context/data-pipeline/normalized_kanjidic_kanji.json
 python scripts/data_pipeline/generate_ko_meaning_drafts.py --input ../.context/data-pipeline/merged_words.json
-python scripts/data_pipeline/import_to_supabase.py --words ../.context/data-pipeline/merged_words_with_ko_drafts.json --kanji ../.context/data-pipeline/merged_kanji.json
+python scripts/data_pipeline/split_meanings.py \
+  --words ../.context/data-pipeline/recommended_v1_words.json \
+  --kanji ../.context/data-pipeline/recommended_v1_kanji.json \
+  --existing-words ../.context/data-pipeline/exports/words.json \
+  --existing-kanji ../.context/data-pipeline/exports/kanji_app_shape.json
+python scripts/data_pipeline/import_to_supabase.py \
+  --words ../.context/data-pipeline/recommended_v1_words_split_meanings.json \
+  --kanji ../.context/data-pipeline/recommended_v1_kanji_split_meanings.json
 ```
 
 `import_to_supabase.py`는 기본값이 dry-run입니다. 실제 반영은 `--apply`를 붙이고 `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`를 설정한 경우에만 수행합니다.
+
+`split_meanings.py`는 실제 import 후보를 만들 때 사용합니다. `meanings`와 `meanings_ko`에는 한국어 뜻만 남기고, JMdict/KANJIDIC 영어 gloss는 `meanings_en`에 보존합니다. 신규 중복이나 영어-only 뜻이 한국어 표시 필드에 남으면 `split_meanings_report.json`에서 실패로 표시합니다.
 
 ## Korean Draft Generation With CLI
 

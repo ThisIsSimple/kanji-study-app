@@ -109,10 +109,19 @@ class LocalDatabaseService {
 
   /// Drift 한자 데이터 → Kanji 모델 변환
   Kanji _kanjiDataToModel(KanjiTableData data) {
+    final meaningsKo = data.meaningsKo.isNotEmpty
+        ? data.meaningsKo
+        : data.meanings.where(_hasKorean).toList();
+    final meaningsEn = data.meaningsEn.isNotEmpty
+        ? data.meaningsEn
+        : data.meanings.where((meaning) => !_hasKorean(meaning)).toList();
+
     return Kanji(
       id: data.id,
       character: data.character,
-      meanings: data.meanings,
+      meanings: meaningsKo,
+      meaningsKo: meaningsKo,
+      meaningsEn: meaningsEn,
       readings: KanjiReadings(on: data.readingsOn, kun: data.readingsKun),
       koreanOnReadings: data.koreanOnReadings,
       koreanKunReadings: data.koreanKunReadings,
@@ -144,6 +153,26 @@ class LocalDatabaseService {
               ?.map((e) => e.toString())
               .toList() ??
           [],
+      meaningsKo: Value(
+        (json['meanings_ko'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            (json['meanings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .where(_hasKorean)
+                .toList() ??
+            [],
+      ),
+      meaningsEn: Value(
+        (json['meanings_en'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            (json['meanings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .where((meaning) => !_hasKorean(meaning))
+                .toList() ??
+            [],
+      ),
       readingsOn:
           (json['on_readings'] as List<dynamic>?)
               ?.map((e) => e.toString())
@@ -192,6 +221,8 @@ class LocalDatabaseService {
       'word': data.word,
       'reading': data.reading,
       'meanings': jsonDecode(data.meanings),
+      'meanings_ko': jsonDecode(data.meaningsKo),
+      'meanings_en': jsonDecode(data.meaningsEn),
       'jlpt_level': data.jlptLevel,
       'source': data.source,
       'external_id': data.externalId,
@@ -213,6 +244,16 @@ class LocalDatabaseService {
       word: json['word'] as String,
       reading: json['reading'] as String,
       meanings: jsonEncode(json['meanings']),
+      meaningsKo: Value(
+        jsonEncode(
+          json['meanings_ko'] ?? _filterWordMeanings(json['meanings'], true),
+        ),
+      ),
+      meaningsEn: Value(
+        jsonEncode(
+          json['meanings_en'] ?? _filterWordMeanings(json['meanings'], false),
+        ),
+      ),
       jlptLevel: json['jlpt_level'] as int,
       source: Value(json['source'] as String? ?? 'legacy_naver'),
       externalId: Value(json['external_id'] as String?),
@@ -233,6 +274,23 @@ class LocalDatabaseService {
     if (value == null) return null;
     if (value is DateTime) return value;
     return DateTime.tryParse(value.toString());
+  }
+
+  static bool _hasKorean(String value) => RegExp(r'[가-힣]').hasMatch(value);
+
+  static List<dynamic> _filterWordMeanings(dynamic meanings, bool korean) {
+    if (meanings is! List) {
+      return [];
+    }
+    return meanings.where((meaning) {
+      if (meaning is Map<String, dynamic>) {
+        return _hasKorean(meaning['meaning']?.toString() ?? '') == korean;
+      }
+      if (meaning is Map) {
+        return _hasKorean(meaning['meaning']?.toString() ?? '') == korean;
+      }
+      return _hasKorean(meaning.toString()) == korean;
+    }).toList();
   }
 
   /// 데이터베이스 종료
