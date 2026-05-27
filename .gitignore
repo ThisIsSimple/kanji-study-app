@@ -62,5 +62,9 @@ kanji_study_app/pubspec.lock.mcp.json
 # Data processing scripts and files
 data_processing/
 
+# Data snapshots: keep compressed checked-in snapshots, not restored working JSON.
+kanji_study_app/data/snapshots/**/*.json
+!kanji_study_app/data/snapshots/**/manifest.json
+
 # env files
 .env

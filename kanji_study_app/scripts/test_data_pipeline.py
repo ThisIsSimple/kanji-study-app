@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
+import gzip
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,6 +15,7 @@ from generate_ko_meaning_drafts import apply_mapping_to_words, build_cli_prompt,
 from merge_dataset import merge_kanji, merge_words, quality_report
 from normalize_jmdict import entry_to_words
 from normalize_kanjidic import character_to_kanji
+from restore_snapshot import restore_file
 from split_meanings import preflight_report, split_kanji, split_words
 
 
@@ -232,6 +235,26 @@ class DataPipelineTest(unittest.TestCase):
         self.assertTrue(report["failed"])
         self.assertEqual(report["warnings"][0]["type"], "existing_word_reading_duplicate")
         self.assertEqual(report["errors"][0]["type"], "new_word_reading_duplicate")
+
+    def test_restore_snapshot_validates_checksums_and_writes_json(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            snapshot_dir = Path(tmp_dir) / "snapshot"
+            output_dir = Path(tmp_dir) / "output"
+            snapshot_dir.mkdir()
+            raw = b'{"words":[]}\n'
+            compressed = gzip.compress(raw)
+            (snapshot_dir / "words.json.gz").write_bytes(compressed)
+            file_info = {
+                "path": "words.json.gz",
+                "restore_to": ".context/data-pipeline/words.json",
+                "sha256_compressed": hashlib.sha256(compressed).hexdigest(),
+                "sha256_uncompressed": hashlib.sha256(raw).hexdigest(),
+            }
+
+            restored = restore_file(snapshot_dir, file_info, output_dir)
+
+            self.assertEqual((output_dir / "words.json").read_bytes(), raw)
+            self.assertEqual(restored["bytes"], len(raw))
 
 
 if __name__ == "__main__":
