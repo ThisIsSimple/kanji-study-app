@@ -11,6 +11,14 @@ import xml.etree.ElementTree as ET
 sys.path.insert(0, str(Path(__file__).resolve().parent / "data_pipeline"))
 
 from fetch_sources import SourceSpec, metadata_for
+from generate_jp_word_meanings import apply_mapping as apply_jp_word_mapping
+from generate_jp_word_meanings import build_prompt as build_jp_word_prompt
+from generate_jp_word_meanings import preflight as jp_word_preflight
+from generate_kanji_multilang_content import apply_mapping as apply_kanji_multilang_mapping
+from generate_kanji_multilang_content import backfill_row as backfill_kanji_multilang_row
+from generate_kanji_multilang_content import build_prompt as build_kanji_multilang_prompt
+from generate_kanji_multilang_content import parse_payload as parse_kanji_multilang_payload
+from generate_kanji_multilang_content import preflight as kanji_multilang_preflight
 from generate_kanji_ko_meaning_drafts import (
     build_kanji_prompt,
     candidate_rows,
@@ -555,6 +563,61 @@ class DataPipelineTest(unittest.TestCase):
         self.assertEqual(report["summary"]["skipped_count"], 2)
         self.assertEqual(report["patches"][0]["quality_status"], "reviewed")
         self.assertEqual(report["patches"][0]["meaning_source"], "human_review")
+
+    def test_jp_word_meanings_prompt_mapping_and_preflight(self):
+        rows = [
+            {
+                "id": 1,
+                "external_id": "jmdict:1:0",
+                "word": "学校",
+                "reading": "がっこう",
+                "meanings_ko": [{"part_of_speech": "명사", "meaning": "학교"}],
+                "meanings_en": [{"part_of_speech": "n", "meaning": "school"}],
+            }
+        ]
+
+        prompt = build_jp_word_prompt(rows)
+        output = apply_jp_word_mapping(rows, {"jmdict:1:0": ["教育を行う施設"]})
+        report = jp_word_preflight(output, expected_count=1)
+        bad_report = jp_word_preflight([{**output[0], "meanings_jp": []}], expected_count=1)
+
+        self.assertIn("jmdict:1:0", prompt)
+        self.assertEqual(output[0]["meanings_jp"][0]["meaning"], "教育を行う施設")
+        self.assertFalse(report["failed"])
+        self.assertTrue(bad_report["failed"])
+
+    def test_kanji_multilang_backfill_mapping_and_preflight(self):
+        row = {
+            "id": 1,
+            "external_id": "kanjidic2:U+5B66",
+            "character": "学",
+            "meanings_ko": ["배울"],
+            "meanings_en": ["study"],
+            "on_readings": ["ガク"],
+            "kun_readings": ["まな.ぶ"],
+            "korean_on_readings": ["학"],
+            "korean_kun_readings": ["배울"],
+            "commentary": "배움과 관련된 한자",
+        }
+
+        backfilled = backfill_kanji_multilang_row(row)
+        prompt = build_kanji_multilang_prompt([backfilled])
+        parsed = parse_kanji_multilang_payload(
+            '{"items":[{"key":"kanjidic2:U+5B66","jp_meanings":["学ぶこと"],'
+            '"jp_commentary":"学ぶ意味を表す漢字です。",'
+            '"en_commentary":"A kanji associated with learning and study."}]}'
+        )
+        output = apply_kanji_multilang_mapping([backfilled], parsed)
+        report = kanji_multilang_preflight(output, expected_count=1)
+        bad_report = kanji_multilang_preflight([{**output[0], "jp_commentary": ""}], expected_count=1)
+
+        self.assertIn("kanjidic2:U+5B66", prompt)
+        self.assertEqual(backfilled["jp_on_readings"], ["ガク"])
+        self.assertEqual(backfilled["kr_on_readings"], ["학"])
+        self.assertEqual(backfilled["kr_commentary"], "배움과 관련된 한자")
+        self.assertEqual(output[0]["jp_meanings"], ["学ぶこと"])
+        self.assertFalse(report["failed"])
+        self.assertTrue(bad_report["failed"])
 
 
 if __name__ == "__main__":

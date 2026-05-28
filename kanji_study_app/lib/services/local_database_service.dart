@@ -122,7 +122,22 @@ class LocalDatabaseService {
       meanings: meaningsKo,
       meaningsKo: meaningsKo,
       meaningsEn: meaningsEn,
+      krMeanings: data.krMeanings.isNotEmpty ? data.krMeanings : meaningsKo,
+      jpMeanings: data.jpMeanings,
+      enMeanings: data.enMeanings.isNotEmpty ? data.enMeanings : meaningsEn,
       readings: KanjiReadings(on: data.readingsOn, kun: data.readingsKun),
+      jpOnReadings: data.jpOnReadings.isNotEmpty
+          ? data.jpOnReadings
+          : data.readingsOn,
+      jpKunReadings: data.jpKunReadings.isNotEmpty
+          ? data.jpKunReadings
+          : data.readingsKun,
+      krOnReadings: data.krOnReadings.isNotEmpty
+          ? data.krOnReadings
+          : data.koreanOnReadings,
+      krKunReadings: data.krKunReadings.isNotEmpty
+          ? data.krKunReadings
+          : data.koreanKunReadings,
       koreanOnReadings: data.koreanOnReadings,
       koreanKunReadings: data.koreanKunReadings,
       grade: data.grade,
@@ -131,6 +146,9 @@ class LocalDatabaseService {
       examples: [], // 예문은 별도 로직으로 처리
       radical: data.radical,
       commentary: data.commentary,
+      krCommentary: data.krCommentary ?? data.commentary,
+      jpCommentary: data.jpCommentary,
+      enCommentary: data.enCommentary,
       source: data.source,
       externalId: data.externalId,
       sourceVersion: data.sourceVersion,
@@ -173,6 +191,34 @@ class LocalDatabaseService {
                 .toList() ??
             [],
       ),
+      krMeanings: Value(
+        (json['kr_meanings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            (json['meanings_ko'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            (json['meanings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .where(_hasKorean)
+                .toList() ??
+            [],
+      ),
+      jpMeanings: Value(
+        (json['jp_meanings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+      ),
+      enMeanings: Value(
+        (json['en_meanings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            (json['meanings_en'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+      ),
       readingsOn:
           (json['on_readings'] as List<dynamic>?)
               ?.map((e) => e.toString())
@@ -183,6 +229,42 @@ class LocalDatabaseService {
               ?.map((e) => e.toString())
               .toList() ??
           [],
+      jpOnReadings: Value(
+        (json['jp_on_readings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            (json['on_readings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+      ),
+      jpKunReadings: Value(
+        (json['jp_kun_readings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            (json['kun_readings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+      ),
+      krOnReadings: Value(
+        (json['kr_on_readings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            (json['korean_on_readings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+      ),
+      krKunReadings: Value(
+        (json['kr_kun_readings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            (json['korean_kun_readings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+      ),
       koreanOnReadings:
           (json['korean_on_readings'] as List<dynamic>?)
               ?.map((e) => e.toString())
@@ -199,6 +281,11 @@ class LocalDatabaseService {
       examples: const Value([]), // 예문은 별도 테이블로 관리 예정
       radical: Value(json['radical'] as String?),
       commentary: Value(json['commentary'] as String?),
+      krCommentary: Value(
+        (json['kr_commentary'] as String?) ?? (json['commentary'] as String?),
+      ),
+      jpCommentary: Value(json['jp_commentary'] as String?),
+      enCommentary: Value(json['en_commentary'] as String?),
       source: Value(json['source'] as String? ?? 'legacy_excel'),
       externalId: Value(json['external_id'] as String?),
       sourceVersion: Value(json['source_version'] as String?),
@@ -223,6 +310,7 @@ class LocalDatabaseService {
       'meanings': jsonDecode(data.meanings),
       'meanings_ko': jsonDecode(data.meaningsKo),
       'meanings_en': jsonDecode(data.meaningsEn),
+      'meanings_jp': jsonDecode(data.meaningsJp),
       'jlpt_level': data.jlptLevel,
       'source': data.source,
       'external_id': data.externalId,
@@ -254,6 +342,7 @@ class LocalDatabaseService {
           json['meanings_en'] ?? _filterWordMeanings(json['meanings'], false),
         ),
       ),
+      meaningsJp: Value(jsonEncode(json['meanings_jp'] ?? [])),
       jlptLevel: json['jlpt_level'] as int,
       source: Value(json['source'] as String? ?? 'legacy_naver'),
       externalId: Value(json['external_id'] as String?),

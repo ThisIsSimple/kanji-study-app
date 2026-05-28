@@ -19,10 +19,31 @@ class KanjiTable extends Table {
   TextColumn get meaningsEn => text()
       .map(const StringListConverter())
       .withDefault(const Constant('[]'))();
+  TextColumn get krMeanings => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
+  TextColumn get jpMeanings => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
+  TextColumn get enMeanings => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
   TextColumn get readingsOn =>
       text().map(const StringListConverter())(); // readings.on
   TextColumn get readingsKun =>
       text().map(const StringListConverter())(); // readings.kun
+  TextColumn get jpOnReadings => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
+  TextColumn get jpKunReadings => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
+  TextColumn get krOnReadings => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
+  TextColumn get krKunReadings => text()
+      .map(const StringListConverter())
+      .withDefault(const Constant('[]'))();
   TextColumn get koreanOnReadings => text().map(const StringListConverter())();
   TextColumn get koreanKunReadings => text().map(const StringListConverter())();
   IntColumn get grade => integer()();
@@ -33,6 +54,9 @@ class KanjiTable extends Table {
       .withDefault(const Constant('[]'))();
   TextColumn get radical => text().nullable()(); // 부수
   TextColumn get commentary => text().nullable()(); // 한자 해설
+  TextColumn get krCommentary => text().nullable()();
+  TextColumn get jpCommentary => text().nullable()();
+  TextColumn get enCommentary => text().nullable()();
   TextColumn get source => text().withDefault(const Constant('legacy_excel'))();
   TextColumn get externalId => text().nullable()();
   TextColumn get sourceVersion => text().nullable()();
@@ -59,6 +83,9 @@ class WordsTable extends Table {
       .map(const JsonStringConverter())
       .withDefault(const Constant('[]'))();
   TextColumn get meaningsEn => text()
+      .map(const JsonStringConverter())
+      .withDefault(const Constant('[]'))();
+  TextColumn get meaningsJp => text()
       .map(const JsonStringConverter())
       .withDefault(const Constant('[]'))();
   IntColumn get jlptLevel => integer()();
@@ -158,7 +185,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -205,6 +232,35 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(kanjiTable, kanjiTable.meaningsEn);
         await m.addColumn(wordsTable, wordsTable.meaningsKo);
         await m.addColumn(wordsTable, wordsTable.meaningsEn);
+      }
+      if (from < 8) {
+        await m.addColumn(wordsTable, wordsTable.meaningsJp);
+
+        await m.addColumn(kanjiTable, kanjiTable.krMeanings);
+        await m.addColumn(kanjiTable, kanjiTable.jpMeanings);
+        await m.addColumn(kanjiTable, kanjiTable.enMeanings);
+        await m.addColumn(kanjiTable, kanjiTable.jpOnReadings);
+        await m.addColumn(kanjiTable, kanjiTable.jpKunReadings);
+        await m.addColumn(kanjiTable, kanjiTable.krOnReadings);
+        await m.addColumn(kanjiTable, kanjiTable.krKunReadings);
+        await m.addColumn(kanjiTable, kanjiTable.krCommentary);
+        await m.addColumn(kanjiTable, kanjiTable.jpCommentary);
+        await m.addColumn(kanjiTable, kanjiTable.enCommentary);
+
+        await customStatement('''
+          UPDATE kanji_table
+          SET
+            jp_on_readings = readings_on,
+            jp_kun_readings = readings_kun,
+            kr_on_readings = korean_on_readings,
+            kr_kun_readings = korean_kun_readings,
+            kr_meanings = CASE
+              WHEN meanings_ko != '[]' THEN meanings_ko
+              ELSE meanings
+            END,
+            en_meanings = meanings_en,
+            kr_commentary = commentary
+        ''');
       }
     },
   );

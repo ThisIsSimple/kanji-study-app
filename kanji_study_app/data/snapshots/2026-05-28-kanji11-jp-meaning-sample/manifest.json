@@ -1,0 +1,84 @@
+{
+  "snapshot_id": "2026-05-28-kanji11-jp-meaning-sample",
+  "created_at": "2026-05-28T17:15:00+09:00",
+  "description": "KANJI-11 sample candidates for words.meanings_jp and kanji multilingual compatibility fields.",
+  "files": [
+    {
+      "path": "words_jp_meanings_sample.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11/words_jp_meanings_sample.json",
+      "bytes_compressed": 11153,
+      "bytes_uncompressed": 238495,
+      "sha256_compressed": "186ce9f90fc8cc68f661cdcaeabf9a1abdba9c18df0a6cfd21c6076799498144",
+      "sha256_uncompressed": "b928d744ae455d625357b4b13526d613a42aa7245977a85c88ecda224b1fa204"
+    },
+    {
+      "path": "words_jp_meanings_report.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11/words_jp_meanings_report.json",
+      "bytes_compressed": 351,
+      "bytes_uncompressed": 967,
+      "sha256_compressed": "c9650b3828a5d6115b25335371998d9a3566c217d8fbc3a72c4ae8cbbe20eab7",
+      "sha256_uncompressed": "6572de6339180f73e3ecf679d5bf6610f91fa0262d6e67018aeb89ac071082f0"
+    },
+    {
+      "path": "kanji_multilang_sample.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11/kanji_multilang_sample.json",
+      "bytes_compressed": 16041,
+      "bytes_uncompressed": 101711,
+      "sha256_compressed": "507b7bb08a00fd07ab60d2b59e7fe67537a30674feecac320e3eae129e79b16e",
+      "sha256_uncompressed": "0b458c11bb5e3b0a832914b72b24a183262ea0521676a9b0f371f5d6fbeb32db"
+    },
+    {
+      "path": "kanji_multilang_report.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11/kanji_multilang_report.json",
+      "bytes_compressed": 355,
+      "bytes_uncompressed": 1071,
+      "sha256_compressed": "03259f1357588fda943139adc552464c98e75847a66869fcbe843c48cf1bfd7b",
+      "sha256_uncompressed": "f48f3c3cc5e73c46f4e08b40c32d5f95d5bb08880515def9f8940e5045b021b5"
+    },
+    {
+      "path": "kanji11_sample_preflight_report.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11/kanji11_sample_preflight_report.json",
+      "bytes_compressed": 666,
+      "bytes_uncompressed": 2570,
+      "sha256_compressed": "48a429a0ed982299dd7655a35e437823226f96ebdbd5a7f31645766d8f0d93e3",
+      "sha256_uncompressed": "55a3f5f56a19ce2acb8a731efc87e5db8732806722d90d9a0146e6c3f6cea39c"
+    },
+    {
+      "path": "kanji11_sample_import_dry_run.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11/kanji11_sample_import_dry_run.json",
+      "bytes_compressed": 302,
+      "bytes_uncompressed": 694,
+      "sha256_compressed": "1abd5f9ca54f472981d5522468450bc863eba01b3ce37ed24be6bb005918b109",
+      "sha256_uncompressed": "6a1a229f3b31b7a2a65650b80a480c6c8e3721b3ac549a2de104d1249f6145d4"
+    }
+  ],
+  "counts": {
+    "words_sample": 100,
+    "kanji_sample": 50,
+    "dry_run_words": 100,
+    "dry_run_kanji": 50
+  },
+  "quality": {
+    "failed": false,
+    "errors": [],
+    "words_missing_meanings_jp": 0,
+    "kanji_missing_jp_meanings": 0,
+    "kanji_missing_jp_commentary": 0,
+    "kanji_missing_en_commentary": 0
+  },
+  "operation": {
+    "applied": false,
+    "dry_run": true,
+    "source_inputs": {
+      "words": ".context/data-pipeline/kanji7-v2/recommended_v2_words_split_meanings.json",
+      "kanji": ".context/data-pipeline/kanji7-v2/recommended_v2_kanji_split_meanings.json"
+    },
+    "provider": "codex-cli",
+    "api_key_used": false
+  },
+  "notes": [
+    "This snapshot is a small sample only; production upsert was not executed.",
+    "Uncompressed JSON working files are intentionally kept out of git.",
+    "Restore with scripts/data_pipeline/restore_snapshot.py before continued agent work."
+  ]
+}
