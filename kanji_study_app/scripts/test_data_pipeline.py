@@ -21,6 +21,7 @@ from generate_ko_meaning_drafts import apply_mapping_to_words, build_cli_prompt,
 from merge_dataset import merge_kanji, merge_words, quality_report
 from normalize_jmdict import entry_to_words
 from normalize_kanjidic import character_to_kanji
+from prepare_tag_backfill import backfill_kanji, backfill_word, preflight as tag_backfill_preflight
 from restore_snapshot import restore_file
 from select_recommended_v2 import (
     preflight as v2_preflight,
@@ -398,6 +399,31 @@ class DataPipelineTest(unittest.TestCase):
         self.assertEqual(derived, {})
         self.assertEqual(report["words"]["candidate_count"], 1)
         self.assertEqual(report["kanji"]["candidate_count"], 1)
+
+    def test_prepare_tag_backfill_preserves_current_tags(self):
+        word = {
+            "id": 1,
+            "source": "jmdict",
+            "word": "心筋",
+            "reading": "しんきん",
+            "tags": ["medicine"],
+        }
+        kanji = {
+            "id": 2,
+            "source": "kanjidic2",
+            "character": "心",
+            "tags": ["kanjidic2"],
+        }
+
+        word_backfill = backfill_word(word)
+        kanji_backfill = backfill_kanji(kanji)
+        report = tag_backfill_preflight([word_backfill], [kanji_backfill])
+
+        self.assertEqual(word_backfill["current_tags"], ["medicine"])
+        self.assertIn("medicine", word_backfill["tags"])
+        self.assertIn("domain:medicine", word_backfill["add_tags"])
+        self.assertIn("source:kanjidic2", kanji_backfill["add_tags"])
+        self.assertFalse(report["failed"])
 
     def test_preflight_allows_existing_duplicates_but_fails_new_duplicates(self):
         words = [
