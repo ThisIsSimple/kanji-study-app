@@ -7,6 +7,7 @@ import '../models/study_record_model.dart';
 import 'kanji_repository.dart';
 import 'favorite_service.dart';
 import 'study_record_service.dart';
+import 'tag_filter.dart';
 
 class KanjiService {
   static final KanjiService _instance = KanjiService._internal();
@@ -54,11 +55,12 @@ class KanjiService {
     await _favoriteService.toggleFavorite(type: 'kanji', targetId: kanji.id);
   }
 
-  List<Kanji> getFavoriteKanji() {
+  List<Kanji> getFavoriteKanji({TagFilter? tagFilter}) {
     final favoriteIds = _favoriteService.getFavoriteIds('kanji');
     return favoriteIds
         .map((id) => _repository.getKanjiById(id))
         .whereType<Kanji>()
+        .whereTags(tagFilter, (kanji) => kanji.tags)
         .toList();
   }
 
@@ -98,22 +100,24 @@ class KanjiService {
     return oldestKanji;
   }
 
-  List<Kanji> getAllKanji() => _repository.getAllKanji();
+  List<Kanji> getAllKanji({TagFilter? tagFilter}) =>
+      _repository.getAllKanji(tagFilter: tagFilter);
 
   Kanji? getKanjiById(int id) => _repository.getKanjiById(id);
 
-  List<Kanji> searchKanji(String query) {
+  List<Kanji> searchKanji(String query, {TagFilter? tagFilter}) {
     if (query.isEmpty) return [];
 
     // Search by character
     final byCharacter = _repository.getKanjiByCharacter(query);
-    if (byCharacter != null) {
+    if (byCharacter != null &&
+        (tagFilter == null || tagFilter.matches(byCharacter.tags))) {
       return [byCharacter];
     }
 
     // Search by meaning or reading
-    final byMeaning = _repository.searchByMeaning(query);
-    final byReading = _repository.searchByReading(query);
+    final byMeaning = _repository.searchByMeaning(query, tagFilter: tagFilter);
+    final byReading = _repository.searchByReading(query, tagFilter: tagFilter);
 
     // Combine results and remove duplicates
     final Map<String, Kanji> resultMap = {};

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/kanji_model.dart';
 import 'local_database_service.dart';
 import 'connectivity_service.dart';
+import 'tag_filter.dart';
 
 class KanjiRepository {
   static final KanjiRepository _instance = KanjiRepository._internal();
@@ -88,8 +89,8 @@ class KanjiRepository {
   }
 
   // Get all kanji
-  List<Kanji> getAllKanji() {
-    return _kanjiList ?? [];
+  List<Kanji> getAllKanji({TagFilter? tagFilter}) {
+    return (_kanjiList ?? []).whereTags(tagFilter, (kanji) => kanji.tags);
   }
 
   // Get kanji by character
@@ -110,11 +111,12 @@ class KanjiRepository {
   // Grade and JLPT methods removed - data is empty in current dataset
 
   // Search kanji by meaning
-  List<Kanji> searchByMeaning(String query) {
+  List<Kanji> searchByMeaning(String query, {TagFilter? tagFilter}) {
     if (_kanjiList == null) return [];
 
     final lowerQuery = query.toLowerCase();
-    return _kanjiList!.where((kanji) {
+    final candidates = _kanjiList!.whereTags(tagFilter, (kanji) => kanji.tags);
+    return candidates.where((kanji) {
       return kanji.meanings.any(
         (meaning) => meaning.toLowerCase().contains(lowerQuery),
       );
@@ -122,10 +124,11 @@ class KanjiRepository {
   }
 
   // Search kanji by reading (Japanese and Korean)
-  List<Kanji> searchByReading(String query) {
+  List<Kanji> searchByReading(String query, {TagFilter? tagFilter}) {
     if (_kanjiList == null) return [];
 
-    return _kanjiList!.where((kanji) {
+    final candidates = _kanjiList!.whereTags(tagFilter, (kanji) => kanji.tags);
+    return candidates.where((kanji) {
       // Search in Japanese readings
       final japaneseMatch = kanji.readings.all.any(
         (reading) => reading.contains(query),
