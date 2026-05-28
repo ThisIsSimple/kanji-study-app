@@ -1,0 +1,55 @@
+{
+  "counts": {
+    "kanji": 1000,
+    "preflight_failed": false,
+    "tag_backfill_kanji": 3100,
+    "tag_backfill_words": 39075,
+    "words": 10000
+  },
+  "created_at": "2026-05-28T11:50:00+09:00",
+  "default_restore_dir": ".context/data-pipeline",
+  "description": "KANJI-7 v2 candidate selection snapshot. Contains selected words/kanji, selection report, and tag backfill candidates. No AI Korean drafts or import payloads yet.",
+  "files": [
+    {
+      "compressed_bytes": 484975,
+      "path": "recommended_v2_words.json.gz",
+      "restore_to": ".context/data-pipeline/recommended_v2_words.json",
+      "row_count": 10000,
+      "sha256_compressed": "1b53b71f7f1d4904ce93b4445fb6325a6a7a174a286ea32acb55fe6ac40237f9",
+      "sha256_uncompressed": "71e583584d1c2996455e67e4f3e6741a2def39af7ddb4210fea919d63e754b6a",
+      "uncompressed_bytes": 9043127
+    },
+    {
+      "compressed_bytes": 61804,
+      "path": "recommended_v2_kanji.json.gz",
+      "restore_to": ".context/data-pipeline/recommended_v2_kanji.json",
+      "row_count": 1000,
+      "sha256_compressed": "c5d9795811da06e0c0f95bcef84089eebdca4f4fa4dd5caa6abbfee605b0823d",
+      "sha256_uncompressed": "d39f0b11efe182c5f7db122f23dba70ec2b29f350031230a77b1a5f27a122650",
+      "uncompressed_bytes": 922864
+    },
+    {
+      "compressed_bytes": 11172,
+      "path": "recommended_v2_selection_report.json.gz",
+      "restore_to": ".context/data-pipeline/recommended_v2_selection_report.json",
+      "sha256_compressed": "d15347034e2130e13abe47fda7dda7244cf441ff5c903e4b31cf1c11845e1f9d",
+      "sha256_uncompressed": "9b6b5d0ae95e2677c51d242639734c6f9749460c19ee42e25802342062d8f146",
+      "uncompressed_bytes": 133445
+    },
+    {
+      "compressed_bytes": 2314,
+      "path": "recommended_v2_tag_backfill_report.json.gz",
+      "restore_to": ".context/data-pipeline/recommended_v2_tag_backfill_report.json",
+      "sha256_compressed": "fcc8364f7705962dd5983888aaf08934db955ff83d2e60a8bed4b122db1bac8a",
+      "sha256_uncompressed": "96bac1d36e707e5b8276987dd350b4efb32ebb2ceecff1cd46258672a64d83d1",
+      "uncompressed_bytes": 20631
+    }
+  ],
+  "import_candidate": {
+    "kanji": ".context/data-pipeline/recommended_v2_kanji.json",
+    "selection_report": ".context/data-pipeline/recommended_v2_selection_report.json",
+    "tag_backfill_report": ".context/data-pipeline/recommended_v2_tag_backfill_report.json",
+    "words": ".context/data-pipeline/recommended_v2_words.json"
+  },
+  "snapshot_id": "2026-05-28-kanji7-v2-selection"
+}

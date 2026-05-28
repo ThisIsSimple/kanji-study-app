@@ -94,3 +94,20 @@ python scripts/data_pipeline/import_to_supabase.py \
 ```
 
 한자 체크포인트는 `.context/data-pipeline/ko-draft-cli-kanji/<provider>/`에 저장됩니다. 운영 반영 전에는 `new_kanji_split_meanings_report.json`의 `preflight.failed == false`, 후보 수 966개, 한국어 표시 필드 영어-only 0건을 확인해야 합니다.
+
+## KANJI-7 v2 Candidate Selection
+
+KANJI-7의 첫 단계는 남은 전체 병합본에서 다음 import 후보만 결정적으로 고르는 것입니다. 이 단계에서는 AI 한국어 뜻 생성, snapshot 생성, Supabase upsert를 하지 않습니다.
+
+```sh
+python scripts/data_pipeline/select_recommended_v2.py \
+  --merged-words ../.context/data-pipeline/merged_words.json \
+  --merged-kanji ../.context/data-pipeline/merged_kanji.json \
+  --imported-words ../.context/data-pipeline/recommended_v1_words_split_meanings.json \
+  --imported-kanji ../.context/data-pipeline/recommended_v1_kanji_split_meanings.json \
+  --imported-kanji ../.context/data-pipeline/recommended_v1_new_kanji_split_meanings.json
+```
+
+기본 출력은 `.context/data-pipeline/recommended_v2_words.json`, `recommended_v2_kanji.json`, `recommended_v2_selection_report.json`, `recommended_v2_tag_backfill_report.json`입니다. 기본 후보 수는 단어 10,000개와 한자 1,000개이며, 이미 v1에서 반영된 id, 빈 값, Latin/digit-only 단어, 단일 한자 표제어, 고어/희귀 표기 태그는 제외합니다.
+
+v2 후보의 `tags`에는 원본 JMdict/KANJIDIC2 태그를 보존하면서 앱/운영 필터용 정규화 태그를 추가합니다. 예를 들어 `medicine`은 `domain:medicine`, `formal or literary term`은 `register:formal`, KANJIDIC2 출처는 `source:kanjidic2`, 이번 후보 배치는 `batch:kanji7_v2`로 저장됩니다. 이미 운영에 들어간 v1 데이터는 삭제하거나 덮어쓰지 않고, `recommended_v2_tag_backfill_report.json`에서 `id`/`external_id` 기준 태그 보강 후보로만 추적합니다.
