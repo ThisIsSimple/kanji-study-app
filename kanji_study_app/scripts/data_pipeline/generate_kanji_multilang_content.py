@@ -258,6 +258,7 @@ def generate_mapping(
             continue
         expected_keys = {kanji_key(row) for row in batch_rows}
         try:
+            generated_now = False
             if parsed_output_path.exists():
                 batch_mapping = parse_payload(parsed_output_path.read_text(encoding="utf-8"))
             else:
@@ -267,7 +268,15 @@ def generate_mapping(
                 raw_output_path.write_text(raw_output, encoding="utf-8")
                 batch_mapping = parse_payload(raw_output)
                 write_json(parsed_output_path, {"items": [{"key": key, **value} for key, value in sorted(batch_mapping.items())]})
+                generated_now = True
             missing_keys = sorted(expected_keys.difference(batch_mapping.keys()))
+            if missing_keys and parsed_output_path.exists() and not generated_now:
+                parsed_output_path.rename(parsed_output_path.with_suffix(".incomplete.json"))
+                raw_output = run_codex_cli(prompt, model, timeout, schema_path, codex_last_message_path)
+                raw_output_path.write_text(raw_output, encoding="utf-8")
+                batch_mapping = parse_payload(raw_output)
+                write_json(parsed_output_path, {"items": [{"key": key, **value} for key, value in sorted(batch_mapping.items())]})
+                missing_keys = sorted(expected_keys.difference(batch_mapping.keys()))
             if missing_keys:
                 failed_batches.append({"batch": batch_index, "missing_keys": missing_keys[:20]})
             mapping.update(batch_mapping)
@@ -347,11 +356,15 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     parser.add_argument("--timeout", type=int, default=900)
     parser.add_argument("--max-batches", type=int, default=None)
+    parser.add_argument("--start-index", type=int, default=0, help="후보 목록에서 처리 시작 index")
+    parser.add_argument("--limit", type=int, default=None, help="start-index 이후 최대 처리 row 수")
     parser.add_argument("--prompts-only", action="store_true")
     args = parser.parse_args()
 
     all_rows = rows_from_json(args.input)
     sample_rows = candidate_rows(all_rows, args.sample_size)
+    if args.start_index or args.limit is not None:
+        sample_rows = sample_rows[args.start_index : None if args.limit is None else args.start_index + args.limit]
     generation_rows = sample_rows
     if args.max_batches and args.max_batches > 0:
         generation_rows = sample_rows[: args.max_batches * args.batch_size]

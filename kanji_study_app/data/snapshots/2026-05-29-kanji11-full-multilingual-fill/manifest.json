@@ -1,0 +1,103 @@
+{
+  "counts": {
+    "kanji_patches": 4102,
+    "operational_kanji": 4102,
+    "operational_words": 56310,
+    "patched_kanji_still_missing": 0,
+    "patched_words_still_missing": 0,
+    "protected_kanji_field_changes": 0,
+    "protected_word_field_changes": 0,
+    "word_patches": 56309
+  },
+  "created_at": "2026-05-29T02:45:00+09:00",
+  "description": "KANJI-11 full operational multilingual field fill reports and generated content.",
+  "files": [
+    {
+      "bytes_compressed": 7120102,
+      "bytes_uncompressed": 153440735,
+      "path": "words_jp_meanings_full.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11-full/words_jp_meanings_full.json",
+      "row_count": 56309,
+      "sha256_compressed": "bd1ea8913beca302480e7d04494b9e875aeb487129412800a997883e6c677f5c",
+      "sha256_uncompressed": "449242d918cdb816f2787ef8fd25da09ddf4df1fa82b7dc7c447a923a26dbc38"
+    },
+    {
+      "bytes_compressed": 1419165,
+      "bytes_uncompressed": 10145099,
+      "path": "kanji_multilang_full.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11-full/kanji_multilang_full.json",
+      "row_count": 4102,
+      "sha256_compressed": "923a3415b50133c2990f12c3c502acf48bd47dda69997e5e8338fa55a8b32145",
+      "sha256_uncompressed": "4094c612a562a224a19530b51559938e78ef216062ba7c0122621bb375794522"
+    },
+    {
+      "bytes_compressed": 214,
+      "bytes_uncompressed": 508,
+      "path": "multilingual_fill_candidate_report.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11-full/multilingual_fill_candidate_report.json",
+      "row_count": null,
+      "sha256_compressed": "f92cb95eb6240a0cdb6e6fef113b17e628835aaf0c5bc4908e946d8aa6c4a6b8",
+      "sha256_uncompressed": "e234c7107da2a4c52dcfbb7a68b37cbf23264589beea5bc38f8c5fdfb329f726"
+    },
+    {
+      "bytes_compressed": 105,
+      "bytes_uncompressed": 154,
+      "path": "multilingual_fill_merge_report.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11-full/multilingual_fill_merge_report.json",
+      "row_count": null,
+      "sha256_compressed": "afeed1a50efd713499c05ebacdffe9634d8cde8be34d6210864de73e768cf78c",
+      "sha256_uncompressed": "4801527bef7296d3445b4215cd32abcd8df72cbe487ea1973fb9903134459b10"
+    },
+    {
+      "bytes_compressed": 2682356,
+      "bytes_uncompressed": 37359297,
+      "path": "multilingual_content_patch_dry_run.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11-full/multilingual_content_patch_dry_run.json",
+      "row_count": null,
+      "sha256_compressed": "e877a2208c19177a71697d781775fbc1ec443f98c1c026235daab569d2f6d011",
+      "sha256_uncompressed": "bd0c3fca17f609bff8bf472fc991abe6c100bb43efd2bbcb7232918ca3f2753a"
+    },
+    {
+      "bytes_compressed": 2682840,
+      "bytes_uncompressed": 37360301,
+      "path": "multilingual_content_apply_report.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11-full/multilingual_content_apply_report.json",
+      "row_count": null,
+      "sha256_compressed": "f09624f61c33a4fa4ae228dd08eb6bfa711e2a7b032f1a694817d35c5778e1b4",
+      "sha256_uncompressed": "4b377d861b052ce5ae1657dba0f0463a70bfc04fca8db8aa0b921adc7a0d3a3f"
+    },
+    {
+      "bytes_compressed": 32143,
+      "bytes_uncompressed": 279390,
+      "path": "post_multilingual_fill_check_report.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11-full/post_multilingual_fill_check_report.json",
+      "row_count": null,
+      "sha256_compressed": "7ca43afe3a4842f8194186c96d5d5385bf2f2cc8a35a500af05cdc10cd749d93",
+      "sha256_uncompressed": "f7697ec7dd050a3751b384a8beca8b44e3f0e29da95fc8bc4afbc64dc703a839"
+    },
+    {
+      "bytes_compressed": 514,
+      "bytes_uncompressed": 2495,
+      "path": "kanji_multilang_full_retry_missing_report.json.gz",
+      "restore_to": ".context/data-pipeline/kanji11-full/kanji_multilang_full_retry_missing_report.json",
+      "row_count": null,
+      "sha256_compressed": "b698e67ac94f67877d7f04256e6fbcc653983fba539b56daa4ff924878f332ef",
+      "sha256_uncompressed": "ddb06582d2e49603bf666602c16137d463f874e62d1908b75228830e0e47f39c"
+    }
+  ],
+  "notes": [
+    "Uncompressed JSON working files are intentionally kept out of git.",
+    "Restore this snapshot to .context/data-pipeline/kanji11-full before continued agent work.",
+    "Checkpoint prompt/raw outputs remain in .context only and are not committed."
+  ],
+  "operation": {
+    "api_key_used_for_generation": false,
+    "applied": true,
+    "apply_failed": false,
+    "dry_run_failed": false,
+    "post_check_failed": false,
+    "provider": "codex-cli",
+    "supabase_write_mode": "PATCH by id; allowed multilingual fields only"
+  },
+  "snapshot_id": "2026-05-29-kanji11-full-multilingual-fill"
+}

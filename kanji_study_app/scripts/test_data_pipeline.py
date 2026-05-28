@@ -37,6 +37,7 @@ from prepare_multilingual_fill_candidates import kanji_candidates as multilingua
 from prepare_multilingual_fill_candidates import preflight as multilingual_candidate_preflight
 from prepare_multilingual_fill_candidates import word_candidates as multilingual_word_candidates
 from post_check_multilingual_fill import build_report as build_multilingual_post_check_report
+from merge_multilingual_fill_outputs import build_report as build_multilingual_merge_report
 from restore_snapshot import restore_file
 from apply_kanji_review_results import build_dry_run as build_kanji_review_dry_run
 from select_recommended_v2 import (
@@ -784,6 +785,17 @@ class DataPipelineTest(unittest.TestCase):
         self.assertFalse(report["failed"])
         self.assertEqual(report["summary"]["protected_word_field_changes"], 0)
         self.assertEqual(report["summary"]["protected_kanji_field_changes"], 0)
+
+    def test_multilingual_merge_report_fails_duplicate_ids(self):
+        report = build_multilingual_merge_report(
+            [{"id": 1, "meanings_jp": [{"meaning": "教育"}]}, {"id": 1, "meanings_jp": [{"meaning": "学校"}]}],
+            [],
+            expected_words=2,
+            expected_kanji=0,
+        )
+
+        self.assertTrue(report["failed"])
+        self.assertIn("duplicate_word_ids", [error["type"] for error in report["errors"]])
 
 
 if __name__ == "__main__":

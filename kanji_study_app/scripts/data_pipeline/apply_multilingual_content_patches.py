@@ -9,9 +9,11 @@ import hashlib
 import json
 import os
 import ssl
+import time
 import urllib.parse
 import urllib.request
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -209,6 +211,21 @@ def patch_row(url: str, key: str, table: str, patch: dict[str, Any]) -> None:
         return
 
 
+def patch_row_with_retries(url: str, key: str, table: str, patch: dict[str, Any], attempts: int = 4) -> None:
+    last_error: Exception | None = None
+    for attempt in range(1, attempts + 1):
+        try:
+            patch_row(url, key, table, patch)
+            return
+        except Exception as error:  # noqa: BLE001 - preserve the original urllib error in report.
+            last_error = error
+            if attempt == attempts:
+                break
+            time.sleep(0.5 * attempt)
+    if last_error:
+        raise last_error
+
+
 def ssl_context():
     if os.getenv("SUPABASE_INSECURE_SKIP_TLS_VERIFY") == "1":
         return ssl._create_unverified_context()
@@ -220,16 +237,48 @@ def ssl_context():
         return ssl.create_default_context()
 
 
-def apply_patches(report: dict[str, Any]) -> dict[str, Any]:
-    url, key = load_key()
-    applied = {"words": 0, "kanji": 0, "failed": []}
-    for table, scope in [("words", "words"), ("kanji", "kanji")]:
-        for patch in report[scope]["patches"]:
+def chunks(rows: list[dict[str, Any]], size: int) -> list[list[dict[str, Any]]]:
+    return [rows[index : index + size] for index in range(0, len(rows), size)]
+
+
+def apply_patch_chunk(url: str, key: str, table: str, batch: list[dict[str, Any]], workers: int) -> dict[str, Any]:
+    failed: list[dict[str, Any]] = []
+    applied = 0
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(patch_row_with_retries, url, key, table, patch): patch for patch in batch}
+        for future in as_completed(futures):
+            patch = futures[future]
             try:
-                patch_row(url, key, table, patch)
-                applied[scope] += 1
-            except Exception as error:  # noqa: BLE001 - report and stop on first remote failure.
-                applied["failed"].append({"table": table, "id": patch.get("id"), "error": str(error)})
+                future.result()
+                applied += 1
+            except Exception as error:  # noqa: BLE001 - report and stop after current chunk.
+                failed.append({"id": patch.get("id"), "error": str(error)})
+    return {"applied": applied, "failed": failed}
+
+
+def apply_patches(report: dict[str, Any], batch_size: int, workers: int) -> dict[str, Any]:
+    url, key = load_key()
+    applied = {"words": 0, "kanji": 0, "failed": [], "batch_size": batch_size, "workers": workers}
+    for table, scope in [("words", "words"), ("kanji", "kanji")]:
+        patches = report[scope]["patches"]
+        patch_chunks = chunks(patches, batch_size)
+        for batch_index, batch in enumerate(patch_chunks, start=1):
+            result = apply_patch_chunk(url, key, table, batch, workers)
+            applied[scope] += result["applied"]
+            print(
+                f"applied {scope} batch {batch_index}/{len(patch_chunks)} "
+                f"rows={result['applied']} failed={len(result['failed'])}",
+                flush=True,
+            )
+            if result["failed"]:
+                applied["failed"].append(
+                    {
+                        "table": table,
+                        "batch": batch_index,
+                        "ids": [patch.get("id") for patch in batch[:50]],
+                        "errors": result["failed"][:20],
+                    }
+                )
                 return applied
     return applied
 
@@ -242,6 +291,8 @@ def main() -> None:
     parser.add_argument("--existing-kanji", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR / "kanji11-full")
     parser.add_argument("--backup-dir", type=Path)
+    parser.add_argument("--apply-batch-size", type=int, default=250)
+    parser.add_argument("--apply-workers", type=int, default=12)
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
 
@@ -260,7 +311,7 @@ def main() -> None:
             args.existing_kanji,
             args.backup_dir or args.output_dir / "backups" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
         )
-        apply_result = apply_patches(report)
+        apply_result = apply_patches(report, args.apply_batch_size, args.apply_workers)
         report["apply"] = apply_result
         report["dry_run"] = False
         if apply_result["failed"]:
