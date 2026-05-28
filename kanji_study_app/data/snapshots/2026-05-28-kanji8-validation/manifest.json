@@ -1,0 +1,48 @@
+{
+  "snapshot_id": "2026-05-28-kanji8-validation",
+  "created_at": "2026-05-28T16:00:00+09:00",
+  "description": "KANJI-8 ai_draft kanji validation report and human review dry-run inputs.",
+  "files": [
+    {
+      "path": "kanji_validation_report.json.gz",
+      "restore_to": ".context/data-pipeline/kanji8/kanji_validation_report.json",
+      "bytes_compressed": 1942,
+      "bytes_uncompressed": 17930,
+      "sha256_compressed": "cad6e4c66e5bece44f04831c6ec0af52c38da008b3f0a38e8140f8219fb372c8",
+      "sha256_uncompressed": "a6537c4f790c373a97e3c8a50e7f65c22cde4be64737aab714d096f0fdac19d9"
+    },
+    {
+      "path": "kanji_validation_candidates.json.gz",
+      "restore_to": ".context/data-pipeline/kanji8/kanji_validation_candidates.json",
+      "bytes_compressed": 147912,
+      "bytes_uncompressed": 1720577,
+      "sha256_compressed": "2ba690f061f3b519f4b787d49bb0a48ec024218e7843a0b3eb968ce663a897bb",
+      "sha256_uncompressed": "ccd427654e021641bad47553115ba0d1fd5425908dfa838fb14381c47fd20a2a"
+    },
+    {
+      "path": "kanji_review_sample_100.json.gz",
+      "restore_to": ".context/data-pipeline/kanji8/kanji_review_sample_100.json",
+      "bytes_compressed": 9687,
+      "bytes_uncompressed": 104848,
+      "sha256_compressed": "47176f82cc5239e1cc284a6432b0d8f11810ad537f4a14146795c80b75348449",
+      "sha256_uncompressed": "56d5ea056000e0c87598dbdf16927a138d446e8916ae1c3ca76ec0280f8dac94"
+    },
+    {
+      "path": "kanji_review_apply_dry_run.json.gz",
+      "restore_to": ".context/data-pipeline/kanji8/kanji_review_apply_dry_run.json",
+      "bytes_compressed": 505,
+      "bytes_uncompressed": 7907,
+      "sha256_compressed": "9eff7cc50672ee98cd0b49363117e7d7899dbc5fd705bb4b19a2f73947a2699a",
+      "sha256_uncompressed": "f8457fb22b7e62c29198c9e1c84a36077ec7d3458a8827e9b01143096bb5adbb"
+    }
+  ],
+  "counts": {
+    "input_rows": 4102,
+    "target_rows": 1966,
+    "hard_errors": 0,
+    "warnings": 390,
+    "review_sample": 100,
+    "dry_run_patches": 0
+  },
+  "validation_failed": false
+}
