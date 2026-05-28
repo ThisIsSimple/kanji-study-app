@@ -1,0 +1,101 @@
+{
+  "snapshot_id": "2026-05-28-kanji7-v2-import",
+  "created_at": "2026-05-28T15:30:00+09:00",
+  "description": "KANJI-7 v2 split import candidates and validation reports.",
+  "files": [
+    {
+      "path": "post_v2_upsert_check_report.json.gz",
+      "restore_to": ".context/data-pipeline/kanji7-v2/post_v2_upsert_check_report.json",
+      "bytes_compressed": 1681,
+      "bytes_uncompressed": 21131,
+      "sha256_compressed": "807fc47d743ed4972b862015845c14993fd50a874138e9b9523fc259f9edabe0",
+      "sha256_uncompressed": "f1730dab89ebd00c20fba7eb2b9badc4aa438d0d4ca6505be01f2e6e2d6c3786"
+    },
+    {
+      "path": "recommended_v2_import_apply_report.json.gz",
+      "restore_to": ".context/data-pipeline/kanji7-v2/recommended_v2_import_apply_report.json",
+      "bytes_compressed": 171,
+      "bytes_uncompressed": 302,
+      "sha256_compressed": "cb91938abd2eb8377c77f3bfe6f674cfd270906e7e3b84843cf435aa486e13d6",
+      "sha256_uncompressed": "4035934b5b857e6ed80694b3dd2eb93763d684494ba80af444aa9aa4b40de614"
+    },
+    {
+      "path": "recommended_v2_import_dry_run.json.gz",
+      "restore_to": ".context/data-pipeline/kanji7-v2/recommended_v2_import_dry_run.json",
+      "bytes_compressed": 213,
+      "bytes_uncompressed": 418,
+      "sha256_compressed": "e4aeb57bfa54696a50c29f453079b1efeccf9b8c9cca3df5ece072145e3de9ed",
+      "sha256_uncompressed": "016c486cde6ee78023aef970492f5b90f23239e5a34e34ecc7bbe76629694f26"
+    },
+    {
+      "path": "recommended_v2_kanji_split_meanings.json.gz",
+      "restore_to": ".context/data-pipeline/kanji7-v2/recommended_v2_kanji_split_meanings.json",
+      "bytes_compressed": 81887,
+      "bytes_uncompressed": 1053384,
+      "sha256_compressed": "5fd58b2c4c82a54ec938618daa07186d110bb9b39302abe6091dad638dcba769",
+      "sha256_uncompressed": "d80b868a785d7e44f3f7b08bc9e72356f2b4626489ee10661791a220b66ef34f"
+    },
+    {
+      "path": "recommended_v2_quality_report.json.gz",
+      "restore_to": ".context/data-pipeline/kanji7-v2/recommended_v2_quality_report.json",
+      "bytes_compressed": 13849,
+      "bytes_uncompressed": 196442,
+      "sha256_compressed": "4f0eac8fa7cdf90395f23aceb5e677f6b10f90930b114cc9a5ec2468c80f4415",
+      "sha256_uncompressed": "65da8f046ea129d9f764a1a947564b01696c6ab4da569f5ad6caead799b0e709"
+    },
+    {
+      "path": "recommended_v2_split_meanings_report.json.gz",
+      "restore_to": ".context/data-pipeline/kanji7-v2/recommended_v2_split_meanings_report.json",
+      "bytes_compressed": 20339,
+      "bytes_uncompressed": 161041,
+      "sha256_compressed": "3ca6975a3e1f3c01eec0b6499cc2d10176b4e13f039b1a8a578d1ffbe06c2046",
+      "sha256_uncompressed": "77be01df3d899345b1471bcaea4dc54af7164a0ce5bcafaa509d31ceb4669828"
+    },
+    {
+      "path": "recommended_v2_words_split_meanings.json.gz",
+      "restore_to": ".context/data-pipeline/kanji7-v2/recommended_v2_words_split_meanings.json",
+      "bytes_compressed": 807447,
+      "bytes_uncompressed": 19032739,
+      "sha256_compressed": "6de72d9ef93fcd659f2d501d31ee101ab08ce71074b5cde238516417ae0b956c",
+      "sha256_uncompressed": "e98ecaff4ef13bb2fefe63c786be3efe6f454c13f2d734b760adde0d73816b10"
+    },
+    {
+      "path": "tag_backfill_dry_run.json.gz",
+      "restore_to": ".context/data-pipeline/tag_backfill_dry_run.json",
+      "bytes_compressed": 6491,
+      "bytes_uncompressed": 88927,
+      "sha256_compressed": "b70650c5b149230f227f00edbbd41db7cb55a835c25b7e12242773da9f21c8b6",
+      "sha256_uncompressed": "70dca2b738226435bee5b78f5ba472e6cd4faf357825813af2bbfb952e09a2a6"
+    }
+  ],
+  "counts": {
+    "words": 10000,
+    "kanji": 1000,
+    "tag_backfill_words": 39075,
+    "tag_backfill_kanji": 3100
+  },
+  "quality": {
+    "failed": false,
+    "english_only_word_ko": 0,
+    "english_only_kanji_ko": 0,
+    "missing_word_en": 0,
+    "missing_kanji_en": 0
+  },
+  "notes": [
+    "Uncompressed JSON working files are intentionally kept out of git.",
+    "Restore with scripts/data_pipeline/restore_snapshot.py before continued agent work."
+  ],
+  "operation": {
+    "applied": true,
+    "before_counts": {
+      "words": 46310,
+      "kanji": 3102
+    },
+    "after_counts": {
+      "words": 56310,
+      "kanji": 4102
+    },
+    "validation_failed": false,
+    "validation_failures": []
+  }
+}

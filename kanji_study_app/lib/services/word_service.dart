@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/word_model.dart';
 import '../repositories/word_repository.dart';
 import 'favorite_service.dart';
+import 'tag_filter.dart';
 
 class WordService {
   static final WordService _instance = WordService._internal();
@@ -16,6 +17,12 @@ class WordService {
 
   // Get all words
   List<Word> get allWords => List.unmodifiable(_allWords);
+
+  List<Word> getWords({TagFilter? tagFilter}) {
+    return List.unmodifiable(
+      _allWords.whereTags(tagFilter, (word) => word.tags),
+    );
+  }
 
   // Check if service is initialized
   bool get isInitialized => _isInitialized;
@@ -61,9 +68,11 @@ class WordService {
   }
 
   // Get favorite words
-  List<Word> getFavoriteWords() {
+  List<Word> getFavoriteWords({TagFilter? tagFilter}) {
     final favoriteIds = _favoriteService.getFavoriteIds('word');
-    return _allWords.where((word) => favoriteIds.contains(word.id)).toList();
+    return _allWords
+        .where((word) => favoriteIds.contains(word.id))
+        .whereTags(tagFilter, (word) => word.tags);
   }
 
   // Get word by ID

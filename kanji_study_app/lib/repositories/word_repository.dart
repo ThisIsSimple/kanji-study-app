@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/word_model.dart';
 import '../services/local_database_service.dart';
 import '../services/connectivity_service.dart';
+import '../services/tag_filter.dart';
 
 class WordRepository {
   static final WordRepository _instance = WordRepository._internal();
@@ -75,8 +76,8 @@ class WordRepository {
   }
 
   // Get all words
-  List<Word> getAllWords() {
-    return _wordList ?? [];
+  List<Word> getAllWords({TagFilter? tagFilter}) {
+    return (_wordList ?? []).whereTags(tagFilter, (word) => word.tags);
   }
 
   // Get word by ID

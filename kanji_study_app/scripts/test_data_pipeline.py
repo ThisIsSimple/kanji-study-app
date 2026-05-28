@@ -21,8 +21,19 @@ from generate_ko_meaning_drafts import apply_mapping_to_words, build_cli_prompt,
 from merge_dataset import merge_kanji, merge_words, quality_report
 from normalize_jmdict import entry_to_words
 from normalize_kanjidic import character_to_kanji
+from prepare_tag_backfill import backfill_kanji, backfill_word, preflight as tag_backfill_preflight
 from restore_snapshot import restore_file
+from select_recommended_v2 import (
+    preflight as v2_preflight,
+    select_kanji as select_v2_kanji,
+    select_words as select_v2_words,
+    tag_backfill_report,
+    normalize_selected_tags,
+    valid_backlog_kanji,
+    valid_backlog_words,
+)
 from split_meanings import preflight_report, split_kanji, split_words
+from tag_normalization import normalized_word_tags
 
 
 class DataPipelineTest(unittest.TestCase):
@@ -289,6 +300,130 @@ class DataPipelineTest(unittest.TestCase):
         candidates = candidate_rows(rows, required_count=1)
 
         self.assertEqual([row["id"] for row in candidates], [2])
+
+    def test_v2_selection_excludes_imported_and_invalid_rows(self):
+        words = [
+            {"id": 1, "source": "jmdict", "quality_status": "ai_draft", "word": "学校", "reading": "がっこう", "meanings": [{"meaning": "school"}]},
+            {"id": 2, "source": "jmdict", "quality_status": "ai_draft", "word": "MP3", "reading": "エムピースリー", "meanings": [{"meaning": "MP3"}]},
+            {"id": 3, "source": "legacy_naver", "quality_status": "reviewed", "word": "山", "reading": "やま", "meanings": [{"meaning": "산"}]},
+            {"id": 4, "source": "jmdict", "quality_status": "ai_draft", "word": "", "reading": "から", "meanings": [{"meaning": "empty"}]},
+            {"id": 5, "source": "jmdict", "quality_status": "ai_draft", "word": "偸閑", "reading": "あからさま", "meanings": [{"meaning": "plain"}], "tags": ["word usually written using kana alone"]},
+            {"id": 6, "source": "jmdict", "quality_status": "ai_draft", "word": "兌", "reading": "だ", "meanings": [{"meaning": "exchange"}]},
+        ]
+        kanji = [
+            {"id": 10, "source": "kanjidic2", "quality_status": "ai_draft", "character": "学", "meanings": ["study"], "readings": {"on": ["ガク"], "kun": []}},
+            {"id": 11, "source": "kanjidic2", "quality_status": "ai_draft", "character": "校", "meanings": [], "readings": {"on": ["コウ"], "kun": []}},
+            {"id": 12, "source": "kanjidic2", "quality_status": "ai_draft", "character": "山", "meanings": ["mountain"], "readings": {"on": [], "kun": []}},
+        ]
+
+        valid_words, word_exclusions = valid_backlog_words(words, {3})
+        valid_kanji, kanji_exclusions = valid_backlog_kanji(kanji, set())
+
+        self.assertEqual([row["id"] for row in valid_words], [1])
+        self.assertEqual(word_exclusions["latin_digit_only_word"], 1)
+        self.assertEqual(word_exclusions["already_imported"], 1)
+        self.assertEqual(word_exclusions["empty_word_or_reading"], 1)
+        self.assertEqual(word_exclusions["excluded_word_tag"], 1)
+        self.assertEqual(word_exclusions["single_kanji_word"], 1)
+        self.assertEqual([row["id"] for row in valid_kanji], [10])
+        self.assertEqual(kanji_exclusions["empty_meanings"], 1)
+        self.assertEqual(kanji_exclusions["empty_readings"], 1)
+
+    def test_v2_selection_is_deterministic_and_prefers_coverage(self):
+        words = [
+            {"id": 101, "source": "jmdict", "quality_status": "ai_draft", "word": "学校", "reading": "がっこう", "meanings": [{"meaning": "school"}]},
+            {"id": 102, "source": "jmdict", "quality_status": "ai_draft", "word": "学者", "reading": "がくしゃ", "meanings": [{"meaning": "scholar"}]},
+            {"id": 103, "source": "jmdict", "quality_status": "ai_draft", "word": "あそこ", "reading": "あそこ", "meanings": [{"meaning": "there"}]},
+        ]
+        imported_kanji = [{"id": 1, "character": "学"}]
+        candidate_kanji = [
+            {"id": 201, "character": "校", "is_common": False, "grade": 1, "strokeCount": 10},
+            {"id": 202, "character": "者", "is_common": False, "grade": 3, "strokeCount": 8},
+        ]
+
+        selected_kanji = select_v2_kanji(candidate_kanji, {"校": 1, "者": 1}, 2)
+        selected_words_a = select_v2_words(words, imported_kanji, selected_kanji, 3)
+        selected_words_b = select_v2_words(words, imported_kanji, selected_kanji, 3)
+
+        self.assertEqual([row["id"] for row in selected_kanji], [201, 202])
+        self.assertEqual([row["id"] for row in selected_words_a], [101, 102, 103])
+        self.assertEqual([row["id"] for row in selected_words_a], [row["id"] for row in selected_words_b])
+
+    def test_v2_preflight_catches_overlap_and_duplicates(self):
+        words = [
+            {"id": 1, "word": "学校", "reading": "がっこう", "meanings": [{"meaning": "school"}]},
+            {"id": 1, "word": "学校", "reading": "がっこう", "meanings": [{"meaning": "school"}]},
+        ]
+        kanji = [
+            {"id": 2, "character": "学", "meanings": ["study"], "readings": {"on": ["ガク"], "kun": []}},
+            {"id": 3, "character": "学", "meanings": ["study"], "readings": {"on": ["ガク"], "kun": []}},
+        ]
+
+        report = v2_preflight(words, kanji, {1}, {2}, expected_words=2, expected_kanji=2)
+
+        self.assertTrue(report["failed"])
+        error_types = [error["type"] for error in report["errors"]]
+        self.assertIn("duplicate_word_ids", error_types)
+        self.assertIn("duplicate_word_reading", error_types)
+        self.assertIn("duplicate_kanji_characters", error_types)
+        self.assertIn("v1_word_id_overlap", error_types)
+        self.assertIn("v1_kanji_id_overlap", error_types)
+
+    def test_v2_normalizes_tags_for_filtering_and_backfill(self):
+        word = {
+            "id": 101,
+            "source": "jmdict",
+            "external_id": "jmdict:1:0",
+            "word": "心筋",
+            "reading": "しんきん",
+            "tags": ["medicine", "anatomy"],
+        }
+        kanji = {
+            "id": 201,
+            "source": "kanjidic2",
+            "external_id": "kanjidic2:U+5FC3",
+            "character": "心",
+            "tags": ["kanjidic2", "unihan"],
+        }
+
+        self.assertEqual(
+            normalized_word_tags(word, batch="kanji7_v2"),
+            ["medicine", "anatomy", "domain:medicine", "domain:anatomy", "source:jmdict", "batch:kanji7_v2"],
+        )
+
+        tagged_words, tagged_kanji, derived = normalize_selected_tags([word], [kanji])
+        report = tag_backfill_report([word], [kanji])
+
+        self.assertIn("domain:medicine", tagged_words[0]["tags"])
+        self.assertIn("source:kanjidic2", tagged_kanji[0]["tags"])
+        self.assertEqual(derived, {})
+        self.assertEqual(report["words"]["candidate_count"], 1)
+        self.assertEqual(report["kanji"]["candidate_count"], 1)
+
+    def test_prepare_tag_backfill_preserves_current_tags(self):
+        word = {
+            "id": 1,
+            "source": "jmdict",
+            "word": "心筋",
+            "reading": "しんきん",
+            "tags": ["medicine"],
+        }
+        kanji = {
+            "id": 2,
+            "source": "kanjidic2",
+            "character": "心",
+            "tags": ["kanjidic2"],
+        }
+
+        word_backfill = backfill_word(word)
+        kanji_backfill = backfill_kanji(kanji)
+        report = tag_backfill_preflight([word_backfill], [kanji_backfill])
+
+        self.assertEqual(word_backfill["current_tags"], ["medicine"])
+        self.assertIn("medicine", word_backfill["tags"])
+        self.assertIn("domain:medicine", word_backfill["add_tags"])
+        self.assertIn("source:kanjidic2", kanji_backfill["add_tags"])
+        self.assertFalse(report["failed"])
 
     def test_preflight_allows_existing_duplicates_but_fails_new_duplicates(self):
         words = [
