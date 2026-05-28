@@ -1,0 +1,67 @@
+{
+  "snapshot_id": "2026-05-28-kanji9-full-backlog",
+  "created_at": "2026-05-28T16:30:00+09:00",
+  "description": "Full normalized and merged backlog for future KANJI data batches.",
+  "files": [
+    {
+      "path": "merged_words.json.gz",
+      "restore_to": ".context/data-pipeline/merged_words.json",
+      "row_count": 296611,
+      "bytes_compressed": 13882064,
+      "bytes_uncompressed": 263341523,
+      "sha256_compressed": "4c226117e9fdcd85be532aa6bb3d66b250f0bf54772387d0b2ef6da313734281",
+      "sha256_uncompressed": "77aba047012d988ca00a86567fc85159ff698214e1f2f9157ecb7dd934a8b706"
+    },
+    {
+      "path": "merged_kanji.json.gz",
+      "restore_to": ".context/data-pipeline/merged_kanji.json",
+      "row_count": 13110,
+      "bytes_compressed": 1041465,
+      "bytes_uncompressed": 12271489,
+      "sha256_compressed": "5fb9f3f544c721cda3667aad4e19648c951b04dd20e2c76216ecc9d9057fa65c",
+      "sha256_uncompressed": "ab9b211b189070de0e04eb5698bbd79b4639770b37028b5beab67ff995a08f72"
+    },
+    {
+      "path": "normalized_jmdict_words.json.gz",
+      "restore_to": ".context/data-pipeline/normalized_jmdict_words.json",
+      "row_count": 299143,
+      "bytes_compressed": 12319478,
+      "bytes_uncompressed": 256696541,
+      "sha256_compressed": "be8a08a10243f8149feb5608fa991f2d09c432e9cef96d3289be2ced67089003",
+      "sha256_uncompressed": "1861f2337849544808b720a004b510194a6ec3f43696a39999285f78700b0158"
+    },
+    {
+      "path": "normalized_kanjidic_kanji.json.gz",
+      "restore_to": ".context/data-pipeline/normalized_kanjidic_kanji.json",
+      "row_count": 13108,
+      "bytes_compressed": 602454,
+      "bytes_uncompressed": 10452126,
+      "sha256_compressed": "deaa0cbf58df90f3617a0a3348f36235050728f826501edde610ea398c865155",
+      "sha256_uncompressed": "dfdf008f77eae72bf4c7f4966d7fa4f57876c866c7ab04055790238439619a86"
+    },
+    {
+      "path": "merge_report.json.gz",
+      "restore_to": ".context/data-pipeline/merge_report.json",
+      "row_count": null,
+      "bytes_compressed": 12790,
+      "bytes_uncompressed": 154728,
+      "sha256_compressed": "0baaf223d18901fc537883631aef99a323240371df89dec56cba456930844f30",
+      "sha256_uncompressed": "3bee0e31d394e8d9ad04d61a60d2ca11641ae2c4b0e5b5af2519c712f07210c1"
+    }
+  ],
+  "counts": {
+    "merged_words": 296611,
+    "merged_kanji": 13110,
+    "normalized_jmdict_words": 299143,
+    "normalized_kanjidic_kanji": 13108,
+    "imported_words_operational": 56310,
+    "imported_kanji_operational": 4102,
+    "remaining_words_estimated": 240301,
+    "remaining_kanji_estimated": 9008
+  },
+  "notes": [
+    ".context is a temporary workspace directory and is not trusted as permanent storage.",
+    "Restore this snapshot before selecting future KANJI data batches.",
+    "Do not commit restored uncompressed JSON files."
+  ]
+}
