@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Japanese dictionary-style word meanings for a small sample."""
+"""Generate Japanese dictionary-style word meanings with checkpoint reuse."""
 
 from __future__ import annotations
 
@@ -16,8 +16,7 @@ from generate_ko_meaning_drafts import TRANSLATION_SCHEMA, draft_key, parse_tran
 
 
 JAPANESE_RE = re.compile(r"[ぁ-んァ-ン一-龯]")
-DEFAULT_SAMPLE_SIZE = 100
-DEFAULT_BATCH_SIZE = 25
+DEFAULT_BATCH_SIZE = 100
 
 
 def rows_from_json(path: Path) -> list[dict[str, Any]]:
@@ -45,7 +44,7 @@ def meaning_texts(row: dict[str, Any], key: str) -> list[str]:
     return result
 
 
-def candidate_rows(rows: list[dict[str, Any]], sample_size: int) -> list[dict[str, Any]]:
+def candidate_rows(rows: list[dict[str, Any]], sample_size: int | None = None) -> list[dict[str, Any]]:
     candidates = [
         row
         for row in rows
@@ -62,7 +61,9 @@ def candidate_rows(rows: list[dict[str, Any]], sample_size: int) -> list[dict[st
             row.get("id") or 0,
         )
     )
-    return candidates[:sample_size]
+    if sample_size and sample_size > 0:
+        return candidates[:sample_size]
+    return candidates
 
 
 def build_prompt(rows: list[dict[str, Any]]) -> str:
@@ -132,6 +133,7 @@ def generate_mapping(
     batch_size: int,
     timeout: int,
     prompts_only: bool,
+    max_batches: int | None = None,
 ) -> tuple[dict[str, list[str]], dict[str, Any]]:
     safe_model = re.sub(r"[^A-Za-z0-9_.-]+", "_", model or "default")
     checkpoint_dir = output_dir / "jp-word-meaning-cli" / provider / safe_model
@@ -143,6 +145,8 @@ def generate_mapping(
     failed_batches: list[dict[str, Any]] = []
     prompt_files: list[str] = []
     batches = batched(rows, batch_size)
+    if max_batches and max_batches > 0:
+        batches = batches[:max_batches]
     completed_batches = 0
     for batch_index, batch_rows in enumerate(batches, start=1):
         prompt = build_prompt(batch_rows)
@@ -187,6 +191,7 @@ def generate_mapping(
         "completed_batches": completed_batches,
         "failed_batches": failed_batches,
         "prompts_only": prompts_only,
+        "max_batches": max_batches,
         "prompt_files": prompt_files[:20],
         "checkpoint_dir": str(checkpoint_dir),
         "translations": len(mapping),
@@ -212,9 +217,9 @@ def apply_mapping(rows: list[dict[str, Any]], mapping: dict[str, list[str]]) -> 
     return result
 
 
-def preflight(rows: list[dict[str, Any]], expected_count: int) -> dict[str, Any]:
+def preflight(rows: list[dict[str, Any]], expected_count: int | None = None) -> dict[str, Any]:
     errors: list[dict[str, Any]] = []
-    if len(rows) != expected_count:
+    if expected_count is not None and len(rows) != expected_count:
         errors.append({"type": "unexpected_word_sample_count", "expected": expected_count, "actual": len(rows)})
     missing = [row.get("id") for row in rows if not row.get("meanings_jp")]
     non_japanese = [
@@ -233,35 +238,44 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR / "kanji11")
+    parser.add_argument("--output-prefix", default="words_jp_meanings_sample")
     parser.add_argument("--provider", choices=["codex-cli"], default="codex-cli")
     parser.add_argument("--model", default="")
-    parser.add_argument("--sample-size", type=int, default=DEFAULT_SAMPLE_SIZE)
+    parser.add_argument("--sample-size", type=int, default=None, help="생략하거나 0이면 전체 후보를 처리합니다.")
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     parser.add_argument("--timeout", type=int, default=900)
+    parser.add_argument("--max-batches", type=int, default=None)
     parser.add_argument("--prompts-only", action="store_true")
     args = parser.parse_args()
 
     all_rows = rows_from_json(args.input)
     sample_rows = candidate_rows(all_rows, args.sample_size)
+    generation_rows = sample_rows
+    if args.max_batches and args.max_batches > 0:
+        generation_rows = sample_rows[: args.max_batches * args.batch_size]
     mapping, cli_report = generate_mapping(
-        sample_rows,
+        generation_rows,
         args.output_dir,
         args.provider,
         args.model,
         args.batch_size,
         args.timeout,
         args.prompts_only,
+        args.max_batches,
     )
-    output_rows = sample_rows if args.prompts_only else apply_mapping(sample_rows, mapping)
+    output_rows = generation_rows if args.prompts_only else apply_mapping(generation_rows, mapping)
     report = {
         "input_count": len(all_rows),
-        "sample_count": len(sample_rows),
+        "candidate_count": len(sample_rows),
+        "processed_count": len(generation_rows),
+        "sample_count": len(generation_rows),
         "cli": cli_report,
-        "preflight": preflight(output_rows, args.sample_size) if not args.prompts_only else None,
+        "preflight": preflight(output_rows, len(generation_rows)) if not args.prompts_only else None,
     }
-    write_json(args.output_dir / "words_jp_meanings_sample.json", {"words": output_rows})
-    write_json(args.output_dir / "words_jp_meanings_report.json", report)
-    print(f"jp word meanings sample words={len(output_rows)} failed={report['preflight']['failed'] if report['preflight'] else None}")
+    report_name = "words_jp_meanings_report" if args.output_prefix == "words_jp_meanings_sample" else f"{args.output_prefix}_report"
+    write_json(args.output_dir / f"{args.output_prefix}.json", {"words": output_rows})
+    write_json(args.output_dir / f"{report_name}.json", report)
+    print(f"jp word meanings words={len(output_rows)} failed={report['preflight']['failed'] if report['preflight'] else None}")
     if report["preflight"] and report["preflight"]["failed"]:
         raise SystemExit(1)
 

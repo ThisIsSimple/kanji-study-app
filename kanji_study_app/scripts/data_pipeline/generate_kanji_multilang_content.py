@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate small-sample multilingual kanji meanings and commentary."""
+"""Generate multilingual kanji meanings and commentary with checkpoint reuse."""
 
 from __future__ import annotations
 
@@ -16,8 +16,7 @@ from common import DEFAULT_OUTPUT_DIR, dedupe, read_json, write_json
 
 JAPANESE_RE = re.compile(r"[ぁ-んァ-ン一-龯]")
 ENGLISH_RE = re.compile(r"[A-Za-z]")
-DEFAULT_SAMPLE_SIZE = 50
-DEFAULT_BATCH_SIZE = 10
+DEFAULT_BATCH_SIZE = 25
 
 KANJI_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -91,8 +90,27 @@ def backfill_row(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def candidate_rows(rows: list[dict[str, Any]], sample_size: int) -> list[dict[str, Any]]:
-    candidates = [backfill_row(row) for row in rows if row.get("id") is not None and row.get("character")]
+def has_missing_multilang_target(row: dict[str, Any]) -> bool:
+    return not row.get("jp_meanings") or not has_japanese(row.get("jp_commentary")) or not has_english(row.get("en_commentary"))
+
+
+def missing_fields(row: dict[str, Any]) -> list[str]:
+    fields: list[str] = []
+    if not row.get("jp_meanings"):
+        fields.append("jp_meanings")
+    if not has_japanese(row.get("jp_commentary")):
+        fields.append("jp_commentary")
+    if not has_english(row.get("en_commentary")):
+        fields.append("en_commentary")
+    return fields
+
+
+def candidate_rows(rows: list[dict[str, Any]], sample_size: int | None = None) -> list[dict[str, Any]]:
+    candidates = [
+        backfill_row(row)
+        for row in rows
+        if row.get("id") is not None and row.get("character") and has_missing_multilang_target(row)
+    ]
     candidates.sort(
         key=lambda row: (
             not bool(row.get("is_common")),
@@ -100,7 +118,9 @@ def candidate_rows(rows: list[dict[str, Any]], sample_size: int) -> list[dict[st
             row.get("id") or 0,
         )
     )
-    return candidates[:sample_size]
+    if sample_size and sample_size > 0:
+        return candidates[:sample_size]
+    return candidates
 
 
 def build_prompt(rows: list[dict[str, Any]]) -> str:
@@ -113,6 +133,10 @@ def build_prompt(rows: list[dict[str, Any]]) -> str:
             "kr_meanings": row.get("kr_meanings") or [],
             "en_meanings": row.get("en_meanings") or [],
             "kr_commentary": row.get("kr_commentary"),
+            "existing_jp_meanings": row.get("jp_meanings") or [],
+            "existing_jp_commentary": row.get("jp_commentary"),
+            "existing_en_commentary": row.get("en_commentary"),
+            "missing_fields": missing_fields(row),
         }
         for row in rows
     ]
@@ -125,6 +149,8 @@ def build_prompt(rows: list[dict[str, Any]]) -> str:
         "- jp_meanings는 일본어 한자 사전식 뜻 1~6개입니다.\n"
         "- jp_commentary는 일본어로 한자의 기원/의미를 1~2문장으로 설명합니다.\n"
         "- en_commentary는 영어로 한자의 origin/meaning를 1~2문장으로 설명합니다.\n"
+        "- existing_* 값이 있으면 의미를 바꾸지 말고 같은 값을 반환하세요.\n"
+        "- missing_fields에 있는 값은 반드시 새로 채우세요.\n"
         "- 모르는 기원은 단정하지 말고 일반적인 의미/구성 중심으로 설명하세요.\n\n"
         f"- 입력 entries {len(entries)}개 각각에 대해 items 항목을 정확히 1개씩 반환하세요.\n\n"
         f"입력 JSON:\n{json.dumps({'entries': entries}, ensure_ascii=False, indent=2)}"
@@ -203,6 +229,7 @@ def generate_mapping(
     batch_size: int,
     timeout: int,
     prompts_only: bool,
+    max_batches: int | None = None,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     safe_model = re.sub(r"[^A-Za-z0-9_.-]+", "_", model or "default")
     checkpoint_dir = output_dir / "kanji-multilang-cli" / provider / safe_model
@@ -214,6 +241,8 @@ def generate_mapping(
     failed_batches: list[dict[str, Any]] = []
     prompt_files: list[str] = []
     batches = batched(rows, batch_size)
+    if max_batches and max_batches > 0:
+        batches = batches[:max_batches]
     completed_batches = 0
     for batch_index, batch_rows in enumerate(batches, start=1):
         prompt = build_prompt(batch_rows)
@@ -254,6 +283,7 @@ def generate_mapping(
         "completed_batches": completed_batches,
         "failed_batches": failed_batches,
         "prompts_only": prompts_only,
+        "max_batches": max_batches,
         "prompt_files": prompt_files[:20],
         "checkpoint_dir": str(checkpoint_dir),
         "items": len(mapping),
@@ -264,20 +294,28 @@ def apply_mapping(rows: list[dict[str, Any]], mapping: dict[str, dict[str, Any]]
     result = []
     for row in rows:
         item = mapping.get(kanji_key(row), {})
+        generated_jp_meanings = [value for value in item.get("jp_meanings", []) if has_japanese(value)]
+        current_jp_meanings = row.get("jp_meanings") or []
+        current_jp_commentary = row.get("jp_commentary")
+        current_en_commentary = row.get("en_commentary")
         result.append(
             {
                 **row,
-                "jp_meanings": [value for value in item.get("jp_meanings", []) if has_japanese(value)],
-                "jp_commentary": item.get("jp_commentary") or row.get("jp_commentary"),
-                "en_commentary": item.get("en_commentary") or row.get("en_commentary"),
+                "jp_meanings": current_jp_meanings or generated_jp_meanings,
+                "jp_commentary": current_jp_commentary
+                if has_japanese(current_jp_commentary)
+                else item.get("jp_commentary") or current_jp_commentary,
+                "en_commentary": current_en_commentary
+                if has_english(current_en_commentary)
+                else item.get("en_commentary") or current_en_commentary,
             }
         )
     return result
 
 
-def preflight(rows: list[dict[str, Any]], expected_count: int) -> dict[str, Any]:
+def preflight(rows: list[dict[str, Any]], expected_count: int | None = None) -> dict[str, Any]:
     errors: list[dict[str, Any]] = []
-    if len(rows) != expected_count:
+    if expected_count is not None and len(rows) != expected_count:
         errors.append({"type": "unexpected_kanji_sample_count", "expected": expected_count, "actual": len(rows)})
     missing_jp_meanings = [row.get("id") for row in rows if not row.get("jp_meanings")]
     missing_jp_commentary = [row.get("id") for row in rows if not has_japanese(row.get("jp_commentary"))]
@@ -302,35 +340,44 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR / "kanji11")
+    parser.add_argument("--output-prefix", default="kanji_multilang_sample")
     parser.add_argument("--provider", choices=["codex-cli"], default="codex-cli")
     parser.add_argument("--model", default="")
-    parser.add_argument("--sample-size", type=int, default=DEFAULT_SAMPLE_SIZE)
+    parser.add_argument("--sample-size", type=int, default=None, help="생략하거나 0이면 전체 후보를 처리합니다.")
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     parser.add_argument("--timeout", type=int, default=900)
+    parser.add_argument("--max-batches", type=int, default=None)
     parser.add_argument("--prompts-only", action="store_true")
     args = parser.parse_args()
 
     all_rows = rows_from_json(args.input)
     sample_rows = candidate_rows(all_rows, args.sample_size)
+    generation_rows = sample_rows
+    if args.max_batches and args.max_batches > 0:
+        generation_rows = sample_rows[: args.max_batches * args.batch_size]
     mapping, cli_report = generate_mapping(
-        sample_rows,
+        generation_rows,
         args.output_dir,
         args.provider,
         args.model,
         args.batch_size,
         args.timeout,
         args.prompts_only,
+        args.max_batches,
     )
-    output_rows = sample_rows if args.prompts_only else apply_mapping(sample_rows, mapping)
+    output_rows = generation_rows if args.prompts_only else apply_mapping(generation_rows, mapping)
     report = {
         "input_count": len(all_rows),
-        "sample_count": len(sample_rows),
+        "candidate_count": len(sample_rows),
+        "processed_count": len(generation_rows),
+        "sample_count": len(generation_rows),
         "cli": cli_report,
-        "preflight": preflight(output_rows, args.sample_size) if not args.prompts_only else None,
+        "preflight": preflight(output_rows, len(generation_rows)) if not args.prompts_only else None,
     }
-    write_json(args.output_dir / "kanji_multilang_sample.json", {"kanji": output_rows})
-    write_json(args.output_dir / "kanji_multilang_report.json", report)
-    print(f"kanji multilang sample kanji={len(output_rows)} failed={report['preflight']['failed'] if report['preflight'] else None}")
+    report_name = "kanji_multilang_report" if args.output_prefix == "kanji_multilang_sample" else f"{args.output_prefix}_report"
+    write_json(args.output_dir / f"{args.output_prefix}.json", {"kanji": output_rows})
+    write_json(args.output_dir / f"{report_name}.json", report)
+    print(f"kanji multilang kanji={len(output_rows)} failed={report['preflight']['failed'] if report['preflight'] else None}")
     if report["preflight"] and report["preflight"]["failed"]:
         raise SystemExit(1)
 
