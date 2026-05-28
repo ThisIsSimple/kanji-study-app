@@ -46,6 +46,14 @@ void main() {
           'quality_status': 'ai_draft',
         },
       ],
+      'meanings_jp': [
+        {
+          'part_of_speech': '名詞',
+          'meaning': '学問を教えるための施設',
+          'source': 'ai_translation',
+          'quality_status': 'ai_draft',
+        },
+      ],
       'jlpt_level': 0,
       'source': 'jmdict',
       'external_id': 'jmdict:1000010:0',
@@ -63,9 +71,11 @@ void main() {
     expect(expandedWord.meanings.single.source, 'ai_translation');
     expect(expandedWord.meaningsText, '학교');
     expect(expandedWord.meaningsEn.single.meaning, 'school');
+    expect(expandedWord.meaningsJp.single.meaning, '学問を教えるための施設');
     expect(expandedWord.isCommon, isTrue);
     expect(expandedWord.toJson()['meanings_ko'], isNotEmpty);
     expect(expandedWord.toJson()['meanings_en'], isNotEmpty);
+    expect(expandedWord.toJson()['meanings_jp'], isNotEmpty);
     expect(expandedWord.toJson()['tags'], ['ichi1']);
   });
 
@@ -114,14 +124,25 @@ void main() {
       'meanings': ['꾸짖을', 'scold'],
       'meanings_ko': ['꾸짖을'],
       'meanings_en': ['scold'],
+      'kr_meanings': ['꾸짖을'],
+      'jp_meanings': ['しかること'],
+      'en_meanings': ['scold'],
       'readings': {
         'on': [],
         'kun': ['しか.る'],
       },
+      'jp_on_readings': [],
+      'jp_kun_readings': ['しか.る'],
+      'kr_on_readings': [],
+      'kr_kun_readings': ['꾸짖을'],
       'grade': 0,
       'jlpt': 0,
       'strokeCount': 5,
       'examples': [],
+      'commentary': '꾸짖는다는 뜻의 한자',
+      'kr_commentary': '꾸짖는다는 뜻의 한자',
+      'jp_commentary': '叱る意味を表す漢字です。',
+      'en_commentary': 'A kanji used for the idea of scolding.',
       'source': 'kanjidic2',
       'external_id': 'kanjidic2:U+20B9F',
       'source_version': 'sample',
@@ -136,8 +157,20 @@ void main() {
     expect(expandedKanji.externalId, 'kanjidic2:U+20B9F');
     expect(expandedKanji.meanings, ['꾸짖을']);
     expect(expandedKanji.meaningsEn, ['scold']);
+    expect(expandedKanji.krMeanings, ['꾸짖을']);
+    expect(expandedKanji.jpMeanings, ['しかること']);
+    expect(expandedKanji.enMeanings, ['scold']);
+    expect(expandedKanji.jpKunReadings, ['しか.る']);
+    expect(expandedKanji.krKunReadings, ['꾸짖을']);
+    expect(expandedKanji.krCommentary, '꾸짖는다는 뜻의 한자');
+    expect(expandedKanji.jpCommentary, '叱る意味を表す漢字です。');
+    expect(
+      expandedKanji.enCommentary,
+      'A kanji used for the idea of scolding.',
+    );
     expect(expandedKanji.tags, ['kanjidic2']);
     expect(expandedKanji.toJson()['quality_status'], 'ai_draft');
     expect(expandedKanji.toJson()['meanings_en'], ['scold']);
+    expect(expandedKanji.toJson()['jp_meanings'], ['しかること']);
   });
 }

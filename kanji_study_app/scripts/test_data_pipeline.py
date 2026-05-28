@@ -11,6 +11,17 @@ import xml.etree.ElementTree as ET
 sys.path.insert(0, str(Path(__file__).resolve().parent / "data_pipeline"))
 
 from fetch_sources import SourceSpec, metadata_for
+from apply_multilingual_content_patches import build_dry_run as build_multilingual_patch_dry_run
+from generate_jp_word_meanings import apply_mapping as apply_jp_word_mapping
+from generate_jp_word_meanings import build_prompt as build_jp_word_prompt
+from generate_jp_word_meanings import candidate_rows as jp_word_candidate_rows
+from generate_jp_word_meanings import preflight as jp_word_preflight
+from generate_kanji_multilang_content import apply_mapping as apply_kanji_multilang_mapping
+from generate_kanji_multilang_content import backfill_row as backfill_kanji_multilang_row
+from generate_kanji_multilang_content import build_prompt as build_kanji_multilang_prompt
+from generate_kanji_multilang_content import candidate_rows as kanji_multilang_candidate_rows
+from generate_kanji_multilang_content import parse_payload as parse_kanji_multilang_payload
+from generate_kanji_multilang_content import preflight as kanji_multilang_preflight
 from generate_kanji_ko_meaning_drafts import (
     build_kanji_prompt,
     candidate_rows,
@@ -22,6 +33,11 @@ from merge_dataset import merge_kanji, merge_words, quality_report
 from normalize_jmdict import entry_to_words
 from normalize_kanjidic import character_to_kanji
 from prepare_tag_backfill import backfill_kanji, backfill_word, preflight as tag_backfill_preflight
+from prepare_multilingual_fill_candidates import kanji_candidates as multilingual_kanji_candidates
+from prepare_multilingual_fill_candidates import preflight as multilingual_candidate_preflight
+from prepare_multilingual_fill_candidates import word_candidates as multilingual_word_candidates
+from post_check_multilingual_fill import build_report as build_multilingual_post_check_report
+from merge_multilingual_fill_outputs import build_report as build_multilingual_merge_report
 from restore_snapshot import restore_file
 from apply_kanji_review_results import build_dry_run as build_kanji_review_dry_run
 from select_recommended_v2 import (
@@ -555,6 +571,231 @@ class DataPipelineTest(unittest.TestCase):
         self.assertEqual(report["summary"]["skipped_count"], 2)
         self.assertEqual(report["patches"][0]["quality_status"], "reviewed")
         self.assertEqual(report["patches"][0]["meaning_source"], "human_review")
+
+    def test_jp_word_meanings_prompt_mapping_and_preflight(self):
+        rows = [
+            {
+                "id": 1,
+                "external_id": "jmdict:1:0",
+                "word": "学校",
+                "reading": "がっこう",
+                "meanings_ko": [{"part_of_speech": "명사", "meaning": "학교"}],
+                "meanings_en": [{"part_of_speech": "n", "meaning": "school"}],
+            }
+        ]
+
+        prompt = build_jp_word_prompt(rows)
+        output = apply_jp_word_mapping(rows, {"jmdict:1:0": ["教育を行う施設"]})
+        report = jp_word_preflight(output, expected_count=1)
+        bad_report = jp_word_preflight([{**output[0], "meanings_jp": []}], expected_count=1)
+
+        self.assertIn("jmdict:1:0", prompt)
+        self.assertEqual(output[0]["meanings_jp"][0]["meaning"], "教育を行う施設")
+        self.assertFalse(report["failed"])
+        self.assertTrue(bad_report["failed"])
+
+    def test_jp_word_candidates_can_process_all_rows_without_sample_size(self):
+        rows = [
+            {
+                "id": 2,
+                "word": "会社",
+                "reading": "かいしゃ",
+                "meanings_ko": [{"meaning": "회사"}],
+                "meanings_jp": [],
+            },
+            {
+                "id": 1,
+                "word": "学校",
+                "reading": "がっこう",
+                "meanings_ko": [{"meaning": "학교"}],
+                "meanings_jp": [{"meaning": "教育を行う施設"}],
+            },
+        ]
+
+        candidates = jp_word_candidate_rows(rows, None)
+
+        self.assertEqual([row["id"] for row in candidates], [2])
+
+    def test_kanji_multilang_backfill_mapping_and_preflight(self):
+        row = {
+            "id": 1,
+            "external_id": "kanjidic2:U+5B66",
+            "character": "学",
+            "meanings_ko": ["배울"],
+            "meanings_en": ["study"],
+            "on_readings": ["ガク"],
+            "kun_readings": ["まな.ぶ"],
+            "korean_on_readings": ["학"],
+            "korean_kun_readings": ["배울"],
+            "commentary": "배움과 관련된 한자",
+        }
+
+        backfilled = backfill_kanji_multilang_row(row)
+        prompt = build_kanji_multilang_prompt([backfilled])
+        parsed = parse_kanji_multilang_payload(
+            '{"items":[{"key":"kanjidic2:U+5B66","jp_meanings":["学ぶこと"],'
+            '"jp_commentary":"学ぶ意味を表す漢字です。",'
+            '"en_commentary":"A kanji associated with learning and study."}]}'
+        )
+        output = apply_kanji_multilang_mapping([backfilled], parsed)
+        report = kanji_multilang_preflight(output, expected_count=1)
+        bad_report = kanji_multilang_preflight([{**output[0], "jp_commentary": ""}], expected_count=1)
+
+        self.assertIn("kanjidic2:U+5B66", prompt)
+        self.assertEqual(backfilled["jp_on_readings"], ["ガク"])
+        self.assertEqual(backfilled["kr_on_readings"], ["학"])
+        self.assertEqual(backfilled["kr_commentary"], "배움과 관련된 한자")
+        self.assertEqual(output[0]["jp_meanings"], ["学ぶこと"])
+        self.assertFalse(report["failed"])
+        self.assertTrue(bad_report["failed"])
+
+    def test_kanji_multilang_candidates_only_include_missing_targets(self):
+        rows = [
+            {
+                "id": 1,
+                "character": "学",
+                "jp_meanings": ["学ぶこと"],
+                "jp_commentary": "学ぶ意味を表す漢字です。",
+                "en_commentary": "A kanji associated with learning.",
+            },
+            {"id": 2, "character": "校", "jp_meanings": [], "jp_commentary": "", "en_commentary": ""},
+        ]
+
+        candidates = kanji_multilang_candidate_rows(rows, None)
+
+        self.assertEqual([row["id"] for row in candidates], [2])
+
+    def test_multilingual_fill_candidate_selection_and_preflight(self):
+        words = [
+            {"id": 1, "word": "学校", "reading": "がっこう", "meanings_ko": [{"meaning": "학교"}], "meanings_jp": []},
+            {
+                "id": 2,
+                "word": "会社",
+                "reading": "かいしゃ",
+                "meanings_ko": [{"meaning": "회사"}],
+                "meanings_jp": [{"meaning": "仕事をする組織"}],
+            },
+        ]
+        kanji = [
+            {
+                "id": 3,
+                "character": "学",
+                "meanings_ko": ["배울"],
+                "meanings_en": ["study"],
+                "on_readings": ["ガク"],
+                "kun_readings": [],
+                "jp_meanings": [],
+            }
+        ]
+
+        selected_words = multilingual_word_candidates(words)
+        selected_kanji = multilingual_kanji_candidates(kanji)
+        report = multilingual_candidate_preflight(selected_words, selected_kanji)
+
+        self.assertEqual([row["id"] for row in selected_words], [1])
+        self.assertEqual([row["id"] for row in selected_kanji], [3])
+        self.assertEqual(selected_kanji[0]["missing_multilingual_fields"], ["jp_meanings", "jp_commentary", "en_commentary"])
+        self.assertFalse(report["failed"])
+
+    def test_multilingual_patch_dry_run_only_updates_allowed_empty_fields(self):
+        existing_words = [{"id": 1, "meanings_jp": []}, {"id": 2, "meanings_jp": [{"meaning": "既存"}]}]
+        generated_words = [
+            {"id": 1, "meanings_jp": [{"meaning": "教育を行う施設", "source": "ai_translation"}]},
+            {"id": 2, "meanings_jp": [{"meaning": "仕事をする組織", "source": "ai_translation"}]},
+        ]
+        existing_kanji = [
+            {"id": 3, "character": "学", "jp_meanings": [], "jp_commentary": "", "en_commentary": ""},
+            {"id": 4, "character": "校", "jp_meanings": ["学校"], "jp_commentary": "学校を表す字です。", "en_commentary": "Existing."},
+        ]
+        generated_kanji = [
+            {
+                "id": 3,
+                "character": "学",
+                "jp_meanings": ["学ぶこと"],
+                "jp_commentary": "学ぶ意味を表す漢字です。",
+                "en_commentary": "A kanji associated with learning.",
+            },
+            {
+                "id": 4,
+                "character": "校",
+                "jp_meanings": ["校舎"],
+                "jp_commentary": "校舎を表す漢字です。",
+                "en_commentary": "Changed.",
+            },
+        ]
+
+        report = build_multilingual_patch_dry_run(
+            generated_words,
+            generated_kanji,
+            existing_words,
+            existing_kanji,
+            updated_at="2026-05-28T00:00:00+00:00",
+        )
+
+        self.assertFalse(report["failed"])
+        self.assertEqual(report["summary"]["word_patch_count"], 1)
+        self.assertEqual(report["summary"]["kanji_patch_count"], 1)
+        self.assertEqual(set(report["words"]["patches"][0]), {"id", "meanings_jp", "updated_at"})
+        self.assertEqual(set(report["kanji"]["patches"][0]), {"id", "jp_meanings", "jp_commentary", "en_commentary", "updated_at"})
+        self.assertEqual(report["words"]["skipped"][0]["reason"], "already_has_meanings_jp")
+        self.assertEqual(report["kanji"]["skipped"][0]["reason"], "already_has_multilingual_content")
+
+    def test_multilingual_post_check_flags_protected_field_changes(self):
+        patch_report = {
+            "words": {"patches": [{"id": 1, "meanings_jp": [{"meaning": "教育を行う施設"}]}]},
+            "kanji": {
+                "patches": [
+                    {
+                        "id": 2,
+                        "jp_meanings": ["学ぶこと"],
+                        "jp_commentary": "学ぶ意味を表す漢字です。",
+                        "en_commentary": "A kanji associated with learning.",
+                    }
+                ]
+            },
+        }
+        before_words = [{"id": 1, "meanings": [{"meaning": "학교"}], "meanings_ko": [{"meaning": "학교"}], "meanings_en": []}]
+        after_words = [
+            {
+                "id": 1,
+                "meanings": [{"meaning": "학교"}],
+                "meanings_ko": [{"meaning": "학교"}],
+                "meanings_en": [],
+                "meanings_jp": [{"meaning": "教育を行う施設"}],
+            }
+        ]
+        before_kanji = [{"id": 2, "meanings": ["배울"], "meanings_ko": ["배울"], "meanings_en": ["study"], "commentary": "기존", "kr_commentary": "기존", "tags": []}]
+        after_kanji = [
+            {
+                "id": 2,
+                "meanings": ["배울"],
+                "meanings_ko": ["배울"],
+                "meanings_en": ["study"],
+                "commentary": "기존",
+                "kr_commentary": "기존",
+                "tags": [],
+                "jp_meanings": ["学ぶこと"],
+                "jp_commentary": "学ぶ意味を表す漢字です。",
+                "en_commentary": "A kanji associated with learning.",
+            }
+        ]
+
+        report = build_multilingual_post_check_report(before_words, before_kanji, after_words, after_kanji, patch_report)
+
+        self.assertFalse(report["failed"])
+        self.assertEqual(report["summary"]["protected_word_field_changes"], 0)
+        self.assertEqual(report["summary"]["protected_kanji_field_changes"], 0)
+
+    def test_multilingual_merge_report_fails_duplicate_ids(self):
+        report = build_multilingual_merge_report(
+            [{"id": 1, "meanings_jp": [{"meaning": "教育"}]}, {"id": 1, "meanings_jp": [{"meaning": "学校"}]}],
+            [],
+            expected_words=2,
+            expected_kanji=0,
+        )
+
+        self.assertTrue(report["failed"])
+        self.assertIn("duplicate_word_ids", [error["type"] for error in report["errors"]])
 
 
 if __name__ == "__main__":

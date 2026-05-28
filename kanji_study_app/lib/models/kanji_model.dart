@@ -6,7 +6,14 @@ class Kanji {
   final List<String> meanings;
   final List<String> meaningsKo;
   final List<String> meaningsEn;
+  final List<String> krMeanings;
+  final List<String> jpMeanings;
+  final List<String> enMeanings;
   final KanjiReadings readings;
+  final List<String> jpOnReadings;
+  final List<String> jpKunReadings;
+  final List<String> krOnReadings;
+  final List<String> krKunReadings;
   final List<String> koreanOnReadings; // 한글 음독
   final List<String> koreanKunReadings; // 한글 훈독
   final int grade;
@@ -15,6 +22,9 @@ class Kanji {
   final List<KanjiExample> examples;
   final String? radical; // 부수
   final String? commentary; // 한자 해설
+  final String? krCommentary;
+  final String? jpCommentary;
+  final String? enCommentary;
   final String source;
   final String? externalId;
   final String? sourceVersion;
@@ -25,21 +35,31 @@ class Kanji {
   final List<String> tags;
   final DateTime? updatedAt;
 
-  const Kanji({
+  Kanji({
     required this.id,
     required this.character,
     required this.meanings,
     List<String>? meaningsKo,
     this.meaningsEn = const [],
+    List<String>? krMeanings,
+    this.jpMeanings = const [],
+    List<String>? enMeanings,
     required this.readings,
-    this.koreanOnReadings = const [],
-    this.koreanKunReadings = const [],
+    List<String>? jpOnReadings,
+    List<String>? jpKunReadings,
+    List<String>? krOnReadings,
+    List<String>? krKunReadings,
+    List<String>? koreanOnReadings,
+    List<String>? koreanKunReadings,
     required this.grade,
     required this.jlpt,
     required this.strokeCount,
     required this.examples,
     this.radical,
     this.commentary,
+    String? krCommentary,
+    this.jpCommentary,
+    this.enCommentary,
     this.source = 'legacy_excel',
     this.externalId,
     this.sourceVersion,
@@ -49,7 +69,16 @@ class Kanji {
     this.priorityRank,
     this.tags = const [],
     this.updatedAt,
-  }) : meaningsKo = meaningsKo ?? meanings;
+  }) : meaningsKo = meaningsKo ?? meanings,
+       krMeanings = krMeanings ?? meaningsKo ?? meanings,
+       enMeanings = enMeanings ?? meaningsEn,
+       jpOnReadings = jpOnReadings ?? readings.on,
+       jpKunReadings = jpKunReadings ?? readings.kun,
+       krOnReadings = krOnReadings ?? koreanOnReadings ?? const [],
+       krKunReadings = krKunReadings ?? koreanKunReadings ?? const [],
+       koreanOnReadings = koreanOnReadings ?? krOnReadings ?? const [],
+       koreanKunReadings = koreanKunReadings ?? krKunReadings ?? const [],
+       krCommentary = krCommentary ?? commentary;
 
   factory Kanji.fromJson(Map<String, dynamic> json) {
     // Handle legacy format (List<String>) and new format (List<KanjiExample>)
@@ -85,6 +114,9 @@ class Kanji {
     final rawMeanings = parseStringList(json['meanings']);
     final explicitMeaningsKo = parseStringList(json['meanings_ko']);
     final explicitMeaningsEn = parseStringList(json['meanings_en']);
+    final explicitKrMeanings = parseStringList(json['kr_meanings']);
+    final explicitJpMeanings = parseStringList(json['jp_meanings']);
+    final explicitEnMeanings = parseStringList(json['en_meanings']);
     final fallbackMeaningsKo = rawMeanings.where(hasKorean).toList();
     final fallbackMeaningsEn = rawMeanings.where((m) => !hasKorean(m)).toList();
     final meaningsKo = explicitMeaningsKo.isNotEmpty
@@ -93,6 +125,29 @@ class Kanji {
     final meaningsEn = explicitMeaningsEn.isNotEmpty
         ? explicitMeaningsEn
         : fallbackMeaningsEn;
+    final readingsJson = json['readings'] is Map<String, dynamic>
+        ? json['readings'] as Map<String, dynamic>
+        : <String, dynamic>{};
+    final jpOnReadings = parseStringList(json['jp_on_readings']);
+    final jpKunReadings = parseStringList(json['jp_kun_readings']);
+    final legacyOnReadings = parseStringList(json['on_readings']);
+    final legacyKunReadings = parseStringList(json['kun_readings']);
+    final readings = KanjiReadings(
+      on: jpOnReadings.isNotEmpty
+          ? jpOnReadings
+          : legacyOnReadings.isNotEmpty
+          ? legacyOnReadings
+          : parseStringList(readingsJson['on']),
+      kun: jpKunReadings.isNotEmpty
+          ? jpKunReadings
+          : legacyKunReadings.isNotEmpty
+          ? legacyKunReadings
+          : parseStringList(readingsJson['kun']),
+    );
+    final krOnReadings = parseStringList(json['kr_on_readings']);
+    final krKunReadings = parseStringList(json['kr_kun_readings']);
+    final koreanOnReadings = parseStringList(json['korean_on_readings']);
+    final koreanKunReadings = parseStringList(json['korean_kun_readings']);
 
     return Kanji(
       id: json['id'] as int,
@@ -100,21 +155,36 @@ class Kanji {
       meanings: meaningsKo,
       meaningsKo: meaningsKo,
       meaningsEn: meaningsEn,
-      readings: KanjiReadings.fromJson(
-        json['readings'] as Map<String, dynamic>,
-      ),
-      koreanOnReadings: json['korean_on_readings'] != null
-          ? List<String>.from(json['korean_on_readings'] as List)
-          : [],
-      koreanKunReadings: json['korean_kun_readings'] != null
-          ? List<String>.from(json['korean_kun_readings'] as List)
-          : [],
+      krMeanings: explicitKrMeanings.isNotEmpty
+          ? explicitKrMeanings
+          : meaningsKo,
+      jpMeanings: explicitJpMeanings,
+      enMeanings: explicitEnMeanings.isNotEmpty
+          ? explicitEnMeanings
+          : meaningsEn,
+      readings: readings,
+      jpOnReadings: jpOnReadings.isNotEmpty ? jpOnReadings : readings.on,
+      jpKunReadings: jpKunReadings.isNotEmpty ? jpKunReadings : readings.kun,
+      krOnReadings: krOnReadings.isNotEmpty ? krOnReadings : koreanOnReadings,
+      krKunReadings: krKunReadings.isNotEmpty
+          ? krKunReadings
+          : koreanKunReadings,
+      koreanOnReadings: koreanOnReadings.isNotEmpty
+          ? koreanOnReadings
+          : krOnReadings,
+      koreanKunReadings: koreanKunReadings.isNotEmpty
+          ? koreanKunReadings
+          : krKunReadings,
       grade: json['grade'] as int,
       jlpt: json['jlpt'] as int,
       strokeCount: json['strokeCount'] as int,
       examples: parseExamples(json['examples']),
       radical: json['radical'] as String?,
       commentary: json['commentary'] as String?,
+      krCommentary:
+          (json['kr_commentary'] as String?) ?? (json['commentary'] as String?),
+      jpCommentary: json['jp_commentary'] as String?,
+      enCommentary: json['en_commentary'] as String?,
       source: json['source'] as String? ?? 'legacy_excel',
       externalId: json['external_id'] as String?,
       sourceVersion: json['source_version'] as String?,
@@ -136,7 +206,14 @@ class Kanji {
       'meanings': meanings,
       'meanings_ko': meaningsKo,
       'meanings_en': meaningsEn,
+      'kr_meanings': krMeanings,
+      'jp_meanings': jpMeanings,
+      'en_meanings': enMeanings,
       'readings': readings.toJson(),
+      'jp_on_readings': jpOnReadings,
+      'jp_kun_readings': jpKunReadings,
+      'kr_on_readings': krOnReadings,
+      'kr_kun_readings': krKunReadings,
       'korean_on_readings': koreanOnReadings,
       'korean_kun_readings': koreanKunReadings,
       'grade': grade,
@@ -145,6 +222,9 @@ class Kanji {
       'examples': examples.map((e) => e.toJson()).toList(),
       'radical': radical,
       'commentary': commentary,
+      'kr_commentary': krCommentary,
+      'jp_commentary': jpCommentary,
+      'en_commentary': enCommentary,
       'source': source,
       'external_id': externalId,
       'source_version': sourceVersion,

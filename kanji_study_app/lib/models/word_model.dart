@@ -7,6 +7,7 @@ class Word {
   final List<WordMeaning> meanings;
   final List<WordMeaning> meaningsKo;
   final List<WordMeaning> meaningsEn;
+  final List<WordMeaning> meaningsJp;
   final int jlptLevel;
   final String source;
   final String? externalId;
@@ -25,6 +26,7 @@ class Word {
     required this.meanings,
     List<WordMeaning>? meaningsKo,
     this.meaningsEn = const [],
+    this.meaningsJp = const [],
     required this.jlptLevel,
     this.source = 'legacy_naver',
     this.externalId,
@@ -55,6 +57,7 @@ class Word {
     final rawMeanings = parseMeanings(json['meanings']);
     final explicitMeaningsKo = parseMeanings(json['meanings_ko']);
     final explicitMeaningsEn = parseMeanings(json['meanings_en']);
+    final explicitMeaningsJp = parseMeanings(json['meanings_jp']);
     final fallbackMeaningsKo = rawMeanings
         .where((meaning) => hasKorean(meaning.meaning))
         .toList();
@@ -75,6 +78,7 @@ class Word {
       meanings: meaningsKo,
       meaningsKo: meaningsKo,
       meaningsEn: meaningsEn,
+      meaningsJp: explicitMeaningsJp,
       jlptLevel: json['jlpt_level'] as int,
       source: json['source'] as String? ?? 'legacy_naver',
       externalId: json['external_id'] as String?,
@@ -98,6 +102,7 @@ class Word {
       'meanings': meanings.map((m) => m.toJson()).toList(),
       'meanings_ko': meaningsKo.map((m) => m.toJson()).toList(),
       'meanings_en': meaningsEn.map((m) => m.toJson()).toList(),
+      'meanings_jp': meaningsJp.map((m) => m.toJson()).toList(),
       'jlpt_level': jlptLevel,
       'source': source,
       'external_id': externalId,

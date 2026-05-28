@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import ssl
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -23,13 +24,14 @@ def fetch_table(table: str, batch_size: int) -> list[dict]:
 
     rows: list[dict] = []
     offset = 0
+    context = ssl_context()
     while True:
         query = urllib.parse.urlencode({"select": "*", "order": "id.asc", "limit": str(batch_size), "offset": str(offset)})
         request = urllib.request.Request(
             f"{url.rstrip('/')}/rest/v1/{table}?{query}",
             headers={"apikey": key, "Authorization": f"Bearer {key}"},
         )
-        with urllib.request.urlopen(request, timeout=60) as response:
+        with urllib.request.urlopen(request, timeout=60, context=context) as response:
             batch = json.loads(response.read().decode("utf-8"))
         if not batch:
             break
@@ -38,6 +40,17 @@ def fetch_table(table: str, batch_size: int) -> list[dict]:
             break
         offset += batch_size
     return rows
+
+
+def ssl_context():
+    if os.getenv("SUPABASE_INSECURE_SKIP_TLS_VERIFY") == "1":
+        return ssl._create_unverified_context()
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except ModuleNotFoundError:
+        return ssl.create_default_context()
 
 
 def main() -> None:

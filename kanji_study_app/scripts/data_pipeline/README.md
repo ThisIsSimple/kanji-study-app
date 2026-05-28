@@ -141,3 +141,71 @@ python scripts/data_pipeline/apply_kanji_review_results.py \
 ```
 
 `apply_kanji_review_results.py`는 이번 이슈에서 실제 DB 반영을 하지 않습니다. `--apply`는 명시적으로 실패하도록 남겨두었고, 생성되는 `kanji_review_apply_dry_run.json`을 확인한 뒤 별도 승인 작업에서 적용합니다.
+
+## KANJI-11 Multilingual Field Fill
+
+KANJI-11은 운영 DB에 이미 있는 row 중 비어 있는 다국어 필드만 채웁니다. 전체 row upsert가 아니라 `id` 기준 patch update만 사용하며, 이미 채워진 값과 기존 한국어/영어 표시 필드는 덮어쓰지 않습니다.
+
+```sh
+# 1. 운영 export
+SUPABASE_URL=... SUPABASE_ANON_KEY=... python scripts/data_pipeline/export_supabase.py \
+  --output-dir ../.context/data-pipeline/kanji11-full/exports
+
+# 2. 빈 필드 후보 선정
+python scripts/data_pipeline/prepare_multilingual_fill_candidates.py \
+  --words ../.context/data-pipeline/kanji11-full/exports/words.json \
+  --kanji ../.context/data-pipeline/kanji11-full/exports/kanji.json \
+  --output-dir ../.context/data-pipeline/kanji11-full
+
+# 3. Codex CLI로 단어 meanings_jp 생성
+python scripts/data_pipeline/generate_jp_word_meanings.py \
+  --input ../.context/data-pipeline/kanji11-full/words_missing_jp_meanings.json \
+  --output-dir ../.context/data-pipeline/kanji11-full \
+  --output-prefix words_jp_meanings_full \
+  --provider codex-cli \
+  --batch-size 100
+
+# 4. Codex CLI로 한자 다국어 필드 생성
+python scripts/data_pipeline/generate_kanji_multilang_content.py \
+  --input ../.context/data-pipeline/kanji11-full/kanji_missing_multilingual_content.json \
+  --output-dir ../.context/data-pipeline/kanji11-full \
+  --output-prefix kanji_multilang_full \
+  --provider codex-cli \
+  --batch-size 25
+
+# 5. patch dry-run
+python scripts/data_pipeline/apply_multilingual_content_patches.py \
+  --generated-words ../.context/data-pipeline/kanji11-full/words_jp_meanings_full.json \
+  --generated-kanji ../.context/data-pipeline/kanji11-full/kanji_multilang_full.json \
+  --existing-words ../.context/data-pipeline/kanji11-full/exports/words.json \
+  --existing-kanji ../.context/data-pipeline/kanji11-full/exports/kanji.json \
+  --output-dir ../.context/data-pipeline/kanji11-full
+
+# 6. 승인 후 실제 patch 적용
+SUPABASE_URL=... SUPABASE_SECRET_KEY=... python scripts/data_pipeline/apply_multilingual_content_patches.py \
+  --generated-words ../.context/data-pipeline/kanji11-full/words_jp_meanings_full.json \
+  --generated-kanji ../.context/data-pipeline/kanji11-full/kanji_multilang_full.json \
+  --existing-words ../.context/data-pipeline/kanji11-full/exports/words.json \
+  --existing-kanji ../.context/data-pipeline/kanji11-full/exports/kanji.json \
+  --output-dir ../.context/data-pipeline/kanji11-full \
+  --apply
+```
+
+적용 후에는 다시 export한 뒤 `post_check_multilingual_fill.py`로 검증합니다.
+
+```sh
+SUPABASE_URL=... SUPABASE_ANON_KEY=... python scripts/data_pipeline/export_supabase.py \
+  --output-dir ../.context/data-pipeline/kanji11-full/post-exports
+
+python scripts/data_pipeline/post_check_multilingual_fill.py \
+  --before-words ../.context/data-pipeline/kanji11-full/exports/words.json \
+  --before-kanji ../.context/data-pipeline/kanji11-full/exports/kanji.json \
+  --after-words ../.context/data-pipeline/kanji11-full/post-exports/words.json \
+  --after-kanji ../.context/data-pipeline/kanji11-full/post-exports/kanji.json \
+  --patch-report ../.context/data-pipeline/kanji11-full/multilingual_content_apply_report.json \
+  --output-dir ../.context/data-pipeline/kanji11-full
+```
+
+`apply_multilingual_content_patches.py`는 실제 적용 전에 입력 export를 gzip 백업합니다. 대용량 Codex CLI checkpoint는 `.context/data-pipeline/kanji11-full/`에만 두고, Git에는 최종 리포트와 snapshot만 보관합니다.
+전체 생성 시간이 길면 `generate_jp_word_meanings.py`와 `generate_kanji_multilang_content.py`에 `--max-batches N`을 붙여 일부 배치만 처리한 뒤, 같은 명령을 다시 실행해 checkpoint를 재사용합니다.
+로컬 Python 인증서 문제로 export/apply HTTPS 검증이 실패하는 개발 머신에서는 임시로 `SUPABASE_INSECURE_SKIP_TLS_VERIFY=1`을 붙여 실행할 수 있습니다. 이 옵션은 명시한 경우에만 동작합니다.
