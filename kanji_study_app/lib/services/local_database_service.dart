@@ -109,10 +109,19 @@ class LocalDatabaseService {
 
   /// Drift 한자 데이터 → Kanji 모델 변환
   Kanji _kanjiDataToModel(KanjiTableData data) {
+    final meaningsKo = data.meaningsKo.isNotEmpty
+        ? data.meaningsKo
+        : data.meanings.where(_hasKorean).toList();
+    final meaningsEn = data.meaningsEn.isNotEmpty
+        ? data.meaningsEn
+        : data.meanings.where((meaning) => !_hasKorean(meaning)).toList();
+
     return Kanji(
       id: data.id,
       character: data.character,
-      meanings: data.meanings,
+      meanings: meaningsKo,
+      meaningsKo: meaningsKo,
+      meaningsEn: meaningsEn,
       readings: KanjiReadings(on: data.readingsOn, kun: data.readingsKun),
       koreanOnReadings: data.koreanOnReadings,
       koreanKunReadings: data.koreanKunReadings,
@@ -122,6 +131,15 @@ class LocalDatabaseService {
       examples: [], // 예문은 별도 로직으로 처리
       radical: data.radical,
       commentary: data.commentary,
+      source: data.source,
+      externalId: data.externalId,
+      sourceVersion: data.sourceVersion,
+      qualityStatus: data.qualityStatus,
+      meaningSource: data.meaningSource,
+      isCommon: data.isCommon,
+      priorityRank: data.priorityRank,
+      tags: data.tags,
+      updatedAt: data.updatedAt,
     );
   }
 
@@ -135,6 +153,26 @@ class LocalDatabaseService {
               ?.map((e) => e.toString())
               .toList() ??
           [],
+      meaningsKo: Value(
+        (json['meanings_ko'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            (json['meanings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .where(_hasKorean)
+                .toList() ??
+            [],
+      ),
+      meaningsEn: Value(
+        (json['meanings_en'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            (json['meanings'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .where((meaning) => !_hasKorean(meaning))
+                .toList() ??
+            [],
+      ),
       readingsOn:
           (json['on_readings'] as List<dynamic>?)
               ?.map((e) => e.toString())
@@ -161,6 +199,18 @@ class LocalDatabaseService {
       examples: const Value([]), // 예문은 별도 테이블로 관리 예정
       radical: Value(json['radical'] as String?),
       commentary: Value(json['commentary'] as String?),
+      source: Value(json['source'] as String? ?? 'legacy_excel'),
+      externalId: Value(json['external_id'] as String?),
+      sourceVersion: Value(json['source_version'] as String?),
+      qualityStatus: Value(json['quality_status'] as String? ?? 'reviewed'),
+      meaningSource: Value(json['meaning_source'] as String? ?? 'legacy_excel'),
+      isCommon: Value(json['is_common'] as bool? ?? false),
+      priorityRank: Value(json['priority_rank'] as int?),
+      tags: Value(
+        (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+            [],
+      ),
+      updatedAt: Value(_parseDateTime(json['updated_at'])),
     );
   }
 
@@ -171,7 +221,18 @@ class LocalDatabaseService {
       'word': data.word,
       'reading': data.reading,
       'meanings': jsonDecode(data.meanings),
+      'meanings_ko': jsonDecode(data.meaningsKo),
+      'meanings_en': jsonDecode(data.meaningsEn),
       'jlpt_level': data.jlptLevel,
+      'source': data.source,
+      'external_id': data.externalId,
+      'source_version': data.sourceVersion,
+      'quality_status': data.qualityStatus,
+      'meaning_source': data.meaningSource,
+      'is_common': data.isCommon,
+      'priority_rank': data.priorityRank,
+      'tags': data.tags,
+      'updated_at': data.updatedAt?.toUtc().toIso8601String(),
     });
     return word;
   }
@@ -183,8 +244,53 @@ class LocalDatabaseService {
       word: json['word'] as String,
       reading: json['reading'] as String,
       meanings: jsonEncode(json['meanings']),
+      meaningsKo: Value(
+        jsonEncode(
+          json['meanings_ko'] ?? _filterWordMeanings(json['meanings'], true),
+        ),
+      ),
+      meaningsEn: Value(
+        jsonEncode(
+          json['meanings_en'] ?? _filterWordMeanings(json['meanings'], false),
+        ),
+      ),
       jlptLevel: json['jlpt_level'] as int,
+      source: Value(json['source'] as String? ?? 'legacy_naver'),
+      externalId: Value(json['external_id'] as String?),
+      sourceVersion: Value(json['source_version'] as String?),
+      qualityStatus: Value(json['quality_status'] as String? ?? 'reviewed'),
+      meaningSource: Value(json['meaning_source'] as String? ?? 'legacy_naver'),
+      isCommon: Value(json['is_common'] as bool? ?? false),
+      priorityRank: Value(json['priority_rank'] as int?),
+      tags: Value(
+        (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+            [],
+      ),
+      updatedAt: Value(_parseDateTime(json['updated_at'])),
     );
+  }
+
+  DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    return DateTime.tryParse(value.toString());
+  }
+
+  static bool _hasKorean(String value) => RegExp(r'[가-힣]').hasMatch(value);
+
+  static List<dynamic> _filterWordMeanings(dynamic meanings, bool korean) {
+    if (meanings is! List) {
+      return [];
+    }
+    return meanings.where((meaning) {
+      if (meaning is Map<String, dynamic>) {
+        return _hasKorean(meaning['meaning']?.toString() ?? '') == korean;
+      }
+      if (meaning is Map) {
+        return _hasKorean(meaning['meaning']?.toString() ?? '') == korean;
+      }
+      return _hasKorean(meaning.toString()) == korean;
+    }).toList();
   }
 
   /// 데이터베이스 종료

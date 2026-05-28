@@ -184,7 +184,7 @@ class AiQuizService {
   ) async {
     var query = _supabaseService.client
         .from('words')
-        .select('id, word, reading, meanings, jlpt_level');
+        .select('id, word, reading, meanings, meanings_ko, jlpt_level');
 
     if (jlptLevel != null) {
       query = query.eq('jlpt_level', jlptLevel);
@@ -193,7 +193,13 @@ class AiQuizService {
     final data = await query.limit(count);
 
     // 셔플해서 반환
-    final list = List<Map<String, dynamic>>.from(data);
+    final list = List<Map<String, dynamic>>.from(data).map((item) {
+      final meaningsKo = item['meanings_ko'];
+      if (meaningsKo is List && meaningsKo.isNotEmpty) {
+        return {...item, 'meanings': meaningsKo};
+      }
+      return item;
+    }).toList();
     list.shuffle();
     return list;
   }
@@ -204,7 +210,9 @@ class AiQuizService {
   ) async {
     var query = _supabaseService.client
         .from('kanji')
-        .select('id, character, meanings, on_readings, kun_readings, jlpt');
+        .select(
+          'id, character, meanings, meanings_ko, on_readings, kun_readings, jlpt',
+        );
 
     if (jlptLevel != null) {
       query = query.eq('jlpt', jlptLevel);
@@ -212,7 +220,13 @@ class AiQuizService {
 
     final data = await query.limit(count);
 
-    final list = List<Map<String, dynamic>>.from(data);
+    final list = List<Map<String, dynamic>>.from(data).map((item) {
+      final meaningsKo = item['meanings_ko'];
+      if (meaningsKo is List && meaningsKo.isNotEmpty) {
+        return {...item, 'meanings': meaningsKo};
+      }
+      return item;
+    }).toList();
     list.shuffle();
     return list;
   }

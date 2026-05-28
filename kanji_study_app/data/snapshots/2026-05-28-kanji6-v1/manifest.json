@@ -1,0 +1,57 @@
+{
+  "counts": {
+    "english_only_values_in_meanings_or_meanings_ko": 0,
+    "kanji": 2136,
+    "kanji_rows_with_meanings_en": 2134,
+    "preflight_failed": false,
+    "preflight_warnings": 8,
+    "word_rows_with_meanings_en": 44050,
+    "words": 46308
+  },
+  "created_at": "2026-05-28T02:12:00+09:00",
+  "default_restore_dir": ".context/data-pipeline",
+  "description": "KANJI-6 recommended v1 import candidate with Korean display meanings and English source glosses split into meanings_ko/meanings_en.",
+  "files": [
+    {
+      "compressed_bytes": 3940879,
+      "path": "recommended_v1_words_split_meanings.json.gz",
+      "restore_to": ".context/data-pipeline/recommended_v1_words_split_meanings.json",
+      "row_count": 46308,
+      "sha256_compressed": "d5cb6474939e3bfffeb8955bead8e5b7525c3e9007ca569b700925205434ca55",
+      "sha256_uncompressed": "60239f6b208c973e3a4e03547e310b75fef8ae336503371fedb48d70b5b12d0c",
+      "uncompressed_bytes": 101425724
+    },
+    {
+      "compressed_bytes": 551748,
+      "path": "recommended_v1_kanji_split_meanings.json.gz",
+      "restore_to": ".context/data-pipeline/recommended_v1_kanji_split_meanings.json",
+      "row_count": 2136,
+      "sha256_compressed": "0e75f33266419a7b4c390d971a4ab971878a5361092c6d8f9e3877773ea649f6",
+      "sha256_uncompressed": "1a1e06ee7d7af88ff0f6cfe9d06ffb0716dee170527f43f2d34f623b038df17b",
+      "uncompressed_bytes": 3636433
+    },
+    {
+      "compressed_bytes": 21459,
+      "path": "split_meanings_report.json.gz",
+      "restore_to": ".context/data-pipeline/split_meanings_report.json",
+      "sha256_compressed": "729a7dd96ff50c649460ccdcd4e233b1afb69f6ff90c3316d8bf8f2e147c5a99",
+      "sha256_uncompressed": "b2ee6e2c8a1e4091ca5a96475404e5f438738609a48ae417675b32ac3941b620",
+      "uncompressed_bytes": 149724
+    },
+    {
+      "compressed_bytes": 499,
+      "path": "recommended_v1_split_import_dry_run.json.gz",
+      "restore_to": ".context/data-pipeline/recommended_v1_split_import_dry_run.json",
+      "sha256_compressed": "b4dd9b2857e3d4f851b02b5df7229438f20fa4d70836cf025568c2c2b338d0eb",
+      "sha256_uncompressed": "a47ec407a636f3ed61fa7f63a70cbcc05eddf91f773c1e968986ef84ae568a9d",
+      "uncompressed_bytes": 1792
+    }
+  ],
+  "import_candidate": {
+    "dry_run_report": ".context/data-pipeline/recommended_v1_split_import_dry_run.json",
+    "kanji": ".context/data-pipeline/recommended_v1_kanji_split_meanings.json",
+    "preflight_report": ".context/data-pipeline/split_meanings_report.json",
+    "words": ".context/data-pipeline/recommended_v1_words_split_meanings.json"
+  },
+  "snapshot_id": "2026-05-28-kanji6-v1"
+}

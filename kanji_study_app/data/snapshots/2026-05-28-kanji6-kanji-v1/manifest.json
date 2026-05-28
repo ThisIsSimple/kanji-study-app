@@ -1,0 +1,56 @@
+{
+  "counts": {
+    "ai_draft": 966,
+    "english_only_values_in_meanings_or_meanings_ko": 0,
+    "new_kanji": 966,
+    "preflight_failed": false,
+    "preflight_warnings": 2,
+    "rows_with_meanings_en": 966,
+    "words": 0
+  },
+  "created_at": "2026-05-28T03:03:00+09:00",
+  "default_restore_dir": ".context/data-pipeline",
+  "description": "KANJI-6 신규 한자 966개 import 후보. 한국어 AI 초안과 KANJIDIC2 영어 gloss가 meanings_ko/meanings_en으로 분리되어 있습니다.",
+  "files": [
+    {
+      "compressed_bytes": 81705,
+      "path": "recommended_v1_new_kanji_split_meanings.json.gz",
+      "restore_to": ".context/data-pipeline/recommended_v1_new_kanji_split_meanings.json",
+      "row_count": 966,
+      "sha256_compressed": "0fccdeb761d938d46508a1847ad8ab79af64cbc36fd73c77db47bb69410d20e5",
+      "sha256_uncompressed": "1e58f645d9df4690992e182188cbc509332a13ae758751d6fba07f74fee15fa0",
+      "uncompressed_bytes": 960923
+    },
+    {
+      "compressed_bytes": 672,
+      "path": "new_kanji_split_meanings_report.json.gz",
+      "restore_to": ".context/data-pipeline/new_kanji_split_meanings_report.json",
+      "sha256_compressed": "54d61ac5d02645e8e0773c19e972627df55ab0c0058e6dcb3bc420a32f97e306",
+      "sha256_uncompressed": "4cc9f42aee99a6b21ef38ae15d3a87e2f314cda41874d9612dd277fee194840f",
+      "uncompressed_bytes": 3070
+    },
+    {
+      "compressed_bytes": 272,
+      "path": "recommended_v1_new_kanji_import_dry_run.json.gz",
+      "restore_to": ".context/data-pipeline/recommended_v1_new_kanji_import_dry_run.json",
+      "sha256_compressed": "185f2f4995273f41827fdd399b8dcd9047b73ca97181d229f61b749b1308a8e4",
+      "sha256_uncompressed": "5f64b815dd7110a66c111e382fc2dacd7fa937348ab1fcc1546f9e73c3f533b0",
+      "uncompressed_bytes": 652
+    },
+    {
+      "compressed_bytes": 7358,
+      "path": "new_kanji_manual_sample_100.json.gz",
+      "restore_to": ".context/data-pipeline/new_kanji_manual_sample_100.json",
+      "sha256_compressed": "47ae082122feafe9af32a4391015251a53fa0f3323ef8c79969f76f5dee17b11",
+      "sha256_uncompressed": "8cf71c74133970c5b5879002ad5e2d57d2d5a8f495cb88830ed9d37e7f472f1f",
+      "uncompressed_bytes": 48793
+    }
+  ],
+  "import_candidate": {
+    "dry_run_report": ".context/data-pipeline/recommended_v1_new_kanji_import_dry_run.json",
+    "kanji": ".context/data-pipeline/recommended_v1_new_kanji_split_meanings.json",
+    "manual_sample": ".context/data-pipeline/new_kanji_manual_sample_100.json",
+    "preflight_report": ".context/data-pipeline/new_kanji_split_meanings_report.json"
+  },
+  "snapshot_id": "2026-05-28-kanji6-kanji-v1"
+}

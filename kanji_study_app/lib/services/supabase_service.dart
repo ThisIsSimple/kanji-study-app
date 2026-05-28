@@ -546,7 +546,9 @@ class SupabaseService {
         result.add({
           'id': item['id'],
           'character': item['character'],
-          'meanings': item['meanings'],
+          'meanings': item['meanings_ko'] ?? item['meanings'],
+          'meanings_ko': item['meanings_ko'] ?? item['meanings'],
+          'meanings_en': item['meanings_en'] ?? [],
           'readings': {
             'on': item['on_readings'] ?? [],
             'kun': item['kun_readings'] ?? [],
@@ -557,6 +559,17 @@ class SupabaseService {
           'jlpt': item['jlpt'],
           'strokeCount': item['stroke_count'],
           'examples': [],
+          'radical': item['radical'],
+          'commentary': item['commentary'],
+          'source': item['source'] ?? 'legacy_excel',
+          'external_id': item['external_id'],
+          'source_version': item['source_version'],
+          'quality_status': item['quality_status'] ?? 'reviewed',
+          'meaning_source': item['meaning_source'] ?? 'legacy_excel',
+          'is_common': item['is_common'] ?? false,
+          'priority_rank': item['priority_rank'],
+          'tags': item['tags'] ?? [],
+          'updated_at': item['updated_at'],
         });
       }
 
