@@ -23,6 +23,7 @@ from normalize_jmdict import entry_to_words
 from normalize_kanjidic import character_to_kanji
 from prepare_tag_backfill import backfill_kanji, backfill_word, preflight as tag_backfill_preflight
 from restore_snapshot import restore_file
+from apply_kanji_review_results import build_dry_run as build_kanji_review_dry_run
 from select_recommended_v2 import (
     preflight as v2_preflight,
     select_kanji as select_v2_kanji,
@@ -34,6 +35,8 @@ from select_recommended_v2 import (
 )
 from split_meanings import preflight_report, split_kanji, split_words
 from tag_normalization import normalized_word_tags
+from validate_kanji_reviews import annotate_rows as annotate_kanji_review_rows
+from validate_kanji_reviews import target_ai_draft_rows, validation_report as kanji_validation_report
 
 
 class DataPipelineTest(unittest.TestCase):
@@ -459,6 +462,99 @@ class DataPipelineTest(unittest.TestCase):
 
             self.assertEqual((output_dir / "words.json").read_bytes(), raw)
             self.assertEqual(restored["bytes"], len(raw))
+
+    def test_kanji_validation_flags_hard_errors_and_warnings(self):
+        rows = [
+            {
+                "id": 1,
+                "character": "学",
+                "external_id": "kanjidic2:U+5B66",
+                "quality_status": "ai_draft",
+                "meaning_source": "ai_translation",
+                "meanings": ["study"],
+                "meanings_ko": ["study"],
+                "meanings_en": [],
+                "on_readings": "ガク",
+                "kun_readings": [],
+                "korean_on_readings": [],
+                "tags": ["batch:kanji7_v2", "domain:medicine"],
+            },
+            {
+                "id": 1,
+                "character": "学",
+                "external_id": "kanjidic2:U+5B66",
+                "quality_status": "ai_draft",
+                "meaning_source": "ai_translation",
+                "meanings": ["아주 긴 한국어 뜻입니다"],
+                "meanings_ko": ["아주 긴 한국어 뜻입니다"],
+                "meanings_en": ["study"],
+                "on_readings": ["ガク"],
+                "kun_readings": [],
+                "korean_on_readings": [],
+                "tags": ["batch:kanji7_v2", "domain:medicine"],
+            },
+        ]
+
+        candidates, _ = annotate_kanji_review_rows(rows)
+        report = kanji_validation_report(rows, rows, candidates)
+
+        self.assertTrue(report["failed"])
+        self.assertIn("duplicate_ids", report["hard_errors"]["by_type"])
+        self.assertIn("duplicate_characters", report["hard_errors"]["by_type"])
+        self.assertIn("korean_display_meanings_contain_english_only", report["hard_errors"]["by_type"])
+        self.assertIn("invalid_reading_structure", report["hard_errors"]["by_type"])
+        self.assertIn("missing_meanings_en", report["hard_errors"]["by_type"])
+        self.assertIn("long_korean_meanings", report["warnings"]["by_type"])
+        self.assertIn("sentence_like_korean_meanings", report["warnings"]["by_type"])
+        self.assertIn("missing_korean_on_readings", report["warnings"]["by_type"])
+        self.assertIn("specialized_or_rare_tags", report["warnings"]["by_type"])
+
+    def test_kanji_validation_filters_ai_draft_and_groups_batches(self):
+        rows = [
+            {"id": 1, "character": "学", "quality_status": "reviewed"},
+            {
+                "id": 2,
+                "character": "娃",
+                "external_id": "kanjidic2:U+5A03",
+                "quality_status": "ai_draft",
+                "meaning_source": "ai_translation",
+                "meanings": ["예쁠"],
+                "meanings_ko": ["예쁠"],
+                "meanings_en": ["beautiful"],
+                "on_readings": ["ア"],
+                "kun_readings": [],
+                "korean_on_readings": ["왜"],
+                "tags": ["batch:kanji7_v2", "source:kanjidic2"],
+            },
+        ]
+
+        target = target_ai_draft_rows(rows)
+        candidates, _ = annotate_kanji_review_rows(target)
+        report = kanji_validation_report(rows, target, candidates)
+
+        self.assertEqual([row["id"] for row in target], [2])
+        self.assertFalse(report["failed"])
+        self.assertEqual(report["counts"]["by_batch"], {"batch:kanji7_v2": 1})
+        self.assertEqual(report["counts"]["by_source_tag"], {"source:kanjidic2": 1})
+
+    def test_kanji_review_dry_run_builds_patches_for_approve_only(self):
+        existing = [
+            {"id": 1, "character": "娃", "quality_status": "ai_draft"},
+            {"id": 2, "character": "唖", "quality_status": "ai_draft"},
+        ]
+        reviews = [
+            {"id": 1, "character": "娃", "meanings_ko": ["예쁠"], "review_decision": "approve"},
+            {"id": 2, "character": "唖", "meanings_ko": ["벙어리"], "review_decision": "reject"},
+            {"id": 3, "character": "校", "meanings_ko": ["학교"], "review_decision": "approve"},
+        ]
+
+        report = build_kanji_review_dry_run(reviews, existing, updated_at="2026-05-28T00:00:00+00:00")
+
+        self.assertFalse(report["failed"])
+        self.assertEqual(report["summary"]["patch_count"], 1)
+        self.assertEqual(report["summary"]["skipped_count"], 2)
+        self.assertEqual(report["patches"][0]["quality_status"], "reviewed")
+        self.assertEqual(report["patches"][0]["meaning_source"], "human_review")
 
 
 if __name__ == "__main__":

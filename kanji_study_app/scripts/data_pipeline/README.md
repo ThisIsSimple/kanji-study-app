@@ -111,3 +111,33 @@ python scripts/data_pipeline/select_recommended_v2.py \
 기본 출력은 `.context/data-pipeline/recommended_v2_words.json`, `recommended_v2_kanji.json`, `recommended_v2_selection_report.json`, `recommended_v2_tag_backfill_report.json`입니다. 기본 후보 수는 단어 10,000개와 한자 1,000개이며, 이미 v1에서 반영된 id, 빈 값, Latin/digit-only 단어, 단일 한자 표제어, 고어/희귀 표기 태그는 제외합니다.
 
 v2 후보의 `tags`에는 원본 JMdict/KANJIDIC2 태그를 보존하면서 앱/운영 필터용 정규화 태그를 추가합니다. 예를 들어 `medicine`은 `domain:medicine`, `formal or literary term`은 `register:formal`, KANJIDIC2 출처는 `source:kanjidic2`, 이번 후보 배치는 `batch:kanji7_v2`로 저장됩니다. 이미 운영에 들어간 v1 데이터는 삭제하거나 덮어쓰지 않고, `recommended_v2_tag_backfill_report.json`에서 `id`/`external_id` 기준 태그 보강 후보로만 추적합니다.
+
+## KANJI-8 Kanji Review Validation
+
+KANJI-8은 운영 DB에 들어간 `quality_status=ai_draft` 한자를 사람이 검수하기 전 점검하는 파이프라인입니다. 기본 출력은 `.context/data-pipeline/kanji8/`에 생성됩니다.
+
+```sh
+SUPABASE_URL=... SUPABASE_ANON_KEY=... python scripts/data_pipeline/export_supabase.py \
+  --output-dir ../.context/data-pipeline/exports
+
+python scripts/data_pipeline/validate_kanji_reviews.py \
+  --input ../.context/data-pipeline/exports/kanji.json \
+  --output-dir ../.context/data-pipeline/kanji8
+```
+
+생성 파일:
+
+- `kanji_validation_report.json`: hard error/warning, batch/source/domain별 count
+- `kanji_validation_candidates.json`: 검수 대상 전체와 validation flags
+- `kanji_review_sample_100.json`: 우선 검수용 샘플 100개
+
+검수자가 `kanji_review_sample_100.json` 또는 candidates 파일에 `review_decision=approve`와 수정된 `meanings_ko`를 기록하면 dry-run patch 후보를 만들 수 있습니다.
+
+```sh
+python scripts/data_pipeline/apply_kanji_review_results.py \
+  --reviews ../.context/data-pipeline/kanji8/kanji_review_sample_100.json \
+  --existing-kanji ../.context/data-pipeline/exports/kanji.json \
+  --output-dir ../.context/data-pipeline/kanji8
+```
+
+`apply_kanji_review_results.py`는 이번 이슈에서 실제 DB 반영을 하지 않습니다. `--apply`는 명시적으로 실패하도록 남겨두었고, 생성되는 `kanji_review_apply_dry_run.json`을 확인한 뒤 별도 승인 작업에서 적용합니다.
