@@ -98,11 +98,20 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
   bool _isModelReady = false;
   bool _isDownloadingModel = false;
   bool _isRecognizing = false;
+  bool _hasLoadedModelStatus = false;
   String? _statusMessage;
 
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_hasLoadedModelStatus) return;
+
+    _hasLoadedModelStatus = true;
     _loadModelStatus();
   }
 

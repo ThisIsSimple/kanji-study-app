@@ -54,6 +54,7 @@ class _WordsScreenState extends State<WordsScreen> {
   @override
   void initState() {
     super.initState();
+    _languageSettings.addListener(_onLanguageSettingsChanged);
     _loadWords();
     _searchController.addListener(() {
       _onSearchChanged(_searchController.text);
@@ -62,8 +63,14 @@ class _WordsScreenState extends State<WordsScreen> {
 
   @override
   void dispose() {
+    _languageSettings.removeListener(_onLanguageSettingsChanged);
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onLanguageSettingsChanged() {
+    if (!mounted) return;
+    _applyFilters();
   }
 
   Future<void> _loadWords() async {

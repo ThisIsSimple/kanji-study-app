@@ -62,14 +62,21 @@ class _KanjiScreenState extends State<KanjiScreen> {
   @override
   void initState() {
     super.initState();
+    _languageSettings.addListener(_onLanguageSettingsChanged);
     _loadKanji();
     _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
+    _languageSettings.removeListener(_onLanguageSettingsChanged);
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onLanguageSettingsChanged() {
+    if (!mounted) return;
+    setState(_applyFilters);
   }
 
   Future<void> _loadKanji({bool forceReload = false}) async {
@@ -107,9 +114,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
         final matchesCharacter = kanji.character.contains(query);
         final matchesMeaning = kanji
             .displayMeanings(_languageSettings.kanjiMeaningLanguage)
-            .any(
-          (meaning) => meaning.toLowerCase().contains(query),
-        );
+            .any((meaning) => meaning.toLowerCase().contains(query));
         final matchesJapaneseReading = kanji.readings.all.any(
           (reading) => reading.toLowerCase().contains(query),
         );
