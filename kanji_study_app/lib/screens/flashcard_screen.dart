@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/localization_extensions.dart';
 import '../models/flashcard_item.dart';
 import '../models/flashcard_session_model.dart';
 import '../services/flashcard_service.dart';
@@ -127,6 +128,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
 
   void _showCompletionScreen() {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
     final stats = _flashcardService.getSessionStats(_session);
 
     showFDialog(
@@ -144,7 +146,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
             ),
             const SizedBox(width: 12),
             Text(
-              '학습 완료!',
+              l10n.studyCompleteTitle,
               style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
@@ -153,14 +155,28 @@ class _FlashcardScreenState extends State<FlashcardScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildStatRow('총 학습 카드', '${stats['total']}개', theme),
-            const SizedBox(height: 8),
-            _buildStatRow('맞힌 개수', '${stats['correct']}개', theme, Colors.green),
-            const SizedBox(height: 8),
-            _buildStatRow('틀린 개수', '${stats['incorrect']}개', theme, Colors.red),
+            _buildStatRow(
+              l10n.totalCards,
+              l10n.countItems(stats['total'] as int),
+              theme,
+            ),
             const SizedBox(height: 8),
             _buildStatRow(
-              '정확도',
+              l10n.correctCount,
+              l10n.countItems(stats['correct'] as int),
+              theme,
+              Colors.green,
+            ),
+            const SizedBox(height: 8),
+            _buildStatRow(
+              l10n.incorrectCount,
+              l10n.countItems(stats['incorrect'] as int),
+              theme,
+              Colors.red,
+            ),
+            const SizedBox(height: 8),
+            _buildStatRow(
+              l10n.accuracy,
               '${stats['accuracy'].toStringAsFixed(1)}%',
               theme,
               theme.colors.primary,
@@ -176,7 +192,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
               navigator.pop(); // Close dialog
               navigator.pop(); // Close flashcard screen
             },
-            child: const Text('완료'),
+            child: Text(l10n.done),
           ),
         ],
       ),
@@ -223,20 +239,24 @@ class _FlashcardScreenState extends State<FlashcardScreen>
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
     final currentItem = _getCurrentItem();
 
     if (_session.isCompleted) {
       return FScaffold(
-        header: FHeader(title: const Text('플래시카드 학습')),
+        header: FHeader(title: Text(l10n.flashcardStudy)),
         child: Center(
-          child: Text('모든 카드를 학습했습니다!', style: theme.typography.lg.copyWith()),
+          child: Text(
+            l10n.flashcardCompleted,
+            style: theme.typography.lg.copyWith(),
+          ),
         ),
       );
     }
 
     if (currentItem == null) {
       return FScaffold(
-        header: FHeader(title: const Text('플래시카드 학습')),
+        header: FHeader(title: Text(l10n.flashcardStudy)),
         child: const Center(child: FCircularProgress()),
       );
     }
@@ -266,20 +286,20 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                 builder: (context, _, animation) => FDialog(
                   animation: animation,
                   direction: Axis.horizontal,
-                  title: const Text('학습 종료'),
-                  body: const Text('플래시카드 학습을 종료하시겠습니까?\n진행 상태가 저장됩니다.'),
+                  title: Text(l10n.exitStudy),
+                  body: Text(l10n.exitStudyBody),
                   actions: [
                     FButton(
                       variant: FButtonVariant.outline,
                       onPress: () => Navigator.of(context).pop(),
-                      child: const Text('취소'),
+                      child: Text(l10n.cancel),
                     ),
                     FButton(
                       onPress: () {
                         Navigator.of(context).pop(); // Close dialog
                         Navigator.of(context).pop(); // Close flashcard screen
                       },
-                      child: const Text('종료'),
+                      child: Text(l10n.close),
                     ),
                   ],
                 ),
@@ -371,7 +391,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                                               ),
                                               const SizedBox(width: 8),
                                               Text(
-                                                '모르겠어요',
+                                                l10n.dontKnow,
                                                 style: theme.typography.sm
                                                     .copyWith(
                                                       fontWeight:
@@ -401,7 +421,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                                               ),
                                               const SizedBox(width: 8),
                                               Text(
-                                                '알았어요',
+                                                l10n.know,
                                                 style: theme.typography.sm
                                                     .copyWith(
                                                       fontWeight:
@@ -418,7 +438,7 @@ class _FlashcardScreenState extends State<FlashcardScreen>
                                 )
                               : Center(
                                   child: Text(
-                                    '카드를 탭하여 뒤집기',
+                                    l10n.tapToFlip,
                                     style: theme.typography.sm.copyWith(
                                       color: theme.colors.mutedForeground,
                                     ),
@@ -459,7 +479,10 @@ class _FlashcardScreenState extends State<FlashcardScreen>
         border: Border.all(color: theme.colors.border, width: 2),
       ),
       child: Center(
-        child: Text('카드를 불러올 수 없습니다', style: theme.typography.md.copyWith()),
+        child: Text(
+          context.l10n.cardLoadFailed,
+          style: theme.typography.md.copyWith(),
+        ),
       ),
     );
   }
@@ -488,7 +511,10 @@ class _FlashcardScreenState extends State<FlashcardScreen>
         border: Border.all(color: theme.colors.border, width: 2),
       ),
       child: Center(
-        child: Text('카드를 불러올 수 없습니다', style: theme.typography.md.copyWith()),
+        child: Text(
+          context.l10n.cardLoadFailed,
+          style: theme.typography.md.copyWith(),
+        ),
       ),
     );
   }

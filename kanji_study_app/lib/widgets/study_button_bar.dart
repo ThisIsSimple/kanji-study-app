@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
+import '../l10n/localization_extensions.dart';
 import '../models/study_record_model.dart';
 
 /// A reusable study button bar widget that displays study status and actions.
@@ -61,14 +62,14 @@ class StudyButtonBar extends StatelessWidget {
 
     if (!hasStudyStats) {
       if (showForgot) {
-        return _buildForgotButton();
+        return _buildForgotButton(context);
       }
-      return _buildStudyCompleteButton();
+      return _buildStudyCompleteButton(context);
     }
 
     final actionButton = showStudyComplete
-        ? _buildStudyCompleteButton()
-        : _buildForgotButton();
+        ? _buildStudyCompleteButton(context)
+        : _buildForgotButton(context);
 
     return Row(
       children: [
@@ -80,7 +81,7 @@ class StudyButtonBar extends StatelessWidget {
               Text(
                 studyStats!.lastStudied != null
                     ? '${DateFormat('yyyy년 MM월 dd일').format(studyStats!.lastStudied!)} 학습'
-                    : '학습 기록',
+                    : context.l10n.studyRecords,
                 style: theme.typography.sm.copyWith(
                   color: theme.colors.mutedForeground,
                 ),
@@ -109,7 +110,8 @@ class StudyButtonBar extends StatelessWidget {
     );
   }
 
-  Widget _buildStudyCompleteButton() {
+  Widget _buildStudyCompleteButton(BuildContext context) {
+    final l10n = context.l10n;
     return FButton(
       onPress: isRecording ? null : onStudyComplete,
       child: Row(
@@ -118,13 +120,17 @@ class StudyButtonBar extends StatelessWidget {
         children: [
           Icon(PhosphorIconsRegular.checkCircle, size: 20),
           const SizedBox(width: 8),
-          Text(isRecording ? '기록 중...' : '학습 완료', style: TextStyle()),
+          Text(
+            isRecording ? l10n.recording : l10n.completed,
+            style: TextStyle(),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildForgotButton() {
+  Widget _buildForgotButton(BuildContext context) {
+    final l10n = context.l10n;
     return FButton(
       onPress: isRecording ? null : onForgot,
       variant: FButtonVariant.outline,
@@ -134,7 +140,10 @@ class StudyButtonBar extends StatelessWidget {
         children: [
           Icon(PhosphorIconsRegular.warningCircle, size: 18),
           const SizedBox(width: 6),
-          Text(isRecording ? '기록 중...' : '까먹음', style: TextStyle()),
+          Text(
+            isRecording ? l10n.recording : l10n.forgotAction,
+            style: TextStyle(),
+          ),
         ],
       ),
     );
@@ -146,6 +155,7 @@ class StudyButtonBar extends StatelessWidget {
     required StudyStats? studyStats,
   }) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
 
     showFSheet(
       context: context,
@@ -183,7 +193,7 @@ class StudyButtonBar extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '학습 기록',
+                    l10n.studyRecords,
                     style: theme.typography.lg.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -206,7 +216,7 @@ class StudyButtonBar extends StatelessWidget {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            '학습 기록이 없습니다',
+                            l10n.noStudyRecords,
                             style: theme.typography.md.copyWith(
                               color: theme.colors.mutedForeground,
                             ),

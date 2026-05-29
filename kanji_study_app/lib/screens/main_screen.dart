@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/localization_extensions.dart';
 import 'home_screen.dart';
 import 'kanji_screen.dart';
 import 'words_screen.dart';
@@ -41,6 +42,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return FScaffold(
       childPad: false,
       footer: FBottomNavigationBar(
@@ -53,7 +55,7 @@ class _MainScreenState extends State<MainScreen> {
                   ? PhosphorIconsFill.house
                   : PhosphorIconsRegular.house,
             ),
-            label: const Text('홈'),
+            label: Text(l10n.home),
           ),
           FBottomNavigationBarItem(
             icon: Icon(
@@ -61,7 +63,7 @@ class _MainScreenState extends State<MainScreen> {
                   ? PhosphorIconsFill.translate
                   : PhosphorIconsRegular.translate,
             ),
-            label: const Text('한자'),
+            label: Text(l10n.kanji),
           ),
           FBottomNavigationBarItem(
             icon: Icon(
@@ -69,7 +71,7 @@ class _MainScreenState extends State<MainScreen> {
                   ? PhosphorIconsFill.bookOpen
                   : PhosphorIconsRegular.bookOpen,
             ),
-            label: const Text('단어'),
+            label: Text(l10n.words),
           ),
           FBottomNavigationBarItem(
             icon: Icon(
@@ -77,7 +79,7 @@ class _MainScreenState extends State<MainScreen> {
                   ? PhosphorIconsFill.question
                   : PhosphorIconsRegular.question,
             ),
-            label: const Text('퀴즈'),
+            label: Text(l10n.quiz),
           ),
           FBottomNavigationBarItem(
             icon: Icon(
@@ -85,7 +87,7 @@ class _MainScreenState extends State<MainScreen> {
                   ? PhosphorIconsFill.user
                   : PhosphorIconsRegular.user,
             ),
-            label: const Text('프로필'),
+            label: Text(l10n.profile),
           ),
         ],
       ),

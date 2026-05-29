@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../constants/app_spacing.dart';
+import '../l10n/localization_extensions.dart';
 import '../models/daily_study_stats.dart';
+import '../services/language_settings_service.dart';
 import '../models/learning_goal.dart';
 import '../models/today_word_recommendation.dart';
 import '../models/user_stats_model.dart';
@@ -92,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!_connectivityService.isOnline) {
         showAppToast(
           context,
-          message: '초기 데이터 다운로드를 위해 인터넷 연결이 필요합니다.',
+          message: context.l10n.initialDataRequiresInternet,
           type: AppToastType.error,
           duration: const Duration(seconds: 5),
         );
@@ -162,15 +164,15 @@ class _HomeScreenState extends State<HomeScreen> {
       showAppToast(
         context,
         message: result.syncedRemotely
-            ? '학습 목표를 저장했습니다.'
-            : '학습 목표를 저장했습니다. 서버 동기화는 나중에 다시 시도됩니다.',
+            ? context.l10n.learningGoalSaved
+            : context.l10n.learningGoalSavedLocalOnly,
       );
       await _loadData();
     } catch (e) {
       if (!mounted) return;
       showAppToast(
         context,
-        message: '학습 목표 저장에 실패했습니다.',
+        message: context.l10n.learningGoalSaveFailed,
         type: AppToastType.error,
       );
     } finally {
@@ -187,9 +189,16 @@ class _HomeScreenState extends State<HomeScreen> {
       itemType: 'word',
       items: words,
       flashcardService: _flashcardService,
-      emptyMessage: '오늘 학습할 단어가 없습니다',
-      toFlashcardItems: (items) =>
-          items.map((word) => WordFlashcardAdapter(word)).toList(),
+      emptyMessage: context.l10n.noTodayWords,
+      toFlashcardItems: (items) => items
+          .map(
+            (word) => WordFlashcardAdapter(
+              word,
+              meaningLanguage:
+                  LanguageSettingsService.instance.wordMeaningLanguage,
+            ),
+          )
+          .toList(),
       resumeItems: _wordService.allWords,
       onComplete: () async {
         await _analyticsService.clearCache();
@@ -246,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        '오늘 학습 목표 설정',
+                        context.l10n.todayGoalSetup,
                         style: theme.typography.lg.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -256,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '하루 단어 수와 목표 JLPT를 설정하면 오늘 학습할 단어를 바로 추천해드릴게요.',
+                  context.l10n.todayGoalSetupBody,
                   style: theme.typography.sm.copyWith(
                     color: theme.colors.mutedForeground,
                   ),
@@ -276,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             height: 18,
                             child: FCircularProgress(),
                           )
-                        : const Text('목표 저장'),
+                        : Text(context.l10n.saveGoal),
                   ),
                 ),
               ],
@@ -323,14 +332,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '오늘의 단어 학습',
+                        context.l10n.todayWordStudy,
                         style: theme.typography.lg.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'JLPT N${goal.targetJlptLevel} 중심으로 ${goal.dailyGoal}개',
+                        context.l10n.dailyGoalSummary(
+                          goal.targetJlptLevel,
+                          goal.dailyGoal,
+                        ),
                         style: theme.typography.sm.copyWith(
                           color: theme.colors.mutedForeground,
                         ),
@@ -346,7 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '진행도',
+                  context.l10n.progress,
                   style: theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -372,8 +384,8 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 10),
             Text(
               stats.isDailyGoalAchieved
-                  ? '오늘 목표를 완료했습니다.'
-                  : '남은 단어 ${stats.remainingForDailyGoal}개',
+                  ? context.l10n.dailyGoalCompleted
+                  : context.l10n.remainingWords(stats.remainingForDailyGoal),
               style: theme.typography.xs.copyWith(
                 color: theme.colors.mutedForeground,
               ),
@@ -394,7 +406,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '이번 주',
+            context.l10n.thisWeek,
             style: theme.typography.md.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 10),
@@ -494,14 +506,16 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    isCompleted ? '오늘 학습 완료' : '오늘 학습할 단어',
+                    isCompleted
+                        ? context.l10n.todayStudyCompleted
+                        : context.l10n.todayWords,
                     style: theme.typography.lg.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
                 Text(
-                  '${_todayWords.length}개',
+                  context.l10n.countItems(_todayWords.length),
                   style: theme.typography.sm.copyWith(
                     color: theme.colors.mutedForeground,
                     fontWeight: FontWeight.w600,
@@ -521,7 +535,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
               if (_todayWords.length > 6)
                 Text(
-                  '외 ${_todayWords.length - 6}개 단어',
+                  context.l10n.otherWordsCount(_todayWords.length - 6),
                   style: theme.typography.xs.copyWith(
                     color: theme.colors.mutedForeground,
                   ),
@@ -531,7 +545,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: double.infinity,
                 child: FButton(
                   onPress: _startTodayStudy,
-                  child: const Text('오늘 학습 시작'),
+                  child: Text(context.l10n.startTodayStudy),
                 ),
               ),
             ],
@@ -543,7 +557,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWordRow(FThemeData theme, TodayWordRecommendation item) {
     final word = item.word;
-    final meaning = word.meaningsText.isEmpty ? '뜻 정보 없음' : word.meaningsText;
+    final wordMeaningLanguage =
+        LanguageSettingsService.instance.wordMeaningLanguage;
+    final meaningsText = word.displayMeaningsText(wordMeaningLanguage);
+    final meaning = meaningsText.isEmpty
+        ? context.l10n.noMeaning
+        : meaningsText;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -606,7 +625,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             child: Text(
-              item.isReview ? '복습' : '새 단어',
+              item.isReview ? context.l10n.review : context.l10n.newWord,
               style: theme.typography.xs.copyWith(
                 fontWeight: FontWeight.w700,
                 color: item.isReview
@@ -638,12 +657,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '오늘은 충분히 학습했어요',
+            context.l10n.enoughStudyToday,
             style: theme.typography.md.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 4),
           Text(
-            '내일 다시 새로운 단어를 추천해드릴게요.',
+            context.l10n.tomorrowRecommendations,
             style: theme.typography.sm.copyWith(
               color: theme.colors.mutedForeground,
             ),
@@ -664,7 +683,7 @@ class _HomeScreenState extends State<HomeScreen> {
         border: Border.all(color: theme.colors.border),
       ),
       child: Text(
-        '추천할 단어를 찾지 못했습니다. 단어 데이터가 준비되면 다시 시도해주세요.',
+        context.l10n.noRecommendations,
         style: theme.typography.sm.copyWith(
           color: theme.colors.mutedForeground,
         ),
@@ -678,7 +697,7 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '하루 단어 수',
+          context.l10n.dailyWordCount,
           style: theme.typography.sm.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 10),
@@ -694,7 +713,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: Center(
                 child: Text(
-                  '$_draftDailyGoal개',
+                  context.l10n.countItems(_draftDailyGoal),
                   style: theme.typography.xl.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -748,7 +767,7 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '목표 JLPT',
+          context.l10n.targetJlpt,
           style: theme.typography.sm.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 10),

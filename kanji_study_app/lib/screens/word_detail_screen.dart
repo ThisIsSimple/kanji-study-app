@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/localization_extensions.dart';
 import '../models/word_model.dart';
 import '../models/word_example_model.dart';
 import '../models/study_record_model.dart';
@@ -8,6 +9,7 @@ import '../services/word_service.dart';
 import '../services/gemini_service.dart';
 import '../services/supabase_service.dart';
 import '../services/study_record_service.dart';
+import '../services/language_settings_service.dart';
 import '../widgets/example_card.dart';
 import '../widgets/jlpt_badge.dart';
 import '../widgets/app_toast.dart';
@@ -35,6 +37,8 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
   final GeminiService _geminiService = GeminiService.instance;
   final SupabaseService _supabaseService = SupabaseService.instance;
   final StudyRecordService _studyRecordService = StudyRecordService.instance;
+  final LanguageSettingsService _languageSettings =
+      LanguageSettingsService.instance;
 
   late PageController _pageController;
   late int _currentIndex;
@@ -154,7 +158,9 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       final isCompleted = status == StudyStatus.completed;
       showAppToast(
         _toastContext,
-        message: isCompleted ? '학습 완료를 기록했습니다!' : '까먹음을 기록했습니다.',
+        message: isCompleted
+            ? context.l10n.studyCompletedToast
+            : context.l10n.studyForgotToast,
         type: isCompleted ? AppToastType.info : AppToastType.error,
         icon: isCompleted
             ? PhosphorIconsRegular.checkCircle
@@ -164,7 +170,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       if (!mounted) return;
       showAppToast(
         _toastContext,
-        message: '기록 저장 실패: $e',
+        message: context.l10n.recordSaveFailed(e.toString()),
         type: AppToastType.error,
         icon: PhosphorIconsRegular.warning,
       );
@@ -185,7 +191,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       setState(() => _isFavorite = !nextValue);
       showAppToast(
         _toastContext,
-        message: '즐겨찾기 저장 실패: $e',
+        message: context.l10n.favoriteSaveFailed(e.toString()),
         type: AppToastType.error,
       );
     }
@@ -212,7 +218,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
       if (mounted) {
         showAppToast(
           context,
-          message: '예문 생성 중 오류가 발생했습니다: $e',
+          message: context.l10n.exampleGenerateFailed(e.toString()),
           type: AppToastType.error,
         );
       }
@@ -226,17 +232,21 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
   String _getSourceLabel(String? source) {
     switch (source) {
       case 'gemini':
-        return 'AI 생성';
+        return context.l10n.sourceAi;
       case 'user':
-        return '사용자 제공';
+        return context.l10n.sourceUser;
       case 'manual':
-        return '수동 입력';
+        return context.l10n.sourceManual;
       default:
         return '';
     }
   }
 
   Widget _buildWordPage(Word word, FThemeData theme) {
+    final l10n = context.l10n;
+    final displayMeanings = word.displayMeanings(
+      _languageSettings.wordMeaningLanguage,
+    );
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -270,7 +280,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                       const SizedBox(height: 24),
 
                       // Meanings by part of speech - Center aligned
-                      ...word.meanings.map((meaning) {
+                      ...displayMeanings.map((meaning) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Center(
@@ -378,7 +388,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '예문',
+                l10n.examples,
                 style: theme.typography.lg.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -393,7 +403,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                           height: 16,
                           child: FCircularProgress(),
                         )
-                      : Text('AI 예문 생성', style: TextStyle()),
+                      : Text(l10n.generateExamples, style: TextStyle()),
                 ),
             ],
           ),
@@ -436,7 +446,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                     furigana: example.furigana,
                     korean: example.korean,
                     explanation: example.explanation,
-                    sourceLabel: 'AI 생성',
+                    sourceLabel: l10n.sourceAi,
                     japaneseFontSize: 20,
                     rubyFontSize: 11,
                   ),
@@ -457,7 +467,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'AI로 예문을 생성해보세요',
+                        l10n.generateExamples,
                         style: theme.typography.md.copyWith(
                           color: theme.colors.mutedForeground,
                         ),
@@ -476,13 +486,14 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
 
     // If no wordList provided, show single word without swipe
     if (_wordList.length == 1) {
       return FScaffold(
         header: FHeader.nested(
           title: Text(
-            '단어 상세',
+            l10n.words,
             style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
           ),
           prefixes: [
@@ -530,7 +541,7 @@ class _WordDetailScreenState extends State<WordDetailScreen> {
     return FScaffold(
       header: FHeader.nested(
         title: Text(
-          '단어 상세 (${_currentIndex + 1}/${_wordList.length})',
+          '${l10n.words} (${_currentIndex + 1}/${_wordList.length})',
           style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
         ),
         prefixes: [

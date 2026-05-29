@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../constants/app_spacing.dart';
+import '../l10n/localization_extensions.dart';
 import '../widgets/custom_header.dart';
 
 class SettingsPrivacyScreen extends StatelessWidget {
@@ -10,13 +11,14 @@ class SettingsPrivacyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: theme.colors.background,
       body: Column(
         children: [
           CustomHeader(
-            title: const Text('개인정보'),
+            title: Text(l10n.privacy),
             titleAlign: HeaderTitleAlign.center,
             withBack: true,
           ),
@@ -27,52 +29,48 @@ class SettingsPrivacyScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _Section(
-                    title: '서버에 저장되는 데이터',
-                    rows: const [
+                    title: l10n.serverStoredData,
+                    rows: [
                       _PrivacyRow(
                         icon: PhosphorIconsRegular.user,
-                        title: '계정 식별자',
-                        body: '로그인 유지, 기기 간 학습 기록 동기화',
+                        title: l10n.accountIdentifier,
+                        body: l10n.accountIdentifierBody,
                       ),
                       _PrivacyRow(
                         icon: PhosphorIconsRegular.envelope,
-                        title: '이메일 주소',
-                        body: '소셜 로그인 계정 표시 및 인증',
+                        title: l10n.emailAddress,
+                        body: l10n.emailAddressBody,
                       ),
                       _PrivacyRow(
                         icon: PhosphorIconsRegular.chartBar,
-                        title: '학습 활동',
-                        body: '학습 기록, 즐겨찾기, 퀴즈 결과 동기화',
+                        title: l10n.learningActivity,
+                        body: l10n.learningActivityBody,
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
                   _Section(
-                    title: '기기에만 저장되는 데이터',
-                    rows: const [
+                    title: l10n.deviceOnlyData,
+                    rows: [
                       _PrivacyRow(
                         icon: PhosphorIconsRegular.database,
-                        title: '학습 콘텐츠 캐시',
-                        body: '오프라인 사용을 위한 한자/단어 데이터',
+                        title: l10n.learningContentCache,
+                        body: l10n.learningContentCacheBody,
                       ),
                       _PrivacyRow(
                         icon: PhosphorIconsRegular.key,
-                        title: 'Gemini API 키',
-                        body: '사용자가 입력한 경우 예문/퀴즈 생성에 사용',
+                        title: l10n.geminiApiKey,
+                        body: l10n.geminiApiKeyBody,
                       ),
                       _PrivacyRow(
                         icon: PhosphorIconsRegular.bell,
-                        title: '알림 설정',
-                        body: '매일 학습 알림 시간과 사용 여부',
+                        title: l10n.notificationSettings,
+                        body: l10n.notificationSettingsBody,
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  _InfoBox(
-                    text:
-                        '광고 추적에는 사용하지 않습니다. 계정 및 학습 데이터 삭제는 설정 > 계정 관리에서 시작할 수 있습니다.',
-                    theme: theme,
-                  ),
+                  _InfoBox(text: l10n.privacyInfo, theme: theme),
                 ],
               ),
             ),

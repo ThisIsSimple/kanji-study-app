@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../l10n/localization_extensions.dart';
 import '../services/handwriting_recognition_service.dart';
 
 typedef HandwritingCandidateRecognizer =
@@ -22,13 +23,14 @@ Future<String?> showKanjiHandwritingSheet(
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.6),
     builder: (context) {
+      final l10n = context.l10n;
       return FractionallySizedBox(
         heightFactor: 0.88,
         child: KanjiHandwritingSheet(
-          title: '손글씨로 한자 찾기',
+          title: l10n.findKanjiByHandwriting,
           availableCandidates: availableKanjiCharacters,
-          emptyStrokesMessage: '먼저 한 글자를 써주세요.',
-          noMatchingCandidatesMessage: '앱 데이터와 일치하는 한자 후보를 찾지 못했습니다.',
+          emptyStrokesMessage: l10n.writeOneCharacterFirst,
+          noMatchingCandidatesMessage: l10n.noMatchingKanjiCandidates,
           recognizeCandidates:
               HandwritingRecognitionService.instance.recognizeSingleKanji,
         ),
@@ -49,13 +51,14 @@ Future<String?> showWordHandwritingSheet(
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.6),
     builder: (context) {
+      final l10n = context.l10n;
       return FractionallySizedBox(
         heightFactor: 0.88,
         child: KanjiHandwritingSheet(
-          title: '손글씨로 단어 찾기',
+          title: l10n.findWordByHandwriting,
           availableCandidates: availableWords,
-          emptyStrokesMessage: '먼저 단어를 써주세요.',
-          noMatchingCandidatesMessage: '앱 데이터와 일치하는 단어 후보를 찾지 못했습니다.',
+          emptyStrokesMessage: l10n.writeWordFirst,
+          noMatchingCandidatesMessage: l10n.noMatchingWordCandidates,
           recognizeCandidates:
               HandwritingRecognitionService.instance.recognizeJapaneseText,
         ),
@@ -104,6 +107,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
   }
 
   Future<void> _loadModelStatus() async {
+    final l10n = context.l10n;
     try {
       final isDownloaded = await _recognitionService
           .isJapaneseModelDownloaded();
@@ -111,13 +115,13 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
       setState(() {
         _isModelReady = isDownloaded;
         _isCheckingModel = false;
-        _statusMessage = isDownloaded ? null : '일본어 필기 인식 모델을 먼저 내려받아야 합니다.';
+        _statusMessage = isDownloaded ? null : l10n.handwritingModelRequired;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _isCheckingModel = false;
-        _statusMessage = '모델 상태를 확인하지 못했습니다: $error';
+        _statusMessage = l10n.modelStatusFailed(error.toString());
       });
     }
   }
@@ -129,17 +133,18 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
     });
 
     try {
+      final l10n = context.l10n;
       final didDownload = await _recognitionService.downloadJapaneseModel();
       if (!mounted) return;
 
       setState(() {
         _isModelReady = didDownload;
-        _statusMessage = didDownload ? null : '모델 다운로드에 실패했습니다.';
+        _statusMessage = didDownload ? null : l10n.modelDownloadFailed;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _statusMessage = '모델 다운로드 중 오류가 발생했습니다: $error';
+        _statusMessage = context.l10n.modelDownloadError(error.toString());
       });
     } finally {
       if (mounted) {
@@ -222,7 +227,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
         _candidates = matchedCandidates;
         if (matchedCandidates.isEmpty) {
           _statusMessage = recognizedCandidates.isEmpty
-              ? '인식 결과가 없습니다. 조금 더 크게 또박또박 써보세요.'
+              ? context.l10n.noRecognitionResults
               : widget.noMatchingCandidatesMessage;
         }
       });
@@ -292,6 +297,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
   }
 
   Widget _buildModelDownloadPanel(FThemeData theme) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -309,12 +315,12 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
           ),
           const SizedBox(height: 16),
           Text(
-            '필기 인식 모델 다운로드',
+            l10n.handwritingModelDownload,
             style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
-            _statusMessage ?? '처음 한 번만 다운로드하면 이후에는 바로 사용할 수 있습니다.',
+            _statusMessage ?? l10n.handwritingModelDownloadBody,
             textAlign: TextAlign.center,
             style: theme.typography.sm.copyWith(
               color: theme.colors.mutedForeground,
@@ -329,7 +335,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('모델 다운로드'),
+                : Text(l10n.downloadModel),
           ),
         ],
       ),
@@ -337,6 +343,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
   }
 
   Widget _buildDrawingPanel(FThemeData theme) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -392,12 +399,12 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('인식'),
+                  : Text(l10n.recognize),
             ),
             FButton(
               onPress: _strokes.isEmpty ? null : _clearCanvas,
               variant: FButtonVariant.outline,
-              child: const Text('지우기'),
+              child: Text(l10n.clear),
             ),
           ],
         ),
@@ -412,7 +419,7 @@ class _KanjiHandwritingSheetState extends State<KanjiHandwritingSheet> {
         if (_candidates.isNotEmpty) ...[
           const SizedBox(height: 12),
           Text(
-            '인식 후보',
+            l10n.recognitionCandidates,
             style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),

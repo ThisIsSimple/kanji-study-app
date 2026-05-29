@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/localization_extensions.dart';
 import '../models/kanji_model.dart';
+import '../models/language_settings.dart';
 import '../models/study_record_model.dart';
 import '../services/study_record_service.dart';
 import '../services/supabase_service.dart';
+import '../services/language_settings_service.dart';
 import '../utils/korean_formatter.dart';
 import 'app_toast.dart';
 import 'jlpt_badge.dart';
@@ -58,6 +61,17 @@ class _KanjiInfoCardState extends State<KanjiInfoCard> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     final kanji = widget.kanji;
+    final l10n = context.l10n;
+    final languageSettings = LanguageSettingsService.instance;
+    final meaningText =
+        languageSettings.kanjiMeaningLanguage == KanjiMeaningLanguage.ko &&
+            hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings)
+        ? formatKoreanReadings(
+            kanji.koreanKunReadings,
+            kanji.koreanOnReadings,
+          )
+        : kanji.displayMeaningsText(languageSettings.kanjiMeaningLanguage);
+    final commentary = kanji.displayCommentary(languageSettings.appLanguage);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -90,13 +104,7 @@ class _KanjiInfoCardState extends State<KanjiInfoCard> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Korean meanings
-                      Text(
-                        formatKoreanReadings(
-                          kanji.koreanKunReadings,
-                          kanji.koreanOnReadings,
-                        ),
-                      ),
+                      if (meaningText.isNotEmpty) Text(meaningText),
                       const SizedBox(height: 16),
 
                       // JLPT and Grade badges
@@ -169,7 +177,7 @@ class _KanjiInfoCardState extends State<KanjiInfoCard> {
                 if (kanji.radical != null && kanji.radical!.isNotEmpty) ...[
                   _buildInfoRow(
                     theme: theme,
-                    label: '부수',
+                    label: l10n.radical,
                     children: [_buildPill(theme: theme, text: kanji.radical!)],
                   ),
                   const SizedBox(height: 16),
@@ -179,7 +187,7 @@ class _KanjiInfoCardState extends State<KanjiInfoCard> {
                 if (kanji.readings.kun.isNotEmpty) ...[
                   _buildInfoRow(
                     theme: theme,
-                    label: '훈독',
+                    label: l10n.kunReading,
                     children: kanji.readings.kun
                         .map((r) => _buildPill(theme: theme, text: r))
                         .toList(),
@@ -194,7 +202,7 @@ class _KanjiInfoCardState extends State<KanjiInfoCard> {
                 if (kanji.readings.on.isNotEmpty) ...[
                   _buildInfoRow(
                     theme: theme,
-                    label: '음독',
+                    label: l10n.onReading,
                     children: kanji.readings.on
                         .map((r) => _buildPill(theme: theme, text: r))
                         .toList(),
@@ -202,10 +210,13 @@ class _KanjiInfoCardState extends State<KanjiInfoCard> {
                 ],
 
                 // 한자 해설 (commentary)
-                if (kanji.commentary != null &&
-                    kanji.commentary!.isNotEmpty) ...[
+                if (commentary != null && commentary.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  _buildInfoRow(theme: theme, label: '한자 해설', children: []),
+                  _buildInfoRow(
+                    theme: theme,
+                    label: l10n.kanjiCommentary,
+                    children: [],
+                  ),
                   const SizedBox(height: 8),
                   Container(
                     width: double.infinity,
@@ -215,7 +226,7 @@ class _KanjiInfoCardState extends State<KanjiInfoCard> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      kanji.commentary!,
+                      commentary,
                       style: theme.typography.sm.copyWith(
                         color: theme.colors.foreground,
                       ),

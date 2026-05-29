@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/localization_extensions.dart';
 import '../services/notification_service.dart';
 import '../constants/app_spacing.dart';
 import '../widgets/app_toast.dart';
@@ -65,7 +66,7 @@ class _SettingsNotificationScreenState
       });
       showAppToast(
         context,
-        message: '알림 권한을 확인해주세요.',
+        message: context.l10n.notificationPermissionError,
         type: AppToastType.error,
       );
     }
@@ -100,13 +101,14 @@ class _SettingsNotificationScreenState
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: theme.colors.background,
       body: Column(
         children: [
           CustomHeader(
-            title: const Text('알림'),
+            title: Text(l10n.notifications),
             titleAlign: HeaderTitleAlign.center,
             withBack: true,
           ),
@@ -143,14 +145,14 @@ class _SettingsNotificationScreenState
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '학습 알림',
+                                        l10n.studyNotification,
                                         style: theme.typography.md.copyWith(
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        '매일 학습 시간을 알려드려요',
+                                        l10n.studyNotificationDetails,
                                         style: theme.typography.sm.copyWith(
                                           color: theme.colors.mutedForeground,
                                         ),
@@ -198,7 +200,7 @@ class _SettingsNotificationScreenState
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            '알림 시간',
+                                            l10n.notificationTime,
                                             style: theme.typography.md.copyWith(
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -232,7 +234,7 @@ class _SettingsNotificationScreenState
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Text(
-                            '알림을 통해 꾸준한 학습 습관을 만들어보세요. 설정한 시간에 매일 학습 알림을 받을 수 있습니다.',
+                            l10n.notificationInfo,
                             style: theme.typography.sm.copyWith(
                               color: theme.colors.mutedForeground,
                             ),

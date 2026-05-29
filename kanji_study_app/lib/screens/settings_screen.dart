@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../constants/app_spacing.dart';
+import '../l10n/localization_extensions.dart';
 import '../widgets/custom_header.dart';
 import 'settings_account_screen.dart';
 import 'settings_notification_screen.dart';
@@ -9,6 +10,7 @@ import 'settings_ai_screen.dart';
 import 'settings_info_screen.dart';
 import 'settings_privacy_screen.dart';
 import 'settings_learning_goal_screen.dart';
+import 'settings_language_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -17,13 +19,14 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     final typography = theme.typography;
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: theme.colors.background,
       body: Column(
         children: [
           CustomHeader(
-            title: const Text('설정'),
+            title: Text(l10n.settings),
             titleAlign: HeaderTitleAlign.center,
             withBack: true,
           ),
@@ -35,12 +38,12 @@ class SettingsScreen extends StatelessWidget {
                   FItem(
                     prefix: Icon(PhosphorIconsRegular.userCircle, size: 26),
                     title: Text(
-                      '계정 관리',
+                      l10n.account,
                       style: typography.md.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    details: Text('로그인 정보 및 계정 설정', style: typography.sm),
+                    details: Text(l10n.accountDetails, style: typography.sm),
                     suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () =>
                         _navigateTo(context, const SettingsAccountScreen()),
@@ -48,12 +51,15 @@ class SettingsScreen extends StatelessWidget {
                   FItem(
                     prefix: Icon(PhosphorIconsRegular.bell, size: 26),
                     title: Text(
-                      '알림',
+                      l10n.notifications,
                       style: typography.md.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    details: Text('학습 알림 및 시간 설정', style: typography.sm),
+                    details: Text(
+                      l10n.notificationDetails,
+                      style: typography.sm,
+                    ),
                     suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () => _navigateTo(
                       context,
@@ -63,12 +69,15 @@ class SettingsScreen extends StatelessWidget {
                   FItem(
                     prefix: Icon(PhosphorIconsRegular.trophy, size: 26),
                     title: Text(
-                      '학습 목표',
+                      l10n.learningGoal,
                       style: typography.md.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    details: Text('하루 단어 수와 목표 JLPT 설정', style: typography.sm),
+                    details: Text(
+                      l10n.learningGoalDetails,
+                      style: typography.sm,
+                    ),
                     suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () => _navigateTo(
                       context,
@@ -78,25 +87,38 @@ class SettingsScreen extends StatelessWidget {
                   FItem(
                     prefix: Icon(PhosphorIconsRegular.sparkle, size: 26),
                     title: Text(
-                      'AI 설정',
+                      l10n.aiSettings,
                       style: typography.md.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    details: Text('Gemini API 키 관리', style: typography.sm),
+                    details: Text(l10n.aiSettingsDetails, style: typography.sm),
                     suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () =>
                         _navigateTo(context, const SettingsAiScreen()),
                   ),
                   FItem(
-                    prefix: Icon(PhosphorIconsRegular.shieldCheck, size: 26),
+                    prefix: Icon(PhosphorIconsRegular.translate, size: 26),
                     title: Text(
-                      '개인정보',
+                      l10n.language,
                       style: typography.md.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    details: Text('수집 데이터 및 삭제 안내', style: typography.sm),
+                    details: Text(l10n.languageSettings, style: typography.sm),
+                    suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
+                    onPress: () =>
+                        _navigateTo(context, const SettingsLanguageScreen()),
+                  ),
+                  FItem(
+                    prefix: Icon(PhosphorIconsRegular.shieldCheck, size: 26),
+                    title: Text(
+                      l10n.privacy,
+                      style: typography.md.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    details: Text(l10n.privacyDetails, style: typography.sm),
                     suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () =>
                         _navigateTo(context, const SettingsPrivacyScreen()),
@@ -104,12 +126,12 @@ class SettingsScreen extends StatelessWidget {
                   FItem(
                     prefix: Icon(PhosphorIconsRegular.info, size: 26),
                     title: Text(
-                      '앱 정보',
+                      l10n.appInfo,
                       style: typography.md.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    details: Text('버전 및 개발자 정보', style: typography.sm),
+                    details: Text(l10n.appInfoDetails, style: typography.sm),
                     suffix: Icon(PhosphorIconsRegular.caretRight, size: 20),
                     onPress: () =>
                         _navigateTo(context, const SettingsInfoScreen()),

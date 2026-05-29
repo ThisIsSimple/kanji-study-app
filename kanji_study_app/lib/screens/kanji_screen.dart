@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/localization_extensions.dart';
 import '../models/kanji_model.dart';
 import '../models/kanji_flashcard_adapter.dart';
 import '../models/study_record_model.dart';
 import '../services/kanji_service.dart';
 import '../services/flashcard_service.dart';
+import '../services/language_settings_service.dart';
 import '../services/study_record_service.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/kanji_grid_card.dart';
@@ -34,6 +36,8 @@ class KanjiScreen extends StatefulWidget {
 class _KanjiScreenState extends State<KanjiScreen> {
   final KanjiService _kanjiService = KanjiService.instance;
   final FlashcardService _flashcardService = FlashcardService.instance;
+  final LanguageSettingsService _languageSettings =
+      LanguageSettingsService.instance;
   final StudyRecordService _studyRecordService = StudyRecordService.instance;
   final TextEditingController _searchController = TextEditingController();
 
@@ -101,7 +105,9 @@ class _KanjiScreenState extends State<KanjiScreen> {
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
         final matchesCharacter = kanji.character.contains(query);
-        final matchesMeaning = kanji.meanings.any(
+        final matchesMeaning = kanji
+            .displayMeanings(_languageSettings.kanjiMeaningLanguage)
+            .any(
           (meaning) => meaning.toLowerCase().contains(query),
         );
         final matchesJapaneseReading = kanji.readings.all.any(
@@ -217,12 +223,13 @@ class _KanjiScreenState extends State<KanjiScreen> {
 
     showAppToast(
       context,
-      message: '$selectedKanji 검색 결과를 표시합니다',
+      message: context.l10n.searchResultShown(selectedKanji),
       type: AppToastType.info,
     );
   }
 
   void _showFilterBottomSheet() {
+    final l10n = context.l10n;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -268,7 +275,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
 
                             // Title
                             Text(
-                              '필터',
+                              l10n.filter,
                               style: theme.typography.lg.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -287,7 +294,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                               const SizedBox(height: 24),
                               // Study Status Filter Section
                               Text(
-                                '학습 상태',
+                                l10n.studyStatus,
                                 style: theme.typography.sm.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: theme.colors.mutedForeground,
@@ -301,10 +308,10 @@ class _KanjiScreenState extends State<KanjiScreen> {
                                 runSpacing: 4,
                                 children:
                                     [
-                                      (null, '전체'),
-                                      ('not_studied', '미학습'),
-                                      ('completed', '학습 완료'),
-                                      ('forgot', '까먹은 한자'),
+                                      (null, l10n.all),
+                                      ('not_studied', l10n.notStudied),
+                                      ('completed', l10n.completed),
+                                      ('forgot', l10n.forgotKanji),
                                     ].map((option) {
                                       final value = option.$1;
                                       final label = option.$2;
@@ -384,7 +391,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
 
                               // Grade Filter Section
                               Text(
-                                '학년',
+                                l10n.grade,
                                 style: theme.typography.sm.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: theme.colors.mutedForeground,
@@ -404,7 +411,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                                       (4, '4학년'),
                                       (5, '5학년'),
                                       (6, '6학년'),
-                                      (7, '중학교+'),
+                                      (7, l10n.middleSchoolPlus),
                                     ].map((option) {
                                       final value = option.$1;
                                       final label = option.$2;
@@ -592,7 +599,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                           width: double.infinity,
                           child: FButton(
                             onPress: () => Navigator.pop(context),
-                            child: const Text('완료'),
+                            child: Text(l10n.done),
                           ),
                         ),
                       ),
@@ -634,9 +641,15 @@ class _KanjiScreenState extends State<KanjiScreen> {
       itemType: 'kanji',
       filteredItems: _filteredKanji,
       flashcardService: _flashcardService,
-      emptyMessage: '학습할 한자가 없습니다',
-      toFlashcardItems: (items) =>
-          items.map((kanji) => KanjiFlashcardAdapter(kanji)).toList(),
+      emptyMessage: context.l10n.noKanjiToStudy,
+      toFlashcardItems: (items) => items
+          .map(
+            (kanji) => KanjiFlashcardAdapter(
+              kanji,
+              meaningLanguage: _languageSettings.kanjiMeaningLanguage,
+            ),
+          )
+          .toList(),
       onComplete: () async {
         if (!mounted) return;
         setState(_applyFilters);
@@ -657,7 +670,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
       if (!mounted) return;
       showAppToast(
         context,
-        message: '즐겨찾기 저장 실패: $e',
+        message: context.l10n.favoriteSaveFailed(e.toString()),
         type: AppToastType.error,
       );
     }
@@ -666,6 +679,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: theme.colors.background,
@@ -691,7 +705,7 @@ class _KanjiScreenState extends State<KanjiScreen> {
                       control: FTextFieldControl.managed(
                         controller: _searchController,
                       ),
-                      hint: '한자, 의미, 읽기로 검색...',
+                      hint: l10n.searchKanjiHint,
                       autofocus: _autofocusSearchField,
                     ),
                   ),
@@ -788,8 +802,8 @@ class _KanjiScreenState extends State<KanjiScreen> {
                                 const SizedBox(height: AppSpacing.md),
                                 Text(
                                   _showOnlyFavorites
-                                      ? '즐겨찾기한 한자가 없습니다'
-                                      : '검색 결과가 없습니다',
+                                      ? l10n.noFavoriteKanji
+                                      : l10n.noSearchResults,
                                   style: theme.typography.md.copyWith(
                                     color: theme.colors.mutedForeground,
                                   ),
@@ -812,6 +826,8 @@ class _KanjiScreenState extends State<KanjiScreen> {
                               return KanjiGridCard(
                                 kanji: kanji,
                                 showMeaning: widget.showMeanings,
+                                meaningLanguage:
+                                    _languageSettings.kanjiMeaningLanguage,
                                 onTap: () => _navigateToStudy(kanji),
                                 onFavoriteToggle: () =>
                                     _toggleKanjiFavorite(kanji),

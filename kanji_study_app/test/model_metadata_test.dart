@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:konnakanji/models/kanji_model.dart';
+import 'package:konnakanji/models/language_settings.dart';
 import 'package:konnakanji/models/word_model.dart';
 
 void main() {
@@ -100,6 +101,58 @@ void main() {
     },
   );
 
+  test(
+    'Word displayMeanings selects requested language with Korean fallback',
+    () {
+      final word = Word.fromJson({
+        'id': 4,
+        'word': '確認',
+        'reading': 'かくにん',
+        'meanings': [
+          {'part_of_speech': '명사', 'meaning': '확인'},
+        ],
+        'meanings_ko': [
+          {'part_of_speech': '명사', 'meaning': '확인'},
+        ],
+        'meanings_en': [
+          {'part_of_speech': 'n', 'meaning': 'confirmation'},
+        ],
+        'meanings_jp': [
+          {'part_of_speech': '名詞', 'meaning': 'はっきり確かめること'},
+        ],
+        'jlpt_level': 3,
+      });
+
+      expect(word.displayMeaningsText(WordMeaningLanguage.ko), '확인');
+      expect(word.displayMeaningsText(WordMeaningLanguage.en), 'confirmation');
+      expect(word.displayMeaningsText(WordMeaningLanguage.ja), 'はっきり確かめること');
+      expect(word.matchesQuery('confirmation'), isFalse);
+      expect(
+        word.matchesQuery(
+          'confirmation',
+          meaningLanguage: WordMeaningLanguage.en,
+        ),
+        isTrue,
+      );
+
+      final fallbackWord = Word.fromJson({
+        'id': 5,
+        'word': '声',
+        'reading': 'こえ',
+        'meanings': [
+          {'part_of_speech': '명사', 'meaning': '소리'},
+        ],
+        'meanings_ko': [
+          {'part_of_speech': '명사', 'meaning': '소리'},
+        ],
+        'meanings_jp': [],
+        'jlpt_level': 5,
+      });
+
+      expect(fallbackWord.displayMeaningsText(WordMeaningLanguage.ja), '소리');
+    },
+  );
+
   test('Kanji parses source metadata with legacy defaults', () {
     final legacyKanji = Kanji.fromJson({
       'id': 1,
@@ -172,5 +225,59 @@ void main() {
     expect(expandedKanji.toJson()['quality_status'], 'ai_draft');
     expect(expandedKanji.toJson()['meanings_en'], ['scold']);
     expect(expandedKanji.toJson()['jp_meanings'], ['しかること']);
+  });
+
+  test('Kanji display helpers select language fields with Korean fallback', () {
+    final kanji = Kanji.fromJson({
+      'id': 3,
+      'character': '海',
+      'meanings': ['바다'],
+      'meanings_ko': ['바다'],
+      'meanings_en': ['sea'],
+      'kr_meanings': ['바다'],
+      'en_meanings': ['sea', 'ocean'],
+      'readings': {
+        'on': ['カイ'],
+        'kun': ['うみ'],
+      },
+      'grade': 2,
+      'jlpt': 4,
+      'strokeCount': 9,
+      'examples': [],
+      'commentary': '물을 뜻하는 한자',
+      'kr_commentary': '물을 뜻하는 한자',
+      'jp_commentary': '水や海を表す漢字です。',
+      'en_commentary': 'A kanji used for the sea.',
+    });
+
+    expect(kanji.displayMeaningsText(KanjiMeaningLanguage.ko), '바다');
+    expect(kanji.displayMeaningsText(KanjiMeaningLanguage.en), 'sea, ocean');
+    expect(kanji.displayCommentary(AppLanguage.ko), '물을 뜻하는 한자');
+    expect(kanji.displayCommentary(AppLanguage.ja), '水や海を表す漢字です。');
+    expect(
+      kanji.displayCommentary(AppLanguage.en),
+      'A kanji used for the sea.',
+    );
+
+    final fallbackKanji = Kanji.fromJson({
+      'id': 4,
+      'character': '山',
+      'meanings': ['산'],
+      'meanings_ko': ['산'],
+      'meanings_en': [],
+      'kr_meanings': ['산'],
+      'readings': {
+        'on': ['サン'],
+        'kun': ['やま'],
+      },
+      'grade': 1,
+      'jlpt': 5,
+      'strokeCount': 3,
+      'examples': [],
+      'commentary': '산을 뜻하는 한자',
+    });
+
+    expect(fallbackKanji.displayMeaningsText(KanjiMeaningLanguage.en), '산');
+    expect(fallbackKanji.displayCommentary(AppLanguage.en), '산을 뜻하는 한자');
   });
 }

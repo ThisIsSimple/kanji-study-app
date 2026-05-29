@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'flashcard_item.dart';
 import 'kanji_model.dart';
+import 'language_settings.dart';
 
 /// Kanji 모델을 FlashcardItem 인터페이스로 변환하는 어댑터
 class KanjiFlashcardAdapter implements FlashcardItem {
   final Kanji kanji;
+  final KanjiMeaningLanguage meaningLanguage;
 
-  KanjiFlashcardAdapter(this.kanji);
+  KanjiFlashcardAdapter(
+    this.kanji, {
+    this.meaningLanguage = KanjiMeaningLanguage.ko,
+  });
 
   @override
   int get id => kanji.id;
@@ -60,9 +65,10 @@ class KanjiFlashcardAdapter implements FlashcardItem {
     final List<FlashcardMeaning> meanings = [];
 
     // 의미
-    if (kanji.meanings.isNotEmpty) {
+    final displayMeanings = kanji.displayMeanings(meaningLanguage);
+    if (displayMeanings.isNotEmpty) {
       meanings.add(
-        FlashcardMeaning(category: '의미', meaning: kanji.meanings.join(', ')),
+        FlashcardMeaning(category: '의미', meaning: displayMeanings.join(', ')),
       );
     }
 

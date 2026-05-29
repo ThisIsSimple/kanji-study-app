@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 
+import '../l10n/localization_extensions.dart';
+
 /// 플래시카드 학습 개수 선택 다이얼로그
 class FlashcardCountSelector extends StatefulWidget {
   final int totalCount; // 필터링된 전체 항목 개수
@@ -65,9 +67,10 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
   }
 
   void _onCustomCountChanged(String value) {
+    final l10n = context.l10n;
     if (value.isEmpty) {
       setState(() {
-        _errorMessage = '개수를 입력해주세요';
+        _errorMessage = l10n.enterCount;
       });
       return;
     }
@@ -75,21 +78,21 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
     final count = int.tryParse(value);
     if (count == null) {
       setState(() {
-        _errorMessage = '올바른 숫자를 입력해주세요';
+        _errorMessage = l10n.invalidNumber;
       });
       return;
     }
 
     if (count < 1) {
       setState(() {
-        _errorMessage = '최소 1개 이상 선택해주세요';
+        _errorMessage = l10n.minimumOneCount;
       });
       return;
     }
 
     if (count > widget.totalCount) {
       setState(() {
-        _errorMessage = '최대 ${widget.totalCount}개까지 선택 가능합니다';
+        _errorMessage = l10n.maxCountAllowed(widget.totalCount);
       });
       return;
     }
@@ -111,6 +114,7 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -149,7 +153,7 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
 
                       // Title
                       Text(
-                        '학습할 카드 개수를 선택하세요',
+                        l10n.selectFlashcardCount,
                         style: theme.typography.lg.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -185,7 +189,7 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
                               ),
                               child: Center(
                                 child: Text(
-                                  '$count개',
+                                  l10n.countItems(count),
                                   style: theme.typography.md.copyWith(
                                     fontWeight: isSelected
                                         ? FontWeight.bold
@@ -205,7 +209,7 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
 
                       // 직접 입력 필드
                       Text(
-                        '또는 직접 입력:',
+                        l10n.directInput,
                         style: theme.typography.sm.copyWith(
                           color: theme.colors.mutedForeground,
                         ),
@@ -229,7 +233,7 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                '개',
+                                l10n.countUnit,
                                 style: theme.typography.md.copyWith(
                                   color: theme.colors.mutedForeground,
                                 ),
@@ -273,7 +277,7 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
                             ),
                             child: Center(
                               child: Text(
-                                '전체 (${widget.totalCount}개)',
+                                l10n.allWithCount(widget.totalCount),
                                 style: theme.typography.md.copyWith(
                                   fontWeight:
                                       _selectedCount == widget.totalCount
@@ -301,7 +305,7 @@ class _FlashcardCountSelectorState extends State<FlashcardCountSelector> {
                 width: double.infinity,
                 child: FButton(
                   onPress: _errorMessage == null ? _onConfirm : null,
-                  child: const Text('시작'),
+                  child: Text(l10n.start),
                 ),
               ),
             ),
