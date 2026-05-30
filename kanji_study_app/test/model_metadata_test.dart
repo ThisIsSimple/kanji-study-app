@@ -235,6 +235,7 @@ void main() {
       'meanings_ko': ['바다'],
       'meanings_en': ['sea'],
       'kr_meanings': ['바다'],
+      'jp_meanings': ['うみ', '海洋'],
       'en_meanings': ['sea', 'ocean'],
       'readings': {
         'on': ['カイ'],
@@ -252,6 +253,7 @@ void main() {
 
     expect(kanji.displayMeaningsText(KanjiMeaningLanguage.ko), '바다');
     expect(kanji.displayMeaningsText(KanjiMeaningLanguage.en), 'sea, ocean');
+    expect(kanji.displayMeaningsText(KanjiMeaningLanguage.ja), 'うみ, 海洋');
     expect(kanji.displayCommentary(AppLanguage.ko), '물을 뜻하는 한자');
     expect(kanji.displayCommentary(AppLanguage.ja), '水や海を表す漢字です。');
     expect(
@@ -278,6 +280,7 @@ void main() {
     });
 
     expect(fallbackKanji.displayMeaningsText(KanjiMeaningLanguage.en), '산');
+    expect(fallbackKanji.displayMeaningsText(KanjiMeaningLanguage.ja), '산');
     expect(fallbackKanji.displayCommentary(AppLanguage.en), '산을 뜻하는 한자');
   });
 }

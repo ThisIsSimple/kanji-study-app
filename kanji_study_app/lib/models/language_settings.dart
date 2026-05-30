@@ -27,7 +27,8 @@ enum AppLanguage {
 
 enum KanjiMeaningLanguage {
   ko('ko'),
-  en('en');
+  en('en'),
+  ja('ja');
 
   const KanjiMeaningLanguage(this.code);
 
@@ -57,4 +58,3 @@ enum WordMeaningLanguage {
     );
   }
 }
-

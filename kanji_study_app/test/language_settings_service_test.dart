@@ -21,7 +21,7 @@ void main() {
       await service.initialize(deviceLocale: const Locale('ja', 'JP'));
 
       expect(service.appLanguage, AppLanguage.ja);
-      expect(service.kanjiMeaningLanguage, KanjiMeaningLanguage.ko);
+      expect(service.kanjiMeaningLanguage, KanjiMeaningLanguage.ja);
       expect(service.wordMeaningLanguage, WordMeaningLanguage.ja);
     },
   );
@@ -46,15 +46,15 @@ void main() {
       await service.initialize(deviceLocale: const Locale('ko', 'KR'));
       await service.setKanjiMeaningLanguage(KanjiMeaningLanguage.en);
       await service.setWordMeaningLanguage(WordMeaningLanguage.ja);
-      await service.setAppLanguage(AppLanguage.en);
+      await service.setAppLanguage(AppLanguage.ja);
 
-      expect(service.appLanguage, AppLanguage.en);
+      expect(service.appLanguage, AppLanguage.ja);
       expect(service.kanjiMeaningLanguage, KanjiMeaningLanguage.en);
       expect(service.wordMeaningLanguage, WordMeaningLanguage.ja);
       expect(notifications, 3);
 
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('app_language'), 'en');
+      expect(prefs.getString('app_language'), 'ja');
       expect(prefs.getString('kanji_meaning_language'), 'en');
       expect(prefs.getString('word_meaning_language'), 'ja');
     },

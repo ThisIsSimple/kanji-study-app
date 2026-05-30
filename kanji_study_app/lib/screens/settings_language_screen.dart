@@ -158,6 +158,7 @@ class _SettingsLanguageScreenState extends State<SettingsLanguageScreen> {
     return switch (language) {
       KanjiMeaningLanguage.ko => l10n.korean,
       KanjiMeaningLanguage.en => l10n.english,
+      KanjiMeaningLanguage.ja => l10n.japanese,
     };
   }
 

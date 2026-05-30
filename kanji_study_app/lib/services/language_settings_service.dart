@@ -84,9 +84,11 @@ class LanguageSettingsService extends ChangeNotifier {
   }
 
   KanjiMeaningLanguage _defaultKanjiMeaningLanguage(AppLanguage appLanguage) {
-    return appLanguage == AppLanguage.en
-        ? KanjiMeaningLanguage.en
-        : KanjiMeaningLanguage.ko;
+    return switch (appLanguage) {
+      AppLanguage.en => KanjiMeaningLanguage.en,
+      AppLanguage.ja => KanjiMeaningLanguage.ja,
+      AppLanguage.ko => KanjiMeaningLanguage.ko,
+    };
   }
 
   WordMeaningLanguage _defaultWordMeaningLanguage(AppLanguage appLanguage) {

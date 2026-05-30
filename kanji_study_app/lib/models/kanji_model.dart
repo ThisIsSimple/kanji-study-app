@@ -240,12 +240,11 @@ class Kanji {
 
   List<String> displayMeanings(KanjiMeaningLanguage language) {
     final selected = switch (language) {
-      KanjiMeaningLanguage.ko => krMeanings.isNotEmpty
-          ? krMeanings
-          : meaningsKo,
-      KanjiMeaningLanguage.en => enMeanings.isNotEmpty
-          ? enMeanings
-          : meaningsEn,
+      KanjiMeaningLanguage.ko =>
+        krMeanings.isNotEmpty ? krMeanings : meaningsKo,
+      KanjiMeaningLanguage.en =>
+        enMeanings.isNotEmpty ? enMeanings : meaningsEn,
+      KanjiMeaningLanguage.ja => jpMeanings,
     };
     if (selected.isNotEmpty) return selected;
     if (krMeanings.isNotEmpty) return krMeanings;
@@ -254,9 +253,9 @@ class Kanji {
   }
 
   String displayMeaningsText(KanjiMeaningLanguage language) {
-    return displayMeanings(language)
-        .where((meaning) => meaning.isNotEmpty)
-        .join(', ');
+    return displayMeanings(
+      language,
+    ).where((meaning) => meaning.isNotEmpty).join(', ');
   }
 
   String? displayCommentary(AppLanguage appLanguage) {
