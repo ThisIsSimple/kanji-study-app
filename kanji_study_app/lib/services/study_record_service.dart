@@ -79,10 +79,12 @@ class StudyRecordService extends ChangeNotifier {
         targetId: targetId,
         status: status.value,
         studyDate: now,
-        isSynced: Value(isOnline && _supabaseService.isInitialized),
+        isSynced: const Value(false),
         createdAt: Value(now),
       );
-      await _localDb.database.insertStudyRecord(localRecord);
+      final localRecordId = await _localDb.database.insertStudyRecord(
+        localRecord,
+      );
 
       // 2. 메모리 캐시 업데이트
       final record = StudyRecord(
@@ -96,13 +98,18 @@ class StudyRecordService extends ChangeNotifier {
 
       // 3. 온라인이면 Supabase에도 저장 (created_at은 DB default now() 사용)
       if (isOnline && _supabaseService.isInitialized) {
-        await _supabaseService.client.from('study_records').insert({
-          'user_id': userId,
-          'type': type.value,
-          'target_id': targetId,
-          'status': status.value,
-          'created_at': now.toIso8601String(),
-        });
+        try {
+          await _supabaseService.client.from('study_records').insert({
+            'user_id': userId,
+            'type': type.value,
+            'target_id': targetId,
+            'status': status.value,
+            'created_at': now.toIso8601String(),
+          });
+          await _localDb.database.markRecordAsSynced(localRecordId);
+        } catch (e) {
+          debugPrint('StudyRecordService: remote insert failed: $e');
+        }
       }
 
       // 4. 리스너에게 알림
