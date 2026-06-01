@@ -392,7 +392,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
               style: theme.typography.lg.copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
-              l10n.countItems(_relatedWords.length),
+              l10n.countWords(_relatedWords.length),
               style: theme.typography.sm.copyWith(
                 color: theme.colors.mutedForeground,
               ),

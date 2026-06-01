@@ -247,6 +247,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String countWords(int count) {
+    return '$count語';
+  }
+
+  @override
   String get exitStudy => '学習を終了';
 
   @override

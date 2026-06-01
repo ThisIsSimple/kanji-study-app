@@ -523,7 +523,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Text(
-                  context.l10n.countItems(_todayWords.length),
+                  context.l10n.countWords(_todayWords.length),
                   style: theme.typography.sm.copyWith(
                     color: theme.colors.mutedForeground,
                     fontWeight: FontWeight.w600,
@@ -720,7 +720,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: Center(
                 child: Text(
-                  context.l10n.countItems(_draftDailyGoal),
+                  context.l10n.countWords(_draftDailyGoal),
                   style: theme.typography.xl.copyWith(
                     fontWeight: FontWeight.w800,
                   ),

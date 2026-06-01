@@ -74,6 +74,7 @@
   "incorrectCount": "不正解数",
   "accuracy": "正答率",
   "countItems": "{count}枚",
+  "countWords": "{count}語",
   "exitStudy": "学習を終了",
   "exitStudyBody": "フラッシュカード学習を終了しますか？\n進行状況は保存されます。",
   "dontKnow": "わからない",

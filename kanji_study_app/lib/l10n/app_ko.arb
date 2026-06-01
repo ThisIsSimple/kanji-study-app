@@ -116,6 +116,14 @@
       }
     }
   },
+  "countWords": "{count}개",
+  "@countWords": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "exitStudy": "학습 종료",
   "exitStudyBody": "플래시카드 학습을 종료하시겠습니까?\n진행 상태가 저장됩니다.",
   "dontKnow": "모르겠어요",

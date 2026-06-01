@@ -544,6 +544,12 @@ abstract class AppLocalizations {
   /// **'{count}개'**
   String countItems(int count);
 
+  /// No description provided for @countWords.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}개'**
+  String countWords(int count);
+
   /// No description provided for @exitStudy.
   ///
   /// In ko, this message translates to:

@@ -248,6 +248,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String countWords(int count) {
+    return '$count';
+  }
+
+  @override
   String get exitStudy => 'Exit study';
 
   @override

@@ -74,6 +74,7 @@
   "incorrectCount": "Incorrect",
   "accuracy": "Accuracy",
   "countItems": "{count}",
+  "countWords": "{count}",
   "exitStudy": "Exit study",
   "exitStudyBody": "Exit this flashcard session?\nYour progress will be saved.",
   "dontKnow": "I don't know",
