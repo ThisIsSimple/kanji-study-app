@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'flashcard_item.dart';
+import 'language_settings.dart';
 import 'word_model.dart';
 
 /// Word 모델을 FlashcardItem 인터페이스로 변환하는 어댑터
 class WordFlashcardAdapter implements FlashcardItem {
   final Word word;
+  final WordMeaningLanguage meaningLanguage;
 
-  WordFlashcardAdapter(this.word);
+  WordFlashcardAdapter(
+    this.word, {
+    this.meaningLanguage = WordMeaningLanguage.ko,
+  });
 
   @override
   int get id => word.id;
@@ -46,7 +51,8 @@ class WordFlashcardAdapter implements FlashcardItem {
   String? get backReading => word.reading;
 
   @override
-  List<FlashcardMeaning> get backMeanings => word.meanings
+  List<FlashcardMeaning> get backMeanings => word
+      .displayMeanings(meaningLanguage)
       .map(
         (m) => FlashcardMeaning(category: m.partOfSpeech, meaning: m.meaning),
       )

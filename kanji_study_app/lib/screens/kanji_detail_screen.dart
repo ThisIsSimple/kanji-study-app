@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/localization_extensions.dart';
 import '../models/kanji_model.dart';
+import '../models/language_settings.dart';
 import '../models/kanji_example.dart';
 import '../models/word_model.dart';
 import '../models/study_record_model.dart';
@@ -11,6 +13,7 @@ import '../services/supabase_service.dart';
 import '../services/kanji_service.dart';
 import '../services/study_record_service.dart';
 import '../services/local_database_service.dart';
+import '../services/language_settings_service.dart';
 import '../widgets/example_card.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/study_button_bar.dart';
@@ -42,6 +45,8 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
   final StudyRecordService _studyRecordService = StudyRecordService.instance;
   final LocalDatabaseService _localDatabaseService =
       LocalDatabaseService.instance;
+  final LanguageSettingsService _languageSettings =
+      LanguageSettingsService.instance;
 
   PageController? _pageController;
   int _currentIndex = 0;
@@ -155,7 +160,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
       setState(() {
         _relatedWords = [];
         _isLoadingRelatedWords = false;
-        _relatedWordsError = '연관 단어를 불러오지 못했습니다.';
+        _relatedWordsError = context.l10n.noSearchResults;
       });
       debugPrint('Error loading related words: $e');
     }
@@ -242,7 +247,9 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
       final isCompleted = recordedStatus == StudyStatus.completed;
       showAppToast(
         _toastContext,
-        message: isCompleted ? '학습 완료를 기록했습니다!' : '까먹음을 기록했습니다.',
+        message: isCompleted
+            ? context.l10n.studyCompletedToast
+            : context.l10n.studyForgotToast,
         type: isCompleted ? AppToastType.info : AppToastType.error,
         icon: isCompleted
             ? PhosphorIconsRegular.checkCircle
@@ -252,7 +259,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
       if (!mounted) return;
       showAppToast(
         _toastContext,
-        message: '기록 저장 실패: $e',
+        message: context.l10n.recordSaveFailed(e.toString()),
         type: AppToastType.error,
         icon: PhosphorIconsRegular.warning,
       );
@@ -274,7 +281,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
       setState(() => _isFavorite = !nextValue);
       showAppToast(
         _toastContext,
-        message: '즐겨찾기 저장 실패: $e',
+        message: context.l10n.favoriteSaveFailed(e.toString()),
         type: AppToastType.error,
       );
     }
@@ -302,7 +309,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
       if (mounted) {
         showAppToast(
           context,
-          message: '예문 생성 실패: $e',
+          message: context.l10n.exampleGenerateFailed(e.toString()),
           type: AppToastType.error,
         );
       }
@@ -312,11 +319,11 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
   String _getSourceLabel(String? source) {
     switch (source) {
       case 'gemini':
-        return 'AI 생성';
+        return context.l10n.sourceAi;
       case 'user':
-        return '사용자 제공';
+        return context.l10n.sourceUser;
       case 'manual':
-        return '수동 입력';
+        return context.l10n.sourceManual;
       default:
         return '';
     }
@@ -338,6 +345,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
   }
 
   Widget _buildRelatedWordsSection(Kanji kanji, FThemeData theme) {
+    final l10n = context.l10n;
     if (_isLoadingRelatedWords) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
@@ -380,11 +388,11 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '연관 단어',
+              l10n.words,
               style: theme.typography.lg.copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
-              '${_relatedWords.length}개',
+              l10n.countWords(_relatedWords.length),
               style: theme.typography.sm.copyWith(
                 color: theme.colors.mutedForeground,
               ),
@@ -438,10 +446,16 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                                 ),
                               ),
                             ],
-                            if (word.meaningsText.isNotEmpty) ...[
+                            if (word
+                                .displayMeaningsText(
+                                  _languageSettings.wordMeaningLanguage,
+                                )
+                                .isNotEmpty) ...[
                               const SizedBox(height: 4),
                               Text(
-                                word.meaningsText,
+                                word.displayMeaningsText(
+                                  _languageSettings.wordMeaningLanguage,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.typography.sm.copyWith(
@@ -472,6 +486,16 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
   }
 
   Widget _buildKanjiPage(Kanji kanji, FThemeData theme) {
+    final l10n = context.l10n;
+    final meaningText = _languageSettings.kanjiMeaningLanguage ==
+                KanjiMeaningLanguage.ko &&
+            hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings)
+        ? formatKoreanReadings(
+            kanji.koreanKunReadings,
+            kanji.koreanOnReadings,
+          )
+        : kanji.displayMeaningsText(_languageSettings.kanjiMeaningLanguage);
+    final commentary = kanji.displayCommentary(_languageSettings.appLanguage);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -506,12 +530,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                         const SizedBox(height: 24),
 
                         // Meanings
-                        Text(
-                          formatKoreanReadings(
-                            kanji.koreanKunReadings,
-                            kanji.koreanOnReadings,
-                          ),
-                        ),
+                        if (meaningText.isNotEmpty) Text(meaningText),
                         const SizedBox(height: 16),
 
                         // JLPT and Grade badges - 가로 정렬
@@ -589,7 +608,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          '부수',
+                          l10n.radical,
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.mutedForeground,
                             fontWeight: FontWeight.w600,
@@ -622,7 +641,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          '훈독',
+                          l10n.kunReading,
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.mutedForeground,
                             fontWeight: FontWeight.w600,
@@ -658,7 +677,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          '음독',
+                          l10n.onReading,
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.mutedForeground,
                             fontWeight: FontWeight.w600,
@@ -683,8 +702,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                     ),
                   ],
                   // 한자 해설 (commentary)
-                  if (kanji.commentary != null &&
-                      kanji.commentary!.isNotEmpty) ...[
+                  if (commentary != null && commentary.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Wrap(
                       alignment: WrapAlignment.start,
@@ -693,7 +711,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          '한자 해설',
+                          l10n.kanjiCommentary,
                           style: theme.typography.sm.copyWith(
                             color: theme.colors.mutedForeground,
                             fontWeight: FontWeight.w600,
@@ -710,7 +728,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        kanji.commentary!,
+                        commentary,
                         style: theme.typography.sm.copyWith(
                           color: theme.colors.foreground,
                         ),
@@ -731,7 +749,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '예시',
+                l10n.examples,
                 style: theme.typography.lg.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -746,7 +764,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                           height: 16,
                           child: FCircularProgress(),
                         )
-                      : Text('AI 예문 생성', style: TextStyle()),
+                      : Text(l10n.generateExamples, style: TextStyle()),
                 ),
             ],
           ),
@@ -787,7 +805,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
                     furigana: example.furigana,
                     korean: example.korean,
                     explanation: example.explanation,
-                    sourceLabel: 'AI 생성',
+                    sourceLabel: l10n.sourceAi,
                   ),
                 ),
               ),
@@ -813,7 +831,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
               padding: const EdgeInsets.symmetric(vertical: 32),
               child: Center(
                 child: Text(
-                  '예문이 없습니다.',
+                  l10n.noSearchResults,
                   style: theme.typography.md.copyWith(
                     color: theme.colors.mutedForeground,
                   ),
@@ -829,13 +847,14 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
 
     // Wait for initialization
     if (_kanjiList == null || _currentKanji == null) {
       return FScaffold(
         header: FHeader.nested(
           title: Text(
-            '한자 학습',
+            l10n.kanji,
             style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
           ),
           prefixes: [
@@ -851,7 +870,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
       return FScaffold(
         header: FHeader.nested(
           title: Text(
-            '한자 학습',
+            l10n.kanji,
             style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
           ),
           prefixes: [
@@ -900,7 +919,7 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
     return FScaffold(
       header: FHeader.nested(
         title: Text(
-          '한자 학습 (${_currentIndex + 1}/${_kanjiList!.length})',
+          '${l10n.kanji} (${_currentIndex + 1}/${_kanjiList!.length})',
           style: theme.typography.xl.copyWith(fontWeight: FontWeight.bold),
         ),
         prefixes: [

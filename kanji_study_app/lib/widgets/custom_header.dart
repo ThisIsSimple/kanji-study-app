@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/localization_extensions.dart';
 import '../services/connectivity_service.dart';
 
 /// Title alignment options for CustomHeader
@@ -57,6 +58,7 @@ class CustomHeader extends StatelessWidget {
     FThemeData theme,
     bool shouldShowBanner,
   ) {
+    final l10n = context.l10n;
     // Build left side with optional back button
     final List<Widget> leftSide = [];
     if (withBack) {
@@ -122,7 +124,7 @@ class CustomHeader extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              '오프라인 모드',
+              l10n.offlineMode,
               style: theme.typography.sm.copyWith(
                 color: theme.colors.mutedForeground,
               ),
@@ -141,7 +143,7 @@ class CustomHeader extends StatelessWidget {
             controller: searchController,
             onChange: (value) => onSearchChanged?.call(value.text),
           ),
-          hint: searchHint ?? '검색...',
+          hint: searchHint ?? l10n.searchGenericHint,
           prefixBuilder: (context, style, variants) =>
               FTextField.prefixIconBuilder(
                 context,

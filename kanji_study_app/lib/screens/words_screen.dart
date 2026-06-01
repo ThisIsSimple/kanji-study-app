@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/localization_extensions.dart';
 import '../models/word_model.dart';
 import '../models/word_flashcard_adapter.dart';
 import '../models/study_record_model.dart';
+import '../services/language_settings_service.dart';
 import '../services/word_service.dart';
 import '../services/flashcard_service.dart';
 import '../services/study_record_service.dart';
@@ -34,6 +36,8 @@ class _WordsScreenState extends State<WordsScreen> {
   final WordService _wordService = WordService.instance;
   final FlashcardService _flashcardService = FlashcardService.instance;
   final StudyRecordService _studyRecordService = StudyRecordService.instance;
+  final LanguageSettingsService _languageSettings =
+      LanguageSettingsService.instance;
   final TextEditingController _searchController = TextEditingController();
 
   List<Word> _filteredWords = [];
@@ -50,6 +54,7 @@ class _WordsScreenState extends State<WordsScreen> {
   @override
   void initState() {
     super.initState();
+    _languageSettings.addListener(_onLanguageSettingsChanged);
     _loadWords();
     _searchController.addListener(() {
       _onSearchChanged(_searchController.text);
@@ -58,8 +63,14 @@ class _WordsScreenState extends State<WordsScreen> {
 
   @override
   void dispose() {
+    _languageSettings.removeListener(_onLanguageSettingsChanged);
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onLanguageSettingsChanged() {
+    if (!mounted) return;
+    _applyFilters();
   }
 
   Future<void> _loadWords() async {
@@ -103,7 +114,14 @@ class _WordsScreenState extends State<WordsScreen> {
 
       // Apply search filter
       if (_searchQuery.isNotEmpty) {
-        words = words.where((word) => word.matchesQuery(_searchQuery)).toList();
+        words = words
+            .where(
+              (word) => word.matchesQuery(
+                _searchQuery,
+                meaningLanguage: _languageSettings.wordMeaningLanguage,
+              ),
+            )
+            .toList();
       }
 
       // Apply JLPT level filters
@@ -207,7 +225,7 @@ class _WordsScreenState extends State<WordsScreen> {
 
     showAppToast(
       context,
-      message: '$selectedWord 검색 결과를 표시합니다',
+      message: context.l10n.searchResultShown(selectedWord),
       type: AppToastType.info,
     );
   }
@@ -218,9 +236,15 @@ class _WordsScreenState extends State<WordsScreen> {
       itemType: 'word',
       filteredItems: _filteredWords,
       flashcardService: _flashcardService,
-      emptyMessage: '학습할 단어가 없습니다',
-      toFlashcardItems: (items) =>
-          items.map((word) => WordFlashcardAdapter(word)).toList(),
+      emptyMessage: context.l10n.noWordsToStudy,
+      toFlashcardItems: (items) => items
+          .map(
+            (word) => WordFlashcardAdapter(
+              word,
+              meaningLanguage: _languageSettings.wordMeaningLanguage,
+            ),
+          )
+          .toList(),
       onComplete: () async {
         await _loadStudyStatusCache();
         if (mounted) {
@@ -243,13 +267,14 @@ class _WordsScreenState extends State<WordsScreen> {
       if (!mounted) return;
       showAppToast(
         context,
-        message: '즐겨찾기 저장 실패: $e',
+        message: context.l10n.favoriteSaveFailed(e.toString()),
         type: AppToastType.error,
       );
     }
   }
 
   void _showFilterBottomSheet() {
+    final l10n = context.l10n;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -292,7 +317,7 @@ class _WordsScreenState extends State<WordsScreen> {
 
                           // Title
                           Text(
-                            '필터',
+                            l10n.filter,
                             style: theme.typography.lg.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -301,7 +326,7 @@ class _WordsScreenState extends State<WordsScreen> {
                           const SizedBox(height: 24),
                           // Study Status Filter Section
                           Text(
-                            '학습 상태',
+                            l10n.studyStatus,
                             style: theme.typography.sm.copyWith(
                               fontWeight: FontWeight.w600,
                               color: theme.colors.mutedForeground,
@@ -315,10 +340,10 @@ class _WordsScreenState extends State<WordsScreen> {
                             runSpacing: 4,
                             children:
                                 [
-                                  (null, '전체'),
-                                  ('not_studied', '미학습'),
-                                  ('completed', '학습 완료'),
-                                  ('forgot', '까먹은 단어'),
+                                  (null, l10n.all),
+                                  ('not_studied', l10n.notStudied),
+                                  ('completed', l10n.completed),
+                                  ('forgot', l10n.forgotWord),
                                 ].map((option) {
                                   final value = option.$1;
                                   final label = option.$2;
@@ -487,7 +512,7 @@ class _WordsScreenState extends State<WordsScreen> {
                         width: double.infinity,
                         child: FButton(
                           onPress: () => Navigator.pop(context),
-                          child: const Text('완료'),
+                          child: Text(l10n.done),
                         ),
                       ),
                     ),
@@ -504,6 +529,7 @@ class _WordsScreenState extends State<WordsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: theme.colors.background,
@@ -529,7 +555,7 @@ class _WordsScreenState extends State<WordsScreen> {
                       control: FTextFieldControl.managed(
                         controller: _searchController,
                       ),
-                      hint: '일본어, 한글, 후리가나로 검색...',
+                      hint: l10n.searchWordsHint,
                       autofocus: _autofocusSearchField,
                     ),
                   ),
@@ -630,8 +656,8 @@ class _WordsScreenState extends State<WordsScreen> {
                                 const SizedBox(height: AppSpacing.md),
                                 Text(
                                   _showOnlyFavorites
-                                      ? '즐겨찾기한 단어가 없습니다'
-                                      : '검색 결과가 없습니다',
+                                      ? l10n.noFavoriteWords
+                                      : l10n.noSearchResults,
                                   style: theme.typography.md.copyWith(
                                     color: theme.colors.mutedForeground,
                                   ),
@@ -659,6 +685,8 @@ class _WordsScreenState extends State<WordsScreen> {
                                 word: word,
                                 isFavorite: _wordService.isFavorite(word.id),
                                 showMeaning: widget.showMeanings,
+                                meaningLanguage:
+                                    _languageSettings.wordMeaningLanguage,
                                 onTap: () {
                                   Navigator.push(
                                     context,

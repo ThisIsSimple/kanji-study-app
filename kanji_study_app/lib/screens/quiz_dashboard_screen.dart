@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/localization_extensions.dart';
 import '../models/ai_quiz.dart';
 import '../models/ai_quiz_attempt.dart';
 import '../services/ai_quiz_service.dart';
@@ -65,6 +66,7 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
     }
 
     // 퀴즈 생성 중 로딩 표시
+    final l10n = context.l10n;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -74,10 +76,10 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
             padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                FCircularProgress(),
-                SizedBox(height: 16),
-                Text('AI가 퀴즈를 생성하고 있습니다...'),
+              children: [
+                const FCircularProgress(),
+                const SizedBox(height: 16),
+                Text(l10n.generatingQuiz),
               ],
             ),
           ),
@@ -109,7 +111,7 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
         Navigator.pop(context); // 로딩 다이얼로그 닫기
         showAppToast(
           context,
-          message: '퀴즈 생성 실패: $e',
+          message: l10n.quizGenerateFailed(e.toString()),
           type: AppToastType.error,
         );
       }
@@ -117,20 +119,19 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
   }
 
   void _showApiKeyDialog() {
+    final l10n = context.l10n;
     showFDialog(
       context: context,
       builder: (context, _, animation) => FDialog(
         animation: animation,
         direction: Axis.horizontal,
-        title: const Text('API 키 필요'),
-        body: const Text(
-          'AI 퀴즈를 사용하려면 Gemini API 키가 필요합니다.\n설정에서 API 키를 입력해주세요.',
-        ),
+        title: Text(l10n.apiKeyRequired),
+        body: Text(l10n.apiKeyRequiredBody),
         actions: [
           FButton(
             variant: FButtonVariant.outline,
             onPress: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text(l10n.cancel),
           ),
           FButton(
             onPress: () {
@@ -142,7 +143,7 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
                 ),
               );
             },
-            child: const Text('설정으로 이동'),
+            child: Text(l10n.goToSettings),
           ),
         ],
       ),
@@ -164,12 +165,13 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: theme.colors.background,
       body: Column(
         children: [
-          const CustomHeader(title: Text('퀴즈')),
+          CustomHeader(title: Text(l10n.quiz)),
           Expanded(
             child: _isLoading
                 ? const Center(child: FCircularProgress())
@@ -184,7 +186,7 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
                           // AI 퀴즈 섹션
                           _buildSectionTitle(
                             theme,
-                            'AI 퀴즈',
+                            l10n.aiQuiz,
                             PhosphorIconsRegular.brain,
                           ),
                           const SizedBox(height: 12),
@@ -195,7 +197,7 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
                           if (_recentAttempts.isNotEmpty) ...[
                             _buildSectionTitle(
                               theme,
-                              '최근 퀴즈 기록',
+                              l10n.recentQuizRecords,
                               PhosphorIconsRegular.chartBar,
                             ),
                             const SizedBox(height: 12),
@@ -206,7 +208,7 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
                           // 플래시카드 섹션
                           _buildSectionTitle(
                             theme,
-                            '플래시카드',
+                            l10n.flashcardStudy,
                             PhosphorIconsRegular.cards,
                           ),
                           const SizedBox(height: 12),
@@ -293,18 +295,12 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              type.displayName,
+              _quizTypeTitle(type),
               style: theme.typography.md.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 2),
             Text(
-              type == AiQuizType.jpToKr
-                  ? '뜻 맞추기'
-                  : type == AiQuizType.krToJp
-                  ? '단어 맞추기'
-                  : type == AiQuizType.kanjiReading
-                  ? '후리가나'
-                  : '문장 완성',
+              _quizTypeSubtitle(type),
               style: theme.typography.xs.copyWith(
                 color: theme.colors.mutedForeground,
               ),
@@ -344,11 +340,14 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
               ),
             ),
             title: Text(
-              quiz?.title ?? '퀴즈',
+              quiz?.title ?? context.l10n.quiz,
               style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
             ),
             subtitle: Text(
-              '${attempt.correctCount ?? 0}/${quiz?.questionCount ?? 0} 정답',
+              context.l10n.correctAnswerCount(
+                attempt.correctCount ?? 0,
+                quiz?.questionCount ?? 0,
+              ),
               style: theme.typography.xs.copyWith(
                 color: theme.colors.mutedForeground,
               ),
@@ -391,7 +390,7 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
             Expanded(
               child: _buildFlashcardButton(
                 theme,
-                title: '단어 학습',
+                title: context.l10n.wordStudy,
                 icon: PhosphorIconsRegular.bookOpen,
                 color: Colors.indigo,
                 onTap: () => _startFlashcard('word'),
@@ -401,7 +400,7 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
             Expanded(
               child: _buildFlashcardButton(
                 theme,
-                title: '한자 학습',
+                title: context.l10n.kanjiStudy,
                 icon: PhosphorIconsRegular.translate,
                 color: Colors.teal,
                 onTap: () => _startFlashcard('kanji'),
@@ -431,13 +430,15 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
                     color: theme.colors.primary,
                   ),
                   title: Text(
-                    itemType == 'word' ? '단어 플래시카드' : '한자 플래시카드',
+                    itemType == 'word'
+                        ? context.l10n.wordFlashcards
+                        : context.l10n.kanjiFlashcards,
                     style: theme.typography.sm.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   subtitle: Text(
-                    '$correctCount/$totalCount 정답',
+                    context.l10n.correctAnswerCount(correctCount, totalCount),
                     style: theme.typography.xs.copyWith(
                       color: theme.colors.mutedForeground,
                     ),
@@ -485,15 +486,36 @@ class _QuizDashboardScreenState extends State<QuizDashboardScreen> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
+    final l10n = context.l10n;
 
     if (diff.inDays == 0) {
-      return '오늘';
+      return l10n.todayRelative;
     } else if (diff.inDays == 1) {
-      return '어제';
+      return l10n.yesterdayRelative;
     } else if (diff.inDays < 7) {
-      return '${diff.inDays}일 전';
+      return l10n.daysAgo(diff.inDays);
     } else {
       return '${date.month}/${date.day}';
     }
+  }
+
+  String _quizTypeTitle(AiQuizType type) {
+    final l10n = context.l10n;
+    return switch (type) {
+      AiQuizType.jpToKr => l10n.jpToMeaningQuizTitle,
+      AiQuizType.krToJp => l10n.meaningToJpQuizTitle,
+      AiQuizType.kanjiReading => l10n.furigana,
+      AiQuizType.fillBlank => l10n.fillBlank,
+    };
+  }
+
+  String _quizTypeSubtitle(AiQuizType type) {
+    final l10n = context.l10n;
+    return switch (type) {
+      AiQuizType.jpToKr => l10n.meaningQuiz,
+      AiQuizType.krToJp => l10n.wordQuiz,
+      AiQuizType.kanjiReading => l10n.furigana,
+      AiQuizType.fillBlank => l10n.fillBlank,
+    };
   }
 }

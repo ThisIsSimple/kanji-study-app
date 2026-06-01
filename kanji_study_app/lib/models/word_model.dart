@@ -1,4 +1,5 @@
 import 'word_meaning_model.dart';
+import 'language_settings.dart';
 
 class Word {
   final int id;
@@ -117,12 +118,28 @@ class Word {
   }
 
   // Helper method to get combined meanings string
-  String get meaningsText {
-    return meanings.map((m) => m.meaning).where((m) => m.isNotEmpty).join(', ');
+  String get meaningsText => displayMeaningsText(WordMeaningLanguage.ko);
+
+  List<WordMeaning> displayMeanings(WordMeaningLanguage language) {
+    final selected = switch (language) {
+      WordMeaningLanguage.ko => meaningsKo,
+      WordMeaningLanguage.en => meaningsEn,
+      WordMeaningLanguage.ja => meaningsJp,
+    };
+    if (selected.isNotEmpty) return selected;
+    if (meaningsKo.isNotEmpty) return meaningsKo;
+    return meanings;
+  }
+
+  String displayMeaningsText(WordMeaningLanguage language) {
+    return displayMeanings(language)
+        .map((m) => m.meaning)
+        .where((m) => m.isNotEmpty)
+        .join(', ');
   }
 
   // Helper method to check if word matches search query
-  bool matchesQuery(String query) {
+  bool matchesQuery(String query, {WordMeaningLanguage? meaningLanguage}) {
     final lowerQuery = query.toLowerCase();
 
     // Check word
@@ -132,7 +149,10 @@ class Word {
     if (reading.toLowerCase().contains(lowerQuery)) return true;
 
     // Check meanings
-    for (final meaning in meanings) {
+    final meaningsToSearch = meaningLanguage == null
+        ? meanings
+        : displayMeanings(meaningLanguage);
+    for (final meaning in meaningsToSearch) {
       if (meaning.meaning.toLowerCase().contains(lowerQuery)) return true;
       if (meaning.partOfSpeech.toLowerCase().contains(lowerQuery)) return true;
     }

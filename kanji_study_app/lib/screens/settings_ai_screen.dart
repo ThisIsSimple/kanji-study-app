@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../l10n/localization_extensions.dart';
 import '../services/gemini_service.dart';
 import '../constants/app_spacing.dart';
 import '../widgets/app_toast.dart';
@@ -48,7 +49,7 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
     if (apiKey.isNotEmpty) {
       await _geminiService.setApiKey(apiKey);
       if (!mounted) return;
-      showAppToast(context, message: 'API 키가 저장되었습니다.');
+      showAppToast(context, message: context.l10n.apiKeySaved);
     }
   }
 
@@ -60,7 +61,7 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
       if (!mounted) return;
       showAppToast(
         context,
-        message: '브라우저에서 aistudio.google.com을 방문하여 API 키를 생성하세요.',
+        message: context.l10n.aiStudioOpenFailed,
         type: AppToastType.error,
       );
     }
@@ -69,13 +70,14 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: theme.colors.background,
       body: Column(
         children: [
           CustomHeader(
-            title: const Text('AI 설정'),
+            title: Text(l10n.aiSettings),
             titleAlign: HeaderTitleAlign.center,
             withBack: true,
           ),
@@ -104,7 +106,7 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  'Gemini API를 사용하여 예문 생성 및 학습 콘텐츠를 만들 수 있습니다.',
+                                  l10n.aiInfo,
                                   style: theme.typography.sm.copyWith(
                                     color: theme.colors.foreground,
                                   ),
@@ -133,7 +135,7 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
                                 control: FTextFieldControl.managed(
                                   controller: _apiKeyController,
                                 ),
-                                hint: 'API 키를 입력하세요',
+                                hint: l10n.apiKeyHint,
                                 obscureText: !_apiKeyVisible,
                               ),
                             ),
@@ -160,7 +162,7 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
                         FButton(
                           onPress: _saveApiKey,
                           variant: FButtonVariant.primary,
-                          child: const Text('API 키 저장'),
+                          child: Text(l10n.saveApiKey),
                         ),
 
                         const SizedBox(height: 24),
@@ -192,14 +194,14 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'API 키 받기',
+                                          l10n.getApiKey,
                                           style: theme.typography.md.copyWith(
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          'Google AI Studio에서 무료로 발급',
+                                          l10n.getApiKeyDetails,
                                           style: theme.typography.sm.copyWith(
                                             color: theme.colors.mutedForeground,
                                           ),
@@ -224,7 +226,7 @@ class _SettingsAiScreenState extends State<SettingsAiScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Text(
-                            'API 키는 기기에 안전하게 저장되며, 예문 생성 요청 시에만 사용됩니다.',
+                            l10n.apiKeyPrivacy,
                             style: theme.typography.sm.copyWith(
                               color: theme.colors.mutedForeground,
                             ),

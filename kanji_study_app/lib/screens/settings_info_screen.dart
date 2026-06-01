@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../constants/app_spacing.dart';
+import '../l10n/localization_extensions.dart';
 import '../widgets/custom_header.dart';
 
 class SettingsInfoScreen extends StatefulWidget {
@@ -41,13 +42,14 @@ class _SettingsInfoScreenState extends State<SettingsInfoScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: theme.colors.background,
       body: Column(
         children: [
           CustomHeader(
-            title: const Text('앱 정보'),
+            title: Text(l10n.appInfo),
             titleAlign: HeaderTitleAlign.center,
             withBack: true,
           ),
@@ -80,14 +82,14 @@ class _SettingsInfoScreenState extends State<SettingsInfoScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                '콘나칸지',
+                                l10n.appTitle,
                                 style: theme.typography.xl.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '일본어 한자와 단어를 이어서 학습하는 앱',
+                                l10n.appSubtitle,
                                 style: theme.typography.sm.copyWith(
                                   color: theme.colors.mutedForeground,
                                 ),
@@ -102,14 +104,14 @@ class _SettingsInfoScreenState extends State<SettingsInfoScreen> {
                         _buildInfoItem(
                           theme,
                           icon: PhosphorIconsRegular.info,
-                          label: '버전',
+                          label: l10n.versionLabel,
                           value: '$_version ($_buildNumber)',
                         ),
                         const SizedBox(height: 12),
                         _buildInfoItem(
                           theme,
                           icon: PhosphorIconsRegular.code,
-                          label: '개발자',
+                          label: l10n.developerLabel,
                           value: 'space.cordelia273',
                         ),
 

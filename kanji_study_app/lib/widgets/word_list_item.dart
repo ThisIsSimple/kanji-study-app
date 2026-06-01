@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/language_settings.dart';
 import '../models/word_model.dart';
 import '../constants/app_spacing.dart';
 
@@ -11,6 +12,7 @@ class WordListItem extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onFavoriteToggle;
   final bool showMeaning;
+  final WordMeaningLanguage meaningLanguage;
 
   const WordListItem({
     super.key,
@@ -19,6 +21,7 @@ class WordListItem extends StatelessWidget {
     required this.onTap,
     required this.onFavoriteToggle,
     this.showMeaning = true,
+    this.meaningLanguage = WordMeaningLanguage.ko,
   });
 
   @override
@@ -103,7 +106,7 @@ class WordListItem extends StatelessWidget {
                         // Meanings
                         if (showMeaning)
                           Text(
-                            word.meaningsText,
+                            word.displayMeaningsText(meaningLanguage),
                             style: theme.typography.sm.copyWith(
                               color: theme.colors.foreground.withValues(
                                 alpha: 0.8,

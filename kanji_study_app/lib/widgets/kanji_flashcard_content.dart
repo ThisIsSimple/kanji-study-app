@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/localization_extensions.dart';
 import '../models/kanji_model.dart';
+import '../models/language_settings.dart';
 import '../services/favorite_service.dart';
+import '../services/language_settings_service.dart';
 import '../utils/korean_formatter.dart';
 import 'jlpt_badge.dart';
 import 'grade_badge.dart';
@@ -46,6 +49,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
   }
 
   Widget _buildStrokeOrderToggle(FThemeData theme) {
+    final l10n = context.l10n;
     return Positioned(
       top: 16,
       left: 0,
@@ -72,7 +76,9 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  _showStrokeOrder ? '획순 숨기기' : '획순 보기',
+                  _showStrokeOrder
+                      ? l10n.hideStrokeOrder
+                      : l10n.showStrokeOrder,
                   style: theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
@@ -188,6 +194,14 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
   }
 
   Widget _buildBack(FThemeData theme) {
+    final l10n = context.l10n;
+    final languageSettings = LanguageSettingsService.instance;
+    final meaningText = widget.kanji.displayMeaningsText(
+      languageSettings.kanjiMeaningLanguage,
+    );
+    final commentary = widget.kanji.displayCommentary(
+      languageSettings.appLanguage,
+    );
     return Stack(
       children: [
         Container(
@@ -232,17 +246,30 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                 ),
                 const SizedBox(height: 16),
 
-                // 의미 (한국어 읽기)
-                Center(
-                  child: Text(
-                    formatKoreanReadings(
+                if (languageSettings.kanjiMeaningLanguage ==
+                        KanjiMeaningLanguage.ko &&
+                    hasKoreanReadings(
                       widget.kanji.koreanKunReadings,
                       widget.kanji.koreanOnReadings,
+                    ))
+                  Center(
+                    child: Text(
+                      formatKoreanReadings(
+                        widget.kanji.koreanKunReadings,
+                        widget.kanji.koreanOnReadings,
+                      ),
+                      textAlign: TextAlign.center,
+                      style: theme.typography.md,
                     ),
-                    textAlign: TextAlign.center,
-                    style: theme.typography.md,
+                  )
+                else if (meaningText.isNotEmpty)
+                  Center(
+                    child: Text(
+                      meaningText,
+                      textAlign: TextAlign.center,
+                      style: theme.typography.md,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 16),
 
                 // JLPT and Grade badges
@@ -271,7 +298,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
-                        '부수',
+                        l10n.radical,
                         style: theme.typography.sm.copyWith(
                           color: theme.colors.mutedForeground,
                           fontWeight: FontWeight.w600,
@@ -305,7 +332,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
-                        '훈독',
+                        l10n.kunReading,
                         style: theme.typography.sm.copyWith(
                           color: theme.colors.mutedForeground,
                           fontWeight: FontWeight.w600,
@@ -338,7 +365,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
-                        '음독',
+                        l10n.onReading,
                         style: theme.typography.sm.copyWith(
                           color: theme.colors.mutedForeground,
                           fontWeight: FontWeight.w600,
@@ -363,10 +390,9 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                 ],
 
                 // 한자 해설 섹션
-                if (widget.kanji.commentary != null &&
-                    widget.kanji.commentary!.isNotEmpty) ...[
+                if (commentary != null && commentary.isNotEmpty) ...[
                   Text(
-                    '한자 해설',
+                    l10n.kanjiCommentary,
                     style: theme.typography.sm.copyWith(
                       color: theme.colors.mutedForeground,
                       fontWeight: FontWeight.w600,
@@ -381,7 +407,7 @@ class _KanjiFlashcardContentState extends State<KanjiFlashcardContent> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      widget.kanji.commentary!,
+                      commentary,
                       style: theme.typography.sm.copyWith(
                         color: theme.colors.foreground,
                       ),

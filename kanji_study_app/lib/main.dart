@@ -7,6 +7,7 @@ import 'package:timezone/timezone.dart' as tz_data;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:app_links/app_links.dart';
+import 'l10n/app_localizations.dart';
 import 'services/notification_service.dart';
 import 'services/gemini_service.dart';
 import 'services/supabase_service.dart';
@@ -14,6 +15,7 @@ import 'services/connectivity_service.dart';
 import 'services/local_database_service.dart';
 import 'services/study_record_service.dart';
 import 'services/favorite_service.dart';
+import 'services/language_settings_service.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
@@ -32,9 +34,13 @@ void main() async {
   // Initialize date formatting for Korean and Japanese locales
   await initializeDateFormatting('ko_KR', null);
   await initializeDateFormatting('ja_JP', null);
+  await initializeDateFormatting('en_US', null);
 
   // Initialize connectivity service (before other services)
   await ConnectivityService.instance.initialize();
+
+  // Initialize local language preferences before building MaterialApp.
+  await LanguageSettingsService.instance.initialize();
 
   // Initialize Supabase
   await SupabaseService.instance.init();
@@ -66,6 +72,7 @@ class KanjiStudyApp extends StatefulWidget {
 
 class _KanjiStudyAppState extends State<KanjiStudyApp> {
   final _appLinks = AppLinks();
+  final _languageSettings = LanguageSettingsService.instance;
   StreamSubscription<bool>? _sessionSubscription;
 
   @override
@@ -128,33 +135,40 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '콘나칸지',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.getLightTheme(),
-      locale: const Locale('ja', 'JP'),
-      supportedLocales: const [Locale('ja', 'JP'), Locale('ko', 'KR')],
-      localizationsDelegates: [
-        ...FLocalizations.localizationsDelegates,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      builder: (context, child) => FTheme(
-        data: AppTheme.getFTheme(),
-        child: FTooltipGroup(
-          child: FToaster(
-            child: AppSessionGate(
-              isInitialized: SupabaseService.instance.isInitialized,
-              hasSession: SupabaseService.instance.hasActiveSession,
-              sessionStream: SupabaseService.instance.sessionPresenceChanges(),
-              authenticatedChild: child!,
-              unauthenticatedChild: const LoginScreen(),
+    return AnimatedBuilder(
+      animation: _languageSettings,
+      builder: (context, _) {
+        return MaterialApp(
+          title: '콘나칸지',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.getLightTheme(),
+          locale: _languageSettings.appLanguage.locale,
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            ...FLocalizations.localizationsDelegates,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          builder: (context, child) => FTheme(
+            data: AppTheme.getFTheme(),
+            child: FTooltipGroup(
+              child: FToaster(
+                child: AppSessionGate(
+                  isInitialized: SupabaseService.instance.isInitialized,
+                  hasSession: SupabaseService.instance.hasActiveSession,
+                  sessionStream: SupabaseService.instance
+                      .sessionPresenceChanges(),
+                  authenticatedChild: child!,
+                  unauthenticatedChild: const LoginScreen(),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-      home: const MainScreen(),
+          home: const MainScreen(),
+        );
+      },
     );
   }
 }

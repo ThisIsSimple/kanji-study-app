@@ -1,4 +1,5 @@
 import 'kanji_example.dart';
+import 'language_settings.dart';
 
 class Kanji {
   final int id;
@@ -235,6 +236,38 @@ class Kanji {
       'tags': tags,
       'updated_at': updatedAt?.toUtc().toIso8601String(),
     };
+  }
+
+  List<String> displayMeanings(KanjiMeaningLanguage language) {
+    final selected = switch (language) {
+      KanjiMeaningLanguage.ko =>
+        krMeanings.isNotEmpty ? krMeanings : meaningsKo,
+      KanjiMeaningLanguage.en =>
+        enMeanings.isNotEmpty ? enMeanings : meaningsEn,
+      KanjiMeaningLanguage.ja => jpMeanings,
+    };
+    if (selected.isNotEmpty) return selected;
+    if (krMeanings.isNotEmpty) return krMeanings;
+    if (meaningsKo.isNotEmpty) return meaningsKo;
+    return meanings;
+  }
+
+  String displayMeaningsText(KanjiMeaningLanguage language) {
+    return displayMeanings(
+      language,
+    ).where((meaning) => meaning.isNotEmpty).join(', ');
+  }
+
+  String? displayCommentary(AppLanguage appLanguage) {
+    final selected = switch (appLanguage) {
+      AppLanguage.en => enCommentary,
+      AppLanguage.ja => jpCommentary,
+      AppLanguage.ko => krCommentary ?? commentary,
+    };
+    if (selected != null && selected.isNotEmpty) return selected;
+    if (krCommentary != null && krCommentary!.isNotEmpty) return krCommentary;
+    if (commentary != null && commentary!.isNotEmpty) return commentary;
+    return null;
   }
 }
 

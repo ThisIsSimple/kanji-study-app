@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../l10n/localization_extensions.dart';
 import '../models/word_model.dart';
 import '../services/favorite_service.dart';
+import '../services/language_settings_service.dart';
 import 'jlpt_badge.dart';
 import 'word_display_widget.dart';
 
@@ -44,6 +46,7 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
   }
 
   Widget _buildStrokeOrderToggle(FThemeData theme) {
+    final l10n = context.l10n;
     return Positioned(
       top: 16,
       left: 0,
@@ -70,7 +73,9 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  _showStrokeOrder ? '획순 숨기기' : '획순 보기',
+                  _showStrokeOrder
+                      ? l10n.hideStrokeOrder
+                      : l10n.showStrokeOrder,
                   style: theme.typography.sm.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
@@ -174,6 +179,9 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
   }
 
   Widget _buildBack(FThemeData theme) {
+    final meanings = widget.word.displayMeanings(
+      LanguageSettingsService.instance.wordMeaningLanguage,
+    );
     return LayoutBuilder(
       builder: (context, constraints) {
         return Stack(
@@ -220,7 +228,7 @@ class _WordFlashcardContentState extends State<WordFlashcardContent> {
                       const SizedBox(height: 24),
 
                       // Meanings by part of speech - Center aligned
-                      ...widget.word.meanings.map((meaning) {
+                      ...meanings.map((meaning) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Center(

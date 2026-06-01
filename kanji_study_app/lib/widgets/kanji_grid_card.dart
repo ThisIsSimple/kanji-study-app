@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:konnakanji/services/kanji_service.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/kanji_model.dart';
+import '../models/language_settings.dart';
 import '../models/study_record_model.dart';
 import '../utils/korean_formatter.dart';
 import '../constants/app_spacing.dart';
@@ -14,6 +15,7 @@ class KanjiGridCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onFavoriteToggle;
   final bool showMeaning;
+  final KanjiMeaningLanguage meaningLanguage;
 
   const KanjiGridCard({
     super.key,
@@ -21,6 +23,7 @@ class KanjiGridCard extends StatelessWidget {
     required this.onTap,
     required this.onFavoriteToggle,
     this.showMeaning = true,
+    this.meaningLanguage = KanjiMeaningLanguage.ko,
   });
 
   @override
@@ -32,6 +35,16 @@ class KanjiGridCard extends StatelessWidget {
       kanji.id,
     );
     final isFavorite = kanjiService.isFavorite(kanji.character);
+    final meaningText = meaningLanguage == KanjiMeaningLanguage.ko &&
+            hasKoreanReadings(
+              kanji.koreanKunReadings,
+              kanji.koreanOnReadings,
+            )
+        ? formatKoreanReadings(
+            kanji.koreanKunReadings,
+            kanji.koreanOnReadings,
+          )
+        : kanji.displayMeaningsText(meaningLanguage);
 
     return GestureDetector(
       onTap: onTap,
@@ -116,16 +129,9 @@ class KanjiGridCard extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   // Korean readings
-                  if (showMeaning &&
-                      hasKoreanReadings(
-                        kanji.koreanKunReadings,
-                        kanji.koreanOnReadings,
-                      ))
+                  if (showMeaning && meaningText.isNotEmpty)
                     Text(
-                      formatKoreanReadings(
-                        kanji.koreanKunReadings,
-                        kanji.koreanOnReadings,
-                      ),
+                      meaningText,
                       style: theme.typography.sm.copyWith(
                         color: theme.colors.primary,
                         fontWeight: FontWeight.w600,

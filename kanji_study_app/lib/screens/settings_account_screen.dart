@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../services/supabase_service.dart';
 import '../services/local_database_service.dart';
 import '../constants/app_spacing.dart';
+import '../l10n/localization_extensions.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/custom_header.dart';
 
@@ -37,27 +38,26 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
   }
 
   Future<void> _handleLogout() async {
+    final l10n = context.l10n;
     final shouldLogout = await showFDialog<bool>(
       context: context,
       builder: (context, style, animation) => FDialog(
         animation: animation,
         direction: Axis.horizontal,
-        title: const Text('로그아웃'),
+        title: Text(l10n.logout),
         body: Text(
-          _isAnonymous
-              ? '게스트 계정에서 로그아웃하면 학습 기록이 삭제될 수 있습니다. 계속하시겠습니까?'
-              : '정말 로그아웃 하시겠습니까?',
+          _isAnonymous ? l10n.logoutGuestWarning : l10n.logoutConfirmBody,
         ),
         actions: [
           FButton(
             variant: FButtonVariant.outline,
             onPress: () => Navigator.of(context).pop(false),
-            child: const Text('취소'),
+            child: Text(l10n.cancel),
           ),
           FButton(
             variant: FButtonVariant.destructive,
             onPress: () => Navigator.of(context).pop(true),
-            child: const Text('로그아웃'),
+            child: Text(l10n.logout),
           ),
         ],
       ),
@@ -71,7 +71,7 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
         if (!mounted) return;
         showAppToast(
           context,
-          message: '로그아웃 중 오류가 발생했습니다.',
+          message: l10n.logoutFailed,
           type: AppToastType.error,
         );
       }
@@ -84,23 +84,24 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
   }
 
   Future<void> _handleDeleteAppData() async {
+    final l10n = context.l10n;
     final shouldDelete = await showFDialog<bool>(
       context: context,
       builder: (context, style, animation) => FDialog(
         animation: animation,
         direction: Axis.horizontal,
-        title: const Text('학습 데이터 삭제'),
-        body: const Text('학습 기록, 즐겨찾기, AI 퀴즈 기록을 삭제합니다. 계정 로그인 정보는 유지됩니다.'),
+        title: Text(l10n.deleteStudyData),
+        body: Text(l10n.deleteStudyDataBody),
         actions: [
           FButton(
             variant: FButtonVariant.outline,
             onPress: () => Navigator.of(context).pop(false),
-            child: const Text('취소'),
+            child: Text(l10n.cancel),
           ),
           FButton(
             variant: FButtonVariant.destructive,
             onPress: () => Navigator.of(context).pop(true),
-            child: const Text('삭제'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -116,12 +117,12 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
       await _supabaseService.deleteCurrentUserServerData();
       await _clearLocalUserData(userId);
       if (!mounted) return;
-      showAppToast(context, message: '학습 데이터가 삭제되었습니다.');
+      showAppToast(context, message: l10n.studyDataDeleted);
     } catch (e) {
       if (!mounted) return;
       showAppToast(
         context,
-        message: '데이터 삭제 중 오류가 발생했습니다.',
+        message: l10n.deleteStudyDataFailed,
         type: AppToastType.error,
       );
     } finally {
@@ -132,23 +133,24 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
   }
 
   Future<void> _handleDeleteAccount() async {
+    final l10n = context.l10n;
     final shouldDelete = await showFDialog<bool>(
       context: context,
       builder: (context, style, animation) => FDialog(
         animation: animation,
         direction: Axis.horizontal,
-        title: const Text('계정 삭제'),
-        body: const Text('계정과 서버에 저장된 학습 데이터를 삭제합니다. 이 작업은 되돌릴 수 없습니다.'),
+        title: Text(l10n.deleteAccount),
+        body: Text(l10n.deleteAccountBody),
         actions: [
           FButton(
             variant: FButtonVariant.outline,
             onPress: () => Navigator.of(context).pop(false),
-            child: const Text('취소'),
+            child: Text(l10n.cancel),
           ),
           FButton(
             variant: FButtonVariant.destructive,
             onPress: () => Navigator.of(context).pop(true),
-            child: const Text('계정 삭제'),
+            child: Text(l10n.deleteAccount),
           ),
         ],
       ),
@@ -164,12 +166,12 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
       await _supabaseService.deleteCurrentUserAccount();
       await _clearLocalUserData(userId);
       if (!mounted) return;
-      showAppToast(context, message: '계정 삭제가 요청되었습니다.');
+      showAppToast(context, message: l10n.accountDeleteRequested);
     } catch (e) {
       if (!mounted) return;
       showAppToast(
         context,
-        message: '계정 삭제 서버 기능을 확인해주세요. 데이터는 삭제되지 않았습니다.',
+        message: l10n.deleteAccountUnavailable,
         type: AppToastType.error,
       );
     } finally {
@@ -182,13 +184,14 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: theme.colors.background,
       body: Column(
         children: [
           CustomHeader(
-            title: const Text('계정 관리'),
+            title: Text(l10n.account),
             titleAlign: HeaderTitleAlign.center,
             withBack: true,
           ),
@@ -235,8 +238,8 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
                                   children: [
                                     Text(
                                       _isAnonymous
-                                          ? '게스트 사용자'
-                                          : (_userEmail ?? '사용자'),
+                                          ? l10n.guestUser
+                                          : (_userEmail ?? l10n.userFallback),
                                       style: theme.typography.md.copyWith(
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -244,8 +247,8 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
                                     const SizedBox(height: 4),
                                     Text(
                                       _isAnonymous
-                                          ? '소셜 계정 연동으로 데이터를 안전하게 보관하세요'
-                                          : '이메일로 로그인됨',
+                                          ? l10n.guestAccountSubtitle
+                                          : l10n.signedInWithEmail,
                                       style: theme.typography.sm.copyWith(
                                         color: theme.colors.mutedForeground,
                                       ),
@@ -279,7 +282,7 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    '게스트 계정은 앱 삭제 시 데이터가 손실될 수 있습니다.',
+                                    l10n.guestDataLossWarning,
                                     style: theme.typography.sm.copyWith(
                                       color: Colors.orange.shade700,
                                     ),
@@ -296,12 +299,12 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
                         FButton(
                           onPress: _isProcessing ? null : _handleDeleteAppData,
                           variant: FButtonVariant.outline,
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(PhosphorIconsRegular.trash, size: 18),
-                              SizedBox(width: 8),
-                              Text('학습 데이터 삭제'),
+                              const Icon(PhosphorIconsRegular.trash, size: 18),
+                              const SizedBox(width: 8),
+                              Text(l10n.deleteStudyData),
                             ],
                           ),
                         ),
@@ -311,12 +314,15 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
                         FButton(
                           onPress: _isProcessing ? null : _handleDeleteAccount,
                           variant: FButtonVariant.destructive,
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(PhosphorIconsRegular.userMinus, size: 18),
-                              SizedBox(width: 8),
-                              Text('계정 삭제'),
+                              const Icon(
+                                PhosphorIconsRegular.userMinus,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(l10n.deleteAccount),
                             ],
                           ),
                         ),
@@ -326,12 +332,15 @@ class _SettingsAccountScreenState extends State<SettingsAccountScreen> {
                         FButton(
                           onPress: _isProcessing ? null : _handleLogout,
                           variant: FButtonVariant.destructive,
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(PhosphorIconsRegular.signOut, size: 18),
-                              SizedBox(width: 8),
-                              Text('로그아웃'),
+                              const Icon(
+                                PhosphorIconsRegular.signOut,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(l10n.logout),
                             ],
                           ),
                         ),
