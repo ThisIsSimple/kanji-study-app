@@ -1,23 +1,99 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../database/app_database.dart';
-import 'local_database_service.dart';
-import 'supabase_service.dart';
+import '../models/favorite_crdt_state.dart';
 import 'connectivity_service.dart';
 import 'connectivity_sync_helper.dart';
+import 'local_database_service.dart';
+import 'supabase_service.dart';
+
+abstract class FavoriteRemoteStore {
+  Future<List<FavoriteCrdtState>> fetchFavorites(String userId);
+  Future<void> upsertFavorite(FavoriteCrdtState state);
+}
+
+class SupabaseFavoriteRemoteStore implements FavoriteRemoteStore {
+  SupabaseFavoriteRemoteStore(this._supabaseService);
+
+  final SupabaseService _supabaseService;
+
+  @override
+  Future<List<FavoriteCrdtState>> fetchFavorites(String userId) async {
+    final response = await _supabaseService.client
+        .from('favorites')
+        .select()
+        .eq('user_id', userId);
+
+    return (response as List)
+        .map((record) => _stateFromServerRecord(record as Map<String, dynamic>))
+        .toList();
+  }
+
+  @override
+  Future<void> upsertFavorite(FavoriteCrdtState state) async {
+    await _supabaseService.client.from('favorites').upsert({
+      'user_id': state.userId,
+      'type': state.type,
+      'target_id': state.targetId,
+      'note': state.note,
+      'is_favorite': state.isFavorite,
+      'operation_timestamp': state.operationTimestamp.toUtc().toIso8601String(),
+      'operation_id': state.operationId,
+      'device_id': state.deviceId,
+      'created_at': (state.createdAt ?? state.operationTimestamp)
+          .toUtc()
+          .toIso8601String(),
+    }, onConflict: 'user_id,type,target_id');
+  }
+
+  FavoriteCrdtState _stateFromServerRecord(Map<String, dynamic> record) {
+    final createdAt = _parseDateTime(record['created_at']);
+    return FavoriteCrdtState(
+      userId: record['user_id'] as String,
+      type: record['type'] as String,
+      targetId: (record['target_id'] as num).toInt(),
+      note: record['note'] as String?,
+      isFavorite: record['is_favorite'] as bool? ?? true,
+      operationTimestamp:
+          _parseDateTime(record['operation_timestamp']) ??
+          createdAt ??
+          DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      operationId:
+          record['operation_id'] as String? ??
+          'legacy-${record['id']?.toString() ?? 'unknown'}',
+      deviceId: record['device_id'] as String? ?? 'legacy',
+      createdAt: createdAt,
+    );
+  }
+
+  DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value);
+    return null;
+  }
+}
 
 /// 즐겨찾기 전역 상태 관리 서비스 (싱글톤)
-/// 오프라인 지원 + Supabase 동기화
-/// 서버 저장은 비동기로 처리하여 지연 없이 사용
+/// 오프라인 작업을 LWW CRDT 상태로 저장하고 Supabase와 병합한다.
 class FavoriteService extends ChangeNotifier {
   static final FavoriteService _instance = FavoriteService._internal();
   static FavoriteService get instance => _instance;
 
-  FavoriteService._internal();
+  FavoriteService._internal()
+    : _remoteStore = SupabaseFavoriteRemoteStore(SupabaseService.instance);
+
+  static const _deviceIdPreferenceKey = 'favorite_crdt_device_id';
 
   final LocalDatabaseService _localDb = LocalDatabaseService.instance;
   final SupabaseService _supabaseService = SupabaseService.instance;
   final ConnectivityService _connectivityService = ConnectivityService.instance;
+  final FavoriteRemoteStore _remoteStore;
   late final ConnectivitySyncHelper _syncHelper = ConnectivitySyncHelper(
     label: 'FavoriteService',
     onReconnect: syncWithSupabase,
@@ -27,6 +103,7 @@ class FavoriteService extends ChangeNotifier {
   // 메모리 캐시: "type_targetId" -> isFavorite
   final Map<String, bool> _favoriteCache = {};
 
+  String? _deviceId;
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
 
@@ -41,14 +118,7 @@ class FavoriteService extends ChangeNotifier {
         return;
       }
 
-      // 로컬 DB에서 즐겨찾기 로드 (삭제되지 않은 것만)
-      final favorites = await _localDb.database.getFavorites(userId);
-
-      // 캐시에 로드
-      for (final favorite in favorites) {
-        final key = '${favorite.type}_${favorite.targetId}';
-        _favoriteCache[key] = true;
-      }
+      await _loadLocalFavoritesIntoCache(userId);
 
       _isInitialized = true;
       debugPrint(
@@ -64,7 +134,7 @@ class FavoriteService extends ChangeNotifier {
 
   /// 즐겨찾기 여부 확인
   bool isFavorite(String type, int targetId) {
-    final key = '${type}_$targetId';
+    final key = _cacheKey(type, targetId);
     return _favoriteCache[key] ?? false;
   }
 
@@ -80,7 +150,7 @@ class FavoriteService extends ChangeNotifier {
     return result;
   }
 
-  /// 즐겨찾기 토글 (비동기 서버 저장)
+  /// 즐겨찾기 토글. 로컬 상태를 즉시 갱신하고 서버 동기화는 별도로 재시도한다.
   Future<void> toggleFavorite({
     required String type,
     required int targetId,
@@ -92,158 +162,44 @@ class FavoriteService extends ChangeNotifier {
       return;
     }
 
-    final key = '${type}_$targetId';
-    final currentlyFavorited = _favoriteCache[key] ?? false;
+    final key = _cacheKey(type, targetId);
+    final nextIsFavorite = !(_favoriteCache[key] ?? false);
 
-    if (currentlyFavorited) {
-      // 즐겨찾기 해제 - 데이터 삭제
-      await _removeFavorite(userId, type, targetId, key);
-    } else {
-      // 즐겨찾기 추가
-      await _addFavorite(userId, type, targetId, key, note);
-    }
+    final operationTimestamp = DateTime.now().toUtc();
+    final state = FavoriteCrdtState(
+      userId: userId,
+      type: type,
+      targetId: targetId,
+      note: note,
+      isFavorite: nextIsFavorite,
+      operationTimestamp: operationTimestamp,
+      operationId: _createOperationId(operationTimestamp),
+      deviceId: await _getDeviceId(),
+      createdAt: operationTimestamp,
+    );
 
-    // 리스너에게 알림
-    notifyListeners();
-  }
-
-  /// 즐겨찾기 추가 (내부 메서드)
-  Future<void> _addFavorite(
-    String userId,
-    String type,
-    int targetId,
-    String key,
-    String? note,
-  ) async {
     try {
-      final now = DateTime.now();
-      final isOnline =
-          _connectivityService.isOnline && _supabaseService.isInitialized;
+      _applyStateToCache(state);
+      await _upsertLocalState(state, isSynced: false);
+      notifyListeners();
 
-      // 1. 캐시 즉시 업데이트 (지연 없이 사용)
-      _favoriteCache[key] = true;
+      if (_connectivityService.isOnline && _supabaseService.isInitialized) {
+        unawaited(syncWithSupabase());
+      }
 
-      // 2. 로컬 DB에 저장
-      final localFavorite = FavoritesTableCompanion.insert(
-        userId: userId,
-        type: type,
-        targetId: targetId,
-        note: Value(note),
-        isSynced: Value(isOnline),
-        createdAt: Value(now),
+      debugPrint(
+        'FavoriteService: ${nextIsFavorite ? 'Added' : 'Removed'} '
+        '$type favorite for $targetId',
       );
-      await _localDb.database.insertFavorite(localFavorite);
-
-      // 3. 온라인이면 서버에 비동기로 저장 (응답 기다리지 않음)
-      if (isOnline) {
-        _saveToServerAsync(userId, type, targetId, note, now);
-      }
-
-      debugPrint('FavoriteService: Added $type favorite for $targetId');
     } catch (e) {
-      debugPrint('Error adding favorite: $e');
-      // 에러 발생 시 캐시 롤백
-      _favoriteCache.remove(key);
-    }
-  }
-
-  /// 즐겨찾기 삭제 (내부 메서드)
-  Future<void> _removeFavorite(
-    String userId,
-    String type,
-    int targetId,
-    String key,
-  ) async {
-    try {
-      final isOnline = _connectivityService.isOnline;
-
-      // 1. 캐시 즉시 업데이트 (지연 없이 사용)
-      _favoriteCache.remove(key);
-
-      if (isOnline) {
-        // 온라인: 로컬 DB에서 즉시 삭제 + 서버에서 비동기 삭제
-        await _localDb.database.deleteFavoriteByTarget(userId, type, targetId);
-        _deleteFromServerAsync(userId, type, targetId);
+      debugPrint('Error toggling favorite: $e');
+      if (nextIsFavorite) {
+        _favoriteCache.remove(key);
       } else {
-        // 오프라인: 삭제 대기 상태로 표시 (온라인 시 동기화)
-        final existing = await _localDb.database.getFavorite(
-          userId,
-          type,
-          targetId,
-        );
-        if (existing != null) {
-          await _localDb.database.markFavoriteAsDeleted(existing.id);
-        }
+        _favoriteCache[key] = true;
       }
-
-      debugPrint('FavoriteService: Removed $type favorite for $targetId');
-    } catch (e) {
-      debugPrint('Error removing favorite: $e');
-      // 에러 발생 시 캐시 롤백
-      _favoriteCache[key] = true;
+      rethrow;
     }
-  }
-
-  /// 서버에 비동기로 저장 (응답 기다리지 않음)
-  void _saveToServerAsync(
-    String userId,
-    String type,
-    int targetId,
-    String? note,
-    DateTime createdAt,
-  ) {
-    _supabaseService.client
-        .from('favorites')
-        .upsert({
-          'user_id': userId,
-          'type': type,
-          'target_id': targetId,
-          'note': note,
-          'created_at': createdAt.toIso8601String(),
-        })
-        .then((_) {
-          debugPrint(
-            'FavoriteService: Server save completed for $type $targetId',
-          );
-          // 동기화 상태 업데이트
-          _markAsSyncedAsync(userId, type, targetId);
-        })
-        .catchError((e) {
-          debugPrint('Error saving to server: $e');
-          // 실패해도 로컬에는 저장되어 있으므로 다음 동기화 시 재시도
-        });
-  }
-
-  /// 서버에서 비동기로 삭제 (응답 기다리지 않음)
-  void _deleteFromServerAsync(String userId, String type, int targetId) {
-    _supabaseService.client
-        .from('favorites')
-        .delete()
-        .eq('user_id', userId)
-        .eq('type', type)
-        .eq('target_id', targetId)
-        .then((_) {
-          debugPrint(
-            'FavoriteService: Server delete completed for $type $targetId',
-          );
-        })
-        .catchError((e) {
-          debugPrint('Error deleting from server: $e');
-        });
-  }
-
-  /// 동기화 상태 업데이트 (비동기)
-  void _markAsSyncedAsync(String userId, String type, int targetId) {
-    _localDb.database
-        .getFavorite(userId, type, targetId)
-        .then((favorite) {
-          if (favorite != null) {
-            _localDb.database.markFavoriteAsSynced(favorite.id);
-          }
-        })
-        .catchError((e) {
-          debugPrint('Error marking as synced: $e');
-        });
   }
 
   /// Supabase와 동기화
@@ -254,53 +210,46 @@ class FavoriteService extends ChangeNotifier {
 
     try {
       await _syncHelper.runGuarded(() async {
-        debugPrint('FavoriteService: Starting sync with Supabase...');
+        debugPrint('FavoriteService: Starting CRDT sync with Supabase...');
 
-        final deletedFavorites = await _localDb.database.getDeletedFavorites();
-        for (final favorite in deletedFavorites) {
-          try {
-            await _supabaseService.client
-                .from('favorites')
-                .delete()
-                .eq('user_id', favorite.userId)
-                .eq('type', favorite.type)
-                .eq('target_id', favorite.targetId);
-            await _localDb.database.deleteFavorite(favorite.id);
-          } catch (e) {
-            debugPrint('Error syncing delete for ${favorite.id}: $e');
+        final localStates = await _localDb.database.getFavoriteStates(userId);
+        final serverStates = await _remoteStore.fetchFavorites(userId);
+        final localByKey = {
+          for (final favorite in localStates) _dbKey(favorite): favorite,
+        };
+        final serverByKey = {
+          for (final favorite in serverStates) favorite.key: favorite,
+        };
+        final allKeys = {...localByKey.keys, ...serverByKey.keys};
+
+        for (final key in allKeys) {
+          final local = localByKey[key];
+          final server = serverByKey[key];
+          final localState = local == null
+              ? null
+              : _stateFromLocalRecord(local);
+          final latest = localState == null
+              ? server!
+              : server == null
+              ? localState
+              : mergeFavoriteStates(localState, server);
+
+          final shouldUpdateServer =
+              server == null || latest.isNewerThan(server);
+          var synced = true;
+          if (shouldUpdateServer) {
+            try {
+              await _remoteStore.upsertFavorite(latest);
+            } catch (e) {
+              synced = false;
+              debugPrint('Error syncing favorite $key: $e');
+            }
           }
+
+          await _upsertLocalState(latest, isSynced: synced);
         }
 
-        final unsyncedFavorites = await _localDb.database
-            .getUnsyncedFavorites();
-        for (final favorite in unsyncedFavorites) {
-          if (favorite.isDeleted) continue;
-          try {
-            await _supabaseService.client.from('favorites').upsert({
-              'user_id': favorite.userId,
-              'type': favorite.type,
-              'target_id': favorite.targetId,
-              'note': favorite.note,
-              'created_at': favorite.createdAt.toIso8601String(),
-            });
-            await _localDb.database.markFavoriteAsSynced(favorite.id);
-          } catch (e) {
-            debugPrint('Error syncing favorite ${favorite.id}: $e');
-          }
-        }
-
-        final serverFavorites = await _supabaseService.client
-            .from('favorites')
-            .select()
-            .eq('user_id', userId);
-
-        _favoriteCache.clear();
-        for (final record in serverFavorites) {
-          final type = record['type'] as String;
-          final targetId = record['target_id'] as int;
-          _favoriteCache['${type}_$targetId'] = true;
-        }
-
+        await _loadLocalFavoritesIntoCache(userId);
         notifyListeners();
         debugPrint(
           'FavoriteService: Sync completed, ${_favoriteCache.length} favorites in cache',
@@ -311,36 +260,92 @@ class FavoriteService extends ChangeNotifier {
     }
   }
 
-  /// 캐시 강제 갱신 (Supabase에서 다시 로드)
-  Future<void> refreshFromSupabase() async {
-    if (!_connectivityService.isOnline) return;
+  /// 캐시 강제 갱신. pending 로컬 작업을 잃지 않도록 일반 CRDT 동기화를 수행한다.
+  Future<void> refreshFromSupabase() => syncWithSupabase();
 
-    final userId = _supabaseService.currentUser?.id;
-    if (userId == null) return;
-
-    try {
-      final serverFavorites = await _supabaseService.client
-          .from('favorites')
-          .select()
-          .eq('user_id', userId);
-
-      _favoriteCache.clear();
-
-      for (final record in serverFavorites) {
-        final type = record['type'] as String;
-        final targetId = record['target_id'] as int;
-        final key = '${type}_$targetId';
-        _favoriteCache[key] = true;
-      }
-
-      notifyListeners();
-      debugPrint(
-        'FavoriteService: Refreshed from Supabase, ${_favoriteCache.length} favorites',
-      );
-    } catch (e) {
-      debugPrint('Error refreshing from Supabase: $e');
+  Future<void> _loadLocalFavoritesIntoCache(String userId) async {
+    final favorites = await _localDb.database.getFavorites(userId);
+    _favoriteCache.clear();
+    for (final favorite in favorites) {
+      _favoriteCache[_cacheKey(favorite.type, favorite.targetId)] = true;
     }
   }
+
+  Future<void> _upsertLocalState(
+    FavoriteCrdtState state, {
+    required bool isSynced,
+  }) {
+    return _localDb.database.upsertFavoriteState(
+      FavoritesTableCompanion.insert(
+        userId: state.userId,
+        type: state.type,
+        targetId: state.targetId,
+        note: Value(state.note),
+        isSynced: Value(isSynced),
+        isDeleted: Value(!state.isFavorite),
+        operationTimestamp: Value(state.operationTimestamp.toLocal()),
+        operationId: Value(state.operationId),
+        deviceId: Value(state.deviceId),
+        createdAt: Value(
+          (state.createdAt ?? state.operationTimestamp).toLocal(),
+        ),
+      ),
+    );
+  }
+
+  FavoriteCrdtState _stateFromLocalRecord(FavoritesTableData favorite) {
+    return FavoriteCrdtState(
+      userId: favorite.userId,
+      type: favorite.type,
+      targetId: favorite.targetId,
+      note: favorite.note,
+      isFavorite: !favorite.isDeleted,
+      operationTimestamp: favorite.operationTimestamp.toUtc(),
+      operationId: favorite.operationId,
+      deviceId: favorite.deviceId,
+      createdAt: favorite.createdAt.toUtc(),
+    );
+  }
+
+  void _applyStateToCache(FavoriteCrdtState state) {
+    final key = _cacheKey(state.type, state.targetId);
+    if (state.isFavorite) {
+      _favoriteCache[key] = true;
+    } else {
+      _favoriteCache.remove(key);
+    }
+  }
+
+  Future<String> _getDeviceId() async {
+    if (_deviceId != null) return _deviceId!;
+
+    final prefs = await SharedPreferences.getInstance();
+    final existing = prefs.getString(_deviceIdPreferenceKey);
+    if (existing != null && existing.isNotEmpty) {
+      _deviceId = existing;
+      return existing;
+    }
+
+    final generated = _createRandomId('device');
+    await prefs.setString(_deviceIdPreferenceKey, generated);
+    _deviceId = generated;
+    return generated;
+  }
+
+  String _createOperationId(DateTime timestamp) {
+    return '${timestamp.microsecondsSinceEpoch}-${_createRandomId('op')}';
+  }
+
+  String _createRandomId(String prefix) {
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    final hex = bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0'));
+    return '$prefix-${DateTime.now().microsecondsSinceEpoch}-${hex.join()}';
+  }
+
+  String _cacheKey(String type, int targetId) => '${type}_$targetId';
+  String _dbKey(FavoritesTableData favorite) =>
+      '${favorite.type}-${favorite.targetId}';
 
   @override
   void dispose() {

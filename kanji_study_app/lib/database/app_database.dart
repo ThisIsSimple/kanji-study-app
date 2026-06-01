@@ -126,8 +126,17 @@ class FavoritesTable extends Table {
   TextColumn get note => text().nullable()();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   BoolColumn get isDeleted =>
-      boolean().withDefault(const Constant(false))(); // 삭제 대기
+      boolean().withDefault(const Constant(false))(); // 서버 tombstone 동기화 대기
+  DateTimeColumn get operationTimestamp =>
+      dateTime().withDefault(currentDateAndTime)();
+  TextColumn get operationId => text().withDefault(const Constant('legacy'))();
+  TextColumn get deviceId => text().withDefault(const Constant('legacy'))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  List<Set<Column<Object>>> get uniqueKeys => [
+    {userId, type, targetId},
+  ];
 }
 
 /// String List <-> JSON 변환기
@@ -185,7 +194,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -260,6 +269,46 @@ class AppDatabase extends _$AppDatabase {
             END,
             en_meanings = meanings_en,
             kr_commentary = commentary
+        ''');
+      }
+      if (from < 9) {
+        await m.addColumn(favoritesTable, favoritesTable.operationTimestamp);
+        await m.addColumn(favoritesTable, favoritesTable.operationId);
+        await m.addColumn(favoritesTable, favoritesTable.deviceId);
+        await customStatement('''
+          UPDATE favorites_table
+          SET operation_timestamp = created_at
+          WHERE operation_timestamp IS NULL
+        ''');
+        await customStatement('''
+          UPDATE favorites_table
+          SET operation_id = 'legacy-' || id
+          WHERE operation_id = 'legacy'
+        ''');
+        await customStatement('''
+          UPDATE favorites_table
+          SET device_id = 'legacy'
+          WHERE device_id IS NULL OR device_id = ''
+        ''');
+        await customStatement('''
+          DELETE FROM favorites_table
+          WHERE id NOT IN (
+            SELECT id
+            FROM (
+              SELECT
+                id,
+                ROW_NUMBER() OVER (
+                  PARTITION BY user_id, type, target_id
+                  ORDER BY operation_timestamp DESC, operation_id DESC, id DESC
+                ) AS row_number
+              FROM favorites_table
+            )
+            WHERE row_number = 1
+          )
+        ''');
+        await customStatement('''
+          CREATE UNIQUE INDEX IF NOT EXISTS favorites_table_user_type_target_idx
+          ON favorites_table (user_id, type, target_id)
         ''');
       }
     },
@@ -337,6 +386,9 @@ class AppDatabase extends _$AppDatabase {
     favoritesTable,
   )..where((t) => t.userId.equals(userId) & t.isDeleted.equals(false))).get();
 
+  Future<List<FavoritesTableData>> getFavoriteStates(String userId) =>
+      (select(favoritesTable)..where((t) => t.userId.equals(userId))).get();
+
   Future<List<FavoritesTableData>> getFavoritesByType(
     String userId,
     String type,
@@ -362,42 +414,41 @@ class AppDatabase extends _$AppDatabase {
           ))
           .getSingleOrNull();
 
-  Future<List<FavoritesTableData>> getUnsyncedFavorites() =>
-      (select(favoritesTable)..where((t) => t.isSynced.equals(false))).get();
+  Future<List<FavoritesTableData>> getUnsyncedFavorites([String? userId]) {
+    final query = select(favoritesTable)
+      ..where((t) => t.isSynced.equals(false));
+    if (userId != null) {
+      query.where((t) => t.userId.equals(userId));
+    }
+    return query.get();
+  }
 
-  Future<List<FavoritesTableData>> getDeletedFavorites() =>
-      (select(favoritesTable)..where((t) => t.isDeleted.equals(true))).get();
+  Future<void> upsertFavoriteState(FavoritesTableCompanion favorite) async {
+    final existing = await getFavorite(
+      favorite.userId.value,
+      favorite.type.value,
+      favorite.targetId.value,
+    );
 
-  /// 즐겨찾기 삽입/업데이트
-  Future<int> insertFavorite(FavoritesTableCompanion favorite) =>
-      into(favoritesTable).insert(favorite);
+    if (existing == null) {
+      await into(favoritesTable).insert(favorite);
+      return;
+    }
 
-  Future<void> markFavoriteAsSynced(int id) =>
-      (update(favoritesTable)..where((t) => t.id.equals(id))).write(
-        const FavoritesTableCompanion(isSynced: Value(true)),
-      );
-
-  Future<void> markFavoriteAsDeleted(int id) =>
-      (update(favoritesTable)..where((t) => t.id.equals(id))).write(
-        const FavoritesTableCompanion(isDeleted: Value(true)),
-      );
-
-  /// 즐겨찾기 삭제 (실제 삭제)
-  Future<void> deleteFavorite(int id) =>
-      (delete(favoritesTable)..where((t) => t.id.equals(id))).go();
-
-  Future<void> deleteFavoriteByTarget(
-    String userId,
-    String type,
-    int targetId,
-  ) =>
-      (delete(favoritesTable)..where(
-            (t) =>
-                t.userId.equals(userId) &
-                t.type.equals(type) &
-                t.targetId.equals(targetId),
-          ))
-          .go();
+    await (update(
+      favoritesTable,
+    )..where((t) => t.id.equals(existing.id))).write(
+      FavoritesTableCompanion(
+        note: favorite.note,
+        isSynced: favorite.isSynced,
+        isDeleted: favorite.isDeleted,
+        operationTimestamp: favorite.operationTimestamp,
+        operationId: favorite.operationId,
+        deviceId: favorite.deviceId,
+        createdAt: favorite.createdAt,
+      ),
+    );
+  }
 
   Future<void> clearUserData(String userId) async {
     await transaction(() async {

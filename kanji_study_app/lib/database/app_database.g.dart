@@ -3425,6 +3425,42 @@ class $FavoritesTableTable extends FavoritesTable
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _operationTimestampMeta =
+      const VerificationMeta('operationTimestamp');
+  @override
+  late final GeneratedColumn<DateTime> operationTimestamp =
+      GeneratedColumn<DateTime>(
+        'operation_timestamp',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      );
+  static const VerificationMeta _operationIdMeta = const VerificationMeta(
+    'operationId',
+  );
+  @override
+  late final GeneratedColumn<String> operationId = GeneratedColumn<String>(
+    'operation_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('legacy'),
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('legacy'),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3446,6 +3482,9 @@ class $FavoritesTableTable extends FavoritesTable
     note,
     isSynced,
     isDeleted,
+    operationTimestamp,
+    operationId,
+    deviceId,
     createdAt,
   ];
   @override
@@ -3505,6 +3544,30 @@ class $FavoritesTableTable extends FavoritesTable
         isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
       );
     }
+    if (data.containsKey('operation_timestamp')) {
+      context.handle(
+        _operationTimestampMeta,
+        operationTimestamp.isAcceptableOrUnknown(
+          data['operation_timestamp']!,
+          _operationTimestampMeta,
+        ),
+      );
+    }
+    if (data.containsKey('operation_id')) {
+      context.handle(
+        _operationIdMeta,
+        operationId.isAcceptableOrUnknown(
+          data['operation_id']!,
+          _operationIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -3516,6 +3579,10 @@ class $FavoritesTableTable extends FavoritesTable
 
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {userId, type, targetId},
+  ];
   @override
   FavoritesTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -3548,6 +3615,18 @@ class $FavoritesTableTable extends FavoritesTable
         DriftSqlType.bool,
         data['${effectivePrefix}is_deleted'],
       )!,
+      operationTimestamp: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}operation_timestamp'],
+      )!,
+      operationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation_id'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -3570,6 +3649,9 @@ class FavoritesTableData extends DataClass
   final String? note;
   final bool isSynced;
   final bool isDeleted;
+  final DateTime operationTimestamp;
+  final String operationId;
+  final String deviceId;
   final DateTime createdAt;
   const FavoritesTableData({
     required this.id,
@@ -3579,6 +3661,9 @@ class FavoritesTableData extends DataClass
     this.note,
     required this.isSynced,
     required this.isDeleted,
+    required this.operationTimestamp,
+    required this.operationId,
+    required this.deviceId,
     required this.createdAt,
   });
   @override
@@ -3593,6 +3678,9 @@ class FavoritesTableData extends DataClass
     }
     map['is_synced'] = Variable<bool>(isSynced);
     map['is_deleted'] = Variable<bool>(isDeleted);
+    map['operation_timestamp'] = Variable<DateTime>(operationTimestamp);
+    map['operation_id'] = Variable<String>(operationId);
+    map['device_id'] = Variable<String>(deviceId);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -3606,6 +3694,9 @@ class FavoritesTableData extends DataClass
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       isSynced: Value(isSynced),
       isDeleted: Value(isDeleted),
+      operationTimestamp: Value(operationTimestamp),
+      operationId: Value(operationId),
+      deviceId: Value(deviceId),
       createdAt: Value(createdAt),
     );
   }
@@ -3623,6 +3714,11 @@ class FavoritesTableData extends DataClass
       note: serializer.fromJson<String?>(json['note']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      operationTimestamp: serializer.fromJson<DateTime>(
+        json['operationTimestamp'],
+      ),
+      operationId: serializer.fromJson<String>(json['operationId']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -3637,6 +3733,9 @@ class FavoritesTableData extends DataClass
       'note': serializer.toJson<String?>(note),
       'isSynced': serializer.toJson<bool>(isSynced),
       'isDeleted': serializer.toJson<bool>(isDeleted),
+      'operationTimestamp': serializer.toJson<DateTime>(operationTimestamp),
+      'operationId': serializer.toJson<String>(operationId),
+      'deviceId': serializer.toJson<String>(deviceId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -3649,6 +3748,9 @@ class FavoritesTableData extends DataClass
     Value<String?> note = const Value.absent(),
     bool? isSynced,
     bool? isDeleted,
+    DateTime? operationTimestamp,
+    String? operationId,
+    String? deviceId,
     DateTime? createdAt,
   }) => FavoritesTableData(
     id: id ?? this.id,
@@ -3658,6 +3760,9 @@ class FavoritesTableData extends DataClass
     note: note.present ? note.value : this.note,
     isSynced: isSynced ?? this.isSynced,
     isDeleted: isDeleted ?? this.isDeleted,
+    operationTimestamp: operationTimestamp ?? this.operationTimestamp,
+    operationId: operationId ?? this.operationId,
+    deviceId: deviceId ?? this.deviceId,
     createdAt: createdAt ?? this.createdAt,
   );
   FavoritesTableData copyWithCompanion(FavoritesTableCompanion data) {
@@ -3669,6 +3774,13 @@ class FavoritesTableData extends DataClass
       note: data.note.present ? data.note.value : this.note,
       isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      operationTimestamp: data.operationTimestamp.present
+          ? data.operationTimestamp.value
+          : this.operationTimestamp,
+      operationId: data.operationId.present
+          ? data.operationId.value
+          : this.operationId,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -3683,6 +3795,9 @@ class FavoritesTableData extends DataClass
           ..write('note: $note, ')
           ..write('isSynced: $isSynced, ')
           ..write('isDeleted: $isDeleted, ')
+          ..write('operationTimestamp: $operationTimestamp, ')
+          ..write('operationId: $operationId, ')
+          ..write('deviceId: $deviceId, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -3697,6 +3812,9 @@ class FavoritesTableData extends DataClass
     note,
     isSynced,
     isDeleted,
+    operationTimestamp,
+    operationId,
+    deviceId,
     createdAt,
   );
   @override
@@ -3710,6 +3828,9 @@ class FavoritesTableData extends DataClass
           other.note == this.note &&
           other.isSynced == this.isSynced &&
           other.isDeleted == this.isDeleted &&
+          other.operationTimestamp == this.operationTimestamp &&
+          other.operationId == this.operationId &&
+          other.deviceId == this.deviceId &&
           other.createdAt == this.createdAt);
 }
 
@@ -3721,6 +3842,9 @@ class FavoritesTableCompanion extends UpdateCompanion<FavoritesTableData> {
   final Value<String?> note;
   final Value<bool> isSynced;
   final Value<bool> isDeleted;
+  final Value<DateTime> operationTimestamp;
+  final Value<String> operationId;
+  final Value<String> deviceId;
   final Value<DateTime> createdAt;
   const FavoritesTableCompanion({
     this.id = const Value.absent(),
@@ -3730,6 +3854,9 @@ class FavoritesTableCompanion extends UpdateCompanion<FavoritesTableData> {
     this.note = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.isDeleted = const Value.absent(),
+    this.operationTimestamp = const Value.absent(),
+    this.operationId = const Value.absent(),
+    this.deviceId = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   FavoritesTableCompanion.insert({
@@ -3740,6 +3867,9 @@ class FavoritesTableCompanion extends UpdateCompanion<FavoritesTableData> {
     this.note = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.isDeleted = const Value.absent(),
+    this.operationTimestamp = const Value.absent(),
+    this.operationId = const Value.absent(),
+    this.deviceId = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : userId = Value(userId),
        type = Value(type),
@@ -3752,6 +3882,9 @@ class FavoritesTableCompanion extends UpdateCompanion<FavoritesTableData> {
     Expression<String>? note,
     Expression<bool>? isSynced,
     Expression<bool>? isDeleted,
+    Expression<DateTime>? operationTimestamp,
+    Expression<String>? operationId,
+    Expression<String>? deviceId,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -3762,6 +3895,9 @@ class FavoritesTableCompanion extends UpdateCompanion<FavoritesTableData> {
       if (note != null) 'note': note,
       if (isSynced != null) 'is_synced': isSynced,
       if (isDeleted != null) 'is_deleted': isDeleted,
+      if (operationTimestamp != null) 'operation_timestamp': operationTimestamp,
+      if (operationId != null) 'operation_id': operationId,
+      if (deviceId != null) 'device_id': deviceId,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -3774,6 +3910,9 @@ class FavoritesTableCompanion extends UpdateCompanion<FavoritesTableData> {
     Value<String?>? note,
     Value<bool>? isSynced,
     Value<bool>? isDeleted,
+    Value<DateTime>? operationTimestamp,
+    Value<String>? operationId,
+    Value<String>? deviceId,
     Value<DateTime>? createdAt,
   }) {
     return FavoritesTableCompanion(
@@ -3784,6 +3923,9 @@ class FavoritesTableCompanion extends UpdateCompanion<FavoritesTableData> {
       note: note ?? this.note,
       isSynced: isSynced ?? this.isSynced,
       isDeleted: isDeleted ?? this.isDeleted,
+      operationTimestamp: operationTimestamp ?? this.operationTimestamp,
+      operationId: operationId ?? this.operationId,
+      deviceId: deviceId ?? this.deviceId,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -3812,6 +3954,15 @@ class FavoritesTableCompanion extends UpdateCompanion<FavoritesTableData> {
     if (isDeleted.present) {
       map['is_deleted'] = Variable<bool>(isDeleted.value);
     }
+    if (operationTimestamp.present) {
+      map['operation_timestamp'] = Variable<DateTime>(operationTimestamp.value);
+    }
+    if (operationId.present) {
+      map['operation_id'] = Variable<String>(operationId.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -3828,6 +3979,9 @@ class FavoritesTableCompanion extends UpdateCompanion<FavoritesTableData> {
           ..write('note: $note, ')
           ..write('isSynced: $isSynced, ')
           ..write('isDeleted: $isDeleted, ')
+          ..write('operationTimestamp: $operationTimestamp, ')
+          ..write('operationId: $operationId, ')
+          ..write('deviceId: $deviceId, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -5412,6 +5566,9 @@ typedef $$FavoritesTableTableCreateCompanionBuilder =
       Value<String?> note,
       Value<bool> isSynced,
       Value<bool> isDeleted,
+      Value<DateTime> operationTimestamp,
+      Value<String> operationId,
+      Value<String> deviceId,
       Value<DateTime> createdAt,
     });
 typedef $$FavoritesTableTableUpdateCompanionBuilder =
@@ -5423,6 +5580,9 @@ typedef $$FavoritesTableTableUpdateCompanionBuilder =
       Value<String?> note,
       Value<bool> isSynced,
       Value<bool> isDeleted,
+      Value<DateTime> operationTimestamp,
+      Value<String> operationId,
+      Value<String> deviceId,
       Value<DateTime> createdAt,
     });
 
@@ -5467,6 +5627,21 @@ class $$FavoritesTableTableFilterComposer
 
   ColumnFilters<bool> get isDeleted => $composableBuilder(
     column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get operationTimestamp => $composableBuilder(
+    column: $table.operationTimestamp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5520,6 +5695,21 @@ class $$FavoritesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get operationTimestamp => $composableBuilder(
+    column: $table.operationTimestamp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -5555,6 +5745,19 @@ class $$FavoritesTableTableAnnotationComposer
 
   GeneratedColumn<bool> get isDeleted =>
       $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get operationTimestamp => $composableBuilder(
+    column: $table.operationTimestamp,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -5604,6 +5807,9 @@ class $$FavoritesTableTableTableManager
                 Value<String?> note = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> operationTimestamp = const Value.absent(),
+                Value<String> operationId = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => FavoritesTableCompanion(
                 id: id,
@@ -5613,6 +5819,9 @@ class $$FavoritesTableTableTableManager
                 note: note,
                 isSynced: isSynced,
                 isDeleted: isDeleted,
+                operationTimestamp: operationTimestamp,
+                operationId: operationId,
+                deviceId: deviceId,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -5624,6 +5833,9 @@ class $$FavoritesTableTableTableManager
                 Value<String?> note = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> operationTimestamp = const Value.absent(),
+                Value<String> operationId = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => FavoritesTableCompanion.insert(
                 id: id,
@@ -5633,6 +5845,9 @@ class $$FavoritesTableTableTableManager
                 note: note,
                 isSynced: isSynced,
                 isDeleted: isDeleted,
+                operationTimestamp: operationTimestamp,
+                operationId: operationId,
+                deviceId: deviceId,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
