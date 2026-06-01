@@ -48,8 +48,10 @@ class TodayWordRecommendationService {
       endDate: dateEnd,
     );
 
+    final candidateWords = await _loadRecommendationCandidates(goal);
+
     return buildRecommendations(
-      allWords: _wordService.allWords,
+      allWords: candidateWords,
       progressById: _studyRecordService.getProgressByType(StudyType.word),
       todayRecords: dateRecords,
       goal: goal,
@@ -57,6 +59,27 @@ class TodayWordRecommendationService {
       userSeed: _supabaseService.currentUser?.id ?? 'local',
       date: dateStart,
     );
+  }
+
+  Future<List<Word>> _loadRecommendationCandidates(LearningGoal goal) async {
+    final quotas = _buildJlptQuotas(
+      count: max(goal.dailyGoal, 1),
+      targetJlptLevel: goal.targetJlptLevel,
+    );
+    final levelsToLoad = quotas.keys.where((levels) => levels.isNotEmpty);
+    final pages = await Future.wait(
+      levelsToLoad.map(
+        (levels) => _wordService.queryWords(jlptLevels: levels, limit: 1200),
+      ),
+    );
+
+    final byId = <int, Word>{};
+    for (final page in pages) {
+      for (final word in page) {
+        byId[word.id] = word;
+      }
+    }
+    return byId.values.toList();
   }
 
   static List<TodayWordRecommendation> buildRecommendations({

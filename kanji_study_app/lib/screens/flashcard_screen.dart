@@ -5,6 +5,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../l10n/localization_extensions.dart';
 import '../models/flashcard_item.dart';
 import '../models/flashcard_session_model.dart';
+import '../models/word_flashcard_adapter.dart';
 import '../services/flashcard_service.dart';
 import '../services/word_service.dart';
 import '../services/kanji_service.dart';
@@ -458,6 +459,9 @@ class _FlashcardScreenState extends State<FlashcardScreen>
   Widget _buildCardFront(FlashcardItem item, FThemeData theme) {
     // itemType에 따라 적절한 카드 컴포넌트 사용
     if (item.itemType == 'word') {
+      if (item is WordFlashcardAdapter) {
+        return WordFlashcardContent(word: item.word, isBack: false);
+      }
       final word = _wordService.getWordById(item.id);
       if (word != null) {
         return WordFlashcardContent(word: word, isBack: false);
@@ -490,6 +494,9 @@ class _FlashcardScreenState extends State<FlashcardScreen>
   Widget _buildCardBack(FlashcardItem item, FThemeData theme) {
     // itemType에 따라 적절한 카드 컴포넌트 사용
     if (item.itemType == 'word') {
+      if (item is WordFlashcardAdapter) {
+        return WordFlashcardContent(word: item.word, isBack: true);
+      }
       final word = _wordService.getWordById(item.id);
       if (word != null) {
         return WordFlashcardContent(word: word, isBack: true);

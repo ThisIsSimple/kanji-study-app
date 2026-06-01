@@ -207,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           )
           .toList(),
-      resumeItems: _wordService.allWords,
+      loadResumeItems: (session) => _wordService.getWordsByIds(session.itemIds),
       onComplete: () async {
         await _analyticsService.clearCache();
         await _loadData();
