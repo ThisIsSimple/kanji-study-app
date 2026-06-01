@@ -12,6 +12,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Konna Kanji';
 
   @override
+  String get loginSubtitle => 'Japanese study that feels just right';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get continueWithApple => 'Continue with Apple';
+
+  @override
+  String get continueWithKakao => 'Continue with Kakao';
+
+  @override
+  String get orDivider => 'or';
+
+  @override
+  String get startAsGuest => 'Start as guest';
+
+  @override
+  String get guestStartInfo =>
+      'Start as a guest now, then link a social account later to keep your data safe.';
+
+  @override
+  String guestLoginFailed(Object error) {
+    return 'Guest login failed: $error';
+  }
+
+  @override
+  String googleLoginFailed(Object error) {
+    return 'Google login failed: $error';
+  }
+
+  @override
+  String appleLoginFailed(Object error) {
+    return 'Apple login failed: $error';
+  }
+
+  @override
+  String kakaoLoginFailed(Object error) {
+    return 'Kakao login failed: $error';
+  }
+
+  @override
   String get home => 'Home';
 
   @override

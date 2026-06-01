@@ -12,6 +12,48 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appTitle => '콘나칸지';
 
   @override
+  String get loginSubtitle => '일본어 공부, 바로 이런 느낌!';
+
+  @override
+  String get continueWithGoogle => 'Google로 계속하기';
+
+  @override
+  String get continueWithApple => 'Apple로 계속하기';
+
+  @override
+  String get continueWithKakao => '카카오로 계속하기';
+
+  @override
+  String get orDivider => '또는';
+
+  @override
+  String get startAsGuest => '게스트로 시작하기';
+
+  @override
+  String get guestStartInfo =>
+      '게스트로 시작하면 나중에 SNS 계정을 연동하여 데이터를 안전하게 보관할 수 있습니다.';
+
+  @override
+  String guestLoginFailed(Object error) {
+    return '게스트 로그인 실패: $error';
+  }
+
+  @override
+  String googleLoginFailed(Object error) {
+    return 'Google 로그인 실패: $error';
+  }
+
+  @override
+  String appleLoginFailed(Object error) {
+    return 'Apple 로그인 실패: $error';
+  }
+
+  @override
+  String kakaoLoginFailed(Object error) {
+    return '카카오 로그인 실패: $error';
+  }
+
+  @override
   String get home => '홈';
 
   @override

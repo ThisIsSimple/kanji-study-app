@@ -12,6 +12,47 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appTitle => 'こんな漢字';
 
   @override
+  String get loginSubtitle => '日本語学習、ちょうどこんな感じ';
+
+  @override
+  String get continueWithGoogle => 'Googleで続ける';
+
+  @override
+  String get continueWithApple => 'Appleで続ける';
+
+  @override
+  String get continueWithKakao => 'カカオで続ける';
+
+  @override
+  String get orDivider => 'または';
+
+  @override
+  String get startAsGuest => 'ゲストとして始める';
+
+  @override
+  String get guestStartInfo => 'ゲストとして始めても、あとでSNSアカウントを連携してデータを安全に保管できます。';
+
+  @override
+  String guestLoginFailed(Object error) {
+    return 'ゲストログインに失敗しました: $error';
+  }
+
+  @override
+  String googleLoginFailed(Object error) {
+    return 'Googleログインに失敗しました: $error';
+  }
+
+  @override
+  String appleLoginFailed(Object error) {
+    return 'Appleログインに失敗しました: $error';
+  }
+
+  @override
+  String kakaoLoginFailed(Object error) {
+    return 'カカオログインに失敗しました: $error';
+  }
+
+  @override
   String get home => 'ホーム';
 
   @override

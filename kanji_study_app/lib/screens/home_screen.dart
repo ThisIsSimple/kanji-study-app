@@ -40,6 +40,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final AnalyticsService _analyticsService = AnalyticsService.instance;
   final ConnectivityService _connectivityService = ConnectivityService.instance;
   final FlashcardService _flashcardService = FlashcardService.instance;
+  final LanguageSettingsService _languageSettings =
+      LanguageSettingsService.instance;
 
   LearningGoal? _goal;
   UserStats? _stats;
@@ -54,13 +56,19 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _learningGoalService.addListener(_handleLearningGoalChanged);
+    _languageSettings.addListener(_handleLanguageSettingsChanged);
     _initializeServices();
   }
 
   @override
   void dispose() {
     _learningGoalService.removeListener(_handleLearningGoalChanged);
+    _languageSettings.removeListener(_handleLanguageSettingsChanged);
     super.dispose();
+  }
+
+  void _handleLanguageSettingsChanged() {
+    if (mounted) setState(() {});
   }
 
   void _handleLearningGoalChanged() {
@@ -557,8 +565,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWordRow(FThemeData theme, TodayWordRecommendation item) {
     final word = item.word;
-    final wordMeaningLanguage =
-        LanguageSettingsService.instance.wordMeaningLanguage;
+    final wordMeaningLanguage = _languageSettings.wordMeaningLanguage;
     final meaningsText = word.displayMeaningsText(wordMeaningLanguage);
     final meaning = meaningsText.isEmpty
         ? context.l10n.noMeaning

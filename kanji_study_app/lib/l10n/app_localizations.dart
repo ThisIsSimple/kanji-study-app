@@ -106,6 +106,72 @@ abstract class AppLocalizations {
   /// **'콘나칸지'**
   String get appTitle;
 
+  /// No description provided for @loginSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'일본어 공부, 바로 이런 느낌!'**
+  String get loginSubtitle;
+
+  /// No description provided for @continueWithGoogle.
+  ///
+  /// In ko, this message translates to:
+  /// **'Google로 계속하기'**
+  String get continueWithGoogle;
+
+  /// No description provided for @continueWithApple.
+  ///
+  /// In ko, this message translates to:
+  /// **'Apple로 계속하기'**
+  String get continueWithApple;
+
+  /// No description provided for @continueWithKakao.
+  ///
+  /// In ko, this message translates to:
+  /// **'카카오로 계속하기'**
+  String get continueWithKakao;
+
+  /// No description provided for @orDivider.
+  ///
+  /// In ko, this message translates to:
+  /// **'또는'**
+  String get orDivider;
+
+  /// No description provided for @startAsGuest.
+  ///
+  /// In ko, this message translates to:
+  /// **'게스트로 시작하기'**
+  String get startAsGuest;
+
+  /// No description provided for @guestStartInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'게스트로 시작하면 나중에 SNS 계정을 연동하여 데이터를 안전하게 보관할 수 있습니다.'**
+  String get guestStartInfo;
+
+  /// No description provided for @guestLoginFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'게스트 로그인 실패: {error}'**
+  String guestLoginFailed(Object error);
+
+  /// No description provided for @googleLoginFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'Google 로그인 실패: {error}'**
+  String googleLoginFailed(Object error);
+
+  /// No description provided for @appleLoginFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'Apple 로그인 실패: {error}'**
+  String appleLoginFailed(Object error);
+
+  /// No description provided for @kakaoLoginFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'카카오 로그인 실패: {error}'**
+  String kakaoLoginFailed(Object error);
+
   /// No description provided for @home.
   ///
   /// In ko, this message translates to:
