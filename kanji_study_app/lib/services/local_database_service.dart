@@ -63,6 +63,7 @@ class LocalDatabaseService {
       debugPrint('Downloading words data from Supabase...');
       final supabaseService = SupabaseService.instance;
       var downloaded = 0;
+      final downloadedIds = <int>{};
 
       while (true) {
         final pageStart = downloaded;
@@ -77,6 +78,7 @@ class LocalDatabaseService {
 
         final words = <WordsTableCompanion>[];
         for (final json in response) {
+          downloadedIds.add(json['id'] as int);
           words.add(_wordJsonToCompanion(json));
         }
 
@@ -87,6 +89,10 @@ class LocalDatabaseService {
         debugPrint('Cached $downloaded words so far');
 
         if (response.length < _wordDownloadPageSize) break;
+      }
+
+      if (downloadedIds.isNotEmpty) {
+        await _database.deleteWordsExceptIds(downloadedIds);
       }
 
       debugPrint('Successfully cached $downloaded words');

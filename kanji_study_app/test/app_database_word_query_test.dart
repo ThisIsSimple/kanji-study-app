@@ -68,6 +68,29 @@ void main() {
       expect(row?.word, '新しい');
       expect(await database.countWords(), 1);
     });
+
+    test('deleteWordsExceptIds removes stale rows only', () async {
+      await database.insertWordsBatch([
+        _word(id: 1, word: '残る', reading: 'のこる'),
+        _word(id: 2, word: '消える', reading: 'きえる'),
+        _word(id: 3, word: '残す', reading: 'のこす'),
+      ]);
+
+      await database.deleteWordsExceptIds({1, 3});
+
+      final rows = await database.queryWords(limit: 10);
+      expect(rows.map((word) => word.id), [1, 3]);
+    });
+
+    test('deleteWordsExceptIds ignores an empty id set', () async {
+      await database.insertWordsBatch([
+        _word(id: 1, word: '残る', reading: 'のこる'),
+      ]);
+
+      await database.deleteWordsExceptIds({});
+
+      expect(await database.countWords(), 1);
+    });
   });
 }
 

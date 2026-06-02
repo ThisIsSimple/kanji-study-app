@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import '../models/learning_goal.dart';
 import '../models/study_progress.dart';
 import '../models/study_record_model.dart';
@@ -19,6 +21,7 @@ class TodayWordRecommendationService {
   final WordService _wordService = WordService.instance;
   final StudyRecordService _studyRecordService = StudyRecordService.instance;
   final SupabaseService _supabaseService = SupabaseService.instance;
+  static const int _recommendationCandidatePageSize = 1200;
 
   Future<List<TodayWordRecommendation>> getTodayWords({
     required LearningGoal goal,
@@ -48,37 +51,130 @@ class TodayWordRecommendationService {
       endDate: dateEnd,
     );
 
-    final candidateWords = await _loadRecommendationCandidates(goal);
+    final progressById = _studyRecordService.getProgressByType(StudyType.word);
+    final userSeed = _supabaseService.currentUser?.id ?? 'local';
+    final candidateWords = await _loadRecommendationCandidates(
+      goal: goal,
+      progressById: progressById,
+      todayRecords: dateRecords,
+      alreadyStudiedToday: alreadyStudiedForDate,
+      userSeed: userSeed,
+      date: dateStart,
+    );
 
     return buildRecommendations(
       allWords: candidateWords,
-      progressById: _studyRecordService.getProgressByType(StudyType.word),
+      progressById: progressById,
       todayRecords: dateRecords,
       goal: goal,
       alreadyStudiedToday: alreadyStudiedForDate,
-      userSeed: _supabaseService.currentUser?.id ?? 'local',
+      userSeed: userSeed,
       date: dateStart,
     );
   }
 
-  Future<List<Word>> _loadRecommendationCandidates(LearningGoal goal) async {
+  Future<List<Word>> _loadRecommendationCandidates({
+    required LearningGoal goal,
+    required Map<int, StudyItemProgress> progressById,
+    required List<StudyRecord> todayRecords,
+    required int alreadyStudiedToday,
+    required String userSeed,
+    required DateTime date,
+  }) {
+    return loadRecommendationCandidatesFromPages(
+      goal: goal,
+      progressById: progressById,
+      todayRecords: todayRecords,
+      alreadyStudiedToday: alreadyStudiedToday,
+      userSeed: userSeed,
+      date: date,
+      queryWords:
+          ({
+            required Set<int> jlptLevels,
+            required int limit,
+            required int offset,
+          }) {
+            return _wordService.queryWords(
+              jlptLevels: jlptLevels,
+              limit: limit,
+              offset: offset,
+            );
+          },
+    );
+  }
+
+  @visibleForTesting
+  static Future<List<Word>> loadRecommendationCandidatesFromPages({
+    required LearningGoal goal,
+    required Map<int, StudyItemProgress> progressById,
+    required List<StudyRecord> todayRecords,
+    required int alreadyStudiedToday,
+    required String userSeed,
+    required DateTime date,
+    required Future<List<Word>> Function({
+      required Set<int> jlptLevels,
+      required int limit,
+      required int offset,
+    })
+    queryWords,
+    int pageSize = _recommendationCandidatePageSize,
+  }) async {
+    final remaining = max(0, goal.dailyGoal - alreadyStudiedToday);
+    if (remaining == 0 || !goal.isValid) return [];
+
     final quotas = _buildJlptQuotas(
       count: max(goal.dailyGoal, 1),
       targetJlptLevel: goal.targetJlptLevel,
     );
-    final levelsToLoad = quotas.keys.where((levels) => levels.isNotEmpty);
-    final pages = await Future.wait(
-      levelsToLoad.map(
-        (levels) => _wordService.queryWords(jlptLevels: levels, limit: 1200),
-      ),
-    );
+    final levelsToLoad = quotas.keys
+        .where((levels) => levels.isNotEmpty)
+        .toList();
+    final offsets = {for (final levels in levelsToLoad) levels: 0};
+    final exhausted = <Set<int>>{};
 
     final byId = <int, Word>{};
-    for (final page in pages) {
-      for (final word in page) {
-        byId[word.id] = word;
+    while (exhausted.length < levelsToLoad.length) {
+      var loadedAny = false;
+
+      for (final levels in levelsToLoad) {
+        if (exhausted.contains(levels)) continue;
+
+        final page = await queryWords(
+          jlptLevels: levels,
+          limit: pageSize,
+          offset: offsets[levels]!,
+        );
+        offsets[levels] = offsets[levels]! + page.length;
+
+        if (page.isEmpty) {
+          exhausted.add(levels);
+          continue;
+        }
+
+        loadedAny = true;
+        for (final word in page) {
+          byId[word.id] = word;
+        }
+
+        if (page.length < pageSize) {
+          exhausted.add(levels);
+        }
+      }
+
+      final recommendations = buildRecommendations(
+        allWords: byId.values.toList(),
+        progressById: progressById,
+        todayRecords: todayRecords,
+        goal: goal,
+        alreadyStudiedToday: alreadyStudiedToday,
+        userSeed: userSeed,
+        date: date,
+      );
+      if (recommendations.length >= remaining || !loadedAny) {
+        break;
       }
     }
+
     return byId.values.toList();
   }
 

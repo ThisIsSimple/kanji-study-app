@@ -388,6 +388,35 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> clearWords() => delete(wordsTable).go();
 
+  Future<void> deleteWordsExceptIds(Set<int> ids) async {
+    if (ids.isEmpty) return;
+
+    await transaction(() async {
+      await customStatement(
+        'CREATE TEMP TABLE IF NOT EXISTS temp_synced_word_ids (id INTEGER PRIMARY KEY)',
+      );
+      await customStatement('DELETE FROM temp_synced_word_ids');
+
+      final sortedIds = ids.toList()..sort();
+      const chunkSize = 500;
+      for (var start = 0; start < sortedIds.length; start += chunkSize) {
+        final end = (start + chunkSize).clamp(0, sortedIds.length);
+        final chunk = sortedIds.sublist(start, end);
+        final placeholders = List.filled(chunk.length, '(?)').join(', ');
+        await customStatement(
+          'INSERT OR IGNORE INTO temp_synced_word_ids (id) VALUES $placeholders',
+          chunk,
+        );
+      }
+
+      await customStatement('''
+        DELETE FROM words_table
+        WHERE id NOT IN (SELECT id FROM temp_synced_word_ids)
+      ''');
+      await customStatement('DELETE FROM temp_synced_word_ids');
+    });
+  }
+
   Future<List<WordsTableData>> queryWords({
     String? query,
     Set<int> jlptLevels = const {},

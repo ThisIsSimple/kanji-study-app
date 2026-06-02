@@ -135,7 +135,12 @@ class _WordsScreenState extends State<WordsScreen> {
   Future<void> _reloadWords({bool showLoader = true}) async {
     final generation = ++_queryGeneration;
     if (showLoader && mounted) {
-      setState(() => _isLoading = true);
+      setState(() {
+        _isLoading = true;
+        _isLoadingMore = false;
+      });
+    } else if (mounted) {
+      setState(() => _isLoadingMore = false);
     }
 
     try {
@@ -192,15 +197,16 @@ class _WordsScreenState extends State<WordsScreen> {
         offset: _filteredWords.length,
       );
 
-      if (!mounted || generation != _queryGeneration) return;
-      setState(() {
-        _filteredWords = [..._filteredWords, ...words];
-        _hasMoreWords = _filteredWords.length < _totalWordCount;
-      });
+      if (mounted && generation == _queryGeneration) {
+        setState(() {
+          _filteredWords = [..._filteredWords, ...words];
+          _hasMoreWords = _filteredWords.length < _totalWordCount;
+        });
+      }
     } catch (e) {
       debugPrint('Error loading more words: $e');
     } finally {
-      if (mounted && generation == _queryGeneration) {
+      if (mounted) {
         setState(() => _isLoadingMore = false);
       }
     }
@@ -728,6 +734,7 @@ class _WordsScreenState extends State<WordsScreen> {
                             ),
                           )
                         : ListView.separated(
+                            controller: _scrollController,
                             padding: EdgeInsets.all(AppSpacing.md),
                             itemCount:
                                 _filteredWords.length +
