@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
@@ -5,7 +7,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../l10n/localization_extensions.dart';
 import '../models/word_model.dart';
 import '../models/word_flashcard_adapter.dart';
-import '../models/study_record_model.dart';
 import '../services/language_settings_service.dart';
 import '../services/word_service.dart';
 import '../services/flashcard_service.dart';
@@ -39,14 +40,21 @@ class _WordsScreenState extends State<WordsScreen> {
   final LanguageSettingsService _languageSettings =
       LanguageSettingsService.instance;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   List<Word> _filteredWords = [];
   String _searchQuery = '';
   final Set<int> _selectedJlptLevels = {};
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMoreWords = false;
   bool _showOnlyFavorites = false;
   bool _isSearchMode = false;
   bool _autofocusSearchField = false;
+  int _totalWordCount = 0;
+  int _queryGeneration = 0;
+  Timer? _searchDebounce;
+  static const int _pageSize = 50;
 
   // Study status filter: null=전체, 'not_studied', 'completed', 'forgot'
   String? _selectedStudyFilter;
@@ -56,6 +64,7 @@ class _WordsScreenState extends State<WordsScreen> {
     super.initState();
     _languageSettings.addListener(_onLanguageSettingsChanged);
     _loadWords();
+    _scrollController.addListener(_onScroll);
     _searchController.addListener(() {
       _onSearchChanged(_searchController.text);
     });
@@ -64,13 +73,15 @@ class _WordsScreenState extends State<WordsScreen> {
   @override
   void dispose() {
     _languageSettings.removeListener(_onLanguageSettingsChanged);
+    _searchDebounce?.cancel();
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   void _onLanguageSettingsChanged() {
     if (!mounted) return;
-    _applyFilters();
+    setState(() {});
   }
 
   Future<void> _loadWords() async {
@@ -82,9 +93,7 @@ class _WordsScreenState extends State<WordsScreen> {
         await _wordService.init();
       }
       await _loadStudyStatusCache();
-      if (mounted) {
-        _applyFilters();
-      }
+      await _reloadWords(showLoader: false);
     } catch (e) {
       debugPrint('Error loading words: $e');
     } finally {
@@ -103,59 +112,104 @@ class _WordsScreenState extends State<WordsScreen> {
   }
 
   void _applyFilters() {
-    setState(() {
-      List<Word> words;
-
-      if (_showOnlyFavorites) {
-        words = _wordService.getFavoriteWords();
-      } else {
-        words = _wordService.allWords;
-      }
-
-      // Apply search filter
-      if (_searchQuery.isNotEmpty) {
-        words = words
-            .where(
-              (word) => word.matchesQuery(
-                _searchQuery,
-                meaningLanguage: _languageSettings.wordMeaningLanguage,
-              ),
-            )
-            .toList();
-      }
-
-      // Apply JLPT level filters
-      if (_selectedJlptLevels.isNotEmpty) {
-        words = words
-            .where((word) => _selectedJlptLevels.contains(word.jlptLevel))
-            .toList();
-      }
-
-      // Apply study status filter
-      if (_selectedStudyFilter != null) {
-        words = words.where((word) {
-          final status = _studyRecordService.getStatus(StudyType.word, word.id);
-          switch (_selectedStudyFilter) {
-            case 'not_studied':
-              return status == null;
-            case 'completed':
-              return status == StudyStatus.completed ||
-                  status == StudyStatus.mastered;
-            case 'forgot':
-              return status == StudyStatus.forgot;
-            default:
-              return true;
-          }
-        }).toList();
-      }
-
-      _filteredWords = words;
-    });
+    unawaited(_reloadWords());
   }
 
   void _onSearchChanged(String value) {
     _searchQuery = value;
-    _applyFilters();
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), _applyFilters);
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients || _isLoadingMore || !_hasMoreWords) {
+      return;
+    }
+
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 400) {
+      unawaited(_loadMoreWords());
+    }
+  }
+
+  Future<void> _reloadWords({bool showLoader = true}) async {
+    final generation = ++_queryGeneration;
+    if (showLoader && mounted) {
+      setState(() {
+        _isLoading = true;
+        _isLoadingMore = false;
+      });
+    } else if (mounted) {
+      setState(() => _isLoadingMore = false);
+    }
+
+    try {
+      final wordsFuture = _wordService.queryWords(
+        query: _searchQuery,
+        jlptLevels: _selectedJlptLevels,
+        favoriteOnly: _showOnlyFavorites,
+        studyFilter: _selectedStudyFilter,
+        limit: _pageSize,
+        offset: 0,
+      );
+      final countFuture = _wordService.countWords(
+        query: _searchQuery,
+        jlptLevels: _selectedJlptLevels,
+        favoriteOnly: _showOnlyFavorites,
+        studyFilter: _selectedStudyFilter,
+      );
+      final words = await wordsFuture;
+      final count = await countFuture;
+
+      if (!mounted || generation != _queryGeneration) return;
+      setState(() {
+        _filteredWords = words;
+        _totalWordCount = count;
+        _hasMoreWords = words.length < count;
+      });
+    } catch (e) {
+      debugPrint('Error querying words: $e');
+      if (!mounted || generation != _queryGeneration) return;
+      setState(() {
+        _filteredWords = [];
+        _totalWordCount = 0;
+        _hasMoreWords = false;
+      });
+    } finally {
+      if (mounted && generation == _queryGeneration) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _loadMoreWords() async {
+    if (!_hasMoreWords || _isLoadingMore) return;
+
+    setState(() => _isLoadingMore = true);
+    final generation = _queryGeneration;
+    try {
+      final words = await _wordService.queryWords(
+        query: _searchQuery,
+        jlptLevels: _selectedJlptLevels,
+        favoriteOnly: _showOnlyFavorites,
+        studyFilter: _selectedStudyFilter,
+        limit: _pageSize,
+        offset: _filteredWords.length,
+      );
+
+      if (mounted && generation == _queryGeneration) {
+        setState(() {
+          _filteredWords = [..._filteredWords, ...words];
+          _hasMoreWords = _filteredWords.length < _totalWordCount;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading more words: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingMore = false);
+      }
+    }
   }
 
   void _toggleJlptFilter(int level) {
@@ -165,15 +219,15 @@ class _WordsScreenState extends State<WordsScreen> {
       } else {
         _selectedJlptLevels.add(level);
       }
-      _applyFilters();
     });
+    _applyFilters();
   }
 
   void _toggleFavoriteFilter() {
     setState(() {
       _showOnlyFavorites = !_showOnlyFavorites;
-      _applyFilters();
     });
+    _applyFilters();
   }
 
   void _toggleMeanings() {
@@ -187,9 +241,11 @@ class _WordsScreenState extends State<WordsScreen> {
       if (!_isSearchMode) {
         _searchController.clear();
         _searchQuery = '';
-        _applyFilters();
       }
     });
+    if (!_isSearchMode) {
+      _applyFilters();
+    }
   }
 
   Future<void> _openHandwritingSearch() async {
@@ -197,9 +253,12 @@ class _WordsScreenState extends State<WordsScreen> {
     await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
     if (!mounted) return;
 
+    final availableWords = await _wordService.getAllWordTexts();
+    if (!mounted) return;
+
     final selectedWord = await showWordHandwritingSheet(
       context,
-      availableWords: _wordService.allWords.map((word) => word.word).toSet(),
+      availableWords: availableWords.toSet(),
     );
 
     if (!mounted) return;
@@ -237,6 +296,15 @@ class _WordsScreenState extends State<WordsScreen> {
       filteredItems: _filteredWords,
       flashcardService: _flashcardService,
       emptyMessage: context.l10n.noWordsToStudy,
+      totalItemCount: _totalWordCount,
+      loadSelectedItems: (count) => _wordService.getWordsForFlashcardSession(
+        query: _searchQuery,
+        jlptLevels: _selectedJlptLevels,
+        favoriteOnly: _showOnlyFavorites,
+        studyFilter: _selectedStudyFilter,
+        limit: count,
+      ),
+      loadResumeItems: (session) => _wordService.getWordsByIds(session.itemIds),
       toFlashcardItems: (items) => items
           .map(
             (word) => WordFlashcardAdapter(
@@ -258,11 +326,11 @@ class _WordsScreenState extends State<WordsScreen> {
     try {
       await _wordService.toggleFavorite(word.id);
       if (!mounted) return;
-      setState(() {
-        if (_showOnlyFavorites) {
-          _applyFilters();
-        }
-      });
+      if (_showOnlyFavorites) {
+        _applyFilters();
+      } else {
+        setState(() {});
+      }
     } catch (e) {
       if (!mounted) return;
       showAppToast(
@@ -640,7 +708,7 @@ class _WordsScreenState extends State<WordsScreen> {
                     onRefresh: () async {
                       await _wordService.reloadData();
                       if (mounted) {
-                        _applyFilters();
+                        await _reloadWords(showLoader: false);
                       }
                     },
                     child: _filteredWords.isEmpty
@@ -666,9 +734,12 @@ class _WordsScreenState extends State<WordsScreen> {
                             ),
                           )
                         : ListView.separated(
+                            controller: _scrollController,
                             padding: EdgeInsets.all(AppSpacing.md),
-                            itemCount: _filteredWords.length,
-                            key: ValueKey(_filteredWords.length),
+                            itemCount:
+                                _filteredWords.length +
+                                (_isLoadingMore ? 1 : 0),
+                            key: ValueKey('words-$_queryGeneration'),
                             separatorBuilder: (context, index) {
                               return const SizedBox(
                                 height: 12,
@@ -677,7 +748,10 @@ class _WordsScreenState extends State<WordsScreen> {
                             itemBuilder: (context, index) {
                               // Safety check to prevent RangeError
                               if (index >= _filteredWords.length) {
-                                return const SizedBox.shrink();
+                                return const Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Center(child: FCircularProgress()),
+                                );
                               }
                               final word = _filteredWords[index];
                               return WordListItem(

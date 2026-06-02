@@ -19,6 +19,7 @@ class LocalDatabaseService {
 
   AppDatabase get database => _database;
   bool get isInitialized => _isInitialized;
+  static const int _wordDownloadPageSize = 1000;
 
   /// 서비스 초기화
   Future<void> initialize() async {
@@ -55,25 +56,46 @@ class LocalDatabaseService {
   }
 
   /// Supabase에서 전체 단어 데이터 다운로드 및 저장
-  Future<void> downloadAndCacheWordsData() async {
+  Future<void> downloadAndCacheWordsData({
+    void Function(int downloaded)? onProgress,
+  }) async {
     try {
       debugPrint('Downloading words data from Supabase...');
       final supabaseService = SupabaseService.instance;
-      final response = await supabaseService.client
-          .from('words')
-          .select()
-          .order('id', ascending: true);
+      var downloaded = 0;
+      final downloadedIds = <int>{};
 
-      final List<WordsTableCompanion> words = [];
-      for (final json in response) {
-        words.add(_wordJsonToCompanion(json));
+      while (true) {
+        final pageStart = downloaded;
+        final pageEnd = pageStart + _wordDownloadPageSize - 1;
+        final response = await supabaseService.client
+            .from('words')
+            .select()
+            .order('id', ascending: true)
+            .range(pageStart, pageEnd);
+
+        if (response.isEmpty) break;
+
+        final words = <WordsTableCompanion>[];
+        for (final json in response) {
+          downloadedIds.add(json['id'] as int);
+          words.add(_wordJsonToCompanion(json));
+        }
+
+        await _database.insertWordsBatch(words);
+
+        downloaded += words.length;
+        onProgress?.call(downloaded);
+        debugPrint('Cached $downloaded words so far');
+
+        if (response.length < _wordDownloadPageSize) break;
       }
 
-      // 기존 데이터 삭제 후 새 데이터 삽입
-      await _database.clearWords();
-      await _database.insertWordsBatch(words);
+      if (downloadedIds.isNotEmpty) {
+        await _database.deleteWordsExceptIds(downloadedIds);
+      }
 
-      debugPrint('Successfully cached ${words.length} words');
+      debugPrint('Successfully cached $downloaded words');
     } catch (e) {
       debugPrint('Error downloading words data: $e');
       rethrow;
@@ -105,6 +127,64 @@ class LocalDatabaseService {
   Future<Word?> getWordById(int id) async {
     final wordData = await _database.getWordById(id);
     return wordData != null ? _wordDataToModel(wordData) : null;
+  }
+
+  Future<List<Word>> queryWords({
+    String? query,
+    Set<int> jlptLevels = const {},
+    Set<int>? includeIds,
+    Set<int> excludeIds = const {},
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final wordsData = await _database.queryWords(
+      query: query,
+      jlptLevels: jlptLevels,
+      includeIds: includeIds,
+      excludeIds: excludeIds,
+      limit: limit,
+      offset: offset,
+    );
+    return wordsData.map(_wordDataToModel).toList();
+  }
+
+  Future<int> countWords({
+    String? query,
+    Set<int> jlptLevels = const {},
+    Set<int>? includeIds,
+    Set<int> excludeIds = const {},
+  }) {
+    return _database.countWords(
+      query: query,
+      jlptLevels: jlptLevels,
+      includeIds: includeIds,
+      excludeIds: excludeIds,
+    );
+  }
+
+  Future<List<Word>> getWordsByIds(List<int> ids) async {
+    final wordsData = await _database.getWordsByIds(ids);
+    return wordsData.map(_wordDataToModel).toList();
+  }
+
+  Future<List<String>> getAllWordTexts() {
+    return _database.getAllWordTexts();
+  }
+
+  Future<List<int>> getWordIdsForSession({
+    String? query,
+    Set<int> jlptLevels = const {},
+    Set<int>? includeIds,
+    Set<int> excludeIds = const {},
+    required int limit,
+  }) {
+    return _database.getWordIdsForSession(
+      query: query,
+      jlptLevels: jlptLevels,
+      includeIds: includeIds,
+      excludeIds: excludeIds,
+      limit: limit,
+    );
   }
 
   /// Drift 한자 데이터 → Kanji 모델 변환

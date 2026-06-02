@@ -64,7 +64,6 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
   bool _isLoadingStats = true;
   bool _isRecordingStudy = false;
   bool _showStrokeOrder = false;
-  List<Word> _allWords = [];
   List<Word> _relatedWords = [];
   bool _isLoadingRelatedWords = true;
   String? _relatedWordsError;
@@ -132,14 +131,11 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
     });
 
     try {
-      if (_allWords.isEmpty) {
-        _allWords = await _localDatabaseService.getAllWords();
-      }
-
       final relatedWords =
-          _allWords
-              .where((word) => word.word.contains(targetCharacter))
-              .toList()
+          (await _localDatabaseService.queryWords(
+              query: targetCharacter,
+              limit: 100,
+            )).where((word) => word.word.contains(targetCharacter)).toList()
             ..sort((a, b) {
               final jlptComparison = a.jlptLevel.compareTo(b.jlptLevel);
               if (jlptComparison != 0) return jlptComparison;
@@ -487,13 +483,10 @@ class _KanjiDetailScreenState extends State<KanjiDetailScreen> {
 
   Widget _buildKanjiPage(Kanji kanji, FThemeData theme) {
     final l10n = context.l10n;
-    final meaningText = _languageSettings.kanjiMeaningLanguage ==
-                KanjiMeaningLanguage.ko &&
+    final meaningText =
+        _languageSettings.kanjiMeaningLanguage == KanjiMeaningLanguage.ko &&
             hasKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings)
-        ? formatKoreanReadings(
-            kanji.koreanKunReadings,
-            kanji.koreanOnReadings,
-          )
+        ? formatKoreanReadings(kanji.koreanKunReadings, kanji.koreanOnReadings)
         : kanji.displayMeaningsText(_languageSettings.kanjiMeaningLanguage);
     final commentary = kanji.displayCommentary(_languageSettings.appLanguage);
     return SingleChildScrollView(
