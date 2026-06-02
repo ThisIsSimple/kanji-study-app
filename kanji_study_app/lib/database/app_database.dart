@@ -113,6 +113,7 @@ class StudyRecordsTable extends Table {
   TextColumn get status => text()(); // 'reviewing', 'familiar', 'mastered'
   DateTimeColumn get studyDate => dateTime()();
   TextColumn get notes => text().nullable()();
+  TextColumn get recordClientId => text().nullable()();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
@@ -194,7 +195,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -311,6 +312,9 @@ class AppDatabase extends _$AppDatabase {
           ON favorites_table (user_id, type, target_id)
         ''');
       }
+      if (from < 10) {
+        await m.addColumn(studyRecordsTable, studyRecordsTable.recordClientId);
+      }
     },
   );
 
@@ -367,6 +371,11 @@ class AppDatabase extends _$AppDatabase {
   /// 학습 기록 삽입/업데이트
   Future<int> insertStudyRecord(StudyRecordsTableCompanion record) =>
       into(studyRecordsTable).insert(record);
+
+  Future<void> updateStudyRecordClientId(int id, String recordClientId) =>
+      (update(studyRecordsTable)..where((t) => t.id.equals(id))).write(
+        StudyRecordsTableCompanion(recordClientId: Value(recordClientId)),
+      );
 
   Future<void> markRecordAsSynced(int id) =>
       (update(studyRecordsTable)..where((t) => t.id.equals(id))).write(

@@ -64,6 +64,7 @@ class StudyRecord {
   final int targetId;
   final StudyStatus status;
   final String? notes;
+  final String? recordClientId;
   final DateTime? createdAt;
 
   const StudyRecord({
@@ -73,6 +74,7 @@ class StudyRecord {
     required this.targetId,
     required this.status,
     this.notes,
+    this.recordClientId,
     this.createdAt,
   });
 
@@ -84,6 +86,7 @@ class StudyRecord {
       targetId: json['target_id'] as int,
       status: StudyStatus.fromString(json['status'] as String),
       notes: json['notes'] as String?,
+      recordClientId: json['record_client_id'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String).toLocal()
           : null,
@@ -98,6 +101,7 @@ class StudyRecord {
       'target_id': targetId,
       'status': status.value,
       if (notes != null) 'notes': notes,
+      if (recordClientId != null) 'record_client_id': recordClientId,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
     };
   }
@@ -109,6 +113,7 @@ class StudyRecord {
       'target_id': targetId,
       'status': status.value,
       if (notes != null) 'notes': notes,
+      if (recordClientId != null) 'record_client_id': recordClientId,
     };
   }
 
@@ -119,6 +124,7 @@ class StudyRecord {
     int? targetId,
     StudyStatus? status,
     String? notes,
+    String? recordClientId,
     DateTime? createdAt,
   }) {
     return StudyRecord(
@@ -128,6 +134,7 @@ class StudyRecord {
       targetId: targetId ?? this.targetId,
       status: status ?? this.status,
       notes: notes ?? this.notes,
+      recordClientId: recordClientId ?? this.recordClientId,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -143,6 +150,7 @@ class StudyRecord {
         other.targetId == targetId &&
         other.status == status &&
         other.notes == notes &&
+        other.recordClientId == recordClientId &&
         other.createdAt == createdAt;
   }
 
@@ -154,12 +162,13 @@ class StudyRecord {
         targetId.hashCode ^
         status.hashCode ^
         notes.hashCode ^
+        recordClientId.hashCode ^
         createdAt.hashCode;
   }
 
   @override
   String toString() {
-    return 'StudyRecord(id: $id, userId: $userId, type: $type, targetId: $targetId, status: $status, notes: $notes, createdAt: $createdAt)';
+    return 'StudyRecord(id: $id, userId: $userId, type: $type, targetId: $targetId, status: $status, notes: $notes, recordClientId: $recordClientId, createdAt: $createdAt)';
   }
 }
 
