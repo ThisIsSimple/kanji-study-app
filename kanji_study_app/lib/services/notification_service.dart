@@ -28,7 +28,7 @@ class NotificationService {
     );
 
     await _notifications.initialize(
-      settings,
+      settings: settings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
   }
@@ -100,11 +100,11 @@ class NotificationService {
     );
 
     await _notifications.zonedSchedule(
-      0,
-      '한자 공부 시간입니다! 🎌',
-      '오늘의 한자를 학습해보세요',
-      scheduledDate,
-      details,
+      id: 0,
+      title: '한자 공부 시간입니다! 🎌',
+      body: '오늘의 한자를 학습해보세요',
+      scheduledDate: scheduledDate,
+      notificationDetails: details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
     );
