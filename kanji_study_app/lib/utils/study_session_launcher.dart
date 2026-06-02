@@ -21,6 +21,7 @@ class StudySessionLauncher {
     required List<FlashcardItem> Function(List<T> items) toFlashcardItems,
     required Future<void> Function() onComplete,
     List<T>? resumeItems,
+    Future<List<T>> Function(FlashcardSession session)? loadResumeItems,
   }) async {
     if (items.isEmpty) {
       final theme = FTheme.of(context);
@@ -63,11 +64,15 @@ class StudySessionLauncher {
               child: const Text('오늘 학습 새로 시작'),
             ),
             FButton(
-              onPress: () {
+              onPress: () async {
                 Navigator.of(dialogContext).pop();
+                final itemsForResume = loadResumeItems != null
+                    ? await loadResumeItems(existingSession)
+                    : resumeItems ?? items;
+                if (!context.mounted) return;
                 _pushFlashcards(
                   context: context,
-                  items: resumeItems ?? items,
+                  items: itemsForResume,
                   session: existingSession,
                   toFlashcardItems: toFlashcardItems,
                   onComplete: onComplete,
@@ -99,8 +104,12 @@ class StudySessionLauncher {
     required String emptyMessage,
     required List<FlashcardItem> Function(List<T> items) toFlashcardItems,
     required Future<void> Function() onComplete,
+    int? totalItemCount,
+    Future<List<T>> Function(int count)? loadSelectedItems,
+    Future<List<T>> Function(FlashcardSession session)? loadResumeItems,
   }) async {
-    if (filteredItems.isEmpty) {
+    final availableCount = totalItemCount ?? filteredItems.length;
+    if (availableCount == 0) {
       final theme = FTheme.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -133,6 +142,8 @@ class StudySessionLauncher {
                 await _startNewSession(
                   context: context,
                   filteredItems: filteredItems,
+                  totalItemCount: availableCount,
+                  loadSelectedItems: loadSelectedItems,
                   toFlashcardItems: toFlashcardItems,
                   onComplete: onComplete,
                 );
@@ -140,11 +151,15 @@ class StudySessionLauncher {
               child: const Text('새로 시작'),
             ),
             FButton(
-              onPress: () {
+              onPress: () async {
                 Navigator.of(dialogContext).pop();
+                final resumeItems = loadResumeItems != null
+                    ? await loadResumeItems(existingSession)
+                    : filteredItems;
+                if (!context.mounted) return;
                 _pushFlashcards(
                   context: context,
-                  items: filteredItems,
+                  items: resumeItems,
                   session: existingSession,
                   toFlashcardItems: toFlashcardItems,
                   onComplete: onComplete,
@@ -162,6 +177,8 @@ class StudySessionLauncher {
     await _startNewSession(
       context: context,
       filteredItems: filteredItems,
+      totalItemCount: availableCount,
+      loadSelectedItems: loadSelectedItems,
       toFlashcardItems: toFlashcardItems,
       onComplete: onComplete,
     );
@@ -170,16 +187,21 @@ class StudySessionLauncher {
   static Future<void> _startNewSession<T>({
     required BuildContext context,
     required List<T> filteredItems,
+    required int totalItemCount,
+    required Future<List<T>> Function(int count)? loadSelectedItems,
     required List<FlashcardItem> Function(List<T>) toFlashcardItems,
     required Future<void> Function() onComplete,
   }) async {
     final selectedCount = await FlashcardCountSelector.show(
       context,
-      filteredItems.length,
+      totalItemCount,
     );
 
     if (selectedCount == null || !context.mounted) return;
-    final selectedItems = _selectRandomItems(filteredItems, selectedCount);
+    final selectedItems = loadSelectedItems != null
+        ? await loadSelectedItems(selectedCount)
+        : _selectRandomItems(filteredItems, selectedCount);
+    if (!context.mounted) return;
     _pushFlashcards(
       context: context,
       items: selectedItems,
@@ -196,7 +218,11 @@ class StudySessionLauncher {
     required List<FlashcardItem> Function(List<T>) toFlashcardItems,
     required Future<void> Function() onComplete,
   }) {
+    if (items.isEmpty) return;
+
     final flashcardItems = toFlashcardItems(items);
+    if (flashcardItems.isEmpty) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(

@@ -183,6 +183,58 @@ void main() {
 
     expect(recommendations, isEmpty);
   });
+
+  test('loads later candidate pages when early page is exhausted', () async {
+    final words = [
+      _word(id: 300, jlptLevel: 3),
+      _word(id: 301, jlptLevel: 3),
+      _word(id: 302, jlptLevel: 3),
+    ];
+    final progressById = {
+      300: _masteredProgress(300),
+      301: _masteredProgress(301),
+    };
+    final requestedTargetOffsets = <int>[];
+
+    final candidates =
+        await TodayWordRecommendationService.loadRecommendationCandidatesFromPages(
+          goal: LearningGoal(dailyGoal: 1, targetJlptLevel: 3),
+          progressById: progressById,
+          todayRecords: const [],
+          alreadyStudiedToday: 0,
+          userSeed: 'user-1',
+          date: DateTime(2026, 5, 26),
+          pageSize: 2,
+          queryWords:
+              ({
+                required Set<int> jlptLevels,
+                required int limit,
+                required int offset,
+              }) async {
+                if (jlptLevels.contains(3)) {
+                  requestedTargetOffsets.add(offset);
+                }
+                return words
+                    .where((word) => jlptLevels.contains(word.jlptLevel))
+                    .skip(offset)
+                    .take(limit)
+                    .toList();
+              },
+        );
+
+    final recommendations = TodayWordRecommendationService.buildRecommendations(
+      allWords: candidates,
+      progressById: progressById,
+      todayRecords: const [],
+      goal: LearningGoal(dailyGoal: 1, targetJlptLevel: 3),
+      alreadyStudiedToday: 0,
+      userSeed: 'user-1',
+      date: DateTime(2026, 5, 26),
+    );
+
+    expect(requestedTargetOffsets, [0, 2]);
+    expect(recommendations.map((item) => item.word.id), [302]);
+  });
 }
 
 List<Word> _wordsByLevel({int perLevel = 5}) {
@@ -190,16 +242,30 @@ List<Word> _wordsByLevel({int perLevel = 5}) {
   for (var level = 1; level <= 5; level++) {
     for (var index = 0; index < perLevel; index++) {
       final id = level * 100 + index;
-      words.add(
-        Word(
-          id: id,
-          word: '単語$id',
-          reading: 'たんご$id',
-          meanings: const [WordMeaning(partOfSpeech: '명사', meaning: '단어')],
-          jlptLevel: level,
-        ),
-      );
+      words.add(_word(id: id, jlptLevel: level));
     }
   }
   return words;
+}
+
+Word _word({required int id, required int jlptLevel}) {
+  return Word(
+    id: id,
+    word: '単語$id',
+    reading: 'たんご$id',
+    meanings: const [WordMeaning(partOfSpeech: '명사', meaning: '단어')],
+    jlptLevel: jlptLevel,
+  );
+}
+
+StudyItemProgress _masteredProgress(int id) {
+  return StudyItemProgress(
+    type: StudyType.word,
+    targetId: id,
+    lastStatus: StudyStatus.mastered,
+    attemptCount: 5,
+    completedCount: 5,
+    forgotCount: 0,
+    lastStudiedAt: DateTime(2026, 5, 25),
+  );
 }

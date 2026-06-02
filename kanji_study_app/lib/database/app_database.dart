@@ -187,18 +187,28 @@ class JsonStringConverter extends TypeConverter<String, String> {
   String toSql(String value) => value;
 }
 
+class _SqlWhere {
+  final String sql;
+  final List<Variable<Object>> variables;
+
+  const _SqlWhere(this.sql, this.variables);
+}
+
 @DriftDatabase(
   tables: [KanjiTable, WordsTable, StudyRecordsTable, FavoritesTable],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (Migrator m) => m.createAll(),
+    onCreate: (Migrator m) async {
+      await m.createAll();
+      await _createWordIndexes();
+    },
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
         await m.createTable(favoritesTable);
@@ -311,8 +321,29 @@ class AppDatabase extends _$AppDatabase {
           ON favorites_table (user_id, type, target_id)
         ''');
       }
+      if (from < 10) {
+        await _createWordIndexes();
+      }
     },
   );
+
+  Future<void> _createWordIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS words_table_word_idx ON words_table (word)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS words_table_reading_idx ON words_table (reading)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS words_table_jlpt_level_idx ON words_table (jlpt_level)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS words_table_priority_rank_idx ON words_table (priority_rank)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS words_table_updated_at_idx ON words_table (updated_at)',
+    );
+  }
 
   /// 한자 데이터 조회
   Future<List<KanjiTableData>> getAllKanji() => select(kanjiTable).get();
@@ -351,11 +382,216 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertWordsBatch(List<WordsTableCompanion> words) async {
     await batch((batch) {
-      batch.insertAll(wordsTable, words);
+      batch.insertAllOnConflictUpdate(wordsTable, words);
     });
   }
 
   Future<void> clearWords() => delete(wordsTable).go();
+
+  Future<void> deleteWordsExceptIds(Set<int> ids) async {
+    if (ids.isEmpty) return;
+
+    await transaction(() async {
+      await customStatement(
+        'CREATE TEMP TABLE IF NOT EXISTS temp_synced_word_ids (id INTEGER PRIMARY KEY)',
+      );
+      await customStatement('DELETE FROM temp_synced_word_ids');
+
+      final sortedIds = ids.toList()..sort();
+      const chunkSize = 500;
+      for (var start = 0; start < sortedIds.length; start += chunkSize) {
+        final end = (start + chunkSize).clamp(0, sortedIds.length);
+        final chunk = sortedIds.sublist(start, end);
+        final placeholders = List.filled(chunk.length, '(?)').join(', ');
+        await customStatement(
+          'INSERT OR IGNORE INTO temp_synced_word_ids (id) VALUES $placeholders',
+          chunk,
+        );
+      }
+
+      await customStatement('''
+        DELETE FROM words_table
+        WHERE id NOT IN (SELECT id FROM temp_synced_word_ids)
+      ''');
+      await customStatement('DELETE FROM temp_synced_word_ids');
+    });
+  }
+
+  Future<List<WordsTableData>> queryWords({
+    String? query,
+    Set<int> jlptLevels = const {},
+    Set<int>? includeIds,
+    Set<int> excludeIds = const {},
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final where = _buildWordWhere(
+      query: query,
+      jlptLevels: jlptLevels,
+      includeIds: includeIds,
+      excludeIds: excludeIds,
+    );
+    final sql =
+        '''
+      SELECT *
+      FROM words_table
+      ${where.sql}
+      ORDER BY
+        CASE WHEN priority_rank IS NULL THEN 1 ELSE 0 END,
+        priority_rank ASC,
+        id ASC
+      LIMIT ? OFFSET ?
+    ''';
+    return customSelect(
+      sql,
+      variables: [
+        ...where.variables,
+        Variable<Object>(limit),
+        Variable<Object>(offset),
+      ],
+      readsFrom: {wordsTable},
+    ).map((row) => wordsTable.map(row.data)).get();
+  }
+
+  Future<int> countWords({
+    String? query,
+    Set<int> jlptLevels = const {},
+    Set<int>? includeIds,
+    Set<int> excludeIds = const {},
+  }) async {
+    final where = _buildWordWhere(
+      query: query,
+      jlptLevels: jlptLevels,
+      includeIds: includeIds,
+      excludeIds: excludeIds,
+    );
+    final row = await customSelect(
+      '''
+        SELECT COUNT(*) AS word_count
+        FROM words_table
+        ${where.sql}
+      ''',
+      variables: where.variables,
+      readsFrom: {wordsTable},
+    ).getSingle();
+    return row.read<int>('word_count');
+  }
+
+  Future<List<WordsTableData>> getWordsByIds(List<int> ids) {
+    if (ids.isEmpty) return Future.value([]);
+    final placeholders = List.filled(ids.length, '?').join(', ');
+    return customSelect(
+      '''
+        SELECT *
+        FROM words_table
+        WHERE id IN ($placeholders)
+      ''',
+      variables: ids.map((id) => Variable<Object>(id)).toList(),
+      readsFrom: {wordsTable},
+    ).map((row) => wordsTable.map(row.data)).get().then((rows) {
+      final byId = {for (final row in rows) row.id: row};
+      return ids.map((id) => byId[id]).whereType<WordsTableData>().toList();
+    });
+  }
+
+  Future<List<String>> getAllWordTexts() async {
+    final rows = await customSelect(
+      '''
+        SELECT word
+        FROM words_table
+        ORDER BY id ASC
+      ''',
+      readsFrom: {wordsTable},
+    ).get();
+    return rows.map((row) => row.read<String>('word')).toList();
+  }
+
+  Future<List<int>> getWordIdsForSession({
+    String? query,
+    Set<int> jlptLevels = const {},
+    Set<int>? includeIds,
+    Set<int> excludeIds = const {},
+    required int limit,
+  }) async {
+    final where = _buildWordWhere(
+      query: query,
+      jlptLevels: jlptLevels,
+      includeIds: includeIds,
+      excludeIds: excludeIds,
+    );
+    final rows = await customSelect(
+      '''
+        SELECT id
+        FROM words_table
+        ${where.sql}
+        ORDER BY RANDOM()
+        LIMIT ?
+      ''',
+      variables: [...where.variables, Variable<Object>(limit)],
+      readsFrom: {wordsTable},
+    ).get();
+    return rows.map((row) => row.read<int>('id')).toList();
+  }
+
+  _SqlWhere _buildWordWhere({
+    String? query,
+    Set<int> jlptLevels = const {},
+    Set<int>? includeIds,
+    Set<int> excludeIds = const {},
+  }) {
+    final clauses = <String>[];
+    final variables = <Variable<Object>>[];
+
+    final normalizedQuery = query?.trim();
+    if (normalizedQuery != null && normalizedQuery.isNotEmpty) {
+      final like = '%${_escapeLike(normalizedQuery.toLowerCase())}%';
+      clauses.add('''
+        (
+          lower(word) LIKE ? ESCAPE '\\' OR
+          lower(reading) LIKE ? ESCAPE '\\' OR
+          lower(meanings_ko) LIKE ? ESCAPE '\\' OR
+          lower(meanings_en) LIKE ? ESCAPE '\\' OR
+          lower(meanings_jp) LIKE ? ESCAPE '\\'
+        )
+      ''');
+      variables.addAll(List.filled(5, Variable<Object>(like)));
+    }
+
+    if (jlptLevels.isNotEmpty) {
+      clauses.add(
+        'jlpt_level IN (${List.filled(jlptLevels.length, '?').join(', ')})',
+      );
+      variables.addAll(jlptLevels.map((level) => Variable<Object>(level)));
+    }
+
+    if (includeIds != null) {
+      if (includeIds.isEmpty) {
+        clauses.add('0 = 1');
+      } else {
+        clauses.add(
+          'id IN (${List.filled(includeIds.length, '?').join(', ')})',
+        );
+        variables.addAll(includeIds.map((id) => Variable<Object>(id)));
+      }
+    }
+
+    if (excludeIds.isNotEmpty) {
+      clauses.add(
+        'id NOT IN (${List.filled(excludeIds.length, '?').join(', ')})',
+      );
+      variables.addAll(excludeIds.map((id) => Variable<Object>(id)));
+    }
+
+    if (clauses.isEmpty) return const _SqlWhere('', []);
+    return _SqlWhere('WHERE ${clauses.join(' AND ')}', variables);
+  }
+
+  String _escapeLike(String value) {
+    return value
+        .replaceAll(r'\', r'\\')
+        .replaceAll('%', r'\%')
+        .replaceAll('_', r'\_');
+  }
 
   /// 학습 기록 조회
   Future<List<StudyRecordsTableData>> getStudyRecords(String userId) =>
