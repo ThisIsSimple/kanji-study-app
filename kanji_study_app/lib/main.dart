@@ -15,6 +15,7 @@ import 'services/connectivity_service.dart';
 import 'services/local_database_service.dart';
 import 'services/study_record_service.dart';
 import 'services/favorite_service.dart';
+import 'services/flashcard_service.dart';
 import 'services/language_settings_service.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
@@ -54,6 +55,9 @@ void main() async {
   // Initialize favorite service (requires local database and supabase)
   await FavoriteService.instance.initialize();
 
+  // Initialize flashcard service pending sync listener
+  await FlashcardService.instance.initialize();
+
   // Initialize notification service
   await NotificationService.instance.init();
 
@@ -91,6 +95,7 @@ class _KanjiStudyAppState extends State<KanjiStudyApp> {
   Future<void> _initializeUserScopedServices() async {
     await StudyRecordService.instance.initialize();
     await FavoriteService.instance.initialize();
+    await FlashcardService.instance.initialize();
   }
 
   /// Initialize deep link handling for OAuth callbacks

@@ -113,6 +113,7 @@ class StudyRecordsTable extends Table {
   TextColumn get status => text()(); // 'reviewing', 'familiar', 'mastered'
   DateTimeColumn get studyDate => dateTime()();
   TextColumn get notes => text().nullable()();
+  TextColumn get recordClientId => text().nullable()();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
@@ -201,7 +202,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -324,8 +325,25 @@ class AppDatabase extends _$AppDatabase {
       if (from < 10) {
         await _createWordIndexes();
       }
+      if (from < 11) {
+        await _addStudyRecordClientIdColumnIfMissing();
+      }
     },
   );
+
+  Future<void> _addStudyRecordClientIdColumnIfMissing() async {
+    final columns = await customSelect(
+      'PRAGMA table_info(study_records_table)',
+    ).get();
+    final hasRecordClientId = columns.any(
+      (column) => column.data['name'] == 'record_client_id',
+    );
+    if (hasRecordClientId) return;
+
+    await customStatement(
+      'ALTER TABLE study_records_table ADD COLUMN record_client_id TEXT',
+    );
+  }
 
   Future<void> _createWordIndexes() async {
     await customStatement(
@@ -603,6 +621,11 @@ class AppDatabase extends _$AppDatabase {
   /// 학습 기록 삽입/업데이트
   Future<int> insertStudyRecord(StudyRecordsTableCompanion record) =>
       into(studyRecordsTable).insert(record);
+
+  Future<void> updateStudyRecordClientId(int id, String recordClientId) =>
+      (update(studyRecordsTable)..where((t) => t.id.equals(id))).write(
+        StudyRecordsTableCompanion(recordClientId: Value(recordClientId)),
+      );
 
   Future<void> markRecordAsSynced(int id) =>
       (update(studyRecordsTable)..where((t) => t.id.equals(id))).write(

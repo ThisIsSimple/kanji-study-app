@@ -35,6 +35,7 @@ class FlashcardResult {
 
 /// Represents a flashcard study session
 class FlashcardSession {
+  final String? sessionClientId;
   final String itemType; // 'word' or 'kanji'
   final List<int> itemIds; // word_ids or kanji_ids
   final int currentIndex;
@@ -43,6 +44,7 @@ class FlashcardSession {
   final DateTime? endTime;
 
   const FlashcardSession({
+    this.sessionClientId,
     required this.itemType,
     required this.itemIds,
     this.currentIndex = 0,
@@ -83,6 +85,7 @@ class FlashcardSession {
   /// Create a new session with updated current index
   FlashcardSession copyWithNextCard() {
     return FlashcardSession(
+      sessionClientId: sessionClientId,
       itemType: itemType,
       itemIds: itemIds,
       currentIndex: currentIndex + 1,
@@ -95,6 +98,7 @@ class FlashcardSession {
   /// Create a new session with an added result
   FlashcardSession copyWithResult(FlashcardResult result) {
     return FlashcardSession(
+      sessionClientId: sessionClientId,
       itemType: itemType,
       itemIds: itemIds,
       currentIndex: currentIndex,
@@ -108,6 +112,7 @@ class FlashcardSession {
   Map<String, dynamic> toJson() {
     return {
       'itemType': itemType,
+      'sessionClientId': sessionClientId,
       'itemIds': itemIds,
       'currentIndex': currentIndex,
       'results': results.map((r) => r.toJson()).toList(),
@@ -119,6 +124,7 @@ class FlashcardSession {
   /// Create from JSON
   factory FlashcardSession.fromJson(Map<String, dynamic> json) {
     return FlashcardSession(
+      sessionClientId: json['sessionClientId'] as String?,
       itemType: json['itemType'] as String? ?? 'word', // 하위 호환성
       itemIds:
           (json['itemIds'] as List?)?.cast<int>() ??
@@ -140,5 +146,17 @@ class FlashcardSession {
   /// Create from JSON string
   static FlashcardSession fromJsonString(String jsonString) {
     return FlashcardSession.fromJson(json.decode(jsonString));
+  }
+
+  FlashcardSession copyWithSessionClientId(String sessionClientId) {
+    return FlashcardSession(
+      sessionClientId: sessionClientId,
+      itemType: itemType,
+      itemIds: itemIds,
+      currentIndex: currentIndex,
+      results: results,
+      startTime: startTime,
+      endTime: endTime,
+    );
   }
 }

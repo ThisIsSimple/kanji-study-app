@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import '../database/app_database.dart';
@@ -71,6 +72,7 @@ class StudyRecordService extends ChangeNotifier {
     try {
       final now = DateTime.now().toUtc();
       final isOnline = _connectivityService.isOnline;
+      final recordClientId = _createRecordClientId();
 
       // 1. 로컬 DB에 저장
       final localRecord = StudyRecordsTableCompanion.insert(
@@ -79,10 +81,13 @@ class StudyRecordService extends ChangeNotifier {
         targetId: targetId,
         status: status.value,
         studyDate: now,
-        isSynced: Value(isOnline && _supabaseService.isInitialized),
+        recordClientId: Value(recordClientId),
+        isSynced: const Value(false),
         createdAt: Value(now),
       );
-      await _localDb.database.insertStudyRecord(localRecord);
+      final localRecordId = await _localDb.database.insertStudyRecord(
+        localRecord,
+      );
 
       // 2. 메모리 캐시 업데이트
       final record = StudyRecord(
@@ -90,19 +95,26 @@ class StudyRecordService extends ChangeNotifier {
         type: type,
         targetId: targetId,
         status: status,
+        recordClientId: recordClientId,
         createdAt: now.toLocal(),
       );
       _upsertProgress(record);
 
       // 3. 온라인이면 Supabase에도 저장 (created_at은 DB default now() 사용)
       if (isOnline && _supabaseService.isInitialized) {
-        await _supabaseService.client.from('study_records').insert({
-          'user_id': userId,
-          'type': type.value,
-          'target_id': targetId,
-          'status': status.value,
-          'created_at': now.toIso8601String(),
-        });
+        try {
+          await _upsertStudyRecordToServer(
+            userId: userId,
+            type: type.value,
+            targetId: targetId,
+            status: status.value,
+            createdAt: now,
+            recordClientId: recordClientId,
+          );
+          await _localDb.database.markRecordAsSynced(localRecordId);
+        } catch (e) {
+          debugPrint('StudyRecordService: remote insert failed: $e');
+        }
       }
 
       // 4. 리스너에게 알림
@@ -153,13 +165,15 @@ class StudyRecordService extends ChangeNotifier {
         final unsyncedRecords = await _localDb.database.getUnsyncedRecords();
         for (final record in unsyncedRecords) {
           try {
-            await _supabaseService.client.from('study_records').insert({
-              'user_id': record.userId,
-              'type': record.studyType,
-              'target_id': record.targetId,
-              'status': record.status,
-              'created_at': record.createdAt.toIso8601String(),
-            });
+            final recordClientId = await _ensureRecordClientId(record);
+            await _upsertStudyRecordToServer(
+              userId: record.userId,
+              type: record.studyType,
+              targetId: record.targetId,
+              status: record.status,
+              createdAt: record.createdAt,
+              recordClientId: recordClientId,
+            );
             await _localDb.database.markRecordAsSynced(record.id);
           } catch (e) {
             debugPrint('Error syncing record ${record.id}: $e');
@@ -247,6 +261,7 @@ class StudyRecordService extends ChangeNotifier {
             targetId: row.targetId,
             status: StudyStatus.fromString(row.status),
             notes: row.notes,
+            recordClientId: row.recordClientId,
             createdAt: row.createdAt.toLocal(),
           ),
         )
@@ -282,7 +297,22 @@ class StudyRecordService extends ChangeNotifier {
     return merged;
   }
 
+  @visibleForTesting
+  static List<StudyRecord> mergeStudyRecordsForTest(
+    Iterable<StudyRecord> localRecords,
+    Iterable<StudyRecord> serverRecords,
+  ) => _mergeStudyRecords(localRecords, serverRecords);
+
+  @visibleForTesting
+  static String recordMergeKeyForTest(StudyRecord record) =>
+      _recordMergeKey(record);
+
   static String _recordMergeKey(StudyRecord record) {
+    final recordClientId = record.recordClientId;
+    if (recordClientId != null && recordClientId.isNotEmpty) {
+      return '${record.userId ?? ''}|$recordClientId';
+    }
+
     final timestamp = record.createdAt?.toUtc().toIso8601String() ?? 'no-time';
     return [
       record.userId ?? '',
@@ -291,6 +321,80 @@ class StudyRecordService extends ChangeNotifier {
       record.status.value,
       timestamp,
     ].join('|');
+  }
+
+  Future<String> _ensureRecordClientId(StudyRecordsTableData record) async {
+    var createdNewId = false;
+    final recordClientId = _recordClientIdForSync(
+      record.recordClientId,
+      createRecordClientId: () {
+        createdNewId = true;
+        return _createRecordClientId();
+      },
+    );
+
+    if (createdNewId) {
+      await _localDb.database.updateStudyRecordClientId(
+        record.id,
+        recordClientId,
+      );
+    }
+    return recordClientId;
+  }
+
+  @visibleForTesting
+  Future<String> ensureRecordClientIdForTest(StudyRecordsTableData record) =>
+      _ensureRecordClientId(record);
+
+  @visibleForTesting
+  static String? existingRecordClientIdOrNullForTest(String? recordClientId) =>
+      _existingRecordClientIdOrNull(recordClientId);
+
+  @visibleForTesting
+  static String recordClientIdForSyncForTest(
+    String? recordClientId, {
+    required String Function() createRecordClientId,
+  }) => _recordClientIdForSync(
+    recordClientId,
+    createRecordClientId: createRecordClientId,
+  );
+
+  static String _recordClientIdForSync(
+    String? recordClientId, {
+    required String Function() createRecordClientId,
+  }) {
+    return _existingRecordClientIdOrNull(recordClientId) ??
+        createRecordClientId();
+  }
+
+  static String? _existingRecordClientIdOrNull(String? recordClientId) {
+    if (recordClientId == null || recordClientId.isEmpty) return null;
+    return recordClientId;
+  }
+
+  Future<void> _upsertStudyRecordToServer({
+    required String userId,
+    required String type,
+    required int targetId,
+    required String status,
+    required DateTime createdAt,
+    required String recordClientId,
+  }) async {
+    await _supabaseService.client.from('study_records').upsert({
+      'user_id': userId,
+      'type': type,
+      'target_id': targetId,
+      'status': status,
+      'created_at': createdAt.toUtc().toIso8601String(),
+      'record_client_id': recordClientId,
+    }, onConflict: 'user_id,record_client_id');
+  }
+
+  static String _createRecordClientId() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    final hex = bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0'));
+    return 'study-record-${DateTime.now().microsecondsSinceEpoch}-${hex.join()}';
   }
 
   void _upsertProgress(StudyRecord record) {

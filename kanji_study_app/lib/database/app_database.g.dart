@@ -2871,6 +2871,17 @@ class $StudyRecordsTableTable extends StudyRecordsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _recordClientIdMeta = const VerificationMeta(
+    'recordClientId',
+  );
+  @override
+  late final GeneratedColumn<String> recordClientId = GeneratedColumn<String>(
+    'record_client_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isSyncedMeta = const VerificationMeta(
     'isSynced',
   );
@@ -2907,6 +2918,7 @@ class $StudyRecordsTableTable extends StudyRecordsTable
     status,
     studyDate,
     notes,
+    recordClientId,
     isSynced,
     createdAt,
   ];
@@ -2971,6 +2983,15 @@ class $StudyRecordsTableTable extends StudyRecordsTable
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
       );
     }
+    if (data.containsKey('record_client_id')) {
+      context.handle(
+        _recordClientIdMeta,
+        recordClientId.isAcceptableOrUnknown(
+          data['record_client_id']!,
+          _recordClientIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('is_synced')) {
       context.handle(
         _isSyncedMeta,
@@ -3020,6 +3041,10 @@ class $StudyRecordsTableTable extends StudyRecordsTable
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
       ),
+      recordClientId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}record_client_id'],
+      ),
       isSynced: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_synced'],
@@ -3046,6 +3071,7 @@ class StudyRecordsTableData extends DataClass
   final String status;
   final DateTime studyDate;
   final String? notes;
+  final String? recordClientId;
   final bool isSynced;
   final DateTime createdAt;
   const StudyRecordsTableData({
@@ -3056,6 +3082,7 @@ class StudyRecordsTableData extends DataClass
     required this.status,
     required this.studyDate,
     this.notes,
+    this.recordClientId,
     required this.isSynced,
     required this.createdAt,
   });
@@ -3070,6 +3097,9 @@ class StudyRecordsTableData extends DataClass
     map['study_date'] = Variable<DateTime>(studyDate);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || recordClientId != null) {
+      map['record_client_id'] = Variable<String>(recordClientId);
     }
     map['is_synced'] = Variable<bool>(isSynced);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -3087,6 +3117,9 @@ class StudyRecordsTableData extends DataClass
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
+      recordClientId: recordClientId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recordClientId),
       isSynced: Value(isSynced),
       createdAt: Value(createdAt),
     );
@@ -3105,6 +3138,7 @@ class StudyRecordsTableData extends DataClass
       status: serializer.fromJson<String>(json['status']),
       studyDate: serializer.fromJson<DateTime>(json['studyDate']),
       notes: serializer.fromJson<String?>(json['notes']),
+      recordClientId: serializer.fromJson<String?>(json['recordClientId']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -3120,6 +3154,7 @@ class StudyRecordsTableData extends DataClass
       'status': serializer.toJson<String>(status),
       'studyDate': serializer.toJson<DateTime>(studyDate),
       'notes': serializer.toJson<String?>(notes),
+      'recordClientId': serializer.toJson<String?>(recordClientId),
       'isSynced': serializer.toJson<bool>(isSynced),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -3133,6 +3168,7 @@ class StudyRecordsTableData extends DataClass
     String? status,
     DateTime? studyDate,
     Value<String?> notes = const Value.absent(),
+    Value<String?> recordClientId = const Value.absent(),
     bool? isSynced,
     DateTime? createdAt,
   }) => StudyRecordsTableData(
@@ -3143,6 +3179,9 @@ class StudyRecordsTableData extends DataClass
     status: status ?? this.status,
     studyDate: studyDate ?? this.studyDate,
     notes: notes.present ? notes.value : this.notes,
+    recordClientId: recordClientId.present
+        ? recordClientId.value
+        : this.recordClientId,
     isSynced: isSynced ?? this.isSynced,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -3155,6 +3194,9 @@ class StudyRecordsTableData extends DataClass
       status: data.status.present ? data.status.value : this.status,
       studyDate: data.studyDate.present ? data.studyDate.value : this.studyDate,
       notes: data.notes.present ? data.notes.value : this.notes,
+      recordClientId: data.recordClientId.present
+          ? data.recordClientId.value
+          : this.recordClientId,
       isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -3170,6 +3212,7 @@ class StudyRecordsTableData extends DataClass
           ..write('status: $status, ')
           ..write('studyDate: $studyDate, ')
           ..write('notes: $notes, ')
+          ..write('recordClientId: $recordClientId, ')
           ..write('isSynced: $isSynced, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -3185,6 +3228,7 @@ class StudyRecordsTableData extends DataClass
     status,
     studyDate,
     notes,
+    recordClientId,
     isSynced,
     createdAt,
   );
@@ -3199,6 +3243,7 @@ class StudyRecordsTableData extends DataClass
           other.status == this.status &&
           other.studyDate == this.studyDate &&
           other.notes == this.notes &&
+          other.recordClientId == this.recordClientId &&
           other.isSynced == this.isSynced &&
           other.createdAt == this.createdAt);
 }
@@ -3212,6 +3257,7 @@ class StudyRecordsTableCompanion
   final Value<String> status;
   final Value<DateTime> studyDate;
   final Value<String?> notes;
+  final Value<String?> recordClientId;
   final Value<bool> isSynced;
   final Value<DateTime> createdAt;
   const StudyRecordsTableCompanion({
@@ -3222,6 +3268,7 @@ class StudyRecordsTableCompanion
     this.status = const Value.absent(),
     this.studyDate = const Value.absent(),
     this.notes = const Value.absent(),
+    this.recordClientId = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
@@ -3233,6 +3280,7 @@ class StudyRecordsTableCompanion
     required String status,
     required DateTime studyDate,
     this.notes = const Value.absent(),
+    this.recordClientId = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : userId = Value(userId),
@@ -3248,6 +3296,7 @@ class StudyRecordsTableCompanion
     Expression<String>? status,
     Expression<DateTime>? studyDate,
     Expression<String>? notes,
+    Expression<String>? recordClientId,
     Expression<bool>? isSynced,
     Expression<DateTime>? createdAt,
   }) {
@@ -3259,6 +3308,7 @@ class StudyRecordsTableCompanion
       if (status != null) 'status': status,
       if (studyDate != null) 'study_date': studyDate,
       if (notes != null) 'notes': notes,
+      if (recordClientId != null) 'record_client_id': recordClientId,
       if (isSynced != null) 'is_synced': isSynced,
       if (createdAt != null) 'created_at': createdAt,
     });
@@ -3272,6 +3322,7 @@ class StudyRecordsTableCompanion
     Value<String>? status,
     Value<DateTime>? studyDate,
     Value<String?>? notes,
+    Value<String?>? recordClientId,
     Value<bool>? isSynced,
     Value<DateTime>? createdAt,
   }) {
@@ -3283,6 +3334,7 @@ class StudyRecordsTableCompanion
       status: status ?? this.status,
       studyDate: studyDate ?? this.studyDate,
       notes: notes ?? this.notes,
+      recordClientId: recordClientId ?? this.recordClientId,
       isSynced: isSynced ?? this.isSynced,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -3312,6 +3364,9 @@ class StudyRecordsTableCompanion
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (recordClientId.present) {
+      map['record_client_id'] = Variable<String>(recordClientId.value);
+    }
     if (isSynced.present) {
       map['is_synced'] = Variable<bool>(isSynced.value);
     }
@@ -3331,6 +3386,7 @@ class StudyRecordsTableCompanion
           ..write('status: $status, ')
           ..write('studyDate: $studyDate, ')
           ..write('notes: $notes, ')
+          ..write('recordClientId: $recordClientId, ')
           ..write('isSynced: $isSynced, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -5283,6 +5339,7 @@ typedef $$StudyRecordsTableTableCreateCompanionBuilder =
       required String status,
       required DateTime studyDate,
       Value<String?> notes,
+      Value<String?> recordClientId,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
     });
@@ -5295,6 +5352,7 @@ typedef $$StudyRecordsTableTableUpdateCompanionBuilder =
       Value<String> status,
       Value<DateTime> studyDate,
       Value<String?> notes,
+      Value<String?> recordClientId,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
     });
@@ -5340,6 +5398,11 @@ class $$StudyRecordsTableTableFilterComposer
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordClientId => $composableBuilder(
+    column: $table.recordClientId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5398,6 +5461,11 @@ class $$StudyRecordsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get recordClientId => $composableBuilder(
+    column: $table.recordClientId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isSynced => $composableBuilder(
     column: $table.isSynced,
     builder: (column) => ColumnOrderings(column),
@@ -5438,6 +5506,11 @@ class $$StudyRecordsTableTableAnnotationComposer
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get recordClientId => $composableBuilder(
+    column: $table.recordClientId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isSynced =>
       $composableBuilder(column: $table.isSynced, builder: (column) => column);
@@ -5493,6 +5566,7 @@ class $$StudyRecordsTableTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<DateTime> studyDate = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<String?> recordClientId = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => StudyRecordsTableCompanion(
@@ -5503,6 +5577,7 @@ class $$StudyRecordsTableTableTableManager
                 status: status,
                 studyDate: studyDate,
                 notes: notes,
+                recordClientId: recordClientId,
                 isSynced: isSynced,
                 createdAt: createdAt,
               ),
@@ -5515,6 +5590,7 @@ class $$StudyRecordsTableTableTableManager
                 required String status,
                 required DateTime studyDate,
                 Value<String?> notes = const Value.absent(),
+                Value<String?> recordClientId = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => StudyRecordsTableCompanion.insert(
@@ -5525,6 +5601,7 @@ class $$StudyRecordsTableTableTableManager
                 status: status,
                 studyDate: studyDate,
                 notes: notes,
+                recordClientId: recordClientId,
                 isSynced: isSynced,
                 createdAt: createdAt,
               ),
